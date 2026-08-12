@@ -47,6 +47,10 @@ No migration framework — Mongoose models in `/models` define the schema (valid
 
 Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mongoose hooks since MongoDB has no native `ON DELETE CASCADE`.
 
+## Code graph
+
+[`graphify`](https://github.com/Graphify-Labs/graphify) maintains a structural code graph of this repo in `graphify-out/` (`graph.json`, the interactive `graph.html`, `GRAPH_REPORT.md`). It rebuilds automatically via a git post-commit hook (AST-only, no LLM/API key) — see `.git/hooks/post-commit`, installed with `graphify hook install`. Rebuild logs land in `~/.cache/graphify-rebuild.log`. To rebuild manually: `graphify update .`.
+
 ## Requirements knowledge base
 
 `scripts/seed-requirements.ts` seeds ~40 requirements grounded in real, fetched source text (Shopify Theme Store requirements/accessibility/testing docs, Google Search Central structured-data docs — see `sourceUrl` on each record). Internal team standards are deliberately **not** seeded — those need to come from the team's actual conventions, not something to invent. Re-run the seed script any time; it upserts by `requirementId` and never duplicates.
