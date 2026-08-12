@@ -1,0 +1,71 @@
+import type { ParsedFile } from "@/lib/theme-parser";
+import type { ThemeIndex } from "./themeIndex";
+
+export type ComposedTemplate = {
+  templateFile: ParsedFile;
+  // template file + its resolved sections (in the template's own render
+  // order) + any snippets those sections render, recursively. Deduped.
+  files: ParsedFile[];
+};
+
+function orderedSectionTypes(templateFile: ParsedFile): string[] {
+  const json = templateFile.jsonInfo?.json;
+  if (!json || typeof json !== "object") return [];
+  const sections = (json as Record<string, unknown>).sections;
+  if (!sections || typeof sections !== "object") return [];
+
+  const orderRaw = (json as Record<string, unknown>).order;
+  const order = Array.isArray(orderRaw)
+    ? orderRaw.filter((k): k is string => typeof k === "string")
+    : Object.keys(sections as Record<string, unknown>);
+
+  const types: string[] = [];
+  for (const key of order) {
+    const entry = (sections as Record<string, unknown>)[key];
+    const type = entry && typeof entry === "object" ? (entry as Record<string, unknown>).type : undefined;
+    if (typeof type === "string") types.push(type);
+  }
+  return types;
+}
+
+function collectRenderedSnippets(file: ParsedFile, index: ThemeIndex, out: ParsedFile[], seen: Set<string>, depth: number) {
+  if (depth <= 0) return;
+  for (const ref of file.sectionReferences) {
+    if (ref.kind !== "snippet" || ref.dynamic) continue;
+    const snippet = index.snippetsByName.get(ref.name);
+    if (!snippet || seen.has(snippet.path)) continue;
+    seen.add(snippet.path);
+    out.push(snippet);
+    collectRenderedSnippets(snippet, index, out, seen, depth - 1);
+  }
+}
+
+/**
+ * Statically composes what a JSON template actually renders: itself, its
+ * directly-referenced sections (in the template's own "order"), and any
+ * snippets those sections render (recursively, depth-limited to guard
+ * against cycles). This never executes Liquid — a section behind a runtime
+ * {% if %} is still included, since over-including is the safer failure
+ * mode than silently dropping content that's usually rendered (phase-4 §16).
+ */
+export function composeTemplate(templateFile: ParsedFile, index: ThemeIndex): ComposedTemplate {
+  const files: ParsedFile[] = [templateFile];
+  const seen = new Set<string>([templateFile.path]);
+
+  for (const type of orderedSectionTypes(templateFile)) {
+    const section = index.sectionsByName.get(type);
+    if (!section || seen.has(section.path)) continue;
+    seen.add(section.path);
+    files.push(section);
+    collectRenderedSnippets(section, index, files, seen, 3);
+  }
+
+  return { templateFile, files };
+}
+
+/** "templates/product.featured.json" -> "product"; "templates/index.json" -> "index". */
+export function templateBaseName(path: string): string {
+  const withoutDir = path.slice("templates/".length);
+  const withoutExt = withoutDir.replace(/\.json$/i, "");
+  return withoutExt.split(".")[0];
+}

@@ -13,6 +13,8 @@
 // to resolve which section a header/footer group actually renders.
 import type { Rule } from "@/lib/audit/rules";
 import { isExternalReference, localeKeyExists } from "@/lib/audit/themeIndex";
+import { composeTemplate, templateBaseName } from "@/lib/audit/templateComposition";
+import { findMultipleH1Across, findSkippedHeadingLevelsAcross, type ComposedHeading } from "@/lib/audit/headingChecks";
 
 const missingSectionRule: Rule = {
   ruleId: "REF-SECTION-MISSING-001",
@@ -288,6 +290,107 @@ const sectionsScopeRule: Rule = {
   },
 };
 
+// --- Template-level SEO composition (phase-4 §6) ------------------------
+// Statically composes each JSON template into itself + its rendered
+// sections + those sections' rendered snippets (templateComposition.ts),
+// then re-runs the heading checks across that combined set. These are the
+// cross-file complements to technical-seo's per-file SEO-H1-MULTIPLE-001 /
+// SEO-HEADING-SKIP-001, which can only ever see one file at a time.
+
+const TEMPLATES_REQUIRING_H1 = new Set(["index", "collection", "product", "page", "blog", "article", "list-collections", "search"]);
+
+function composedHeadingEntries(files: ReturnType<typeof composeTemplate>["files"]): ComposedHeading[] {
+  return files.flatMap((f) => f.headings.map((heading) => ({ filePath: f.path, heading })));
+}
+
+const composedH1MissingRule: Rule = {
+  ruleId: "SEO-H1-MISSING-COMPOSED-001",
+  requirementId: "TECH-SEO-H1-001",
+  category: "Technical SEO",
+  defaultSeverity: "medium",
+  title: "Each rendered page/template should have an H1 (composed)",
+  description:
+    "Each rendered page/template should have exactly one H1 identifying the page's main topic — checked across the template's statically composed sections and snippets, not just one file.",
+  sourceReference: "General technical SEO best practice",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
+      if (!TEMPLATES_REQUIRING_H1.has(templateBaseName(f.path))) continue;
+
+      const composed = composeTemplate(f, index);
+      const totalH1 = composed.files.reduce((sum, cf) => sum + cf.headings.filter((h) => h.level === 1).length, 0);
+      if (totalH1 === 0) {
+        findings.push({
+          filePath: f.path,
+          category: "Technical SEO" as const,
+          severity: "medium" as const,
+          finding: `No <h1> was found anywhere in ${f.path}'s statically composed sections/snippets.`,
+          recommendation: "Ensure one of the sections this template renders outputs an <h1>.",
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const composedMultipleH1Rule: Rule = {
+  ruleId: "SEO-H1-MULTIPLE-COMPOSED-001",
+  requirementId: "TECH-SEO-H1-001",
+  category: "Technical SEO",
+  defaultSeverity: "medium",
+  title: "No more than one H1 across a composed template",
+  description: "A template's statically composed sections/snippets should not collectively output more than one <h1>.",
+  sourceReference: "General technical SEO best practice",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
+      const composed = composeTemplate(f, index);
+      for (const issue of findMultipleH1Across(composedHeadingEntries(composed.files))) {
+        findings.push({
+          filePath: issue.filePath,
+          lineNumber: issue.line,
+          category: "Technical SEO" as const,
+          severity: "medium" as const,
+          finding: `${f.path}: ${issue.message}`,
+          recommendation: "Ensure only one section in this template outputs an <h1>; use lower heading levels elsewhere.",
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const composedSkippedHeadingRule: Rule = {
+  ruleId: "SEO-HEADING-SKIP-COMPOSED-001",
+  requirementId: "TECH-SEO-HEADING-001",
+  category: "Technical SEO",
+  defaultSeverity: "low",
+  title: "No skipped heading levels across a composed template",
+  description:
+    "Heading hierarchy should not skip levels across a template's statically composed sections/snippets (e.g. one section's h2 followed by another's h4).",
+  sourceReference: "General technical SEO best practice",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
+      const composed = composeTemplate(f, index);
+      for (const issue of findSkippedHeadingLevelsAcross(composedHeadingEntries(composed.files))) {
+        findings.push({
+          filePath: issue.filePath,
+          lineNumber: issue.line,
+          category: "Technical SEO" as const,
+          severity: "low" as const,
+          finding: `${f.path}: ${issue.message}`,
+          recommendation: "Use heading levels in sequence across the sections this template renders.",
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const CROSS_FILE_RULES: Rule[] = [
   missingSectionRule,
   missingSnippetRule,
@@ -298,4 +401,7 @@ export const CROSS_FILE_RULES: Rule[] = [
   brokenAriaReferenceRule,
   missingGlobalSettingRule,
   sectionsScopeRule,
+  composedH1MissingRule,
+  composedMultipleH1Rule,
+  composedSkippedHeadingRule,
 ];
