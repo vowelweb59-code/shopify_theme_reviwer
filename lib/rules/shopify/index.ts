@@ -1,4 +1,6 @@
 import type { Rule } from "@/lib/audit/rules";
+import { SHOPIFY_FEATURE_RULES } from "./features";
+import { SHOPIFY_SETTINGS_RULES } from "./settings";
 
 const THEME_STORE_REQUIREMENTS_URL = "https://shopify.dev/docs/storefronts/themes/store/requirements";
 
@@ -153,4 +155,6 @@ export const SHOPIFY_RULES: Rule[] = [
   contentForHeaderRule,
   shopifyLinksNofollowRule,
   seoMetadataSnippetRule,
+  ...SHOPIFY_FEATURE_RULES,
+  ...SHOPIFY_SETTINGS_RULES,
 ];

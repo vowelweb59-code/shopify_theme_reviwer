@@ -5,6 +5,12 @@ import type { ParsedJsonFileInfo, ParsedSectionReference } from "./types";
 function isTemplateJsonPath(path: string): boolean {
   return path.startsWith("templates/") || path.includes("/listings/");
 }
+// Section GROUP files (sections/header-group.json, rendered by {% sections %}
+// rather than {% section %}) have the identical { sections: {...}, order }
+// shape as a template — same extraction applies.
+function isSectionGroupPath(path: string): boolean {
+  return path.startsWith("sections/") && path.endsWith(".json");
+}
 function isSettingsSchemaPath(path: string): boolean {
   return path.endsWith("config/settings_schema.json");
 }
@@ -89,7 +95,7 @@ export function parseJsonFile(path: string, rawText: string): ParsedJsonFileInfo
 
   if (!json || typeof json !== "object" || parseError) return info;
 
-  if (isTemplateJsonPath(path)) {
+  if (isTemplateJsonPath(path) || isSectionGroupPath(path)) {
     info.sectionReferences = extractTemplateSectionReferences(json as Record<string, unknown>, rawText, toLine);
   }
   if (isSettingsSchemaPath(path)) {

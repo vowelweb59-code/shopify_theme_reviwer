@@ -4,10 +4,13 @@
 // theme-wide index of what sections/snippets/assets/locale keys actually
 // exist, built once per audit run.
 //
-// None of these map to an authoritative Shopify Theme Store requirement (no
-// seeded Requirement covers "broken reference"), so they're plain `Bug`
-// findings rather than `Theme Store Compliance` — per phase-3's rule that
-// Theme Store Compliance is reserved for rules grounded in a real requirement.
+// Most of these don't map to an authoritative Shopify Theme Store
+// requirement (no seeded Requirement covers "broken reference"), so they're
+// plain `Bug` findings rather than `Theme Store Compliance` — per phase-3's
+// rule that Theme Store Compliance is reserved for rules grounded in a real
+// requirement. sectionsScopeRule below is the exception: it does have a
+// seeded requirement (SHOPIFY-SECTIONS-SCOPE-001) and needs the theme index
+// to resolve which section a header/footer group actually renders.
 import type { Rule } from "@/lib/audit/rules";
 import { isExternalReference, localeKeyExists } from "@/lib/audit/themeIndex";
 
@@ -241,6 +244,50 @@ const missingGlobalSettingRule: Rule = {
   },
 };
 
+const THEME_STORE_REQUIREMENTS_URL = "https://shopify.dev/docs/storefronts/themes/store/requirements";
+
+const sectionsScopeRule: Rule = {
+  ruleId: "SHOPIFY-SECTIONS-SCOPE-001",
+  requirementId: "SHOPIFY-SECTIONS-SCOPE-001",
+  category: "Theme Store Compliance",
+  defaultSeverity: "low",
+  title: "Sections in header/footer groups should be scoped with enabled_on/disabled_on",
+  description:
+    "It's recommended to use the enabled_on/disabled_on schema attributes to restrict a section's availability to relevant contexts — general-purpose sections included in the Header/Footer groups should declare this scope.",
+  sourceReference: "Shopify Theme Store requirements",
+  sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+  // Recommendation-level per Shopify's own wording ("it's recommended"), not
+  // a hard "must" — kept at low severity, and only checked for section
+  // groups whose path suggests header/footer to avoid guessing at every
+  // section group in the theme.
+  check({ files, index }) {
+    const findings = [];
+    const groupFiles = files.filter(
+      (f) => f.fileType === "json" && f.path.startsWith("sections/") && /(header|footer)/i.test(f.path)
+    );
+    for (const group of groupFiles) {
+      if (!group.jsonInfo) continue;
+      for (const ref of group.jsonInfo.sectionReferences) {
+        const section = index.sectionsByName.get(ref.name);
+        if (!section) continue; // missing section is REF-TEMPLATE-SECTION-MISSING-001's job
+        const schema = section.schemaBlocks[0];
+        if (!schema?.json) continue;
+        const hasScope = "enabled_on" in schema.json || "disabled_on" in schema.json;
+        if (hasScope) continue;
+        findings.push({
+          filePath: group.path,
+          lineNumber: ref.line,
+          category: "Theme Store Compliance" as const,
+          severity: "low" as const,
+          finding: `Section "${ref.name}" is included in ${group.path} (a header/footer group) but its own schema declares no enabled_on/disabled_on scope.`,
+          recommendation: `Add enabled_on/disabled_on to sections/${ref.name}.liquid's schema to restrict it to appropriate template contexts, or confirm it's intentionally general-purpose.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const CROSS_FILE_RULES: Rule[] = [
   missingSectionRule,
   missingSnippetRule,
@@ -250,4 +297,5 @@ export const CROSS_FILE_RULES: Rule[] = [
   duplicateLocaleKeyRule,
   brokenAriaReferenceRule,
   missingGlobalSettingRule,
+  sectionsScopeRule,
 ];
