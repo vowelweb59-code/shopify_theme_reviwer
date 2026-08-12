@@ -1,5 +1,5 @@
 {
-  "0": "rules.ts",
+  "0": "connectToDatabase",
   "1": "devDependencies",
   "2": "dependencies",
   "3": "compilerOptions",
@@ -16,10 +16,14 @@
   "14": "eslint.config.mjs",
   "15": "next.config.ts",
   "16": "postcss.config.mjs",
+  "17": "registry.ts",
   "18": "reports/index.ts",
   "19": "accessibility/index.ts",
-  "20": "registry.ts",
-  "22": "runRules.ts",
+  "20": "shopify/index.ts",
+  "21": "bugs/index.ts",
+  "22": "rules.ts",
   "23": "cross-file/index.ts",
+  "24": "technical-aeo/index.ts",
+  "25": "themeIndex.ts",
   "26": "Shopify Theme Auditor"
 }
