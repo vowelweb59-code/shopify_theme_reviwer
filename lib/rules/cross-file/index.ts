@@ -128,6 +128,40 @@ const missingAssetRule: Rule = {
   },
 };
 
+function jsImportCandidates(specifier: string): string[] {
+  const base = specifier.split("/").pop() ?? specifier;
+  return /\.[a-z0-9]+$/i.test(base) ? [base] : [base, `${base}.js`, `${base}.mjs`];
+}
+
+const missingJsImportRule: Rule = {
+  ruleId: "REF-JS-IMPORT-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "medium",
+  title: "Relative JS import must resolve to a file in assets/",
+  description:
+    "A relative (./ or ../) JS import/require must resolve to a file actually present in assets/ — Shopify's assets/ folder is flat, so only the specifier's filename is checked. Bare specifiers (npm-style, e.g. \"alpinejs\") are never flagged — they may be resolved by a build step before upload.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "js") continue;
+      for (const imp of f.jsImports) {
+        if (!imp.specifier.startsWith("./") && !imp.specifier.startsWith("../")) continue;
+        const candidates = jsImportCandidates(imp.specifier);
+        if (candidates.some((c) => index.assetBasenames.has(c))) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: imp.line,
+          category: "Bug" as const,
+          severity: "medium" as const,
+          finding: `Imports "${imp.specifier}", but no matching file exists in assets/.`,
+          recommendation: `Add assets/${candidates[0]}, or fix the import path.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 const missingTranslationKeyRule: Rule = {
   ruleId: "REF-LOCALE-KEY-MISSING-001",
   category: "Bug",
@@ -480,6 +514,7 @@ export const CROSS_FILE_RULES: Rule[] = [
   missingSnippetRule,
   missingTemplateSectionRule,
   missingAssetRule,
+  missingJsImportRule,
   missingTranslationKeyRule,
   duplicateLocaleKeyRule,
   brokenAriaReferenceRule,

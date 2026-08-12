@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { extractCssStructure } from "./extractCssStructure";
 import { extractHtmlStructure } from "./extractHtmlStructure";
+import { extractJsImports } from "./extractJsStructure";
 import { extractLiquidStructure } from "./extractLiquidStructure";
 import { parseJsonFile } from "./parseJsonFile";
 import { emptyParsedFile, type FileType, type ParsedFile } from "./types";
@@ -37,9 +38,9 @@ function parseOneFile(relativePath: string, fileType: FileType, rawText: string)
     const { cssInfo, parseErrors } = extractCssStructure(rawText);
     parsedFile.cssInfo = cssInfo;
     parsedFile.parseErrors = parseErrors;
+  } else if (fileType === "js") {
+    parsedFile.jsImports = extractJsImports(rawText);
   }
-  // fileType === "js": Phase 2 only records the file's existence/content;
-  // JS-specific structural checks are a Phase 3/4 concern (see phase-3/4 docs).
 
   return parsedFile;
 }

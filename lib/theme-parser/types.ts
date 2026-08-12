@@ -200,6 +200,14 @@ export type ParsedLocaleReference = {
   key: string;
 };
 
+// Only populated for fileType 'js'. A regex-based best-effort scan (import/
+// require statements), not a real JS parser — matches this project's
+// general approach to static extraction elsewhere (e.g. Liquid tags).
+export type ParsedJsImport = {
+  line: number;
+  specifier: string;
+};
+
 export type ParsedSettingReference = {
   line: number;
   key: string;
@@ -280,6 +288,7 @@ export type ParsedFile = {
   localeReferences: ParsedLocaleReference[];
   settingReferences: ParsedSettingReference[];
   linksToFiles: ParsedFileReference[];
+  jsImports: ParsedJsImport[];
 
   cssInfo?: ParsedCssInfo;
   jsonInfo?: ParsedJsonFileInfo;
@@ -324,6 +333,7 @@ export function emptyParsedFile(path: string, fileType: FileType, rawText: strin
     localeReferences: [],
     settingReferences: [],
     linksToFiles: [],
+    jsImports: [],
     parseErrors: [],
   };
 }
