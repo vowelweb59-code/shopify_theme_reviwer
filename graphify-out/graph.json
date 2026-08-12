@@ -4,6 +4,19 @@
   "graph": {},
   "nodes": [
     {
+      "label": "FindingDoc",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L36",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "findingdoc",
+      "community_name": "finding.ts",
+      "id": "models_finding_findingdoc"
+    },
+    {
       "label": "RequirementDoc",
       "file_type": "code",
       "source_file": "models/requirement.ts",
@@ -13,8 +26,21 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirementdoc",
-      "id": "models_requirement_requirementdoc",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement_requirementdoc"
+    },
+    {
+      "label": "RuleDoc",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L23",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "ruledoc",
+      "community_name": "finding.ts",
+      "id": "models_rule_ruledoc"
     },
     {
       "label": "Category",
@@ -26,8 +52,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "category",
-      "id": "scripts_seed_requirements_category",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_category"
     },
     {
       "label": "SeedRequirement",
@@ -39,8 +65,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seedrequirement",
-      "id": "scripts_seed_requirements_seedrequirement",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_seedrequirement"
     },
     {
       "label": "Severity",
@@ -52,8 +78,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "severity",
-      "id": "scripts_seed_requirements_severity",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_severity"
     },
     {
       "label": "SourceType",
@@ -65,8 +91,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "sourcetype",
-      "id": "scripts_seed_requirements_sourcetype",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_sourcetype"
     },
     {
       "label": "AuditSettingsDoc",
@@ -78,8 +104,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "auditsettingsdoc",
-      "id": "models_audit_settings_auditsettingsdoc",
-      "community_name": "audit-settings.ts"
+      "community_name": "audit-settings.ts",
+      "id": "models_audit_settings_auditsettingsdoc"
     },
     {
       "label": "AuditRunResult",
@@ -91,8 +117,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "auditrunresult",
-      "id": "app_audit_page_auditrunresult",
-      "community_name": "audit/page.tsx"
+      "community_name": "audit/page.tsx",
+      "id": "app_audit_page_auditrunresult"
     },
     {
       "label": "MongooseCache",
@@ -104,8 +130,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "mongoosecache",
-      "id": "lib_db_connect_mongoosecache",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "lib_db_connect_mongoosecache"
     },
     {
       "label": "AuditRunDoc",
@@ -117,34 +143,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "auditrundoc",
-      "id": "models_audit_run_auditrundoc",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "FindingDoc",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L36",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "findingdoc",
-      "id": "models_finding_findingdoc",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "RuleDoc",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L23",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "ruledoc",
-      "id": "models_rule_ruledoc",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run_auditrundoc"
     },
     {
       "label": "ThemeDoc",
@@ -156,8 +156,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "themedoc",
-      "id": "models_theme_themedoc",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_theme_themedoc"
     },
     {
       "label": "Requirement",
@@ -169,8 +169,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "requirement",
-      "id": "app_rules_page_requirement",
-      "community_name": "rules/page.tsx"
+      "community_name": "rules/page.tsx",
+      "id": "app_rules_page_requirement"
     },
     {
       "label": "AuditRunRow",
@@ -182,8 +182,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "auditrunrow",
-      "id": "app_reports_page_auditrunrow",
-      "community_name": "reports/page.tsx"
+      "community_name": "reports/page.tsx",
+      "id": "app_reports_page_auditrunrow"
     },
     {
       "label": "main()",
@@ -194,8 +194,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "main()",
-      "id": "scripts_seed_requirements_main",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_main"
     },
     {
       "label": "AuditPage()",
@@ -206,8 +206,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "auditpage()",
-      "id": "app_audit_page_auditpage",
-      "community_name": "audit/page.tsx"
+      "community_name": "audit/page.tsx",
+      "id": "app_audit_page_auditpage"
     },
     {
       "label": "Home()",
@@ -218,8 +218,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "home()",
-      "id": "app_page_home",
-      "community_name": "app/page.tsx"
+      "community_name": "app/page.tsx",
+      "id": "app_page_home"
     },
     {
       "label": "SettingsPage()",
@@ -230,8 +230,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "settingspage()",
-      "id": "app_settings_page_settingspage",
-      "community_name": "settings/page.tsx"
+      "community_name": "settings/page.tsx",
+      "id": "app_settings_page_settingspage"
     },
     {
       "label": "GET()",
@@ -242,8 +242,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_audit_id_findings_route_get",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_audit_id_findings_route_get"
     },
     {
       "label": "GET()",
@@ -254,20 +254,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_audit_id_route_get",
-      "community_name": "connectToDatabase"
-    },
-    {
-      "label": "POST()",
-      "file_type": "code",
-      "source_file": "app/api/audit/run/route.ts",
-      "source_location": "L6",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "norm_label": "post()",
-      "id": "app_api_audit_run_route_post",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_audit_id_route_get"
     },
     {
       "label": "GET()",
@@ -278,8 +266,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_reports_id_route_get",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_reports_id_route_get"
     },
     {
       "label": "GET()",
@@ -290,8 +278,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_reports_route_get",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_reports_route_get"
     },
     {
       "label": "GET()",
@@ -302,8 +290,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_requirements_route_get",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_requirements_route_get"
     },
     {
       "label": "GET()",
@@ -314,8 +302,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "get()",
-      "id": "app_api_rules_route_get",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_rules_route_get"
     },
     {
       "label": "connectToDatabase()",
@@ -326,8 +314,20 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "connecttodatabase()",
-      "id": "lib_db_connect_connecttodatabase",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "lib_db_connect_connecttodatabase"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/audit/run/route.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "post()",
+      "community_name": "audit-run.ts",
+      "id": "app_api_audit_run_route_post"
     },
     {
       "label": "cascadeDeleteFindings()",
@@ -338,8 +338,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "cascadedeletefindings()",
-      "id": "models_audit_run_cascadedeletefindings",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run_cascadedeletefindings"
     },
     {
       "label": "cascadeDeleteRuns()",
@@ -350,8 +350,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "cascadedeleteruns()",
-      "id": "models_theme_cascadedeleteruns",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_theme_cascadedeleteruns"
     },
     {
       "label": "RootLayout()",
@@ -362,8 +362,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "rootlayout()",
-      "id": "app_layout_rootlayout",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout_rootlayout"
     },
     {
       "label": "RulesPage()",
@@ -374,8 +374,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "rulespage()",
-      "id": "app_rules_page_rulespage",
-      "community_name": "rules/page.tsx"
+      "community_name": "rules/page.tsx",
+      "id": "app_rules_page_rulespage"
     },
     {
       "label": "formatDate()",
@@ -386,8 +386,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "formatdate()",
-      "id": "app_reports_page_formatdate",
-      "community_name": "reports/page.tsx"
+      "community_name": "reports/page.tsx",
+      "id": "app_reports_page_formatdate"
     },
     {
       "label": "ReportsPage()",
@@ -398,8 +398,74 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "reportspage()",
-      "id": "app_reports_page_reportspage",
-      "community_name": "reports/page.tsx"
+      "community_name": "reports/page.tsx",
+      "id": "app_reports_page_reportspage"
+    },
+    {
+      "label": "finding.ts",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "finding.ts",
+      "community_name": "finding.ts",
+      "id": "models_finding"
+    },
+    {
+      "label": "FINDING_CATEGORIES",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L3",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "finding_categories",
+      "community_name": "finding.ts",
+      "id": "models_finding_finding_categories"
+    },
+    {
+      "label": "FINDING_LAYERS",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L17",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "finding_layers",
+      "community_name": "finding.ts",
+      "id": "models_finding_finding_layers"
+    },
+    {
+      "label": "FINDING_SEVERITIES",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L12",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "finding_severities",
+      "community_name": "finding.ts",
+      "id": "models_finding_finding_severities"
+    },
+    {
+      "label": "findingSchema",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L19",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "findingschema",
+      "community_name": "finding.ts",
+      "id": "models_finding_findingschema"
+    },
+    {
+      "label": "models/index.ts",
+      "file_type": "code",
+      "source_file": "models/index.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "models/index.ts",
+      "community_name": "finding.ts",
+      "id": "models_index"
     },
     {
       "label": "requirement.ts",
@@ -409,19 +475,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirement.ts",
-      "id": "models_requirement",
-      "community_name": "seed-requirements.ts"
-    },
-    {
-      "label": "Requirement",
-      "file_type": "code",
-      "source_file": "models/requirement.ts",
-      "source_location": "L41",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "requirement",
-      "id": "models_requirement_requirement",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement"
     },
     {
       "label": "REQUIREMENT_SOURCE_TYPES",
@@ -431,8 +486,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirement_source_types",
-      "id": "models_requirement_requirement_source_types",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement_requirement_source_types"
     },
     {
       "label": "REQUIREMENT_STATUSES",
@@ -442,8 +497,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirement_statuses",
-      "id": "models_requirement_requirement_statuses",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement_requirement_statuses"
     },
     {
       "label": "requirementSchema",
@@ -453,8 +508,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirementschema",
-      "id": "models_requirement_requirementschema",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement_requirementschema"
     },
     {
       "label": "RULE_STATUSES",
@@ -464,8 +519,30 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "rule_statuses",
-      "id": "models_requirement_rule_statuses",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "models_requirement_rule_statuses"
+    },
+    {
+      "label": "rule.ts",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "rule.ts",
+      "community_name": "finding.ts",
+      "id": "models_rule"
+    },
+    {
+      "label": "ruleSchema",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L4",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "ruleschema",
+      "community_name": "finding.ts",
+      "id": "models_rule_ruleschema"
     },
     {
       "label": "seed-requirements.ts",
@@ -475,8 +552,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seed-requirements.ts",
-      "id": "scripts_seed_requirements",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements"
     },
     {
       "label": "requirements",
@@ -486,8 +563,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requirements",
-      "id": "scripts_seed_requirements_requirements",
-      "community_name": "seed-requirements.ts"
+      "community_name": "finding.ts",
+      "id": "scripts_seed_requirements_requirements"
     },
     {
       "label": "devDependencies",
@@ -497,8 +574,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "devdependencies",
-      "id": "package_devdependencies",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies"
     },
     {
       "label": "eslint",
@@ -508,8 +585,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eslint",
-      "id": "package_devdependencies_eslint",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_eslint"
     },
     {
       "label": "eslint-config-next",
@@ -519,8 +596,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eslint-config-next",
-      "id": "package_devdependencies_eslint_config_next",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_eslint_config_next"
     },
     {
       "label": "tailwindcss",
@@ -530,8 +607,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tailwindcss",
-      "id": "package_devdependencies_tailwindcss",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_tailwindcss"
     },
     {
       "label": "@tailwindcss/postcss",
@@ -541,8 +618,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@tailwindcss/postcss",
-      "id": "package_devdependencies_tailwindcss_postcss",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_tailwindcss_postcss"
     },
     {
       "label": "tsx",
@@ -552,8 +629,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tsx",
-      "id": "package_devdependencies_tsx",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_tsx"
     },
     {
       "label": "@types/node",
@@ -563,8 +640,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/node",
-      "id": "package_devdependencies_types_node",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_types_node"
     },
     {
       "label": "@types/react",
@@ -574,8 +651,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/react",
-      "id": "package_devdependencies_types_react",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_types_react"
     },
     {
       "label": "@types/react-dom",
@@ -585,8 +662,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/react-dom",
-      "id": "package_devdependencies_types_react_dom",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_types_react_dom"
     },
     {
       "label": "typescript",
@@ -596,8 +673,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "typescript",
-      "id": "package_devdependencies_typescript",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_typescript"
     },
     {
       "label": "eslint",
@@ -607,8 +684,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eslint",
-      "id": "eslint",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "eslint"
     },
     {
       "label": "eslint-config-next",
@@ -618,8 +695,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eslint-config-next",
-      "id": "eslint_config_next",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "eslint_config_next"
     },
     {
       "label": "tailwindcss",
@@ -629,8 +706,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tailwindcss",
-      "id": "tailwindcss",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "tailwindcss"
     },
     {
       "label": "@tailwindcss/postcss",
@@ -640,8 +717,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@tailwindcss/postcss",
-      "id": "tailwindcss_postcss",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "tailwindcss_postcss"
     },
     {
       "label": "tsx",
@@ -651,8 +728,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tsx",
-      "id": "tsx",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "tsx"
     },
     {
       "label": "@types/node",
@@ -662,8 +739,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/node",
-      "id": "types_node",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "types_node"
     },
     {
       "label": "@types/react",
@@ -673,8 +750,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/react",
-      "id": "types_react",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "types_react"
     },
     {
       "label": "@types/react-dom",
@@ -684,8 +761,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "@types/react-dom",
-      "id": "types_react_dom",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "types_react_dom"
     },
     {
       "label": "typescript",
@@ -695,8 +772,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "typescript",
-      "id": "typescript",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "typescript"
     },
     {
       "label": "audit-settings.ts",
@@ -706,8 +783,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "audit-settings.ts",
-      "id": "models_audit_settings",
-      "community_name": "audit-settings.ts"
+      "community_name": "audit-settings.ts",
+      "id": "models_audit_settings"
     },
     {
       "label": "AuditSettings",
@@ -717,8 +794,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "auditsettings",
-      "id": "models_audit_settings_auditsettings",
-      "community_name": "audit-settings.ts"
+      "community_name": "audit-settings.ts",
+      "id": "models_audit_settings_auditsettings"
     },
     {
       "label": "auditSettingsSchema",
@@ -728,8 +805,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "auditsettingsschema",
-      "id": "models_audit_settings_auditsettingsschema",
-      "community_name": "audit-settings.ts"
+      "community_name": "audit-settings.ts",
+      "id": "models_audit_settings_auditsettingsschema"
     },
     {
       "label": "audit/page.tsx",
@@ -739,8 +816,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "audit/page.tsx",
-      "id": "app_audit_page",
-      "community_name": "audit/page.tsx"
+      "community_name": "audit/page.tsx",
+      "id": "app_audit_page"
     },
     {
       "label": "app/page.tsx",
@@ -750,8 +827,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "app/page.tsx",
-      "id": "app_page",
-      "community_name": "app/page.tsx"
+      "community_name": "app/page.tsx",
+      "id": "app_page"
     },
     {
       "label": "SECTIONS",
@@ -761,8 +838,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "sections",
-      "id": "app_page_sections",
-      "community_name": "app/page.tsx"
+      "community_name": "app/page.tsx",
+      "id": "app_page_sections"
     },
     {
       "label": "settings/page.tsx",
@@ -772,8 +849,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "settings/page.tsx",
-      "id": "app_settings_page",
-      "community_name": "settings/page.tsx"
+      "community_name": "settings/page.tsx",
+      "id": "app_settings_page"
     },
     {
       "label": "eslint.config.mjs",
@@ -783,8 +860,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "eslint.config.mjs",
-      "id": "eslint_config",
-      "community_name": "eslint.config.mjs"
+      "community_name": "eslint.config.mjs",
+      "id": "eslint_config"
     },
     {
       "label": "eslintConfig",
@@ -794,8 +871,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "eslintconfig",
-      "id": "eslint_config_eslintconfig",
-      "community_name": "eslint.config.mjs"
+      "community_name": "eslint.config.mjs",
+      "id": "eslint_config_eslintconfig"
     },
     {
       "label": "next.config.ts",
@@ -805,8 +882,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "next.config.ts",
-      "id": "next_config",
-      "community_name": "next.config.ts"
+      "community_name": "next.config.ts",
+      "id": "next_config"
     },
     {
       "label": "nextConfig",
@@ -816,8 +893,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "nextconfig",
-      "id": "next_config_nextconfig",
-      "community_name": "next.config.ts"
+      "community_name": "next.config.ts",
+      "id": "next_config_nextconfig"
     },
     {
       "label": "postcss.config.mjs",
@@ -827,8 +904,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "postcss.config.mjs",
-      "id": "postcss_config",
-      "community_name": "postcss.config.mjs"
+      "community_name": "postcss.config.mjs",
+      "id": "postcss_config"
     },
     {
       "label": "config",
@@ -838,8 +915,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "config",
-      "id": "postcss_config_config",
-      "community_name": "postcss.config.mjs"
+      "community_name": "postcss.config.mjs",
+      "id": "postcss_config_config"
     },
     {
       "label": "audit/index.ts",
@@ -849,8 +926,8 @@
       "_origin": "ast",
       "community": 17,
       "norm_label": "audit/index.ts",
-      "id": "lib_audit_index",
-      "community_name": "audit/index.ts"
+      "community_name": "audit/index.ts",
+      "id": "lib_audit_index"
     },
     {
       "label": "reports/index.ts",
@@ -860,8 +937,8 @@
       "_origin": "ast",
       "community": 18,
       "norm_label": "reports/index.ts",
-      "id": "lib_reports_index",
-      "community_name": "reports/index.ts"
+      "community_name": "reports/index.ts",
+      "id": "lib_reports_index"
     },
     {
       "label": "accessibility/index.ts",
@@ -871,8 +948,8 @@
       "_origin": "ast",
       "community": 19,
       "norm_label": "accessibility/index.ts",
-      "id": "lib_rules_accessibility_index",
-      "community_name": "accessibility/index.ts"
+      "community_name": "accessibility/index.ts",
+      "id": "lib_rules_accessibility_index"
     },
     {
       "label": "package.json",
@@ -882,8 +959,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "package.json",
-      "id": "package",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package"
     },
     {
       "label": "dependencies",
@@ -893,8 +970,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "dependencies",
-      "id": "package_dependencies",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_dependencies"
     },
     {
       "label": "mongoose",
@@ -904,8 +981,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "mongoose",
-      "id": "package_dependencies_mongoose",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_dependencies_mongoose"
     },
     {
       "label": "next",
@@ -915,8 +992,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "next",
-      "id": "package_dependencies_next",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_dependencies_next"
     },
     {
       "label": "react",
@@ -926,8 +1003,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "react",
-      "id": "package_dependencies_react",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_dependencies_react"
     },
     {
       "label": "react-dom",
@@ -937,8 +1014,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "react-dom",
-      "id": "package_dependencies_react_dom",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_dependencies_react_dom"
     },
     {
       "label": "name",
@@ -948,8 +1025,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "name",
-      "id": "package_name",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_name"
     },
     {
       "label": "private",
@@ -959,8 +1036,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "private",
-      "id": "package_private",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_private"
     },
     {
       "label": "scripts",
@@ -970,8 +1047,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "scripts",
-      "id": "package_scripts",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts"
     },
     {
       "label": "build",
@@ -981,8 +1058,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "build",
-      "id": "package_scripts_build",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts_build"
     },
     {
       "label": "dev",
@@ -992,8 +1069,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "dev",
-      "id": "package_scripts_dev",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts_dev"
     },
     {
       "label": "lint",
@@ -1003,8 +1080,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "lint",
-      "id": "package_scripts_lint",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts_lint"
     },
     {
       "label": "seed:requirements",
@@ -1014,8 +1091,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "seed:requirements",
-      "id": "package_scripts_seed_requirements",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts_seed_requirements"
     },
     {
       "label": "start",
@@ -1025,8 +1102,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "start",
-      "id": "package_scripts_start",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_scripts_start"
     },
     {
       "label": "version",
@@ -1036,8 +1113,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "version",
-      "id": "package_version",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "package_version"
     },
     {
       "label": "mongoose",
@@ -1047,8 +1124,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "mongoose",
-      "id": "mongoose",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "mongoose"
     },
     {
       "label": "next",
@@ -1058,8 +1135,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "next",
-      "id": "next",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "next"
     },
     {
       "label": "react",
@@ -1069,8 +1146,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "react",
-      "id": "react",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "react"
     },
     {
       "label": "react-dom",
@@ -1080,8 +1157,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "react-dom",
-      "id": "react_dom",
-      "community_name": "package.json"
+      "community_name": "package.json",
+      "id": "react_dom"
     },
     {
       "label": "bugs/index.ts",
@@ -1091,8 +1168,8 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "bugs/index.ts",
-      "id": "lib_rules_bugs_index",
-      "community_name": "bugs/index.ts"
+      "community_name": "bugs/index.ts",
+      "id": "lib_rules_bugs_index"
     },
     {
       "label": "internal/index.ts",
@@ -1102,8 +1179,8 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "internal/index.ts",
-      "id": "lib_rules_internal_index",
-      "community_name": "internal/index.ts"
+      "community_name": "internal/index.ts",
+      "id": "lib_rules_internal_index"
     },
     {
       "label": "shopify/index.ts",
@@ -1113,8 +1190,8 @@
       "_origin": "ast",
       "community": 22,
       "norm_label": "shopify/index.ts",
-      "id": "lib_rules_shopify_index",
-      "community_name": "shopify/index.ts"
+      "community_name": "shopify/index.ts",
+      "id": "lib_rules_shopify_index"
     },
     {
       "label": "technical-aeo/index.ts",
@@ -1124,8 +1201,8 @@
       "_origin": "ast",
       "community": 23,
       "norm_label": "technical-aeo/index.ts",
-      "id": "lib_rules_technical_aeo_index",
-      "community_name": "technical-aeo/index.ts"
+      "community_name": "technical-aeo/index.ts",
+      "id": "lib_rules_technical_aeo_index"
     },
     {
       "label": "technical-seo/index.ts",
@@ -1135,8 +1212,8 @@
       "_origin": "ast",
       "community": 24,
       "norm_label": "technical-seo/index.ts",
-      "id": "lib_rules_technical_seo_index",
-      "community_name": "technical-seo/index.ts"
+      "community_name": "technical-seo/index.ts",
+      "id": "lib_rules_technical_seo_index"
     },
     {
       "label": "theme-parser/index.ts",
@@ -1146,8 +1223,96 @@
       "_origin": "ast",
       "community": 25,
       "norm_label": "theme-parser/index.ts",
-      "id": "lib_theme_parser_index",
-      "community_name": "theme-parser/index.ts"
+      "community_name": "theme-parser/index.ts",
+      "id": "lib_theme_parser_index"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "readme",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "Code graph",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L50",
+      "_origin": "ast",
+      "id": "readme_code_graph",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "code graph"
+    },
+    {
+      "label": "Database",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "readme_database",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "database"
+    },
+    {
+      "label": "Folder structure",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L58",
+      "_origin": "ast",
+      "id": "readme_folder_structure",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "folder structure"
+    },
+    {
+      "label": "Requirements knowledge base",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "readme_requirements_knowledge_base",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "requirements knowledge base"
+    },
+    {
+      "label": "Setup",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "readme_setup",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "setup"
+    },
+    {
+      "label": "Shopify Theme Auditor",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "readme_shopify_theme_auditor",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "shopify theme auditor"
+    },
+    {
+      "label": "Stack",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "readme_stack",
+      "community": 26,
+      "community_name": "Shopify Theme Auditor",
+      "norm_label": "stack"
     },
     {
       "label": "compilerOptions",
@@ -1157,8 +1322,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "compileroptions",
-      "id": "tsconfig_compileroptions",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions"
     },
     {
       "label": "allowJs",
@@ -1168,8 +1333,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "allowjs",
-      "id": "tsconfig_compileroptions_allowjs",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_allowjs"
     },
     {
       "label": "esModuleInterop",
@@ -1179,8 +1344,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "esmoduleinterop",
-      "id": "tsconfig_compileroptions_esmoduleinterop",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_esmoduleinterop"
     },
     {
       "label": "incremental",
@@ -1190,8 +1355,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "incremental",
-      "id": "tsconfig_compileroptions_incremental",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_incremental"
     },
     {
       "label": "isolatedModules",
@@ -1201,8 +1366,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "isolatedmodules",
-      "id": "tsconfig_compileroptions_isolatedmodules",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_isolatedmodules"
     },
     {
       "label": "jsx",
@@ -1212,8 +1377,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "jsx",
-      "id": "tsconfig_compileroptions_jsx",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_jsx"
     },
     {
       "label": "lib",
@@ -1223,8 +1388,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "lib",
-      "id": "tsconfig_compileroptions_lib",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_lib"
     },
     {
       "label": "module",
@@ -1234,8 +1399,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "module",
-      "id": "tsconfig_compileroptions_module",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_module"
     },
     {
       "label": "moduleResolution",
@@ -1245,8 +1410,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "moduleresolution",
-      "id": "tsconfig_compileroptions_moduleresolution",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_moduleresolution"
     },
     {
       "label": "noEmit",
@@ -1256,8 +1421,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "noemit",
-      "id": "tsconfig_compileroptions_noemit",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_noemit"
     },
     {
       "label": "paths",
@@ -1267,8 +1432,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "paths",
-      "id": "tsconfig_compileroptions_paths",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_paths"
     },
     {
       "label": "plugins",
@@ -1278,8 +1443,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "plugins",
-      "id": "tsconfig_compileroptions_plugins",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_plugins"
     },
     {
       "label": "resolveJsonModule",
@@ -1289,8 +1454,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "resolvejsonmodule",
-      "id": "tsconfig_compileroptions_resolvejsonmodule",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_resolvejsonmodule"
     },
     {
       "label": "skipLibCheck",
@@ -1300,8 +1465,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "skiplibcheck",
-      "id": "tsconfig_compileroptions_skiplibcheck",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_skiplibcheck"
     },
     {
       "label": "strict",
@@ -1311,8 +1476,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "strict",
-      "id": "tsconfig_compileroptions_strict",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_strict"
     },
     {
       "label": "target",
@@ -1322,8 +1487,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "target",
-      "id": "tsconfig_compileroptions_target",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "tsconfig_compileroptions_target"
     },
     {
       "label": "dom",
@@ -1333,8 +1498,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dom",
-      "id": "ref_dom",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "ref_dom"
     },
     {
       "label": "dom.iterable",
@@ -1344,8 +1509,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dom.iterable",
-      "id": "ref_dom_iterable",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "ref_dom_iterable"
     },
     {
       "label": "esnext",
@@ -1355,8 +1520,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "esnext",
-      "id": "ref_esnext",
-      "community_name": "compilerOptions"
+      "community_name": "compilerOptions",
+      "id": "ref_esnext"
     },
     {
       "label": "findings/route.ts",
@@ -1366,8 +1531,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "findings/route.ts",
-      "id": "app_api_audit_id_findings_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_audit_id_findings_route"
     },
     {
       "label": "audit/[id]/route.ts",
@@ -1377,19 +1542,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "audit/[id]/route.ts",
-      "id": "app_api_audit_id_route",
-      "community_name": "connectToDatabase"
-    },
-    {
-      "label": "run/route.ts",
-      "file_type": "code",
-      "source_file": "app/api/audit/run/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 4,
-      "norm_label": "run/route.ts",
-      "id": "app_api_audit_run_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_audit_id_route"
     },
     {
       "label": "reports/[id]/route.ts",
@@ -1399,8 +1553,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "reports/[id]/route.ts",
-      "id": "app_api_reports_id_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_reports_id_route"
     },
     {
       "label": "reports/route.ts",
@@ -1410,8 +1564,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "reports/route.ts",
-      "id": "app_api_reports_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_reports_route"
     },
     {
       "label": "requirements/route.ts",
@@ -1421,8 +1575,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "requirements/route.ts",
-      "id": "app_api_requirements_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_requirements_route"
     },
     {
       "label": "rules/route.ts",
@@ -1432,8 +1586,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "rules/route.ts",
-      "id": "app_api_rules_route",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "app_api_rules_route"
     },
     {
       "label": "connect.ts",
@@ -1443,8 +1597,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "connect.ts",
-      "id": "lib_db_connect",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "lib_db_connect"
     },
     {
       "label": "globalForMongoose",
@@ -1454,8 +1608,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "globalformongoose",
-      "id": "lib_db_connect_globalformongoose",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "lib_db_connect_globalformongoose"
     },
     {
       "label": "AuditRun",
@@ -1465,8 +1619,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "auditrun",
-      "id": "models_audit_run_auditrun",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "models_audit_run_auditrun"
     },
     {
       "label": "Finding",
@@ -1476,19 +1630,41 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "finding",
-      "id": "models_finding_finding",
-      "community_name": "connectToDatabase"
+      "community_name": "connectToDatabase",
+      "id": "models_finding_finding"
     },
     {
-      "label": "Theme",
+      "label": "Requirement",
       "file_type": "code",
-      "source_file": "models/theme.ts",
-      "source_location": "L36",
+      "source_file": "models/requirement.ts",
+      "source_location": "L41",
       "_origin": "ast",
       "community": 4,
-      "norm_label": "theme",
-      "id": "models_theme_theme",
-      "community_name": "connectToDatabase"
+      "norm_label": "requirement",
+      "community_name": "connectToDatabase",
+      "id": "models_requirement_requirement"
+    },
+    {
+      "label": "Rule",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L25",
+      "_origin": "ast",
+      "community": 4,
+      "norm_label": "rule",
+      "community_name": "connectToDatabase",
+      "id": "models_rule_rule"
+    },
+    {
+      "label": "run/route.ts",
+      "file_type": "code",
+      "source_file": "app/api/audit/run/route.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "run/route.ts",
+      "community_name": "audit-run.ts",
+      "id": "app_api_audit_run_route"
     },
     {
       "label": "audit-run.ts",
@@ -1498,8 +1674,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "audit-run.ts",
-      "id": "models_audit_run",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run"
     },
     {
       "label": "AUDIT_RUN_STATUSES",
@@ -1509,8 +1685,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "audit_run_statuses",
-      "id": "models_audit_run_audit_run_statuses",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run_audit_run_statuses"
     },
     {
       "label": "auditRunSchema",
@@ -1520,8 +1696,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "auditrunschema",
-      "id": "models_audit_run_auditrunschema",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run_auditrunschema"
     },
     {
       "label": "auditRunSummarySchema",
@@ -1531,107 +1707,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "auditrunsummaryschema",
-      "id": "models_audit_run_auditrunsummaryschema",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "finding.ts",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "finding.ts",
-      "id": "models_finding",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "FINDING_CATEGORIES",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L3",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "finding_categories",
-      "id": "models_finding_finding_categories",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "FINDING_LAYERS",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L17",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "finding_layers",
-      "id": "models_finding_finding_layers",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "FINDING_SEVERITIES",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L12",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "finding_severities",
-      "id": "models_finding_finding_severities",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "findingSchema",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L19",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "findingschema",
-      "id": "models_finding_findingschema",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "models/index.ts",
-      "file_type": "code",
-      "source_file": "models/index.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "models/index.ts",
-      "id": "models_index",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "rule.ts",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "rule.ts",
-      "id": "models_rule",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "Rule",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L25",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "rule",
-      "id": "models_rule_rule",
-      "community_name": "finding.ts"
-    },
-    {
-      "label": "ruleSchema",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L4",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "ruleschema",
-      "id": "models_rule_ruleschema",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_audit_run_auditrunsummaryschema"
     },
     {
       "label": "theme.ts",
@@ -1641,8 +1718,19 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "theme.ts",
-      "id": "models_theme",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_theme"
+    },
+    {
+      "label": "Theme",
+      "file_type": "code",
+      "source_file": "models/theme.ts",
+      "source_location": "L36",
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "theme",
+      "community_name": "audit-run.ts",
+      "id": "models_theme_theme"
     },
     {
       "label": "themeSchema",
@@ -1652,8 +1740,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "themeschema",
-      "id": "models_theme_themeschema",
-      "community_name": "finding.ts"
+      "community_name": "audit-run.ts",
+      "id": "models_theme_themeschema"
     },
     {
       "label": "tsconfig.json",
@@ -1663,8 +1751,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "tsconfig.json",
-      "id": "tsconfig",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "tsconfig"
     },
     {
       "label": "exclude",
@@ -1674,8 +1762,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "exclude",
-      "id": "tsconfig_exclude",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "tsconfig_exclude"
     },
     {
       "label": "include",
@@ -1685,8 +1773,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "include",
-      "id": "tsconfig_include",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "tsconfig_include"
     },
     {
       "label": "**/*.mts",
@@ -1696,8 +1784,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "**/*.mts",
-      "id": "ref_mts",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_mts"
     },
     {
       "label": ".next/dev/types/**/*.ts",
@@ -1707,8 +1795,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": ".next/dev/types/**/*.ts",
-      "id": "ref_next_dev_types_ts",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_next_dev_types_ts"
     },
     {
       "label": "next-env.d.ts",
@@ -1718,8 +1806,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "next-env.d.ts",
-      "id": "ref_next_env_d_ts",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_next_env_d_ts"
     },
     {
       "label": ".next/types/**/*.ts",
@@ -1729,8 +1817,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": ".next/types/**/*.ts",
-      "id": "ref_next_types_ts",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_next_types_ts"
     },
     {
       "label": "node_modules",
@@ -1740,8 +1828,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "node_modules",
-      "id": "ref_node_modules",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_node_modules"
     },
     {
       "label": "**/*.ts",
@@ -1751,8 +1839,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "**/*.ts",
-      "id": "ref_ts",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_ts"
     },
     {
       "label": "**/*.tsx",
@@ -1762,8 +1850,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "**/*.tsx",
-      "id": "ref_tsx",
-      "community_name": "include"
+      "community_name": "include",
+      "id": "ref_tsx"
     },
     {
       "label": "layout.tsx",
@@ -1773,8 +1861,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "layout.tsx",
-      "id": "app_layout",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout"
     },
     {
       "label": "geistMono",
@@ -1784,8 +1872,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "geistmono",
-      "id": "app_layout_geistmono",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout_geistmono"
     },
     {
       "label": "geistSans",
@@ -1795,8 +1883,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "geistsans",
-      "id": "app_layout_geistsans",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout_geistsans"
     },
     {
       "label": "metadata",
@@ -1806,8 +1894,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "metadata",
-      "id": "app_layout_metadata",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout_metadata"
     },
     {
       "label": "NAV_LINKS",
@@ -1817,8 +1905,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "nav_links",
-      "id": "app_layout_nav_links",
-      "community_name": "layout.tsx"
+      "community_name": "layout.tsx",
+      "id": "app_layout_nav_links"
     },
     {
       "label": "rules/page.tsx",
@@ -1828,8 +1916,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "rules/page.tsx",
-      "id": "app_rules_page",
-      "community_name": "rules/page.tsx"
+      "community_name": "rules/page.tsx",
+      "id": "app_rules_page"
     },
     {
       "label": "RULE_STATUS_LABELS",
@@ -1839,8 +1927,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "rule_status_labels",
-      "id": "app_rules_page_rule_status_labels",
-      "community_name": "rules/page.tsx"
+      "community_name": "rules/page.tsx",
+      "id": "app_rules_page_rule_status_labels"
     },
     {
       "label": "SOURCE_TYPE_LABELS",
@@ -1850,8 +1938,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "source_type_labels",
-      "id": "app_rules_page_source_type_labels",
-      "community_name": "rules/page.tsx"
+      "community_name": "rules/page.tsx",
+      "id": "app_rules_page_source_type_labels"
     },
     {
       "label": "reports/page.tsx",
@@ -1861,8 +1949,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "reports/page.tsx",
-      "id": "app_reports_page",
-      "community_name": "reports/page.tsx"
+      "community_name": "reports/page.tsx",
+      "id": "app_reports_page"
     }
   ],
   "links": [
@@ -3818,6 +3906,83 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme",
+      "target": "readme_shopify_theme_auditor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_setup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_database",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_code_graph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_requirements_knowledge_base",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_folder_structure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "readme_shopify_theme_auditor",
+      "target": "readme_stack",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "scripts/seed-requirements.ts",
       "source_location": "L15",
       "weight": 1.0,
@@ -4107,5 +4272,6 @@
       "target": "models_finding"
     }
   ],
-  "hyperedges": []
+  "hyperedges": [],
+  "built_at_commit": "b3d8d75d7ab695573f05476d7d12d972f2287a8c"
 }

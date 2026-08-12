@@ -20,6 +20,7 @@ const findingSchema = new Schema(
   {
     auditRunId: { type: Schema.Types.ObjectId, required: true, ref: "AuditRun", index: true },
     ruleId: { type: String, required: true, index: true },
+    requirementId: { type: String, default: null, index: true },
     filePath: { type: String, required: true },
     lineNumber: { type: Number, default: null },
     category: { type: String, required: true, enum: FINDING_CATEGORIES, index: true },

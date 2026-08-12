@@ -34,6 +34,7 @@ const GOOGLE_PRODUCT_SD_URL = "https://developers.google.com/search/docs/appeara
 const GOOGLE_ORG_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/organization";
 const GOOGLE_ARTICLE_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/article";
 const GOOGLE_SD_POLICIES_URL = "https://developers.google.com/search/docs/appearance/structured-data/sd-policies";
+const SECTION_SCHEMA_URL = "https://shopify.dev/docs/storefronts/themes/architecture/sections/section-schema";
 
 const requirements: SeedRequirement[] = [
   // --- Shopify Theme Store Compliance: structure -----------------------
@@ -331,6 +332,17 @@ const requirements: SeedRequirement[] = [
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
+  },
+  {
+    requirementId: "SHOPIFY-SCHEMA-001",
+    sourceType: "shopify_theme_store",
+    category: "Bug",
+    title: "{% schema %} tags must contain only valid JSON",
+    description:
+      "Each section/block can have a single {% schema %} tag, and it must contain only valid JSON — Shopify's own Theme Check linter flags this as an error (SchemaJsonFormat). Malformed schema JSON breaks the section in the theme editor entirely.",
+    sourceName: "Shopify: Section schema",
+    sourceUrl: SECTION_SCHEMA_URL,
+    severity: "blocker",
   },
 
   // --- Accessibility best practices (not hard Theme Store requirements) ---

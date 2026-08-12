@@ -2,7 +2,7 @@
 
 Internal, single-user tool for auditing Shopify themes against Theme Store requirements, accessibility, and technical SEO/AEO. No authentication — not exposed beyond localhost.
 
-The core audit pipeline is fully deterministic — **no AI API, no embeddings, no vector search**. See `phase-0-scaffolding-updated.md` through `phase-8-testing-security-deployment-updated.md` in the repo root for the full spec (these superseded the original `phase-0-scaffolding.md` … `phase-6-polish.md` docs after a scope change). Currently: **Phase 0 — Foundation & MongoDB Scaffolding** + **Phase 1 — Shopify Requirements & Standards Knowledge Base**.
+The core audit pipeline is fully deterministic — **no AI API, no embeddings, no vector search**. See `phase-0-scaffolding-updated.md` through `phase-8-testing-security-deployment-updated.md` in the repo root for the full spec (these superseded the original `phase-0-scaffolding.md` … `phase-6-polish.md` docs after a scope change). Currently: Phases 0-2 complete, **Phase 3 — Static Rules Engine** underway — theme ZIPs are parsed, evaluated against the rule set, and findings are persisted and viewable in the app.
 
 ## Stack
 
@@ -24,11 +24,12 @@ The core audit pipeline is fully deterministic — **no AI API, no embeddings, n
    docker compose up -d
    ```
 
-3. Install dependencies, seed the requirements knowledge base, and run the dev server:
+3. Install dependencies, seed the requirements knowledge base and rule catalog, and run the dev server:
 
    ```bash
    npm install
    npm run seed:requirements
+   npm run seed:rules
    npm run dev
    ```
 
@@ -42,7 +43,7 @@ No migration framework — Mongoose models in `/models` define the schema (valid
 - `AuditRun` — one audit execution against a theme.
 - `Finding` — one issue discovered during a run, always traceable to a `ruleId` (and usually a `requirementId`).
 - `Requirement` — the structured, sourced knowledge base of what must be checked and why (Shopify Theme Store requirements, accessibility, technical SEO/AEO, best practices). Seeded via `npm run seed:requirements`, idempotent by `requirementId`.
-- `Rule` — executable rule metadata (implemented starting Phase 3). Empty for now — every requirement's `ruleStatus` is `not_implemented` until then.
+- `Rule` — executable rule metadata, seeded via `npm run seed:rules` from `lib/rules/registry.ts`. Marks the requirements it covers as `implemented`.
 - `AuditSettings` — minimal singleton for app-level config, expanded in later phases.
 
 Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mongoose hooks since MongoDB has no native `ON DELETE CASCADE`.
@@ -59,17 +60,20 @@ Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mong
 
 ```
 /app
-  /audit, /rules, /reports, /settings   — page shells (rules + reports have real data now)
+  /audit                        — upload a theme, run it, see findings inline
+  /rules                        — requirement knowledge base + rule coverage
+  /reports, /reports/[id]       — audit run history + per-run findings detail
+  /settings                     — placeholder until Phase 7
   /api/audit/run, /api/audit/[id], /api/audit/[id]/findings
   /api/rules, /api/requirements
   /api/reports, /api/reports/[id]
+  /_components/findings.tsx     — shared SummaryBar/FindingsTable used by /audit and /reports/[id]
 /lib
   /db               — Mongoose connection helper
-  /theme-parser     — Phase 2
-  /rules/{shopify,accessibility,technical-seo,technical-aeo,bugs,internal}  — Phase 3
-  /audit            — audit lifecycle orchestration, Phases 2-4
-  /reports          — Phase 5
+  /theme-parser     — Phase 2: ZIP -> ParsedFile[]
+  /rules/{shopify,accessibility,technical-seo,technical-aeo,bugs,internal}  — Phase 3 rule implementations
+  /audit            — runs the enabled rule set against a ParsedFile[] (lib/audit/runRules.ts)
 /models             — Theme, AuditRun, Finding, Requirement, Rule, AuditSettings
 /scripts
-  seed-requirements.ts
+  seed-requirements.ts, seed-rules.ts
 ```

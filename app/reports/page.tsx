@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type AuditRunRow = {
   _id: string;
@@ -45,7 +46,7 @@ export default function ReportsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Reports</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Audit run history. Findings, summaries, and exports land in Phase 5.
+          Audit run history. Open a run to see its findings and severity summary — exports land in Phase 5.
         </p>
       </div>
 
@@ -78,7 +79,9 @@ export default function ReportsPage() {
             {auditRuns.map((run) => (
               <tr key={run._id} className="border-b border-black/[.06] last:border-0 dark:border-white/[.08]">
                 <td className="px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
-                  {run.themeId?.name ?? "Unknown"}
+                  <Link href={`/reports/${run._id}`} className="underline hover:no-underline">
+                    {run.themeId?.name ?? "Unknown"}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{run.status}</td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(run.startedAt)}</td>

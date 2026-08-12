@@ -1,0 +1,16 @@
+import type { Rule } from "@/lib/audit/rules";
+import { SHOPIFY_RULES } from "./shopify";
+import { ACCESSIBILITY_RULES } from "./accessibility";
+import { TECHNICAL_SEO_RULES } from "./technical-seo";
+import { TECHNICAL_AEO_RULES } from "./technical-aeo";
+import { BUG_RULES } from "./bugs";
+
+// lib/rules/internal is intentionally empty — no internal team standards
+// have been provided to build rules from (see phase-1 seed notes).
+export const ALL_RULES: Rule[] = [
+  ...SHOPIFY_RULES,
+  ...ACCESSIBILITY_RULES,
+  ...TECHNICAL_SEO_RULES,
+  ...TECHNICAL_AEO_RULES,
+  ...BUG_RULES,
+];
