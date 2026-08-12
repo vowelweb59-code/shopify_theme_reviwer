@@ -1,0 +1,193 @@
+// Phase 4 — cross-file/theme-wide checks. Unlike lib/rules/{shopify,
+// accessibility,...}, these rules can't be answered by looking at one file in
+// isolation — they use RuleContext.index (lib/audit/themeIndex.ts), the
+// theme-wide index of what sections/snippets/assets/locale keys actually
+// exist, built once per audit run.
+//
+// None of these map to an authoritative Shopify Theme Store requirement (no
+// seeded Requirement covers "broken reference"), so they're plain `Bug`
+// findings rather than `Theme Store Compliance` — per phase-3's rule that
+// Theme Store Compliance is reserved for rules grounded in a real requirement.
+import type { Rule } from "@/lib/audit/rules";
+import { isExternalReference, localeKeyExists } from "@/lib/audit/themeIndex";
+
+const missingSectionRule: Rule = {
+  ruleId: "REF-SECTION-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "high",
+  title: "{% section %} / {% sections %} must reference an existing section or section group",
+  description:
+    "A {% section 'name' %} tag must resolve to sections/name.liquid, and a {% sections 'name' %} tag must resolve to sections/name.json (a section group) — checked against every section/section-group file actually present in the theme.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const ref of f.sectionReferences) {
+        if (ref.kind !== "section" || ref.dynamic) continue;
+        if (index.sectionsByName.has(ref.name) || index.sectionGroupsByName.has(ref.name)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "high" as const,
+          finding: `References section "${ref.name}", but no sections/${ref.name}.liquid or sections/${ref.name}.json exists in the theme.`,
+          recommendation: `Add sections/${ref.name}.liquid (or the .json section group), or fix the reference.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const missingSnippetRule: Rule = {
+  ruleId: "REF-SNIPPET-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "high",
+  title: "{% render %} / {% include %} must reference an existing snippet",
+  description:
+    "A {% render 'name' %} or {% include 'name' %} tag must resolve to snippets/name.liquid, checked against every snippet file actually present in the theme.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const ref of f.sectionReferences) {
+        if (ref.kind !== "snippet" || ref.dynamic) continue;
+        if (index.snippetsByName.has(ref.name)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "high" as const,
+          finding: `Renders snippet "${ref.name}", but no snippets/${ref.name}.liquid exists in the theme.`,
+          recommendation: `Add snippets/${ref.name}.liquid, or fix the reference.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const missingTemplateSectionRule: Rule = {
+  ruleId: "REF-TEMPLATE-SECTION-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "high",
+  title: "JSON templates must reference an existing section type",
+  description:
+    "Each entry in a JSON template's \"sections\" object declares a \"type\" — that type must resolve to sections/type.liquid.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "json" || !f.jsonInfo) continue;
+      for (const ref of f.jsonInfo.sectionReferences) {
+        if (index.sectionsByName.has(ref.name)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "high" as const,
+          finding: `Template references section type "${ref.name}", but no sections/${ref.name}.liquid exists in the theme.`,
+          recommendation: `Add sections/${ref.name}.liquid, or fix the "type" value in this template.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const missingAssetRule: Rule = {
+  ruleId: "REF-ASSET-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "medium",
+  title: "Referenced local asset must exist in assets/",
+  description:
+    "A quoted image/CSS/JS/font filename piped through asset_url (or similarly referenced) must exist in the theme's assets/ folder. External URLs are never flagged.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const ref of f.assetReferences) {
+        if (isExternalReference(ref.reference)) continue;
+        const name = ref.reference.startsWith("assets/") ? ref.reference.slice("assets/".length) : ref.reference;
+        if (index.assetBasenames.has(name)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "medium" as const,
+          finding: `References local asset "${ref.reference}", but no matching file exists in assets/.`,
+          recommendation: `Add assets/${name}, or fix the reference.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const missingTranslationKeyRule: Rule = {
+  ruleId: "REF-LOCALE-KEY-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "medium",
+  title: "Translation key must exist in the default locale file",
+  description:
+    "A key referenced via the `t`/`translate` filter (or direct `locale.x.y` access) must resolve to a value or pluralization group in the storefront's default locale file (locales/xx.default.json).",
+  // Only runs when a default locale file was found at all — a theme with a
+  // non-standard locale layout gets no findings from this rule rather than a
+  // pile of false positives (phase-4 §16: unresolved, not reported as errors).
+  check({ files, index }) {
+    if (index.defaultLocaleTrees.length === 0) return [];
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      const seenOnLine = new Set<string>();
+      for (const ref of f.localeReferences) {
+        const dedupeKey = `${ref.line}:${ref.key}`;
+        if (seenOnLine.has(dedupeKey)) continue;
+        seenOnLine.add(dedupeKey);
+        if (localeKeyExists(index, ref.key)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "medium" as const,
+          finding: `Translation key "${ref.key}" was not found in the default locale file.`,
+          recommendation: `Add "${ref.key}" to locales/<default>.default.json, or fix the key.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const duplicateLocaleKeyRule: Rule = {
+  ruleId: "REF-LOCALE-KEY-DUPLICATE-001",
+  category: "Bug",
+  defaultSeverity: "low",
+  title: "Locale files must not contain duplicate keys",
+  description: "A JSON object with a repeated key silently keeps only the last value, hiding the discarded translation.",
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "json" || !f.jsonInfo) continue;
+      for (const dup of f.jsonInfo.duplicateLocaleKeys) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: dup.line,
+          category: "Bug" as const,
+          severity: "low" as const,
+          finding: `Locale key "${dup.key}" is defined more than once in this file — only the last definition takes effect.`,
+          recommendation: `Remove the duplicate "${dup.key}" entry.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+export const CROSS_FILE_RULES: Rule[] = [
+  missingSectionRule,
+  missingSnippetRule,
+  missingTemplateSectionRule,
+  missingAssetRule,
+  missingTranslationKeyRule,
+  duplicateLocaleKeyRule,
+];

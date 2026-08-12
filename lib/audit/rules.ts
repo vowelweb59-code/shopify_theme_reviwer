@@ -1,15 +1,17 @@
 import type { ParsedFile } from "@/lib/theme-parser";
 import type { FINDING_CATEGORIES, FINDING_SEVERITIES } from "@/models/finding";
+import type { ThemeIndex } from "./themeIndex";
 
 export type FindingCategory = (typeof FINDING_CATEGORIES)[number];
 export type Severity = (typeof FINDING_SEVERITIES)[number];
 
 // Every rule receives every parsed file, not just "the current file" — most
-// checks are per-file, but a few (e.g. "does an Organization schema exist
-// anywhere in the theme?") are inherently theme-wide and don't need Phase 4's
-// cross-file dependency graph to answer.
+// Phase 3 checks are per-file and only destructure `files`. Phase 4 cross-file
+// rules (section/snippet/asset/locale resolution) additionally use `index`,
+// the theme-wide index built once per run (see themeIndex.ts, runRules.ts).
 export type RuleContext = {
   files: ParsedFile[];
+  index: ThemeIndex;
 };
 
 export type RuleFinding = {

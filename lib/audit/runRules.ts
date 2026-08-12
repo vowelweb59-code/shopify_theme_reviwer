@@ -1,6 +1,7 @@
 import type { ParsedFile } from "@/lib/theme-parser";
 import { ALL_RULES } from "@/lib/rules/registry";
 import type { FindingCategory, Rule, RuleFinding, Severity } from "./rules";
+import { buildThemeIndex } from "./themeIndex";
 
 export type ExecutedFinding = RuleFinding & {
   ruleId: string;
@@ -33,12 +34,13 @@ const EMPTY_SUMMARY = (): RunRulesSummary => ({ total: 0, blocker: 0, high: 0, m
 
 /** Runs every rule against every parsed file. A failing rule is recorded and skipped — it never aborts the rest of the audit. */
 export function runRules(files: ParsedFile[], rules: Rule[] = ALL_RULES): RunRulesResult {
+  const index = buildThemeIndex(files);
   const findingsByKey = new Map<string, ExecutedFinding>();
   const ruleErrors: { ruleId: string; error: string }[] = [];
 
   for (const rule of rules) {
     try {
-      const results = rule.check({ files });
+      const results = rule.check({ files, index });
       for (const r of results) {
         const finding: ExecutedFinding = {
           ...r,

@@ -199,12 +199,12 @@ export function extractLiquidStructure(rawText: string): LiquidStructure {
     settingReferences.push({ line: toLine(match.index ?? 0), key: match[1] });
   }
 
-  // --- locale keys referenced outside of a `| t` filter (rare, but some
-  // themes read locale.xxx directly) ------------------------------------
-  const LOCALE_DIRECT_RE = /\blocale\.([a-zA-Z0-9_.]+)/g;
-  for (const match of withoutSchema.matchAll(LOCALE_DIRECT_RE)) {
-    localeReferences.push({ line: toLine(match.index ?? 0), key: match[1] });
-  }
+  // Translation keys are only ever resolved through the `t`/`translate`
+  // filter — Shopify has no generic dot-path accessor into locale JSON, so
+  // `localeReferences` must not include bare `locale.xxx`/`request.locale.xxx`
+  // access: that's always the built-in locale/language Drop (iso_code, name,
+  // endonym_name, primary), never a translation lookup, and treating it as
+  // one produced false "missing translation key" findings.
   for (const ref of translationReferences) {
     localeReferences.push({ line: ref.line, key: ref.key });
   }

@@ -222,7 +222,7 @@ export type ParsedJsonFileInfo = {
   sectionReferences: ParsedSectionReference[];
   settingKeys: string[];
   localeKeys: string[];
-  duplicateLocaleKeys: string[];
+  duplicateLocaleKeys: { key: string; line: number }[];
 };
 
 export type ParsedFile = {

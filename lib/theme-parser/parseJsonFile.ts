@@ -1,4 +1,5 @@
 import { buildLineIndex } from "./lineIndex";
+import { findDuplicateJsonKeys } from "./duplicateJsonKeys";
 import type { ParsedJsonFileInfo, ParsedSectionReference } from "./types";
 
 function isTemplateJsonPath(path: string): boolean {
@@ -97,12 +98,11 @@ export function parseJsonFile(path: string, rawText: string): ParsedJsonFileInfo
   if (isLocaleFilePath(path)) {
     const keys: string[] = [];
     flattenLocaleKeys(json, "", keys);
-    const seen = new Set<string>();
-    for (const key of keys) {
-      if (seen.has(key)) info.duplicateLocaleKeys.push(key);
-      seen.add(key);
-    }
     info.localeKeys = keys;
+    // JSON.parse silently collapses duplicate keys (last write wins) before
+    // there's a parsed value left to inspect, so detecting them requires
+    // scanning the raw text instead of the already-deduplicated `json`.
+    info.duplicateLocaleKeys = findDuplicateJsonKeys(rawText).map((d) => ({ key: d.path, line: d.line }));
   }
 
   return info;
