@@ -100,8 +100,8 @@
     "semantic_hash": "c8e284522396c0d6be170cb00a23a58f"
   },
   "lib/rules/shopify/index.ts": {
-    "mtime": 1786526923.1153822,
-    "ast_hash": "41363ed4b321afbe5e3222a8ce27c47b",
+    "mtime": 1786534470.0057752,
+    "ast_hash": "0d1dd592301d7c59a28930a658f93fd5",
     "semantic_hash": ""
   },
   "lib/rules/technical-aeo/index.ts": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/parseJsonFile.ts": {
-    "mtime": 1786531483.006907,
-    "ast_hash": "2f5012ecb0c2d4df64b3f41d9c99a1a0",
+    "mtime": 1786534488.0338717,
+    "ast_hash": "5ed30ea5243ce8ca8e33f1e78c0fc0b4",
     "semantic_hash": ""
   },
   "lib/theme-parser/types.ts": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786532124.801941,
-    "ast_hash": "ac32be2c29c46fe0fe90ebe8979b150e",
+    "mtime": 1786534529.6770897,
+    "ast_hash": "8b52e9142f2acf6c570e78dca2b75a58",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {
@@ -402,6 +402,16 @@
   "lib/audit/diagnostics.ts": {
     "mtime": 1786532509.3962364,
     "ast_hash": "6c9d42afba4e3761d085b748e6cda2e5",
+    "semantic_hash": ""
+  },
+  "lib/rules/shopify/features.ts": {
+    "mtime": 1786534303.0127459,
+    "ast_hash": "ce1a62ea5939ee3b07995c7dff7fdf39",
+    "semantic_hash": ""
+  },
+  "lib/rules/shopify/settings.ts": {
+    "mtime": 1786534456.0238042,
+    "ast_hash": "3c9da403a5dffff341ad1866d5fc02b5",
     "semantic_hash": ""
   }
 }
