@@ -6,7 +6,15 @@ export type SourceLocation = {
   column?: number;
 };
 
-export type FileType = "liquid" | "json" | "css" | "js";
+// "asset" covers images/fonts/anything else under assets/ that isn't one
+// of the parseable types — never structurally parsed (no Liquid/CSS/JS
+// content to extract), but still discovered so ThemeIndex.assetBasenames
+// can see it. Without this, every reference to a real image/font/svg
+// asset was structurally guaranteed to be reported as missing regardless
+// of whether it existed — found auditing Shopify's own Dawn theme, where
+// it produced 241 false "missing asset" findings for icons that were
+// right there in assets/.
+export type FileType = "liquid" | "json" | "css" | "js" | "asset";
 
 export type ParsedImage = {
   line: number;
@@ -213,10 +221,13 @@ export type ParsedSettingReference = {
   key: string;
   // `settings.x` (global theme settings, config/settings_schema.json),
   // `section.settings.x` (the current section's own {% schema %} settings),
-  // or `block.settings.x` (the current block's own schema settings) — these
-  // are three different declaration sources and must not be validated
-  // against each other.
-  scope: "global" | "section" | "block";
+  // `block.settings.x` (the current block's own schema settings), or
+  // `other.settings.x` for any other preceding identifier (e.g.
+  // `scheme.settings.x` inside `{% for scheme in settings.color_schemes %}`
+  // — a real, common OS 2.0 pattern found auditing Shopify's own Dawn
+  // theme). "other" is deliberately never validated against anything: we
+  // don't know what object it is, so guessing would be a false positive.
+  scope: "global" | "section" | "block" | "other";
 };
 
 export type ParsedFileReference = {

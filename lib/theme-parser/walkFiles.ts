@@ -31,14 +31,21 @@ export function walkThemeFiles(themeRoot: string): { files: DiscoveredFile[]; sk
       }
       if (!entry.isFile()) continue;
 
+      const relativePath = path.relative(themeRoot, absolutePath).split(path.sep).join("/");
       const ext = path.extname(entry.name).toLowerCase();
-      const fileType = EXTENSION_TO_TYPE[ext];
+      let fileType = EXTENSION_TO_TYPE[ext];
       if (!fileType) {
-        skippedCount++;
-        continue;
+        // Images/fonts/anything else under assets/ still need to be
+        // discoverable for asset-existence checks, even though there's no
+        // structural content to parse from them.
+        if (relativePath.startsWith("assets/")) {
+          fileType = "asset";
+        } else {
+          skippedCount++;
+          continue;
+        }
       }
 
-      const relativePath = path.relative(themeRoot, absolutePath).split(path.sep).join("/");
       files.push({ absolutePath, relativePath, fileType });
     }
   }

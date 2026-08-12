@@ -12,6 +12,19 @@ function hasJsonLdType(files: { jsonLdBlocks: { types: string[] }[] }[], type: s
   return files.some((f) => f.jsonLdBlocks.some((b) => b.types.includes(type)));
 }
 
+// Shopify's `| structured_data` filter generates the entire JSON-LD
+// <script> block server-side from a Liquid object (e.g.
+// `{{ product | structured_data }}`) — the theme's source never contains
+// literal JSON-LD markup for it at all, so hasJsonLdType (which scans
+// parsed <script type="application/ld+json"> blocks) can never see it.
+// Found auditing Shopify's own Dawn theme: main-product.liquid and
+// main-article.liquid both use this filter and were false-flagged as
+// missing Product/Article JSON-LD before this check existed.
+function hasStructuredDataFilter(files: { rawText: string }[], objectName: string): boolean {
+  const re = new RegExp(`\\b${objectName}\\s*\\|\\s*structured_data\\b`);
+  return files.some((f) => re.test(f.rawText));
+}
+
 const productSchemaRule: Rule = {
   ruleId: "AEO-PRODUCT-SCHEMA-001",
   requirementId: "TECH-AEO-PRODUCT-001",
@@ -25,7 +38,7 @@ const productSchemaRule: Rule = {
   // theme with none genuinely has nothing to check here.
   check({ files }) {
     const hasProductFiles = files.some((f) => /product/i.test(f.path));
-    if (!hasProductFiles || hasJsonLdType(files, "Product")) return [];
+    if (!hasProductFiles || hasJsonLdType(files, "Product") || hasStructuredDataFilter(files, "product")) return [];
     return [
       {
         filePath: anchorPath(files),
@@ -72,7 +85,7 @@ const articleSchemaRule: Rule = {
   sourceUrl: GOOGLE_ARTICLE_SD_URL,
   check({ files }) {
     const hasArticleFiles = files.some((f) => /article|blog/i.test(f.path));
-    if (!hasArticleFiles || hasJsonLdType(files, "Article")) return [];
+    if (!hasArticleFiles || hasJsonLdType(files, "Article") || hasStructuredDataFilter(files, "article")) return [];
     return [
       {
         filePath: anchorPath(files),

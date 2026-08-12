@@ -226,6 +226,15 @@ function selectorParts(selector: string): string[] {
   return selector.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+// postcss's rule.selector preserves the source's original line breaks for
+// a multi-line compound selector (one per comma-separated part, as many
+// real stylesheets format them) — fine for matching, but dumped raw into a
+// finding message it reads as a garbled multi-line blob. Collapse to one
+// line for display only (found auditing Shopify's own Dawn theme).
+function formatSelectorForDisplay(selector: string): string {
+  return selector.replace(/\s+/g, " ").trim();
+}
+
 const outlineRemovalRule: Rule = {
   ruleId: "A11Y-OUTLINE-REMOVAL-001",
   requirementId: "A11Y-BP-008",
@@ -259,13 +268,14 @@ const outlineRemovalRule: Rule = {
         const removalBases = selectorParts(removal.selector).map(stripFocusPseudo);
         const hasReplacement = removalBases.some((base) => focusBases.has(base));
         if (hasReplacement) continue;
+        const displaySelector = formatSelectorForDisplay(removal.selector);
         findings.push({
           filePath: f.path,
           lineNumber: removal.line,
           category: "Accessibility" as const,
           severity: "medium" as const,
-          finding: `Selector "${removal.selector}" removes the outline with no corresponding :focus/:focus-visible rule found in this file.`,
-          recommendation: `Add a :focus or :focus-visible style for "${removal.selector}" so keyboard users still see where focus is.`,
+          finding: `Selector "${displaySelector}" removes the outline with no corresponding :focus/:focus-visible rule found in this file.`,
+          recommendation: `Add a :focus or :focus-visible style for "${displaySelector}" so keyboard users still see where focus is.`,
         });
       }
     }

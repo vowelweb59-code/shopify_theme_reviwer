@@ -442,10 +442,20 @@ function countJsonLdType(files: { jsonLdBlocks: { types: string[] }[] }[], type:
   return files.reduce((sum, f) => sum + f.jsonLdBlocks.filter((b) => b.types.includes(type)).length, 0);
 }
 
+// Shopify's `| structured_data` filter (e.g. `{{ product | structured_data }}`,
+// used by Dawn's own main-product.liquid/main-article.liquid) generates the
+// entire JSON-LD <script> server-side — literal-markup counting above can
+// never see it, so it's counted separately here and added in.
+function countStructuredDataFilterUsage(files: { rawText: string }[], objectName: string): number {
+  const re = new RegExp(`\\b${objectName}\\s*\\|\\s*structured_data\\b`, "g");
+  return files.reduce((sum, f) => sum + (f.rawText.match(re)?.length ?? 0), 0);
+}
+
 function composedSchemaRule(config: {
   ruleId: string;
   requirementId: string;
   jsonLdType: string;
+  objectName: string;
   templateBase: string;
   title: string;
   sourceUrl: string;
@@ -461,12 +471,14 @@ function composedSchemaRule(config: {
     sourceUrl: config.sourceUrl,
     check({ files, index }) {
       const findings = [];
-      if (countJsonLdType(files, config.jsonLdType) === 0) return [];
+      const themeWideCount = countJsonLdType(files, config.jsonLdType) + countStructuredDataFilterUsage(files, config.objectName);
+      if (themeWideCount === 0) return [];
 
       for (const f of files) {
         if (f.fileType !== "json" || !f.path.startsWith("templates/") || templateBaseName(f.path) !== config.templateBase) continue;
         const composed = composeTemplate(f, index);
-        const composedCount = countJsonLdType(composed.files, config.jsonLdType);
+        const composedCount =
+          countJsonLdType(composed.files, config.jsonLdType) + countStructuredDataFilterUsage(composed.files, config.objectName);
 
         if (composedCount === 0) {
           findings.push({
@@ -495,6 +507,7 @@ const composedProductSchemaRule = composedSchemaRule({
   ruleId: "AEO-PRODUCT-SCHEMA-COMPOSED-001",
   requirementId: "TECH-AEO-PRODUCT-001",
   jsonLdType: "Product",
+  objectName: "product",
   templateBase: "product",
   title: "Product JSON-LD should be reachable from the product template, not just present in the theme",
   sourceUrl: GOOGLE_PRODUCT_SD_URL,
@@ -504,6 +517,7 @@ const composedArticleSchemaRule = composedSchemaRule({
   ruleId: "AEO-ARTICLE-SCHEMA-COMPOSED-001",
   requirementId: "TECH-AEO-ARTICLE-001",
   jsonLdType: "Article",
+  objectName: "article",
   templateBase: "article",
   title: "Article JSON-LD should be reachable from the article template, not just present in the theme",
   sourceUrl: GOOGLE_ARTICLE_SD_URL,

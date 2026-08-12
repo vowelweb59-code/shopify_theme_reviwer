@@ -50,12 +50,26 @@ const TAG_RE = /\{%-?\s*(\w+)([\s\S]*?)-?%\}/g;
 const OBJECT_CHAIN_RE = /\b([a-zA-Z_][a-zA-Z0-9_]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g;
 const FILTER_RE = /\|\s*([a-zA-Z_][a-zA-Z0-9_]*)/g;
 const TRANSLATION_RE = /(['"])((?:(?!\1)[^\r\n])*)\1\s*\|\s*(t|translate)\b/g;
-const ASSET_URL_RE = /(['"])((?:(?!\1)[^\r\n])*?\.(png|jpe?g|gif|svg|webp|css|js|woff2?|ttf|eot))\1/gi;
-// Captures an optional "section."/"block." prefix so callers can tell a
-// global theme setting apart from a section- or block-scoped one — they're
-// declared in entirely different places (config/settings_schema.json vs.
-// that section's own {% schema %}) and must be validated separately.
-const SETTINGS_REF_RE = /\b(?:(section|block)\.)?settings\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
+// Requires: (1) a non-empty filename stem before the extension — `+?` not
+// `*?` — or a bare filter-argument fragment like '.svg' (e.g. from
+// `| append: '.svg'` building a dynamic filename) matches trivially since
+// zero characters plus the extension still satisfies "ends in .svg". (2)
+// immediately followed by | asset_url or | inline_asset_content — the two
+// filters that resolve against the theme's OWN assets/ folder.
+// shopify_asset_url resolves against Shopify's platform-wide asset
+// library instead (used for things like the gift card QR code image) and
+// must never be checked against this theme's assets/. Both bugs found
+// auditing Shopify's own Dawn theme, where the old regex flagged a
+// dynamically-built '.svg' fragment and multiple shopify_asset_url
+// references as "missing" local assets.
+const ASSET_URL_RE = /(['"])((?:(?!\1)[^\r\n])+?\.(png|jpe?g|gif|svg|webp|css|js|woff2?|ttf|eot))\1\s*\|\s*(?:asset_url|inline_asset_content)\b/gi;
+// Captures ANY identifier immediately preceding "settings." — not just
+// "section."/"block." — because plenty of other Liquid variables expose
+// their own .settings, e.g. `scheme.settings.background` inside
+// `{% for scheme in settings.color_schemes %}`, a standard OS 2.0 pattern
+// (found auditing Shopify's own Dawn theme: a narrower regex here
+// misread every one of those as a bare global settings.x reference).
+const SETTINGS_REF_RE = /\b(?:([a-zA-Z_][a-zA-Z0-9_]*)\.)?settings\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
 const NOT_LIQUID_WORD_CHARS = /^[a-zA-Z][a-zA-Z0-9 ,.'!?&:;()-]*$/;
 
 /** Blanks a matched span to spaces while preserving every `\n` at its original position, so line numbers computed from character offsets into the blanked string never drift for content after a multi-line match. */
@@ -200,8 +214,9 @@ export function extractLiquidStructure(rawText: string): LiquidStructure {
 
   // --- settings.* references -------------------------------------------------
   for (const match of withoutSchema.matchAll(SETTINGS_REF_RE)) {
+    const prefix = match[1];
     const scope: ParsedSettingReference["scope"] =
-      match[1] === "section" ? "section" : match[1] === "block" ? "block" : "global";
+      prefix === undefined ? "global" : prefix === "section" ? "section" : prefix === "block" ? "block" : "other";
     settingReferences.push({ line: toLine(match.index ?? 0), key: match[2], scope });
   }
 

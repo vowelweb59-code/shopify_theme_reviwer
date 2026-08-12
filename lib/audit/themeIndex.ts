@@ -28,6 +28,13 @@ export type ThemeIndex = {
   // it's a leaf string or a group object (Shopify pluralization keys like
   // `cart.item_count.one` / `.other` are groups, not leaves).
   defaultLocaleTrees: unknown[];
+  // Raw JSON trees for the *schema* locale file(s) (locales/xx.default.
+  // schema.json) — a separate file from the storefront one above. This is
+  // what "t:sections.foo.name"-style schema translation keys (section/
+  // setting names, labels, defaults) resolve against; resolving them
+  // against defaultLocaleTrees instead would never find anything, since
+  // storefront and schema strings live in entirely different files.
+  defaultSchemaLocaleTrees: unknown[];
 };
 
 function basenameNoExt(path: string): string {
@@ -53,6 +60,7 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
   const labelForTargets = new Set<string>();
   const globalSettingIds = new Set<string>();
   const defaultLocaleTrees: unknown[] = [];
+  const defaultSchemaLocaleTrees: unknown[] = [];
 
   for (const f of files) {
     if (f.path.startsWith("sections/") && f.fileType === "liquid") {
@@ -63,6 +71,8 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
       snippetsByName.set(basenameNoExt(f.path), f);
     } else if (f.path.startsWith("assets/")) {
       assetBasenames.add(f.path.slice("assets/".length));
+    } else if (f.path.startsWith("locales/") && /\.default\.schema\.json$/i.test(f.path) && f.jsonInfo?.json) {
+      defaultSchemaLocaleTrees.push(f.jsonInfo.json);
     } else if (f.path.startsWith("locales/") && /\.default\.json$/i.test(f.path) && f.jsonInfo?.json) {
       defaultLocaleTrees.push(f.jsonInfo.json);
     } else if (f.path.endsWith("config/settings_schema.json") && f.jsonInfo) {
@@ -83,6 +93,7 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
     labelForTargets,
     globalSettingIds,
     defaultLocaleTrees,
+    defaultSchemaLocaleTrees,
   };
 }
 
@@ -99,4 +110,23 @@ function getPath(obj: unknown, parts: string[]): unknown {
 export function localeKeyExists(index: ThemeIndex, key: string): boolean {
   const parts = key.split(".");
   return index.defaultLocaleTrees.some((tree) => getPath(tree, parts) !== undefined);
+}
+
+/**
+ * Resolves a schema string value that may be a `t:`-prefixed translation
+ * key (e.g. `"name": "t:sections.collage.name"`) against the schema locale
+ * file. Returns the literal string unchanged if it isn't a `t:` reference,
+ * the resolved string if it is and the key resolves to a string leaf, or
+ * undefined if it's a `t:` reference that couldn't be resolved (missing
+ * key, or resolves to a non-string) — never the raw "t:..." key itself,
+ * which would be meaningless to compare as if it were display text.
+ */
+export function resolveSchemaString(index: ThemeIndex, value: string): string | undefined {
+  if (!value.startsWith("t:")) return value;
+  const parts = value.slice(2).split(".");
+  for (const tree of index.defaultSchemaLocaleTrees) {
+    const resolved = getPath(tree, parts);
+    if (typeof resolved === "string") return resolved;
+  }
+  return undefined;
 }

@@ -64,10 +64,18 @@ export function parseThemeDirectory(themeRoot: string): ThemeParseResult {
 
   const files: ParsedFile[] = [];
   const fileErrors: { path: string; error: string }[] = [];
-  const fileStats: Record<FileType, number> = { liquid: 0, json: 0, css: 0, js: 0 };
+  const fileStats: Record<FileType, number> = { liquid: 0, json: 0, css: 0, js: 0, asset: 0 };
 
   for (const { absolutePath, relativePath, fileType } of discovered) {
     try {
+      // "asset" files (images, fonts, ...) are only tracked for
+      // existence — no structural content to extract, and reading a
+      // binary file as utf-8 text would just be wasted I/O.
+      if (fileType === "asset") {
+        files.push(emptyParsedFile(relativePath, fileType, ""));
+        fileStats[fileType]++;
+        continue;
+      }
       const rawText = fs.readFileSync(absolutePath, "utf-8");
       const parsedFile = parseOneFile(relativePath, fileType, rawText);
       files.push(parsedFile);
