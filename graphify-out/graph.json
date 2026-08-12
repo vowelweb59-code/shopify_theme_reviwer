@@ -388,10 +388,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_composedheading",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "composedheading"
+      "norm_label": "composedheading",
+      "id": "lib_audit_headingchecks_composedheading"
     },
     {
       "label": "ComposedHeadingIssue",
@@ -401,10 +401,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_composedheadingissue",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "composedheadingissue"
+      "norm_label": "composedheadingissue",
+      "id": "lib_audit_headingchecks_composedheadingissue"
     },
     {
       "label": "HeadingIssue",
@@ -414,10 +414,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_headingissue",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "headingissue"
+      "norm_label": "headingissue",
+      "id": "lib_audit_headingchecks_headingissue"
     },
     {
       "label": "ComposedTemplate",
@@ -427,10 +427,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition_composedtemplate",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "composedtemplate"
+      "norm_label": "composedtemplate",
+      "id": "lib_audit_templatecomposition_composedtemplate"
     },
     {
       "label": "ThemeIndex",
@@ -1139,18 +1139,6 @@
       "id": "lib_db_connect_connecttodatabase"
     },
     {
-      "label": "parseThemeZip()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/index.ts",
-      "source_location": "L51",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "parsethemezip()",
-      "id": "lib_theme_parser_index_parsethemezip"
-    },
-    {
       "label": "cascadeDeleteFindings()",
       "file_type": "code",
       "source_file": "models/audit-run.ts",
@@ -1661,10 +1649,10 @@
       "source_location": "L20",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_findmultipleh1",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "findmultipleh1()"
+      "norm_label": "findmultipleh1()",
+      "id": "lib_audit_headingchecks_findmultipleh1"
     },
     {
       "label": "findMultipleH1Across()",
@@ -1673,10 +1661,10 @@
       "source_location": "L57",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_findmultipleh1across",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "findmultipleh1across()"
+      "norm_label": "findmultipleh1across()",
+      "id": "lib_audit_headingchecks_findmultipleh1across"
     },
     {
       "label": "findSkippedHeadingLevels()",
@@ -1685,10 +1673,10 @@
       "source_location": "L8",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_findskippedheadinglevels",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "findskippedheadinglevels()"
+      "norm_label": "findskippedheadinglevels()",
+      "id": "lib_audit_headingchecks_findskippedheadinglevels"
     },
     {
       "label": "findSkippedHeadingLevelsAcross()",
@@ -1697,10 +1685,10 @@
       "source_location": "L35",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_headingchecks_findskippedheadinglevelsacross",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "findskippedheadinglevelsacross()"
+      "norm_label": "findskippedheadinglevelsacross()",
+      "id": "lib_audit_headingchecks_findskippedheadinglevelsacross"
     },
     {
       "label": "collectRenderedSnippets()",
@@ -1709,10 +1697,10 @@
       "source_location": "L31",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition_collectrenderedsnippets",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "collectrenderedsnippets()"
+      "norm_label": "collectrenderedsnippets()",
+      "id": "lib_audit_templatecomposition_collectrenderedsnippets"
     },
     {
       "label": "composeTemplate()",
@@ -1721,10 +1709,10 @@
       "source_location": "L51",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition_composetemplate",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "composetemplate()"
+      "norm_label": "composetemplate()",
+      "id": "lib_audit_templatecomposition_composetemplate"
     },
     {
       "label": "orderedSectionTypes()",
@@ -1733,10 +1721,10 @@
       "source_location": "L11",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition_orderedsectiontypes",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "orderedsectiontypes()"
+      "norm_label": "orderedsectiontypes()",
+      "id": "lib_audit_templatecomposition_orderedsectiontypes"
     },
     {
       "label": "templateBaseName()",
@@ -1745,10 +1733,10 @@
       "source_location": "L67",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition_templatebasename",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "templatebasename()"
+      "norm_label": "templatebasename()",
+      "id": "lib_audit_templatecomposition_templatebasename"
     },
     {
       "label": "composedHeadingEntries()",
@@ -1763,28 +1751,28 @@
       "norm_label": "composedheadingentries()"
     },
     {
-      "label": "extractHtmlStructure()",
+      "label": "composedSchemaRule()",
       "file_type": "code",
-      "source_file": "lib/theme-parser/extractHtmlStructure.ts",
-      "source_location": "L75",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L411",
       "_callable": true,
       "_origin": "ast",
-      "community": 4,
-      "community_name": "types.ts",
-      "norm_label": "extracthtmlstructure()",
-      "id": "lib_theme_parser_extracthtmlstructure_extracthtmlstructure"
+      "id": "lib_rules_cross_file_index_composedschemarule",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "composedschemarule()"
     },
     {
-      "label": "isLiquidExpression()",
+      "label": "countJsonLdType()",
       "file_type": "code",
-      "source_file": "lib/theme-parser/extractHtmlStructure.ts",
-      "source_location": "L62",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L407",
       "_callable": true,
       "_origin": "ast",
-      "community": 4,
-      "community_name": "types.ts",
-      "norm_label": "isliquidexpression()",
-      "id": "lib_theme_parser_extracthtmlstructure_isliquidexpression"
+      "id": "lib_rules_cross_file_index_countjsonldtype",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "countjsonldtype()"
     },
     {
       "label": "stripLiquidSyntax()",
@@ -1871,18 +1859,6 @@
       "id": "lib_theme_parser_extractliquidstructure_quotedarg"
     },
     {
-      "label": "parseOneFile()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/index.ts",
-      "source_location": "L22",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "types.ts",
-      "norm_label": "parseonefile()",
-      "id": "lib_theme_parser_index_parseonefile"
-    },
-    {
       "label": "neutralizeConditionals()",
       "file_type": "code",
       "source_file": "lib/theme-parser/liquidJson.ts",
@@ -1919,30 +1895,6 @@
       "id": "lib_theme_parser_liquidjson_tryparseliquidjson"
     },
     {
-      "label": "emptyMetaTags()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/types.ts",
-      "source_location": "L290",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "types.ts",
-      "norm_label": "emptymetatags()",
-      "id": "lib_theme_parser_types_emptymetatags"
-    },
-    {
-      "label": "emptyParsedFile()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/types.ts",
-      "source_location": "L294",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "types.ts",
-      "norm_label": "emptyparsedfile()",
-      "id": "lib_theme_parser_types_emptyparsedfile"
-    },
-    {
       "label": "looksLikeColorValue()",
       "file_type": "code",
       "source_file": "lib/theme-parser/cssColorNames.ts",
@@ -1967,6 +1919,42 @@
       "id": "lib_theme_parser_extractcssstructure_extractcssstructure"
     },
     {
+      "label": "extractHtmlStructure()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractHtmlStructure.ts",
+      "source_location": "L75",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "extracthtmlstructure()",
+      "id": "lib_theme_parser_extracthtmlstructure_extracthtmlstructure"
+    },
+    {
+      "label": "isLiquidExpression()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractHtmlStructure.ts",
+      "source_location": "L62",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "isliquidexpression()",
+      "id": "lib_theme_parser_extracthtmlstructure_isliquidexpression"
+    },
+    {
+      "label": "parseOneFile()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/index.ts",
+      "source_location": "L22",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "parseonefile()",
+      "id": "lib_theme_parser_index_parseonefile"
+    },
+    {
       "label": "parseThemeDirectory()",
       "file_type": "code",
       "source_file": "lib/theme-parser/index.ts",
@@ -1977,6 +1965,42 @@
       "community_name": "theme-parser/index.ts",
       "norm_label": "parsethemedirectory()",
       "id": "lib_theme_parser_index_parsethemedirectory"
+    },
+    {
+      "label": "parseThemeZip()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/index.ts",
+      "source_location": "L51",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "parsethemezip()",
+      "id": "lib_theme_parser_index_parsethemezip"
+    },
+    {
+      "label": "emptyMetaTags()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/types.ts",
+      "source_location": "L290",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "emptymetatags()",
+      "id": "lib_theme_parser_types_emptymetatags"
+    },
+    {
+      "label": "emptyParsedFile()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/types.ts",
+      "source_location": "L294",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "emptyparsedfile()",
+      "id": "lib_theme_parser_types_emptyparsedfile"
     },
     {
       "label": "countThemeDirectories()",
@@ -3265,6 +3289,17 @@
       "id": "lib_rules_accessibility_index"
     },
     {
+      "label": "ACCESSIBILITY_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/accessibility/index.ts",
+      "source_location": "L276",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "accessibility/index.ts",
+      "norm_label": "accessibility_rules",
+      "id": "lib_rules_accessibility_index_accessibility_rules"
+    },
+    {
       "label": "BG_LIKE_PROPS",
       "file_type": "code",
       "source_file": "lib/rules/accessibility/index.ts",
@@ -3672,17 +3707,6 @@
       "id": "lib_audit_rules"
     },
     {
-      "label": "ACCESSIBILITY_RULES",
-      "file_type": "code",
-      "source_file": "lib/rules/accessibility/index.ts",
-      "source_location": "L276",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "rules.ts",
-      "norm_label": "accessibility_rules",
-      "id": "lib_rules_accessibility_index_accessibility_rules"
-    },
-    {
       "label": "bugs/index.ts",
       "file_type": "code",
       "source_file": "lib/rules/bugs/index.ts",
@@ -3758,17 +3782,6 @@
       "community_name": "rules.ts",
       "norm_label": "validschemablockrule",
       "id": "lib_rules_bugs_index_validschemablockrule"
-    },
-    {
-      "label": "CROSS_FILE_RULES",
-      "file_type": "code",
-      "source_file": "lib/rules/cross-file/index.ts",
-      "source_location": "L394",
-      "_origin": "ast",
-      "id": "lib_rules_cross_file_index_cross_file_rules",
-      "community": 20,
-      "community_name": "rules.ts",
-      "norm_label": "cross_file_rules"
     },
     {
       "label": "internal/index.ts",
@@ -4029,10 +4042,10 @@
       "source_file": "lib/audit/headingChecks.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_audit_headingchecks",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "headingchecks.ts"
+      "norm_label": "headingchecks.ts",
+      "id": "lib_audit_headingchecks"
     },
     {
       "label": "templateComposition.ts",
@@ -4040,10 +4053,10 @@
       "source_file": "lib/audit/templateComposition.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_audit_templatecomposition",
       "community": 23,
       "community_name": "cross-file/index.ts",
-      "norm_label": "templatecomposition.ts"
+      "norm_label": "templatecomposition.ts",
+      "id": "lib_audit_templatecomposition"
     },
     {
       "label": "cross-file/index.ts",
@@ -4068,6 +4081,17 @@
       "norm_label": "brokenariareferencerule"
     },
     {
+      "label": "composedArticleSchemaRule",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L469",
+      "_origin": "ast",
+      "id": "lib_rules_cross_file_index_composedarticleschemarule",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "composedarticleschemarule"
+    },
+    {
       "label": "composedH1MissingRule",
       "file_type": "code",
       "source_file": "lib/rules/cross-file/index.ts",
@@ -4090,6 +4114,17 @@
       "norm_label": "composedmultipleh1rule"
     },
     {
+      "label": "composedProductSchemaRule",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L460",
+      "_origin": "ast",
+      "id": "lib_rules_cross_file_index_composedproductschemarule",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "composedproductschemarule"
+    },
+    {
       "label": "composedSkippedHeadingRule",
       "file_type": "code",
       "source_file": "lib/rules/cross-file/index.ts",
@@ -4099,6 +4134,17 @@
       "community": 23,
       "community_name": "cross-file/index.ts",
       "norm_label": "composedskippedheadingrule"
+    },
+    {
+      "label": "CROSS_FILE_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L478",
+      "_origin": "ast",
+      "id": "lib_rules_cross_file_index_cross_file_rules",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "cross_file_rules"
     },
     {
       "label": "duplicateLocaleKeyRule",
@@ -5328,9 +5374,9 @@
       "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition_composetemplate",
-      "target": "lib_audit_templatecomposition_orderedsectiontypes",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_orderedsectiontypes"
     },
     {
       "relation": "calls",
@@ -5340,9 +5386,9 @@
       "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition_composetemplate",
-      "target": "lib_audit_templatecomposition_collectrenderedsnippets",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_collectrenderedsnippets"
     },
     {
       "relation": "calls",
@@ -6663,9 +6709,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_themeindex_themeindex",
-      "confidence_score": 1.0
+      "target": "lib_audit_themeindex_themeindex"
     },
     {
       "relation": "imports",
@@ -8343,9 +8389,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_theme_parser_index",
-      "confidence_score": 1.0
+      "target": "lib_theme_parser_index"
     },
     {
       "relation": "imports_from",
@@ -8487,9 +8533,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_theme_parser_index",
-      "confidence_score": 1.0
+      "target": "lib_theme_parser_index"
     },
     {
       "relation": "imports_from",
@@ -8499,9 +8545,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_themeindex",
-      "confidence_score": 1.0
+      "target": "lib_audit_themeindex"
     },
     {
       "relation": "imports_from",
@@ -9644,9 +9690,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_findmultipleh1",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findmultipleh1"
     },
     {
       "relation": "contains",
@@ -9655,9 +9701,9 @@
       "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_composedheading",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_composedheading"
     },
     {
       "relation": "contains",
@@ -9666,9 +9712,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_composedheadingissue",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_composedheadingissue"
     },
     {
       "relation": "contains",
@@ -9677,9 +9723,9 @@
       "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_findskippedheadinglevelsacross",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findskippedheadinglevelsacross"
     },
     {
       "relation": "contains",
@@ -9688,9 +9734,9 @@
       "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_findmultipleh1across",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findmultipleh1across"
     },
     {
       "relation": "contains",
@@ -9699,9 +9745,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_headingissue",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_headingissue"
     },
     {
       "relation": "contains",
@@ -9710,9 +9756,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_headingchecks",
-      "target": "lib_audit_headingchecks_findskippedheadinglevels",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findskippedheadinglevels"
     },
     {
       "relation": "contains",
@@ -9864,9 +9910,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_templatecomposition_orderedsectiontypes",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_orderedsectiontypes"
     },
     {
       "relation": "contains",
@@ -9875,9 +9921,9 @@
       "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_templatecomposition_collectrenderedsnippets",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_collectrenderedsnippets"
     },
     {
       "relation": "contains",
@@ -9886,9 +9932,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_templatecomposition_composedtemplate",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_composedtemplate"
     },
     {
       "relation": "contains",
@@ -9897,9 +9943,9 @@
       "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_templatecomposition_composetemplate",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_composetemplate"
     },
     {
       "relation": "contains",
@@ -9908,9 +9954,9 @@
       "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_templatecomposition",
-      "target": "lib_audit_templatecomposition_templatebasename",
-      "confidence_score": 1.0
+      "target": "lib_audit_templatecomposition_templatebasename"
     },
     {
       "relation": "contains",
@@ -10400,11 +10446,44 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/rules/cross-file/index.ts",
-      "source_location": "L394",
+      "source_location": "L407",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_rules_cross_file_index",
-      "target": "lib_rules_cross_file_index_cross_file_rules",
+      "target": "lib_rules_cross_file_index_countjsonldtype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L411",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_cross_file_index",
+      "target": "lib_rules_cross_file_index_composedschemarule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L460",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_cross_file_index",
+      "target": "lib_rules_cross_file_index_composedproductschemarule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L469",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_cross_file_index",
+      "target": "lib_rules_cross_file_index_composedarticleschemarule",
       "confidence_score": 1.0
     },
     {
@@ -10416,6 +10495,17 @@
       "_origin": "ast",
       "source": "lib_rules_cross_file_index",
       "target": "lib_rules_cross_file_index_missingsnippetrule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L478",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_cross_file_index",
+      "target": "lib_rules_cross_file_index_cross_file_rules",
       "confidence_score": 1.0
     },
     {
@@ -13057,5 +13147,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "103b166e49270bbe1d738376a0b0c1455e950eda"
+  "built_at_commit": "ead9f6262dae91cdaf7da8e40844f808580cd57b"
 }

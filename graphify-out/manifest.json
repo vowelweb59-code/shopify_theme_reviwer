@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786535921.083305,
-    "ast_hash": "ab8530e36a81a133c1f6653c6bedfa3b",
+    "mtime": 1786536223.737298,
+    "ast_hash": "efc326a0a8e3a7a9d49acd7a40e7514b",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {

@@ -1,16 +1,16 @@
 # Graph Report - Shopify Theme Auditor  (2026-08-12)
 
 ## Corpus Check
-- 78 files · ~48,768 words
+- 78 files · ~49,174 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 439 nodes · 693 edges · 23 communities (19 shown, 4 thin omitted)
+- 443 nodes · 697 edges · 23 communities (19 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `103b166e`
+- Built from commit: `ead9f626`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -54,12 +54,12 @@
   app/api/audit/[id]/findings/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/audit/[id]/route.ts → lib/db/connect.ts
+- `POST()` --calls--> `runAuditRules()`  [EXTRACTED]
+  app/api/audit/run/route.ts → lib/audit/index.ts
+- `POST()` --calls--> `parseThemeZip()`  [EXTRACTED]
+  app/api/audit/run/route.ts → lib/theme-parser/index.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/reports/[id]/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/reports/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/requirements/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -68,7 +68,7 @@
 
 ### Community 0 - "connectToDatabase"
 Cohesion: 0.05
-Nodes (52): GET(), GET(), POST(), GET(), GET(), GET(), GET(), AuditDiagnostics (+44 more)
+Nodes (51): GET(), GET(), POST(), GET(), GET(), GET(), GET(), AuditDiagnostics (+43 more)
 
 ### Community 1 - "devDependencies"
 Cohesion: 0.10
@@ -84,11 +84,11 @@ Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-e
 
 ### Community 4 - "types.ts"
 Cohesion: 0.06
-Nodes (54): DEPRECATED_FILTER_NAMES, DEPRECATED_LIQUID_REFERENCES, DEPRECATED_OBJECT_NAMES, DEPRECATED_TAG_NAMES, DeprecatedEntry, ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, extractHtmlStructure() (+46 more)
+Nodes (49): DEPRECATED_FILTER_NAMES, DEPRECATED_LIQUID_REFERENCES, DEPRECATED_OBJECT_NAMES, DEPRECATED_TAG_NAMES, DeprecatedEntry, ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, HtmlStructure (+41 more)
 
 ### Community 5 - "theme-parser/index.ts"
-Cohesion: 0.10
-Nodes (24): CSS_NAMED_COLORS, looksLikeColorValue(), COLOR_PROPERTIES, extractCssStructure(), parseThemeDirectory(), ThemeParseResult, FileType, ParsedCssInfo (+16 more)
+Cohesion: 0.09
+Nodes (30): CSS_NAMED_COLORS, looksLikeColorValue(), COLOR_PROPERTIES, extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory() (+22 more)
 
 ### Community 6 - "parseJsonFile.ts"
 Cohesion: 0.23
@@ -115,27 +115,27 @@ Cohesion: 0.23
 Nodes (11): AuditRunResult, AuditDiagnostics, DiagnosticsNote(), FindingRow, FindingsTable(), FindingSummary, SEVERITY_STYLES, SummaryBar() (+3 more)
 
 ### Community 19 - "accessibility/index.ts"
-Cohesion: 0.14
-Nodes (14): contrastRatio(), parseColorToRgb(), relativeLuminance(), srgbChannelToLinear(), BG_LIKE_PROPS, COLOR_LIKE_PROPS, colorContrastRule, focusOrderRule (+6 more)
+Cohesion: 0.13
+Nodes (15): contrastRatio(), parseColorToRgb(), relativeLuminance(), srgbChannelToLinear(), ACCESSIBILITY_RULES, BG_LIKE_PROPS, COLOR_LIKE_PROPS, colorContrastRule (+7 more)
 
 ### Community 20 - "rules.ts"
 Cohesion: 0.07
-Nodes (27): Rule, RuleContext, Severity, ACCESSIBILITY_RULES, BUG_RULES, duplicateAssetLoadingRule, duplicateSchemaIdRule, missingScopedSettingRule (+19 more)
+Nodes (25): Rule, RuleContext, Severity, BUG_RULES, duplicateAssetLoadingRule, duplicateSchemaIdRule, missingScopedSettingRule, validJsonLdRule (+17 more)
 
 ### Community 22 - "runRules.ts"
 Cohesion: 0.16
 Nodes (16): loadEnabledRules(), runAuditRules(), FindingCategory, RuleFinding, dedupeKey(), EMPTY_SUMMARY(), ExecutedFinding, runRules() (+8 more)
 
 ### Community 23 - "cross-file/index.ts"
-Cohesion: 0.07
-Nodes (31): ComposedHeading, ComposedHeadingIssue, findMultipleH1(), findMultipleH1Across(), findSkippedHeadingLevels(), findSkippedHeadingLevelsAcross(), HeadingIssue, collectRenderedSnippets() (+23 more)
+Cohesion: 0.06
+Nodes (34): ComposedHeading, ComposedHeadingIssue, findMultipleH1(), findMultipleH1Across(), findSkippedHeadingLevels(), findSkippedHeadingLevelsAcross(), HeadingIssue, collectRenderedSnippets() (+26 more)
 
 ### Community 26 - "Shopify Theme Auditor"
 Cohesion: 0.25
 Nodes (7): Code graph, Database, Folder structure, Requirements knowledge base, Setup, Shopify Theme Auditor, Stack
 
 ## Knowledge Gaps
-- **186 isolated node(s):** `HeadingIssue`, `ComposedHeadingIssue`, `ComposedTemplate`, `missingSectionRule`, `missingSnippetRule` (+181 more)
+- **188 isolated node(s):** `missingSectionRule`, `missingSnippetRule`, `missingTemplateSectionRule`, `missingAssetRule`, `missingTranslationKeyRule` (+183 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -143,13 +143,13 @@ Nodes (7): Code graph, Database, Folder structure, Requirements knowledge base, 
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Rule` connect `rules.ts` to `settings.ts`, `accessibility/index.ts`, `runRules.ts`, `cross-file/index.ts`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `parseJsonFile()` connect `parseJsonFile.ts` to `types.ts`, `theme-parser/index.ts`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `parseJsonFile()` connect `parseJsonFile.ts` to `theme-parser/index.ts`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **What connects `HeadingIssue`, `ComposedHeadingIssue`, `ComposedTemplate` to the rest of the system?**
-  _186 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `missingSectionRule`, `missingSnippetRule`, `missingTemplateSectionRule` to the rest of the system?**
+  _188 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `connectToDatabase` be split into smaller, more focused modules?**
-  _Cohesion score 0.054244306418219465 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.054987212276214836 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
