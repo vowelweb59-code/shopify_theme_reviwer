@@ -305,18 +305,18 @@
     "semantic_hash": ""
   },
   "lib/audit/rules.ts": {
-    "mtime": 1786526432.499275,
-    "ast_hash": "af9375b3c2d781f31429b25521f462c7",
+    "mtime": 1786531190.221272,
+    "ast_hash": "7b3d6bf8763c8f4f7485950a10903927",
     "semantic_hash": ""
   },
   "lib/audit/runRules.ts": {
-    "mtime": 1786527169.864675,
-    "ast_hash": "1c4b658cd477ce6a196a1a2023b20ffe",
+    "mtime": 1786531200.8447142,
+    "ast_hash": "c2c0005984760e86acefb3230a810b27",
     "semantic_hash": ""
   },
   "lib/rules/registry.ts": {
-    "mtime": 1786527157.6676729,
-    "ast_hash": "f6a06a120061df9dd9bf18244e1f0c19",
+    "mtime": 1786531233.421414,
+    "ast_hash": "3f2828a03f47797bb6b5a4a4911b1f29",
     "semantic_hash": ""
   },
   "lib/theme-parser/cssColorNames.ts": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/extractLiquidStructure.ts": {
-    "mtime": 1786525206.2128453,
-    "ast_hash": "ba7fec6d0f946dfdb2cf7685da81ed7c",
+    "mtime": 1786531347.30313,
+    "ast_hash": "4cf75a34492a054063c03bf6fb33e5b8",
     "semantic_hash": ""
   },
   "lib/theme-parser/lineIndex.ts": {
@@ -355,13 +355,13 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/parseJsonFile.ts": {
-    "mtime": 1786523356.2536168,
-    "ast_hash": "4834ab359879fdb649fe157405f9a467",
+    "mtime": 1786531483.006907,
+    "ast_hash": "2f5012ecb0c2d4df64b3f41d9c99a1a0",
     "semantic_hash": ""
   },
   "lib/theme-parser/types.ts": {
-    "mtime": 1786522186.3505785,
-    "ast_hash": "63619a94aa02b826edb9722202e32b43",
+    "mtime": 1786531471.8741689,
+    "ast_hash": "219e85d092e98615fc04f2a93faea11f",
     "semantic_hash": ""
   },
   "lib/theme-parser/validateThemeStructure.ts": {
@@ -382,6 +382,21 @@
   "scripts/seed-rules.ts": {
     "mtime": 1786527245.2130268,
     "ast_hash": "fcd58a8c6bfa0adea658362213b4e1c3",
+    "semantic_hash": ""
+  },
+  "lib/audit/themeIndex.ts": {
+    "mtime": 1786531181.7654757,
+    "ast_hash": "2d2f79cfeddcbacd97ad4bc1e8e4f762",
+    "semantic_hash": ""
+  },
+  "lib/rules/cross-file/index.ts": {
+    "mtime": 1786531488.8446517,
+    "ast_hash": "49383d6dc07b465c370e81034f57428b",
+    "semantic_hash": ""
+  },
+  "lib/theme-parser/duplicateJsonKeys.ts": {
+    "mtime": 1786531466.3698342,
+    "ast_hash": "a41c0541fa61d7cd8134ee131f3b502a",
     "semantic_hash": ""
   }
 }
