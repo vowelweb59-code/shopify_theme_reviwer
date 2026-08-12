@@ -131,4 +131,81 @@ const missingScopedSettingRule: Rule = {
   },
 };
 
-export const BUG_RULES: Rule[] = [validJsonLdRule, validSchemaBlockRule, missingScopedSettingRule];
+function findDuplicates(values: string[]): string[] {
+  const seen = new Set<string>();
+  const dupes = new Set<string>();
+  for (const value of values) {
+    if (seen.has(value)) dupes.add(value);
+    seen.add(value);
+  }
+  return [...dupes];
+}
+
+function stringIdsOf(items: unknown, field = "id"): string[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => (item && typeof item === "object" ? (item as Record<string, unknown>)[field] : undefined))
+    .filter((x): x is string => typeof x === "string");
+}
+
+const duplicateSchemaIdRule: Rule = {
+  ruleId: "SCHEMA-DUPLICATE-ID-001",
+  category: "Bug",
+  defaultSeverity: "high",
+  title: "Schema settings/blocks must not declare duplicate ids or types",
+  description:
+    "Within a single {% schema %}: each top-level setting id must be unique, each block type's own settings ids must be unique within that block type, and block \"type\" values must be unique among the declared blocks. A duplicate id means only the last definition is ever used, silently dropping the others.",
+  sourceReference: "Shopify: Section schema",
+  sourceUrl: SECTION_SCHEMA_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      const schema = f.schemaBlocks[0];
+      if (!schema?.json) continue; // missing/malformed schema is already flagged by validSchemaBlockRule
+      const json = schema.json;
+
+      for (const dup of findDuplicates(stringIdsOf(json.settings))) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: schema.line,
+          category: "Bug" as const,
+          severity: "high" as const,
+          finding: `Schema declares the setting id "${dup}" more than once in its "settings" array — only the last definition is ever used.`,
+          recommendation: `Remove or rename the duplicate "${dup}" setting.`,
+        });
+      }
+
+      const blocks = Array.isArray(json.blocks) ? json.blocks : [];
+      for (const dup of findDuplicates(stringIdsOf(blocks, "type"))) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: schema.line,
+          category: "Bug" as const,
+          severity: "high" as const,
+          finding: `Schema declares the block type "${dup}" more than once in its "blocks" array.`,
+          recommendation: `Remove or rename the duplicate "${dup}" block type.`,
+        });
+      }
+
+      for (const block of blocks) {
+        if (!block || typeof block !== "object") continue;
+        const type = (block as Record<string, unknown>).type;
+        const label = typeof type === "string" ? type : "(unknown)";
+        for (const dup of findDuplicates(stringIdsOf((block as Record<string, unknown>).settings))) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: schema.line,
+            category: "Bug" as const,
+            severity: "high" as const,
+            finding: `Block type "${label}" declares the setting id "${dup}" more than once in its "settings" array.`,
+            recommendation: `Remove or rename the duplicate "${dup}" setting in the "${label}" block type.`,
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
+export const BUG_RULES: Rule[] = [validJsonLdRule, validSchemaBlockRule, missingScopedSettingRule, duplicateSchemaIdRule];

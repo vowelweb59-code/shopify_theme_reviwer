@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FindingsTable, SummaryBar, type FindingRow, type FindingSummary } from "@/app/_components/findings";
+import {
+  DiagnosticsNote,
+  FindingsTable,
+  SummaryBar,
+  type AuditDiagnostics,
+  type FindingRow,
+  type FindingSummary,
+} from "@/app/_components/findings";
 
 type AuditRunResult = {
   theme: { name: string };
@@ -14,6 +21,7 @@ type AuditRunResult = {
     skippedFileCount?: number;
     fileErrors?: { path: string; error: string }[];
     summary?: FindingSummary;
+    diagnostics?: AuditDiagnostics;
   };
   findings?: FindingRow[];
 };
@@ -145,6 +153,7 @@ export default function AuditPage() {
           </div>
 
           {result.auditRun.summary && <SummaryBar summary={result.auditRun.summary} />}
+          {result.auditRun.diagnostics && <DiagnosticsNote diagnostics={result.auditRun.diagnostics} />}
           {result.findings && <FindingsTable findings={result.findings} />}
         </div>
       )}

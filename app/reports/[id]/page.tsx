@@ -2,7 +2,14 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { FindingsTable, SummaryBar, type FindingRow, type FindingSummary } from "@/app/_components/findings";
+import {
+  DiagnosticsNote,
+  FindingsTable,
+  SummaryBar,
+  type AuditDiagnostics,
+  type FindingRow,
+  type FindingSummary,
+} from "@/app/_components/findings";
 
 type AuditRunDetail = {
   _id: string;
@@ -14,6 +21,7 @@ type AuditRunDetail = {
   summary?: FindingSummary;
   fileStats?: Record<string, number>;
   skippedFileCount?: number;
+  diagnostics?: AuditDiagnostics;
 };
 
 function formatDate(iso: string) {
@@ -80,6 +88,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}
+          {auditRun.diagnostics && <DiagnosticsNote diagnostics={auditRun.diagnostics} />}
           <FindingsTable findings={findings} />
         </>
       )}

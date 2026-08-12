@@ -7,6 +7,13 @@ export type FindingSummary = {
   byCategory?: Record<string, number>;
 };
 
+export type AuditDiagnostics = {
+  parserWarnings: number;
+  unresolvedDynamicReferences: number;
+  filesSkipped: number;
+  rulesSkippedDueToError: number;
+};
+
 export type FindingRow = {
   ruleId: string;
   requirementId?: string | null;
@@ -63,6 +70,32 @@ export function SummaryBar({ summary }: { summary: FindingSummary }) {
         <div className="text-zinc-500">Low</div>
       </div>
     </div>
+  );
+}
+
+/** Surfaces analysis limitations ("could not reliably analyze") separately from findings ("no issue found"), so a clean report reads as trustworthy rather than just quiet. */
+export function DiagnosticsNote({ diagnostics }: { diagnostics: AuditDiagnostics }) {
+  const notes: string[] = [];
+  if (diagnostics.filesSkipped > 0) {
+    notes.push(`${diagnostics.filesSkipped} unsupported file(s) in the ZIP were skipped`);
+  }
+  if (diagnostics.unresolvedDynamicReferences > 0) {
+    notes.push(
+      `${diagnostics.unresolvedDynamicReferences} section/snippet render target(s) use a dynamic (non-literal) name and could not be checked`
+    );
+  }
+  if (diagnostics.parserWarnings > 0) {
+    notes.push(`${diagnostics.parserWarnings} file(s) had parser warnings`);
+  }
+  if (diagnostics.rulesSkippedDueToError > 0) {
+    notes.push(`${diagnostics.rulesSkippedDueToError} rule(s) failed to run and were skipped`);
+  }
+  if (notes.length === 0) return null;
+
+  return (
+    <p className="text-xs text-zinc-500">
+      Analysis limitations: {notes.join("; ")}.
+    </p>
   );
 }
 

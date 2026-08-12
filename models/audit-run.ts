@@ -23,6 +23,18 @@ const fileErrorSchema = new Schema({ path: String, error: String }, { _id: false
 // the offending rule is skipped and recorded here for diagnostics instead.
 const ruleErrorSchema = new Schema({ ruleId: String, error: String }, { _id: false });
 
+// Distinguishes "no issue found" from "could not reliably analyze" — see
+// lib/audit/diagnostics.ts (phase-4 §17).
+const diagnosticsSchema = new Schema(
+  {
+    parserWarnings: { type: Number, required: true, default: 0 },
+    unresolvedDynamicReferences: { type: Number, required: true, default: 0 },
+    filesSkipped: { type: Number, required: true, default: 0 },
+    rulesSkippedDueToError: { type: Number, required: true, default: 0 },
+  },
+  { _id: false }
+);
+
 const auditRunSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
@@ -35,6 +47,7 @@ const auditRunSchema = new Schema(
     skippedFileCount: { type: Number, default: null },
     fileErrors: { type: [fileErrorSchema], default: undefined },
     ruleErrors: { type: [ruleErrorSchema], default: undefined },
+    diagnostics: { type: diagnosticsSchema, default: undefined },
   },
   { timestamps: false }
 );

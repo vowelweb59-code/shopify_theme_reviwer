@@ -5,6 +5,7 @@ import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { parseThemeZip, ThemeZipError, InvalidThemeError } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
+import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 
 export async function POST(request: Request) {
   await connectToDatabase();
@@ -63,6 +64,10 @@ export async function POST(request: Request) {
     if (result.fileErrors.length > 0) auditRun.fileErrors = result.fileErrors;
     auditRun.summary = summary;
     if (ruleErrors.length > 0) auditRun.ruleErrors = ruleErrors;
+    auditRun.diagnostics = computeAuditDiagnostics(result.files, {
+      filesSkipped: result.skippedFileCount,
+      rulesSkippedDueToError: ruleErrors.length,
+    });
     await auditRun.save();
 
     return NextResponse.json({ theme, auditRun, findings }, { status: 201 });
