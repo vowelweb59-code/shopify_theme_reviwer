@@ -15,6 +15,13 @@ export type ThemeIndex = {
   // includes (phase-4 §12's explicit caution about this).
   allElementIds: Set<string>;
   labelForTargets: Set<string>;
+  // Ids declared in config/settings_schema.json — the only source of truth
+  // for bare `settings.x` (global) references. Section-/block-scoped
+  // `section.settings.x` / `block.settings.x` references are validated
+  // per-file against that section's own {% schema %} instead (see
+  // lib/rules/bugs's scoped-settings rule) — a global index can't answer
+  // those since every section declares its own settings independently.
+  globalSettingIds: Set<string>;
   // Raw JSON trees for the storefront's default locale file(s) — usually a
   // single locales/xx.default.json. Used for translation-key existence
   // checks: a key "resolves" if the path exists in the tree at all, whether
@@ -44,6 +51,7 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
   const assetBasenames = new Set<string>();
   const allElementIds = new Set<string>();
   const labelForTargets = new Set<string>();
+  const globalSettingIds = new Set<string>();
   const defaultLocaleTrees: unknown[] = [];
 
   for (const f of files) {
@@ -57,6 +65,8 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
       assetBasenames.add(f.path.slice("assets/".length));
     } else if (f.path.startsWith("locales/") && /\.default\.json$/i.test(f.path) && f.jsonInfo?.json) {
       defaultLocaleTrees.push(f.jsonInfo.json);
+    } else if (f.path.endsWith("config/settings_schema.json") && f.jsonInfo) {
+      for (const id of f.jsonInfo.settingKeys) globalSettingIds.add(id);
     }
 
     for (const el of f.elementIds) allElementIds.add(el.id);
@@ -71,6 +81,7 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
     assetBasenames,
     allElementIds,
     labelForTargets,
+    globalSettingIds,
     defaultLocaleTrees,
   };
 }

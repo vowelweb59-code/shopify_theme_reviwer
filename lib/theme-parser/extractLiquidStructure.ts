@@ -51,7 +51,11 @@ const OBJECT_CHAIN_RE = /\b([a-zA-Z_][a-zA-Z0-9_]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g;
 const FILTER_RE = /\|\s*([a-zA-Z_][a-zA-Z0-9_]*)/g;
 const TRANSLATION_RE = /(['"])((?:(?!\1)[^\r\n])*)\1\s*\|\s*(t|translate)\b/g;
 const ASSET_URL_RE = /(['"])((?:(?!\1)[^\r\n])*?\.(png|jpe?g|gif|svg|webp|css|js|woff2?|ttf|eot))\1/gi;
-const SETTINGS_REF_RE = /\bsettings\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
+// Captures an optional "section."/"block." prefix so callers can tell a
+// global theme setting apart from a section- or block-scoped one — they're
+// declared in entirely different places (config/settings_schema.json vs.
+// that section's own {% schema %}) and must be validated separately.
+const SETTINGS_REF_RE = /\b(?:(section|block)\.)?settings\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
 const NOT_LIQUID_WORD_CHARS = /^[a-zA-Z][a-zA-Z0-9 ,.'!?&:;()-]*$/;
 
 /** Blanks a matched span to spaces while preserving every `\n` at its original position, so line numbers computed from character offsets into the blanked string never drift for content after a multi-line match. */
@@ -196,7 +200,9 @@ export function extractLiquidStructure(rawText: string): LiquidStructure {
 
   // --- settings.* references -------------------------------------------------
   for (const match of withoutSchema.matchAll(SETTINGS_REF_RE)) {
-    settingReferences.push({ line: toLine(match.index ?? 0), key: match[1] });
+    const scope: ParsedSettingReference["scope"] =
+      match[1] === "section" ? "section" : match[1] === "block" ? "block" : "global";
+    settingReferences.push({ line: toLine(match.index ?? 0), key: match[2], scope });
   }
 
   // Translation keys are only ever resolved through the `t`/`translate`

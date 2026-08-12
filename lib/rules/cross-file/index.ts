@@ -210,6 +210,37 @@ const brokenAriaReferenceRule: Rule = {
   },
 };
 
+const missingGlobalSettingRule: Rule = {
+  ruleId: "REF-SETTINGS-GLOBAL-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "medium",
+  title: "settings.x must reference a declared global theme setting",
+  description:
+    "A bare settings.x reference (as opposed to section.settings.x or block.settings.x) must resolve to an id declared in config/settings_schema.json.",
+  // Skipped entirely if no settings_schema.json was found/parsed — a theme
+  // with a non-standard config layout gets no findings here rather than a
+  // false positive on every settings.x reference in the theme.
+  check({ files, index }) {
+    if (index.globalSettingIds.size === 0) return [];
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const ref of f.settingReferences) {
+        if (ref.scope !== "global" || index.globalSettingIds.has(ref.key)) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Bug" as const,
+          severity: "medium" as const,
+          finding: `References global setting "settings.${ref.key}", but no setting with that id is declared in config/settings_schema.json.`,
+          recommendation: `Add a setting with id "${ref.key}" to config/settings_schema.json, or fix the reference.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const CROSS_FILE_RULES: Rule[] = [
   missingSectionRule,
   missingSnippetRule,
@@ -218,4 +249,5 @@ export const CROSS_FILE_RULES: Rule[] = [
   missingTranslationKeyRule,
   duplicateLocaleKeyRule,
   brokenAriaReferenceRule,
+  missingGlobalSettingRule,
 ];

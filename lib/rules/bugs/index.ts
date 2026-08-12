@@ -61,4 +61,74 @@ const validSchemaBlockRule: Rule = {
   },
 };
 
-export const BUG_RULES: Rule[] = [validJsonLdRule, validSchemaBlockRule];
+function collectSchemaSettingIds(schemaJson: Record<string, unknown>): { ownIds: Set<string>; blockIds: Set<string> } {
+  const ownIds = new Set<string>();
+  const blockIds = new Set<string>();
+
+  const settings = Array.isArray(schemaJson.settings) ? schemaJson.settings : [];
+  for (const setting of settings) {
+    const id = setting && typeof setting === "object" ? (setting as Record<string, unknown>).id : undefined;
+    if (typeof id === "string") ownIds.add(id);
+  }
+
+  const blocks = Array.isArray(schemaJson.blocks) ? schemaJson.blocks : [];
+  for (const block of blocks) {
+    if (!block || typeof block !== "object") continue;
+    const blockSettings = (block as Record<string, unknown>).settings;
+    if (!Array.isArray(blockSettings)) continue;
+    for (const setting of blockSettings) {
+      const id = setting && typeof setting === "object" ? (setting as Record<string, unknown>).id : undefined;
+      if (typeof id === "string") blockIds.add(id);
+    }
+  }
+
+  return { ownIds, blockIds };
+}
+
+const missingScopedSettingRule: Rule = {
+  ruleId: "REF-SETTINGS-SCOPED-MISSING-001",
+  category: "Bug",
+  defaultSeverity: "medium",
+  title: "section.settings.x / block.settings.x must be declared in that section's own schema",
+  description:
+    "section.settings.x must resolve to an id in this section's own {% schema %} \"settings\" array, and block.settings.x must resolve to an id declared under any block type's \"settings\" array in the same schema — each section declares these independently, unlike global settings.x.",
+  // Only enforced for section files (which own a schema) — a snippet using
+  // section.settings.x/block.settings.x could be rendered from any number of
+  // different sections/block types with no static way to know which, so
+  // checking it there would risk exactly the false positives phase-4 warns
+  // about for cross-file component splits.
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid" || !f.path.startsWith("sections/")) continue;
+      const schema = f.schemaBlocks[0];
+      if (!schema?.json) continue; // missing/malformed schema is already flagged by validSchemaBlockRule
+      const { ownIds, blockIds } = collectSchemaSettingIds(schema.json);
+
+      for (const ref of f.settingReferences) {
+        if (ref.scope === "section" && !ownIds.has(ref.key)) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: ref.line,
+            category: "Bug" as const,
+            severity: "medium" as const,
+            finding: `References section.settings.${ref.key}, but no setting with that id is declared in this section's own schema.`,
+            recommendation: `Add a setting with id "${ref.key}" to this section's {% schema %} "settings" array, or fix the reference.`,
+          });
+        } else if (ref.scope === "block" && !blockIds.has(ref.key)) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: ref.line,
+            category: "Bug" as const,
+            severity: "medium" as const,
+            finding: `References block.settings.${ref.key}, but no block type in this section's schema declares a setting with that id.`,
+            recommendation: `Add a setting with id "${ref.key}" to the relevant block type's "settings" array in this section's schema, or fix the reference.`,
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
+export const BUG_RULES: Rule[] = [validJsonLdRule, validSchemaBlockRule, missingScopedSettingRule];

@@ -203,6 +203,12 @@ export type ParsedLocaleReference = {
 export type ParsedSettingReference = {
   line: number;
   key: string;
+  // `settings.x` (global theme settings, config/settings_schema.json),
+  // `section.settings.x` (the current section's own {% schema %} settings),
+  // or `block.settings.x` (the current block's own schema settings) — these
+  // are three different declaration sources and must not be validated
+  // against each other.
+  scope: "global" | "section" | "block";
 };
 
 export type ParsedFileReference = {
