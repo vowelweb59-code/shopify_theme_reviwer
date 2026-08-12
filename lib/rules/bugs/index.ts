@@ -208,4 +208,61 @@ const duplicateSchemaIdRule: Rule = {
   },
 };
 
-export const BUG_RULES: Rule[] = [validJsonLdRule, validSchemaBlockRule, missingScopedSettingRule, duplicateSchemaIdRule];
+function findDuplicateLines(values: { value: string | null | undefined; line: number }[]): Map<string, number[]> {
+  const byValue = new Map<string, number[]>();
+  for (const { value, line } of values) {
+    if (!value) continue;
+    const lines = byValue.get(value) ?? [];
+    lines.push(line);
+    byValue.set(value, lines);
+  }
+  const dupes = new Map<string, number[]>();
+  for (const [value, lines] of byValue) {
+    if (lines.length > 1) dupes.set(value, lines);
+  }
+  return dupes;
+}
+
+const duplicateAssetLoadingRule: Rule = {
+  ruleId: "PERF-DUPLICATE-ASSET-001",
+  requirementId: "TECH-PERF-DUPLICATE-ASSET-001",
+  category: "Bug",
+  defaultSeverity: "low",
+  title: "No duplicate script/stylesheet loading within a file",
+  description: "The same script src or stylesheet href should not be loaded more than once within the same file.",
+  sourceReference: "General technical performance best practice",
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      for (const [src, lines] of findDuplicateLines(f.scripts.map((s) => ({ value: s.src, line: s.line })))) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: lines[1],
+          category: "Bug" as const,
+          severity: "low" as const,
+          finding: `Script "${src}" is loaded ${lines.length} times in this file (lines ${lines.join(", ")}).`,
+          recommendation: "Load this script once.",
+        });
+      }
+      for (const [href, lines] of findDuplicateLines(f.stylesheets.map((s) => ({ value: s.href, line: s.line })))) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: lines[1],
+          category: "Bug" as const,
+          severity: "low" as const,
+          finding: `Stylesheet "${href}" is loaded ${lines.length} times in this file (lines ${lines.join(", ")}).`,
+          recommendation: "Load this stylesheet once.",
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+export const BUG_RULES: Rule[] = [
+  validJsonLdRule,
+  validSchemaBlockRule,
+  missingScopedSettingRule,
+  duplicateSchemaIdRule,
+  duplicateAssetLoadingRule,
+];

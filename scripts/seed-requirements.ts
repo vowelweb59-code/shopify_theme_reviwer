@@ -418,6 +418,17 @@ const requirements: SeedRequirement[] = [
     sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
     severity: "low",
   },
+  {
+    requirementId: "A11Y-BP-008",
+    sourceType: "accessibility",
+    category: "Accessibility",
+    title: "Do not remove the focus outline without a visible replacement",
+    description:
+      "A selector that sets outline: none/0 must have a corresponding :focus or :focus-visible rule providing a visible replacement — removing the browser's default focus indicator with nothing in its place breaks keyboard navigation.",
+    sourceName: "Accessibility best practices for Shopify themes",
+    sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+    severity: "medium",
+  },
 
   // --- Technical SEO (structural only, general best practice) -----------
   {
@@ -454,6 +465,24 @@ const requirements: SeedRequirement[] = [
     title: "Below-the-fold images should lazy-load",
     description: "Images below the fold should use loading=\"lazy\".",
     sourceName: "General technical SEO best practice",
+    severity: "low",
+  },
+  {
+    requirementId: "TECH-PERF-SCRIPT-001",
+    sourceType: "best_practice",
+    category: "Technical SEO",
+    title: "Scripts in <head> should not render-block",
+    description: "A <script> with a src, placed in <head>, should use async or defer rather than blocking HTML parsing.",
+    sourceName: "General technical performance best practice",
+    severity: "medium",
+  },
+  {
+    requirementId: "TECH-PERF-DUPLICATE-ASSET-001",
+    sourceType: "best_practice",
+    category: "Bug",
+    title: "No duplicate script/stylesheet loading within a file",
+    description: "The same script src or stylesheet href should not be loaded more than once within the same file.",
+    sourceName: "General technical performance best practice",
     severity: "low",
   },
 

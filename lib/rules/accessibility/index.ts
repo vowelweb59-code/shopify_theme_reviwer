@@ -218,6 +218,61 @@ const colorContrastRule: Rule = {
   },
 };
 
+function stripFocusPseudo(selector: string): string {
+  return selector.replace(/:focus-visible\b/gi, "").replace(/:focus\b/gi, "").trim();
+}
+
+function selectorParts(selector: string): string[] {
+  return selector.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+const outlineRemovalRule: Rule = {
+  ruleId: "A11Y-OUTLINE-REMOVAL-001",
+  requirementId: "A11Y-BP-008",
+  category: "Accessibility",
+  defaultSeverity: "medium",
+  title: "outline: none must have a visible focus replacement",
+  description:
+    "A selector that removes the outline (outline: none/0) must have a :focus or :focus-visible rule for the same selector providing a visible replacement.",
+  sourceReference: "Accessibility best practices for Shopify themes",
+  sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+  // Matches by comparing the outline-removal selector against every
+  // :focus/:focus-visible selector in the same file with its pseudo-class
+  // stripped — e.g. ".btn:focus" becomes ".btn", matched against a plain
+  // ".btn { outline: none }" rule. Compound (comma-separated) selectors are
+  // split on both sides. This can't see a replacement style defined via a
+  // different but equivalent selector (e.g. a shared class applied via
+  // Liquid), so it's a heuristic, not a certainty.
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (!f.cssInfo) continue;
+      const focusBases = new Set<string>();
+      for (const rule of [...f.cssInfo.focusRules, ...f.cssInfo.focusVisibleRules]) {
+        for (const part of selectorParts(rule.selector)) focusBases.add(stripFocusPseudo(part));
+      }
+      for (const removal of f.cssInfo.outlineRemovals) {
+        // The removal's own selector may itself be a :focus/:focus-visible
+        // rule (e.g. ".btn:focus { outline: none }") — strip it the same
+        // way focusBases was built, or a separate :focus-visible providing
+        // the real replacement would never match.
+        const removalBases = selectorParts(removal.selector).map(stripFocusPseudo);
+        const hasReplacement = removalBases.some((base) => focusBases.has(base));
+        if (hasReplacement) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: removal.line,
+          category: "Accessibility" as const,
+          severity: "medium" as const,
+          finding: `Selector "${removal.selector}" removes the outline with no corresponding :focus/:focus-visible rule found in this file.`,
+          recommendation: `Add a :focus or :focus-visible style for "${removal.selector}" so keyboard users still see where focus is.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const ACCESSIBILITY_RULES: Rule[] = [
   htmlLangRule,
   formLabelRule,
@@ -225,4 +280,5 @@ export const ACCESSIBILITY_RULES: Rule[] = [
   focusOrderRule,
   skippedHeadingA11yRule,
   colorContrastRule,
+  outlineRemovalRule,
 ];

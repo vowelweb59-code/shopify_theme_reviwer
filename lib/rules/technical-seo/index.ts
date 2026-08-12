@@ -87,4 +87,36 @@ const imageDimensionsRule: Rule = {
   },
 };
 
-export const TECHNICAL_SEO_RULES: Rule[] = [skippedHeadingSeoRule, multipleH1Rule, imageDimensionsRule];
+const renderBlockingScriptRule: Rule = {
+  ruleId: "SEO-SCRIPT-RENDERBLOCKING-001",
+  requirementId: "TECH-PERF-SCRIPT-001",
+  category: "Technical SEO",
+  defaultSeverity: "medium",
+  title: "Scripts in <head> should not render-block",
+  description: "A <script src=...> placed in <head> should use async or defer rather than blocking HTML parsing.",
+  sourceReference: "General technical performance best practice",
+  // "location: head" only reflects <head>...<script>...</head> found
+  // structurally within this one file (Phase 2 parses files independently),
+  // so this reliably catches layout/theme.liquid but can't see a script
+  // injected into <head> from a rendered snippet.
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      for (const script of f.scripts) {
+        if (script.location === "head" && !script.inline && script.src && !script.async && !script.defer) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: script.line,
+            category: "Technical SEO" as const,
+            severity: "medium" as const,
+            finding: `<script src="${script.src}"> in <head> has neither async nor defer, blocking HTML parsing.`,
+            recommendation: "Add defer (or async if execution order doesn't matter), or move the script tag to just before </body>.",
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
+export const TECHNICAL_SEO_RULES: Rule[] = [skippedHeadingSeoRule, multipleH1Rule, imageDimensionsRule, renderBlockingScriptRule];
