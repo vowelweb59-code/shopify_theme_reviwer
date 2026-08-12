@@ -95,9 +95,9 @@
     "semantic_hash": ""
   },
   "lib/rules/internal/index.ts": {
-    "mtime": 1786520120.4602087,
-    "ast_hash": "c8e284522396c0d6be170cb00a23a58f",
-    "semantic_hash": "c8e284522396c0d6be170cb00a23a58f"
+    "mtime": 1786535604.3697653,
+    "ast_hash": "1ec1d0da08e6d3ea67b08704e585e6b3",
+    "semantic_hash": ""
   },
   "lib/rules/shopify/index.ts": {
     "mtime": 1786534470.0057752,
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "lib/rules/registry.ts": {
-    "mtime": 1786531233.421414,
-    "ast_hash": "3f2828a03f47797bb6b5a4a4911b1f29",
+    "mtime": 1786535615.1312418,
+    "ast_hash": "7a4e1b279d21852a651cd91135c4b011",
     "semantic_hash": ""
   },
   "lib/theme-parser/cssColorNames.ts": {

@@ -20,7 +20,6 @@
   "18": "reports/index.ts",
   "19": "accessibility/index.ts",
   "20": "rules.ts",
-  "21": "internal/index.ts",
   "22": "runRules.ts",
   "23": "cross-file/index.ts",
   "24": "registry.ts",

@@ -4,19 +4,6 @@
   "graph": {},
   "nodes": [
     {
-      "label": "AuditDiagnostics",
-      "file_type": "code",
-      "source_file": "lib/audit/diagnostics.ts",
-      "source_location": "L6",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "auditdiagnostics",
-      "id": "lib_audit_diagnostics_auditdiagnostics"
-    },
-    {
       "label": "MongooseCache",
       "file_type": "code",
       "source_file": "lib/db/connect.ts",
@@ -115,10 +102,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "scripts_seed_requirements_category",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "category"
+      "norm_label": "category",
+      "id": "scripts_seed_requirements_category"
     },
     {
       "label": "SeedRequirement",
@@ -128,10 +115,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "scripts_seed_requirements_seedrequirement",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "seedrequirement"
+      "norm_label": "seedrequirement",
+      "id": "scripts_seed_requirements_seedrequirement"
     },
     {
       "label": "Severity",
@@ -141,10 +128,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "scripts_seed_requirements_severity",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "severity"
+      "norm_label": "severity",
+      "id": "scripts_seed_requirements_severity"
     },
     {
       "label": "SourceType",
@@ -154,10 +141,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "scripts_seed_requirements_sourcetype",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "sourcetype"
+      "norm_label": "sourcetype",
+      "id": "scripts_seed_requirements_sourcetype"
     },
     {
       "label": "SchemaNameContext",
@@ -277,19 +264,6 @@
       "id": "lib_theme_parser_types_parsedfile"
     },
     {
-      "label": "Rule",
-      "file_type": "code",
-      "source_file": "lib/audit/rules.ts",
-      "source_location": "L26",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "rules.ts",
-      "norm_label": "rule",
-      "id": "lib_audit_rules_rule"
-    },
-    {
       "label": "RuleContext",
       "file_type": "code",
       "source_file": "lib/audit/rules.ts",
@@ -405,6 +379,19 @@
       "community_name": "cross-file/index.ts",
       "norm_label": "themeindex",
       "id": "lib_audit_themeindex_themeindex"
+    },
+    {
+      "label": "Rule",
+      "file_type": "code",
+      "source_file": "lib/audit/rules.ts",
+      "source_location": "L26",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "registry.ts",
+      "norm_label": "rule",
+      "id": "lib_audit_rules_rule"
     },
     {
       "label": "DeprecatedEntry",
@@ -836,6 +823,19 @@
       "id": "lib_theme_parser_types_sourcelocation"
     },
     {
+      "label": "AuditDiagnostics",
+      "file_type": "code",
+      "source_file": "lib/audit/diagnostics.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "auditdiagnostics",
+      "id": "lib_audit_diagnostics_auditdiagnostics"
+    },
+    {
       "label": "ThemeParseResult",
       "file_type": "code",
       "source_file": "lib/theme-parser/index.ts",
@@ -1016,18 +1016,6 @@
       "id": "app_api_audit_id_route_get"
     },
     {
-      "label": "POST()",
-      "file_type": "code",
-      "source_file": "app/api/audit/run/route.ts",
-      "source_location": "L10",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "post()",
-      "id": "app_api_audit_run_route_post"
-    },
-    {
       "label": "GET()",
       "file_type": "code",
       "source_file": "app/api/reports/[id]/route.ts",
@@ -1076,18 +1064,6 @@
       "id": "app_api_rules_route_get"
     },
     {
-      "label": "computeAuditDiagnostics()",
-      "file_type": "code",
-      "source_file": "lib/audit/diagnostics.ts",
-      "source_location": "L17",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "computeauditdiagnostics()",
-      "id": "lib_audit_diagnostics_computeauditdiagnostics"
-    },
-    {
       "label": "connectToDatabase()",
       "file_type": "code",
       "source_file": "lib/db/connect.ts",
@@ -1098,18 +1074,6 @@
       "norm_label": "connecttodatabase()",
       "community_name": "connectToDatabase",
       "id": "lib_db_connect_connecttodatabase"
-    },
-    {
-      "label": "parseThemeZip()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/index.ts",
-      "source_location": "L51",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "parsethemezip()",
-      "id": "lib_theme_parser_index_parsethemezip"
     },
     {
       "label": "cascadeDeleteFindings()",
@@ -1142,10 +1106,10 @@
       "source_location": "L1010",
       "_callable": true,
       "_origin": "ast",
-      "id": "scripts_seed_requirements_main",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "main()"
+      "norm_label": "main()",
+      "id": "scripts_seed_requirements_main"
     },
     {
       "label": "main()",
@@ -1334,10 +1298,10 @@
       "source_location": "L64",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_collectschemasettingids",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "collectschemasettingids()"
+      "norm_label": "collectschemasettingids()",
+      "id": "lib_rules_bugs_index_collectschemasettingids"
     },
     {
       "label": "findDuplicateLines()",
@@ -1346,10 +1310,10 @@
       "source_location": "L211",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_findduplicatelines",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "findduplicatelines()"
+      "norm_label": "findduplicatelines()",
+      "id": "lib_rules_bugs_index_findduplicatelines"
     },
     {
       "label": "findDuplicates()",
@@ -1358,10 +1322,10 @@
       "source_location": "L134",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_findduplicates",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "findduplicates()"
+      "norm_label": "findduplicates()",
+      "id": "lib_rules_bugs_index_findduplicates"
     },
     {
       "label": "stringIdsOf()",
@@ -1370,10 +1334,10 @@
       "source_location": "L144",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_stringidsof",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "stringidsof()"
+      "norm_label": "stringidsof()",
+      "id": "lib_rules_bugs_index_stringidsof"
     },
     {
       "label": "contrastRatio()",
@@ -1454,10 +1418,10 @@
       "source_location": "L225",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_selectorparts",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "selectorparts()"
+      "norm_label": "selectorparts()",
+      "id": "lib_rules_accessibility_index_selectorparts"
     },
     {
       "label": "stripFocusPseudo()",
@@ -1466,10 +1430,10 @@
       "source_location": "L221",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_stripfocuspseudo",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "stripfocuspseudo()"
+      "norm_label": "stripfocuspseudo()",
+      "id": "lib_rules_accessibility_index_stripfocuspseudo"
     },
     {
       "label": "themeWidePresenceRule()",
@@ -1550,8 +1514,8 @@
       "source_location": "L33",
       "_callable": true,
       "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
+      "community": 22,
+      "community_name": "runRules.ts",
       "norm_label": "basenamenoext()",
       "id": "lib_audit_themeindex_basenamenoext"
     },
@@ -1562,8 +1526,8 @@
       "source_location": "L46",
       "_callable": true,
       "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
+      "community": 22,
+      "community_name": "runRules.ts",
       "norm_label": "buildthemeindex()",
       "id": "lib_audit_themeindex_buildthemeindex"
     },
@@ -1602,6 +1566,18 @@
       "community_name": "cross-file/index.ts",
       "norm_label": "localekeyexists()",
       "id": "lib_audit_themeindex_localekeyexists"
+    },
+    {
+      "label": "findHeadingSetting()",
+      "file_type": "code",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "lib_rules_internal_index_findheadingsetting",
+      "community": 24,
+      "community_name": "registry.ts",
+      "norm_label": "findheadingsetting()"
     },
     {
       "label": "anchorPath()",
@@ -1748,6 +1724,30 @@
       "id": "lib_theme_parser_liquidjson_tryparseliquidjson"
     },
     {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/audit/run/route.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "post()",
+      "id": "app_api_audit_run_route_post"
+    },
+    {
+      "label": "computeAuditDiagnostics()",
+      "file_type": "code",
+      "source_file": "lib/audit/diagnostics.ts",
+      "source_location": "L17",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "computeauditdiagnostics()",
+      "id": "lib_audit_diagnostics_computeauditdiagnostics"
+    },
+    {
       "label": "looksLikeColorValue()",
       "file_type": "code",
       "source_file": "lib/theme-parser/cssColorNames.ts",
@@ -1818,6 +1818,18 @@
       "community_name": "theme-parser/index.ts",
       "norm_label": "parsethemedirectory()",
       "id": "lib_theme_parser_index_parsethemedirectory"
+    },
+    {
+      "label": "parseThemeZip()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/index.ts",
+      "source_location": "L51",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "parsethemezip()",
+      "id": "lib_theme_parser_index_parsethemezip"
     },
     {
       "label": "emptyMetaTags()",
@@ -2118,17 +2130,6 @@
       "id": "app_api_audit_id_route"
     },
     {
-      "label": "run/route.ts",
-      "file_type": "code",
-      "source_file": "app/api/audit/run/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "run/route.ts",
-      "id": "app_api_audit_run_route"
-    },
-    {
       "label": "reports/[id]/route.ts",
       "file_type": "code",
       "source_file": "app/api/reports/[id]/route.ts",
@@ -2173,17 +2174,6 @@
       "id": "app_api_rules_route"
     },
     {
-      "label": "diagnostics.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/diagnostics.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "connectToDatabase",
-      "norm_label": "diagnostics.ts",
-      "id": "lib_audit_diagnostics"
-    },
-    {
       "label": "connect.ts",
       "file_type": "code",
       "source_file": "lib/db/connect.ts",
@@ -2209,12 +2199,12 @@
       "label": "ALL_RULES",
       "file_type": "code",
       "source_file": "lib/rules/registry.ts",
-      "source_location": "L11",
+      "source_location": "L10",
       "_origin": "ast",
+      "id": "lib_rules_registry_all_rules",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "all_rules",
-      "id": "lib_rules_registry_all_rules"
+      "norm_label": "all_rules"
     },
     {
       "label": "audit-run.ts",
@@ -2552,10 +2542,10 @@
       "source_file": "scripts/seed-requirements.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "scripts_seed_requirements",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "seed-requirements.ts"
+      "norm_label": "seed-requirements.ts",
+      "id": "scripts_seed_requirements"
     },
     {
       "label": "requirements",
@@ -2563,10 +2553,10 @@
       "source_file": "scripts/seed-requirements.ts",
       "source_location": "L39",
       "_origin": "ast",
-      "id": "scripts_seed_requirements_requirements",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "requirements"
+      "norm_label": "requirements",
+      "id": "scripts_seed_requirements_requirements"
     },
     {
       "label": "seed-rules.ts",
@@ -3102,10 +3092,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "bugs/index.ts"
+      "norm_label": "bugs/index.ts",
+      "id": "lib_rules_bugs_index"
     },
     {
       "label": "duplicateAssetLoadingRule",
@@ -3113,10 +3103,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L226",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_duplicateassetloadingrule",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "duplicateassetloadingrule"
+      "norm_label": "duplicateassetloadingrule",
+      "id": "lib_rules_bugs_index_duplicateassetloadingrule"
     },
     {
       "label": "duplicateSchemaIdRule",
@@ -3124,10 +3114,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L151",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_duplicateschemaidrule",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "duplicateschemaidrule"
+      "norm_label": "duplicateschemaidrule",
+      "id": "lib_rules_bugs_index_duplicateschemaidrule"
     },
     {
       "label": "missingScopedSettingRule",
@@ -3135,10 +3125,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L88",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_missingscopedsettingrule",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "missingscopedsettingrule"
+      "norm_label": "missingscopedsettingrule",
+      "id": "lib_rules_bugs_index_missingscopedsettingrule"
     },
     {
       "label": "validJsonLdRule",
@@ -3146,10 +3136,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L6",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_validjsonldrule",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "validjsonldrule"
+      "norm_label": "validjsonldrule",
+      "id": "lib_rules_bugs_index_validjsonldrule"
     },
     {
       "label": "validSchemaBlockRule",
@@ -3157,10 +3147,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L35",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_validschemablockrule",
       "community": 17,
       "community_name": "bugs/index.ts",
-      "norm_label": "validschemablockrule"
+      "norm_label": "validschemablockrule",
+      "id": "lib_rules_bugs_index_validschemablockrule"
     },
     {
       "label": "reports/index.ts",
@@ -3201,10 +3191,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "accessibility/index.ts"
+      "norm_label": "accessibility/index.ts",
+      "id": "lib_rules_accessibility_index"
     },
     {
       "label": "ACCESSIBILITY_RULES",
@@ -3212,10 +3202,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L276",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_accessibility_rules",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "accessibility_rules"
+      "norm_label": "accessibility_rules",
+      "id": "lib_rules_accessibility_index_accessibility_rules"
     },
     {
       "label": "BG_LIKE_PROPS",
@@ -3223,10 +3213,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L172",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_bg_like_props",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "bg_like_props"
+      "norm_label": "bg_like_props",
+      "id": "lib_rules_accessibility_index_bg_like_props"
     },
     {
       "label": "COLOR_LIKE_PROPS",
@@ -3234,10 +3224,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L171",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_color_like_props",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "color_like_props"
+      "norm_label": "color_like_props",
+      "id": "lib_rules_accessibility_index_color_like_props"
     },
     {
       "label": "colorContrastRule",
@@ -3245,10 +3235,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L174",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_colorcontrastrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "colorcontrastrule"
+      "norm_label": "colorcontrastrule",
+      "id": "lib_rules_accessibility_index_colorcontrastrule"
     },
     {
       "label": "focusOrderRule",
@@ -3256,10 +3246,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L100",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_focusorderrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "focusorderrule"
+      "norm_label": "focusorderrule",
+      "id": "lib_rules_accessibility_index_focusorderrule"
     },
     {
       "label": "formLabelRule",
@@ -3267,10 +3257,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L34",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_formlabelrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "formlabelrule"
+      "norm_label": "formlabelrule",
+      "id": "lib_rules_accessibility_index_formlabelrule"
     },
     {
       "label": "htmlLangRule",
@@ -3278,10 +3268,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L8",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_htmllangrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "htmllangrule"
+      "norm_label": "htmllangrule",
+      "id": "lib_rules_accessibility_index_htmllangrule"
     },
     {
       "label": "missingAltRule",
@@ -3289,10 +3279,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L71",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_missingaltrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "missingaltrule"
+      "norm_label": "missingaltrule",
+      "id": "lib_rules_accessibility_index_missingaltrule"
     },
     {
       "label": "NON_LABELABLE_INPUT_TYPES",
@@ -3300,10 +3290,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L32",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_non_labelable_input_types",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "non_labelable_input_types"
+      "norm_label": "non_labelable_input_types",
+      "id": "lib_rules_accessibility_index_non_labelable_input_types"
     },
     {
       "label": "outlineRemovalRule",
@@ -3311,10 +3301,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L229",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_outlineremovalrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "outlineremovalrule"
+      "norm_label": "outlineremovalrule",
+      "id": "lib_rules_accessibility_index_outlineremovalrule"
     },
     {
       "label": "skippedHeadingA11yRule",
@@ -3322,10 +3312,10 @@
       "source_file": "lib/rules/accessibility/index.ts",
       "source_location": "L144",
       "_origin": "ast",
-      "id": "lib_rules_accessibility_index_skippedheadinga11yrule",
       "community": 19,
       "community_name": "accessibility/index.ts",
-      "norm_label": "skippedheadinga11yrule"
+      "norm_label": "skippedheadinga11yrule",
+      "id": "lib_rules_accessibility_index_skippedheadinga11yrule"
     },
     {
       "label": "package.json",
@@ -3713,6 +3703,17 @@
       "id": "lib_rules_shopify_index_seometadatasnippetrule"
     },
     {
+      "label": "SHOPIFY_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/shopify/index.ts",
+      "source_location": "L152",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "rules.ts",
+      "norm_label": "shopify_rules",
+      "id": "lib_rules_shopify_index_shopify_rules"
+    },
+    {
       "label": "shopifyLinksNofollowRule",
       "file_type": "code",
       "source_file": "lib/rules/shopify/index.ts",
@@ -3733,17 +3734,6 @@
       "community_name": "rules.ts",
       "norm_label": "shopify_settings_rules",
       "id": "lib_rules_shopify_settings_shopify_settings_rules"
-    },
-    {
-      "label": "internal/index.ts",
-      "file_type": "code",
-      "source_file": "lib/rules/internal/index.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 21,
-      "norm_label": "internal/index.ts",
-      "community_name": "internal/index.ts",
-      "id": "lib_rules_internal_index"
     },
     {
       "label": "audit/index.ts",
@@ -3894,10 +3884,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L262",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_bug_rules",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "bug_rules"
+      "norm_label": "bug_rules",
+      "id": "lib_rules_bugs_index_bug_rules"
     },
     {
       "label": "CROSS_FILE_RULES",
@@ -3911,26 +3901,48 @@
       "id": "lib_rules_cross_file_index_cross_file_rules"
     },
     {
+      "label": "internal/index.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "lib_rules_internal_index",
+      "community": 24,
+      "community_name": "registry.ts",
+      "norm_label": "internal/index.ts"
+    },
+    {
+      "label": "headingMatchesSectionNameRule",
+      "file_type": "code",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "lib_rules_internal_index_headingmatchessectionnamerule",
+      "community": 24,
+      "community_name": "registry.ts",
+      "norm_label": "headingmatchessectionnamerule"
+    },
+    {
+      "label": "INTERNAL_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "lib_rules_internal_index_internal_rules",
+      "community": 24,
+      "community_name": "registry.ts",
+      "norm_label": "internal_rules"
+    },
+    {
       "label": "registry.ts",
       "file_type": "code",
       "source_file": "lib/rules/registry.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_rules_registry",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "registry.ts",
-      "id": "lib_rules_registry"
-    },
-    {
-      "label": "SHOPIFY_RULES",
-      "file_type": "code",
-      "source_file": "lib/rules/shopify/index.ts",
-      "source_location": "L152",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "registry.ts",
-      "norm_label": "shopify_rules",
-      "id": "lib_rules_shopify_index_shopify_rules"
+      "norm_label": "registry.ts"
     },
     {
       "label": "technical-seo/index.ts",
@@ -3938,10 +3950,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "technical-seo/index.ts"
+      "norm_label": "technical-seo/index.ts",
+      "id": "lib_rules_technical_seo_index"
     },
     {
       "label": "imageDimensionsRule",
@@ -3949,10 +3961,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L61",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index_imagedimensionsrule",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "imagedimensionsrule"
+      "norm_label": "imagedimensionsrule",
+      "id": "lib_rules_technical_seo_index_imagedimensionsrule"
     },
     {
       "label": "multipleH1Rule",
@@ -3960,10 +3972,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L30",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index_multipleh1rule",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "multipleh1rule"
+      "norm_label": "multipleh1rule",
+      "id": "lib_rules_technical_seo_index_multipleh1rule"
     },
     {
       "label": "renderBlockingScriptRule",
@@ -3971,10 +3983,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L90",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index_renderblockingscriptrule",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "renderblockingscriptrule"
+      "norm_label": "renderblockingscriptrule",
+      "id": "lib_rules_technical_seo_index_renderblockingscriptrule"
     },
     {
       "label": "skippedHeadingSeoRule",
@@ -3982,10 +3994,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L4",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index_skippedheadingseorule",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "skippedheadingseorule"
+      "norm_label": "skippedheadingseorule",
+      "id": "lib_rules_technical_seo_index_skippedheadingseorule"
     },
     {
       "label": "TECHNICAL_SEO_RULES",
@@ -3993,10 +4005,10 @@
       "source_file": "lib/rules/technical-seo/index.ts",
       "source_location": "L122",
       "_origin": "ast",
-      "id": "lib_rules_technical_seo_index_technical_seo_rules",
       "community": 24,
       "community_name": "registry.ts",
-      "norm_label": "technical_seo_rules"
+      "norm_label": "technical_seo_rules",
+      "id": "lib_rules_technical_seo_index_technical_seo_rules"
     },
     {
       "label": "technical-aeo/index.ts",
@@ -4591,6 +4603,28 @@
       "community_name": "types.ts",
       "norm_label": "types.ts",
       "id": "lib_theme_parser_types"
+    },
+    {
+      "label": "run/route.ts",
+      "file_type": "code",
+      "source_file": "app/api/audit/run/route.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "run/route.ts",
+      "id": "app_api_audit_run_route"
+    },
+    {
+      "label": "diagnostics.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/diagnostics.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "diagnostics.ts",
+      "id": "lib_audit_diagnostics"
     },
     {
       "label": "cssColorNames.ts",
@@ -6439,9 +6473,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_rules_rule",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules_rule"
     },
     {
       "relation": "imports",
@@ -6451,9 +6485,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_colorcontrast_contrastratio",
-      "confidence_score": 1.0
+      "target": "lib_audit_colorcontrast_contrastratio"
     },
     {
       "relation": "imports",
@@ -6463,9 +6497,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_colorcontrast_parsecolortorgb",
-      "confidence_score": 1.0
+      "target": "lib_audit_colorcontrast_parsecolortorgb"
     },
     {
       "relation": "imports",
@@ -6475,9 +6509,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_headingchecks_findskippedheadinglevels",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findskippedheadinglevels"
     },
     {
       "relation": "imports",
@@ -6487,9 +6521,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_audit_rules_rule",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules_rule"
     },
     {
       "relation": "imports",
@@ -6531,13 +6565,25 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_internal_index",
+      "target": "lib_audit_rules_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/rules/registry.ts",
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_audit_rules_rule"
+      "target": "lib_audit_rules_rule",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6547,9 +6593,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_shopify_index_shopify_rules"
+      "target": "lib_rules_shopify_index_shopify_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6559,9 +6605,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_accessibility_index_accessibility_rules"
+      "target": "lib_rules_accessibility_index_accessibility_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6571,9 +6617,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_technical_seo_index_technical_seo_rules"
+      "target": "lib_rules_technical_seo_index_technical_seo_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6583,9 +6629,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_technical_aeo_index_technical_aeo_rules"
+      "target": "lib_rules_technical_aeo_index_technical_aeo_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6595,9 +6641,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_bugs_index_bug_rules"
+      "target": "lib_rules_bugs_index_bug_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6607,9 +6653,21 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_cross_file_index_cross_file_rules"
+      "target": "lib_rules_cross_file_index_cross_file_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/registry.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_registry",
+      "target": "lib_rules_internal_index_internal_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6703,9 +6761,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_audit_rules_rule",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules_rule"
     },
     {
       "relation": "imports",
@@ -6715,9 +6773,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_audit_headingchecks_findmultipleh1",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findmultipleh1"
     },
     {
       "relation": "imports",
@@ -6727,9 +6785,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_audit_headingchecks_findskippedheadinglevels",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks_findskippedheadinglevels"
     },
     {
       "relation": "imports",
@@ -7639,9 +7697,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "lib_db_connect_connecttodatabase",
-      "confidence_score": 1.0
+      "target": "lib_db_connect_connecttodatabase"
     },
     {
       "relation": "imports",
@@ -7651,9 +7709,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement_requirement",
-      "confidence_score": 1.0
+      "target": "models_requirement_requirement"
     },
     {
       "relation": "imports",
@@ -7663,9 +7721,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement_requirement_source_types",
-      "confidence_score": 1.0
+      "target": "models_requirement_requirement_source_types"
     },
     {
       "relation": "imports",
@@ -7675,9 +7733,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding_finding_categories",
-      "confidence_score": 1.0
+      "target": "models_finding_finding_categories"
     },
     {
       "relation": "imports",
@@ -7687,9 +7745,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding_finding_severities",
-      "confidence_score": 1.0
+      "target": "models_finding_finding_severities"
     },
     {
       "relation": "imports",
@@ -8179,9 +8237,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_rules",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules"
     },
     {
       "relation": "imports_from",
@@ -8191,9 +8249,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_colorcontrast",
-      "confidence_score": 1.0
+      "target": "lib_audit_colorcontrast"
     },
     {
       "relation": "imports_from",
@@ -8203,9 +8261,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_audit_headingchecks",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks"
     },
     {
       "relation": "imports_from",
@@ -8215,9 +8273,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_audit_rules",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules"
     },
     {
       "relation": "imports_from",
@@ -8247,13 +8305,25 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_internal_index",
+      "target": "lib_audit_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/rules/registry.ts",
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_audit_rules"
+      "target": "lib_audit_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8263,9 +8333,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_shopify_index"
+      "target": "lib_rules_shopify_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8275,9 +8345,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_accessibility_index"
+      "target": "lib_rules_accessibility_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8287,9 +8357,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_technical_seo_index"
+      "target": "lib_rules_technical_seo_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8299,9 +8369,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_technical_aeo_index"
+      "target": "lib_rules_technical_aeo_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8311,9 +8381,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_bugs_index"
+      "target": "lib_rules_bugs_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8323,9 +8393,21 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_rules_registry",
-      "target": "lib_rules_cross_file_index"
+      "target": "lib_rules_cross_file_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/registry.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_registry",
+      "target": "lib_rules_internal_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8419,9 +8501,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_audit_rules",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules"
     },
     {
       "relation": "imports_from",
@@ -8431,9 +8513,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_audit_headingchecks",
-      "confidence_score": 1.0
+      "target": "lib_audit_headingchecks"
     },
     {
       "relation": "imports_from",
@@ -8683,9 +8765,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "lib_db_connect",
-      "confidence_score": 1.0
+      "target": "lib_db_connect"
     },
     {
       "relation": "imports_from",
@@ -8695,9 +8777,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement",
-      "confidence_score": 1.0
+      "target": "models_requirement"
     },
     {
       "relation": "imports_from",
@@ -8707,9 +8789,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding",
-      "confidence_score": 1.0
+      "target": "models_finding"
     },
     {
       "relation": "imports_from",
@@ -9527,9 +9609,9 @@
       "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_focusorderrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_focusorderrule"
     },
     {
       "relation": "contains",
@@ -9538,9 +9620,9 @@
       "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_skippedheadinga11yrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_skippedheadinga11yrule"
     },
     {
       "relation": "contains",
@@ -9549,9 +9631,9 @@
       "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_color_like_props",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_color_like_props"
     },
     {
       "relation": "contains",
@@ -9560,9 +9642,9 @@
       "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_bg_like_props",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_bg_like_props"
     },
     {
       "relation": "contains",
@@ -9571,9 +9653,9 @@
       "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_colorcontrastrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_colorcontrastrule"
     },
     {
       "relation": "contains",
@@ -9582,9 +9664,9 @@
       "source_location": "L221",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_stripfocuspseudo",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_stripfocuspseudo"
     },
     {
       "relation": "contains",
@@ -9593,9 +9675,9 @@
       "source_location": "L225",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_selectorparts",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_selectorparts"
     },
     {
       "relation": "contains",
@@ -9604,9 +9686,9 @@
       "source_location": "L229",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_outlineremovalrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_outlineremovalrule"
     },
     {
       "relation": "contains",
@@ -9615,9 +9697,9 @@
       "source_location": "L276",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_accessibility_rules",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_accessibility_rules"
     },
     {
       "relation": "contains",
@@ -9626,9 +9708,9 @@
       "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_non_labelable_input_types",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_non_labelable_input_types"
     },
     {
       "relation": "contains",
@@ -9637,9 +9719,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_formlabelrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_formlabelrule"
     },
     {
       "relation": "contains",
@@ -9648,9 +9730,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_missingaltrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_missingaltrule"
     },
     {
       "relation": "contains",
@@ -9659,9 +9741,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_accessibility_index",
-      "target": "lib_rules_accessibility_index_htmllangrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_accessibility_index_htmllangrule"
     },
     {
       "relation": "contains",
@@ -9670,9 +9752,9 @@
       "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_findduplicates",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_findduplicates"
     },
     {
       "relation": "contains",
@@ -9681,9 +9763,9 @@
       "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_stringidsof",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_stringidsof"
     },
     {
       "relation": "contains",
@@ -9692,9 +9774,9 @@
       "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_duplicateschemaidrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_duplicateschemaidrule"
     },
     {
       "relation": "contains",
@@ -9703,9 +9785,9 @@
       "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_findduplicatelines",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_findduplicatelines"
     },
     {
       "relation": "contains",
@@ -9714,9 +9796,9 @@
       "source_location": "L226",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_duplicateassetloadingrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_duplicateassetloadingrule"
     },
     {
       "relation": "contains",
@@ -9725,9 +9807,9 @@
       "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_bug_rules",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_bug_rules"
     },
     {
       "relation": "contains",
@@ -9736,9 +9818,9 @@
       "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_validschemablockrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_validschemablockrule"
     },
     {
       "relation": "contains",
@@ -9747,9 +9829,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_validjsonldrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_validjsonldrule"
     },
     {
       "relation": "contains",
@@ -9758,9 +9840,9 @@
       "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_collectschemasettingids",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_collectschemasettingids"
     },
     {
       "relation": "contains",
@@ -9769,9 +9851,9 @@
       "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_missingscopedsettingrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_missingscopedsettingrule"
     },
     {
       "relation": "contains",
@@ -9886,13 +9968,46 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "lib/rules/registry.ts",
-      "source_location": "L11",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
+      "source": "lib_rules_internal_index",
+      "target": "lib_rules_internal_index_headingmatchessectionnamerule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_internal_index",
+      "target": "lib_rules_internal_index_internal_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/internal/index.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_rules_internal_index",
+      "target": "lib_rules_internal_index_findheadingsetting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rules/registry.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
       "source": "lib_rules_registry",
-      "target": "lib_rules_registry_all_rules"
+      "target": "lib_rules_registry_all_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -10286,9 +10401,9 @@
       "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_rules_technical_seo_index_technical_seo_rules",
-      "confidence_score": 1.0
+      "target": "lib_rules_technical_seo_index_technical_seo_rules"
     },
     {
       "relation": "contains",
@@ -10297,9 +10412,9 @@
       "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_rules_technical_seo_index_multipleh1rule",
-      "confidence_score": 1.0
+      "target": "lib_rules_technical_seo_index_multipleh1rule"
     },
     {
       "relation": "contains",
@@ -10308,9 +10423,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_rules_technical_seo_index_skippedheadingseorule",
-      "confidence_score": 1.0
+      "target": "lib_rules_technical_seo_index_skippedheadingseorule"
     },
     {
       "relation": "contains",
@@ -10319,9 +10434,9 @@
       "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_rules_technical_seo_index_imagedimensionsrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_technical_seo_index_imagedimensionsrule"
     },
     {
       "relation": "contains",
@@ -10330,9 +10445,9 @@
       "source_location": "L90",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_technical_seo_index",
-      "target": "lib_rules_technical_seo_index_renderblockingscriptrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_technical_seo_index_renderblockingscriptrule"
     },
     {
       "relation": "contains",
@@ -12145,9 +12260,9 @@
       "source_location": "L1010",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_main",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_main"
     },
     {
       "relation": "contains",
@@ -12156,9 +12271,9 @@
       "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_sourcetype",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_sourcetype"
     },
     {
       "relation": "contains",
@@ -12167,9 +12282,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_category",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_category"
     },
     {
       "relation": "contains",
@@ -12178,9 +12293,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_severity",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_severity"
     },
     {
       "relation": "contains",
@@ -12189,9 +12304,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_seedrequirement",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_seedrequirement"
     },
     {
       "relation": "contains",
@@ -12200,9 +12315,9 @@
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_requirements",
-      "confidence_score": 1.0
+      "target": "scripts_seed_requirements_requirements"
     },
     {
       "relation": "contains",
@@ -12478,5 +12593,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "cc97082334622ee56258e8a6e2195ef7444e6f48"
+  "built_at_commit": "5f82b2f9976292a722d212a9fb2d4f310c4e432e"
 }
