@@ -1,0 +1,395 @@
+{
+  "communities": {
+    "0": [
+      "models_requirement",
+      "models_requirement_requirement",
+      "models_requirement_requirement_source_types",
+      "models_requirement_requirement_statuses",
+      "models_requirement_requirementdoc",
+      "models_requirement_requirementschema",
+      "models_requirement_rule_statuses",
+      "scripts_seed_requirements",
+      "scripts_seed_requirements_category",
+      "scripts_seed_requirements_main",
+      "scripts_seed_requirements_requirements",
+      "scripts_seed_requirements_seedrequirement",
+      "scripts_seed_requirements_severity",
+      "scripts_seed_requirements_sourcetype"
+    ],
+    "1": [
+      "eslint",
+      "eslint_config_next",
+      "package_devdependencies",
+      "package_devdependencies_eslint",
+      "package_devdependencies_eslint_config_next",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_tsx",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "tsx",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript"
+    ],
+    "2": [
+      "mongoose",
+      "next",
+      "package",
+      "package_dependencies",
+      "package_dependencies_mongoose",
+      "package_dependencies_next",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_seed_requirements",
+      "package_scripts_start",
+      "package_version",
+      "react",
+      "react_dom"
+    ],
+    "3": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_esnext",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_allowjs",
+      "tsconfig_compileroptions_esmoduleinterop",
+      "tsconfig_compileroptions_incremental",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_plugins",
+      "tsconfig_compileroptions_resolvejsonmodule",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target"
+    ],
+    "4": [
+      "app_api_audit_id_findings_route",
+      "app_api_audit_id_findings_route_get",
+      "app_api_audit_id_route",
+      "app_api_audit_id_route_get",
+      "app_api_audit_run_route",
+      "app_api_audit_run_route_post",
+      "app_api_reports_id_route",
+      "app_api_reports_id_route_get",
+      "app_api_reports_route",
+      "app_api_reports_route_get",
+      "app_api_requirements_route",
+      "app_api_requirements_route_get",
+      "app_api_rules_route",
+      "app_api_rules_route_get",
+      "lib_db_connect",
+      "lib_db_connect_connecttodatabase",
+      "lib_db_connect_globalformongoose",
+      "lib_db_connect_mongoosecache",
+      "models_audit_run_auditrun",
+      "models_finding_finding",
+      "models_theme_theme"
+    ],
+    "5": [
+      "models_audit_run",
+      "models_audit_run_audit_run_statuses",
+      "models_audit_run_auditrundoc",
+      "models_audit_run_auditrunschema",
+      "models_audit_run_auditrunsummaryschema",
+      "models_audit_run_cascadedeletefindings",
+      "models_finding",
+      "models_finding_finding_categories",
+      "models_finding_finding_layers",
+      "models_finding_finding_severities",
+      "models_finding_findingdoc",
+      "models_finding_findingschema",
+      "models_index",
+      "models_rule",
+      "models_rule_rule",
+      "models_rule_ruledoc",
+      "models_rule_ruleschema",
+      "models_theme",
+      "models_theme_cascadedeleteruns",
+      "models_theme_themedoc",
+      "models_theme_themeschema"
+    ],
+    "6": [
+      "ref_mts",
+      "ref_next_dev_types_ts",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_exclude",
+      "tsconfig_include"
+    ],
+    "7": [
+      "app_layout",
+      "app_layout_geistmono",
+      "app_layout_geistsans",
+      "app_layout_metadata",
+      "app_layout_nav_links",
+      "app_layout_rootlayout"
+    ],
+    "8": [
+      "app_rules_page",
+      "app_rules_page_requirement",
+      "app_rules_page_rule_status_labels",
+      "app_rules_page_rulespage",
+      "app_rules_page_source_type_labels"
+    ],
+    "9": [
+      "app_reports_page",
+      "app_reports_page_auditrunrow",
+      "app_reports_page_formatdate",
+      "app_reports_page_reportspage"
+    ],
+    "10": [
+      "models_audit_settings",
+      "models_audit_settings_auditsettings",
+      "models_audit_settings_auditsettingsdoc",
+      "models_audit_settings_auditsettingsschema"
+    ],
+    "11": [
+      "app_audit_page",
+      "app_audit_page_auditpage",
+      "app_audit_page_auditrunresult"
+    ],
+    "12": [
+      "app_page",
+      "app_page_home",
+      "app_page_sections"
+    ],
+    "13": [
+      "app_settings_page",
+      "app_settings_page_settingspage"
+    ],
+    "14": [
+      "eslint_config",
+      "eslint_config_eslintconfig"
+    ],
+    "15": [
+      "next_config",
+      "next_config_nextconfig"
+    ],
+    "16": [
+      "postcss_config",
+      "postcss_config_config"
+    ],
+    "17": [
+      "lib_audit_index"
+    ],
+    "18": [
+      "lib_reports_index"
+    ],
+    "19": [
+      "lib_rules_accessibility_index"
+    ],
+    "20": [
+      "lib_rules_bugs_index"
+    ],
+    "21": [
+      "lib_rules_internal_index"
+    ],
+    "22": [
+      "lib_rules_shopify_index"
+    ],
+    "23": [
+      "lib_rules_technical_aeo_index"
+    ],
+    "24": [
+      "lib_rules_technical_seo_index"
+    ],
+    "25": [
+      "lib_theme_parser_index"
+    ]
+  },
+  "cohesion": {
+    "0": 0.16483516483516483,
+    "1": 0.10526315789473684,
+    "2": 0.10526315789473684,
+    "3": 0.10526315789473684,
+    "4": 0.18095238095238095,
+    "5": 0.1380952380952381,
+    "6": 0.2,
+    "7": 0.3333333333333333,
+    "8": 0.4,
+    "9": 0.6666666666666666,
+    "10": 0.5,
+    "11": 0.6666666666666666,
+    "12": 0.6666666666666666,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0
+  },
+  "gods": [
+    {
+      "id": "lib_db_connect_connecttodatabase",
+      "label": "connectToDatabase()",
+      "degree": 17
+    },
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "tsconfig_include",
+      "label": "include",
+      "degree": 7
+    },
+    {
+      "id": "package_scripts",
+      "label": "scripts",
+      "degree": 6
+    },
+    {
+      "id": "models_audit_run_auditrun",
+      "label": "AuditRun",
+      "degree": 5
+    },
+    {
+      "id": "models_finding_finding_categories",
+      "label": "FINDING_CATEGORIES",
+      "degree": 4
+    },
+    {
+      "id": "models_finding_finding_severities",
+      "label": "FINDING_SEVERITIES",
+      "degree": 4
+    },
+    {
+      "id": "tsconfig_compileroptions_lib",
+      "label": "lib",
+      "degree": 4
+    },
+    {
+      "id": "models_theme_cascadedeleteruns",
+      "label": "cascadeDeleteRuns()",
+      "degree": 3
+    },
+    {
+      "id": "models_requirement_requirement",
+      "label": "Requirement",
+      "degree": 3
+    }
+  ],
+  "surprises": [
+    {
+      "source": "main()",
+      "target": "connectToDatabase()",
+      "source_files": [
+        "scripts/seed-requirements.ts",
+        "lib/db/connect.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `main()` unexpectedly reaches hub `connectToDatabase()`"
+    },
+    {
+      "source": "GET()",
+      "target": "connectToDatabase()",
+      "source_files": [
+        "app/api/audit/[id]/findings/route.ts",
+        "lib/db/connect.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `GET()` unexpectedly reaches hub `connectToDatabase()`"
+    },
+    {
+      "source": "GET()",
+      "target": "connectToDatabase()",
+      "source_files": [
+        "app/api/audit/[id]/route.ts",
+        "lib/db/connect.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `GET()` unexpectedly reaches hub `connectToDatabase()`"
+    },
+    {
+      "source": "GET()",
+      "target": "connectToDatabase()",
+      "source_files": [
+        "app/api/reports/[id]/route.ts",
+        "lib/db/connect.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `GET()` unexpectedly reaches hub `connectToDatabase()`"
+    },
+    {
+      "source": "GET()",
+      "target": "connectToDatabase()",
+      "source_files": [
+        "app/api/reports/route.ts",
+        "lib/db/connect.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `GET()` unexpectedly reaches hub `connectToDatabase()`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `devDependencies` connect `devDependencies` to `package.json`?",
+      "why": "High betweenness centrality (0.036) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `connectToDatabase()` connect `connectToDatabase` to `seed-requirements.ts`?",
+      "why": "High betweenness centrality (0.025) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `compilerOptions` connect `compilerOptions` to `include`?",
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `FindingDoc`, `RequirementDoc`, `RuleDoc` to the rest of the system?",
+      "why": "83 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `devDependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `package.json` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `compilerOptions` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    }
+  ]
+}
