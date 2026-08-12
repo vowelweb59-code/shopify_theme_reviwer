@@ -1,5 +1,5 @@
 {
-  "0": "connectToDatabase",
+  "0": "rules.ts",
   "1": "devDependencies",
   "2": "dependencies",
   "3": "compilerOptions",
@@ -18,7 +18,7 @@
   "16": "postcss.config.mjs",
   "18": "reports/index.ts",
   "19": "accessibility/index.ts",
-  "20": "rules.ts",
+  "20": "registry.ts",
   "22": "runRules.ts",
   "23": "cross-file/index.ts",
   "26": "Shopify Theme Auditor"

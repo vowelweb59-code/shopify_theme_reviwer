@@ -115,8 +115,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/index.ts": {
-    "mtime": 1786523542.19523,
-    "ast_hash": "71ab3c674bc2e2e9018bb73af4ad4def",
+    "mtime": 1786536543.3198628,
+    "ast_hash": "d1deedcf6c383280f51b14b09fbd4728",
     "semantic_hash": ""
   },
   "models/audit-run.ts": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/types.ts": {
-    "mtime": 1786532072.3134663,
-    "ast_hash": "e83ffed8091ce197de3f1f557c6d8365",
+    "mtime": 1786536511.8905733,
+    "ast_hash": "fb5fbee0efb3f5494590f17eea1fd1db",
     "semantic_hash": ""
   },
   "lib/theme-parser/validateThemeStructure.ts": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786536223.737298,
-    "ast_hash": "efc326a0a8e3a7a9d49acd7a40e7514b",
+    "mtime": 1786536564.957906,
+    "ast_hash": "fd4f32d5477952d435894dd7dc3779b8",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {
@@ -417,6 +417,11 @@
   "lib/audit/templateComposition.ts": {
     "mtime": 1786535857.7646155,
     "ast_hash": "63f56483c964dbf039e1c99586ba4ade",
+    "semantic_hash": ""
+  },
+  "lib/theme-parser/extractJsStructure.ts": {
+    "mtime": 1786536520.7990952,
+    "ast_hash": "b9945fe76544e9965c05da2b6544db90",
     "semantic_hash": ""
   }
 }

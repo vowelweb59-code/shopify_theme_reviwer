@@ -1,21 +1,21 @@
 # Graph Report - Shopify Theme Auditor  (2026-08-12)
 
 ## Corpus Check
-- 78 files · ~49,174 words
+- 79 files · ~49,491 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 443 nodes · 697 edges · 23 communities (19 shown, 4 thin omitted)
+- 448 nodes · 709 edges · 23 communities (19 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ead9f626`
+- Built from commit: `f7d7b10b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- connectToDatabase
+- rules.ts
 - devDependencies
 - dependencies
 - compilerOptions
@@ -32,7 +32,7 @@
 - next.config.ts
 - postcss.config.mjs
 - accessibility/index.ts
-- rules.ts
+- registry.ts
 - runRules.ts
 - cross-file/index.ts
 - Shopify Theme Auditor
@@ -42,22 +42,22 @@
 2. `compilerOptions` - 16 edges
 3. `Rule` - 12 edges
 4. `parseJsonFile()` - 12 edges
-5. `buildLineIndex()` - 9 edges
-6. `extractLiquidStructure()` - 8 edges
-7. `parseOneFile()` - 7 edges
+5. `buildLineIndex()` - 11 edges
+6. `parseOneFile()` - 8 edges
+7. `extractLiquidStructure()` - 8 edges
 8. `scripts` - 7 edges
 9. `Shopify Theme Auditor` - 7 edges
 10. `include` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `POST()` --calls--> `parseThemeZip()`  [EXTRACTED]
+  app/api/audit/run/route.ts → lib/theme-parser/index.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/audit/[id]/findings/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/audit/[id]/route.ts → lib/db/connect.ts
 - `POST()` --calls--> `runAuditRules()`  [EXTRACTED]
   app/api/audit/run/route.ts → lib/audit/index.ts
-- `POST()` --calls--> `parseThemeZip()`  [EXTRACTED]
-  app/api/audit/run/route.ts → lib/theme-parser/index.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/reports/[id]/route.ts → lib/db/connect.ts
 
@@ -66,7 +66,7 @@
 
 ## Communities (23 total, 4 thin omitted)
 
-### Community 0 - "connectToDatabase"
+### Community 0 - "rules.ts"
 Cohesion: 0.05
 Nodes (51): GET(), GET(), POST(), GET(), GET(), GET(), GET(), AuditDiagnostics (+43 more)
 
@@ -91,8 +91,8 @@ Cohesion: 0.09
 Nodes (30): CSS_NAMED_COLORS, looksLikeColorValue(), COLOR_PROPERTIES, extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory() (+22 more)
 
 ### Community 6 - "parseJsonFile.ts"
-Cohesion: 0.23
-Nodes (14): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, buildLineIndex(), extractSettingKeys(), extractTemplateSectionReferences(), findLine(), flattenLocaleKeys() (+6 more)
+Cohesion: 0.19
+Nodes (16): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports(), buildLineIndex(), extractSettingKeys(), extractTemplateSectionReferences(), findLine() (+8 more)
 
 ### Community 7 - "layout.tsx"
 Cohesion: 0.33
@@ -118,9 +118,9 @@ Nodes (11): AuditRunResult, AuditDiagnostics, DiagnosticsNote(), FindingRow, Fin
 Cohesion: 0.13
 Nodes (15): contrastRatio(), parseColorToRgb(), relativeLuminance(), srgbChannelToLinear(), ACCESSIBILITY_RULES, BG_LIKE_PROPS, COLOR_LIKE_PROPS, colorContrastRule (+7 more)
 
-### Community 20 - "rules.ts"
-Cohesion: 0.07
-Nodes (25): Rule, RuleContext, Severity, BUG_RULES, duplicateAssetLoadingRule, duplicateSchemaIdRule, missingScopedSettingRule, validJsonLdRule (+17 more)
+### Community 20 - "registry.ts"
+Cohesion: 0.06
+Nodes (26): Rule, Severity, BUG_RULES, duplicateAssetLoadingRule, duplicateSchemaIdRule, missingScopedSettingRule, validJsonLdRule, validSchemaBlockRule (+18 more)
 
 ### Community 22 - "runRules.ts"
 Cohesion: 0.16
@@ -135,24 +135,24 @@ Cohesion: 0.25
 Nodes (7): Code graph, Database, Folder structure, Requirements knowledge base, Setup, Shopify Theme Auditor, Stack
 
 ## Knowledge Gaps
-- **188 isolated node(s):** `missingSectionRule`, `missingSnippetRule`, `missingTemplateSectionRule`, `missingAssetRule`, `missingTranslationKeyRule` (+183 more)
+- **189 isolated node(s):** `missingSectionRule`, `missingSnippetRule`, `missingTemplateSectionRule`, `missingAssetRule`, `missingJsImportRule` (+184 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Rule` connect `rules.ts` to `settings.ts`, `accessibility/index.ts`, `runRules.ts`, `cross-file/index.ts`?**
+- **Why does `connectToDatabase()` connect `rules.ts` to `registry.ts`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `Rule` connect `registry.ts` to `rules.ts`, `settings.ts`, `accessibility/index.ts`, `runRules.ts`, `cross-file/index.ts`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Why does `parseJsonFile()` connect `parseJsonFile.ts` to `theme-parser/index.ts`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **What connects `missingSectionRule`, `missingSnippetRule`, `missingTemplateSectionRule` to the rest of the system?**
-  _188 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `connectToDatabase` be split into smaller, more focused modules?**
-  _Cohesion score 0.054987212276214836 - nodes in this community are weakly interconnected._
+  _189 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `rules.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05328218243819267 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._
-- **Should `compilerOptions` be split into smaller, more focused modules?**
-  _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
