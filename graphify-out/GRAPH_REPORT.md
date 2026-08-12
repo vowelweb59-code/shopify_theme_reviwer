@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-08-12)
 
 ## Corpus Check
-- 75 files · ~40,250 words
+- 75 files · ~42,737 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1117e653`
+- Built from commit: `2285bb02`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,16 +47,16 @@
 10. `include` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `POST()` --calls--> `parseThemeZip()`  [EXTRACTED]
-  app/api/audit/run/route.ts → lib/theme-parser/index.ts
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/audit/[id]/findings/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/audit/[id]/route.ts → lib/db/connect.ts
+- `POST()` --calls--> `parseThemeZip()`  [EXTRACTED]
+  app/api/audit/run/route.ts → lib/theme-parser/index.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/reports/[id]/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/reports/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -120,7 +120,7 @@ Cohesion: 0.25
 Nodes (7): Code graph, Database, Folder structure, Requirements knowledge base, Setup, Shopify Theme Auditor, Stack
 
 ## Knowledge Gaps
-- **159 isolated node(s):** `SEVERITY_STYLES`, `AuditRunResult`, `AuditRunDetail`, `AuditDiagnostics`, `validJsonLdRule` (+154 more)
+- **159 isolated node(s):** `SourceType`, `Category`, `Severity`, `SeedRequirement`, `requirements` (+154 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -131,7 +131,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `dependencies`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **What connects `SEVERITY_STYLES`, `AuditRunResult`, `AuditRunDetail` to the rest of the system?**
+- **What connects `SourceType`, `Category`, `Severity` to the rest of the system?**
   _159 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `connectToDatabase` be split into smaller, more focused modules?**
   _Cohesion score 0.05289193302891933 - nodes in this community are weakly interconnected._

@@ -11,10 +11,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_diagnostics_auditdiagnostics",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "auditdiagnostics"
+      "norm_label": "auditdiagnostics",
+      "id": "lib_audit_diagnostics_auditdiagnostics"
     },
     {
       "label": "RunRulesResult",
@@ -50,10 +50,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "models_audit_run_auditrundoc",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "auditrundoc"
+      "norm_label": "auditrundoc",
+      "id": "models_audit_run_auditrundoc"
     },
     {
       "label": "AuditSettingsDoc",
@@ -128,10 +128,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "scripts_seed_requirements_category",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "category",
-      "id": "scripts_seed_requirements_category"
+      "norm_label": "category"
     },
     {
       "label": "SeedRequirement",
@@ -141,10 +141,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "scripts_seed_requirements_seedrequirement",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "seedrequirement",
-      "id": "scripts_seed_requirements_seedrequirement"
+      "norm_label": "seedrequirement"
     },
     {
       "label": "Severity",
@@ -154,10 +154,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "scripts_seed_requirements_severity",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "severity",
-      "id": "scripts_seed_requirements_severity"
+      "norm_label": "severity"
     },
     {
       "label": "SourceType",
@@ -167,10 +167,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "scripts_seed_requirements_sourcetype",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "sourcetype",
-      "id": "scripts_seed_requirements_sourcetype"
+      "norm_label": "sourcetype"
     },
     {
       "label": "AuditRunResult",
@@ -180,10 +180,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_audit_page_auditrunresult",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "auditrunresult"
+      "norm_label": "auditrunresult",
+      "id": "app_audit_page_auditrunresult"
     },
     {
       "label": "AuditDiagnostics",
@@ -193,10 +193,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_components_findings_auditdiagnostics",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "auditdiagnostics"
+      "norm_label": "auditdiagnostics",
+      "id": "app_components_findings_auditdiagnostics"
     },
     {
       "label": "FindingRow",
@@ -206,10 +206,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_components_findings_findingrow",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "findingrow"
+      "norm_label": "findingrow",
+      "id": "app_components_findings_findingrow"
     },
     {
       "label": "FindingSummary",
@@ -219,10 +219,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_components_findings_findingsummary",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "findingsummary"
+      "norm_label": "findingsummary",
+      "id": "app_components_findings_findingsummary"
     },
     {
       "label": "AuditRunDetail",
@@ -232,10 +232,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_reports_id_page_auditrundetail",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "auditrundetail"
+      "norm_label": "auditrundetail",
+      "id": "app_reports_id_page_auditrundetail"
     },
     {
       "label": "FindingCategory",
@@ -983,10 +983,10 @@
       "source_location": "L10",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_api_audit_run_route_post",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "post()"
+      "norm_label": "post()",
+      "id": "app_api_audit_run_route_post"
     },
     {
       "label": "GET()",
@@ -1043,10 +1043,10 @@
       "source_location": "L17",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_diagnostics_computeauditdiagnostics",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "computeauditdiagnostics()"
+      "norm_label": "computeauditdiagnostics()",
+      "id": "lib_audit_diagnostics_computeauditdiagnostics"
     },
     {
       "label": "loadEnabledRules()",
@@ -1091,10 +1091,10 @@
       "source_location": "L55",
       "_callable": true,
       "_origin": "ast",
-      "id": "models_audit_run_cascadedeletefindings",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "cascadedeletefindings()"
+      "norm_label": "cascadedeletefindings()",
+      "id": "models_audit_run_cascadedeletefindings"
     },
     {
       "label": "cascadeDeleteRuns()",
@@ -1112,13 +1112,13 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "scripts/seed-requirements.ts",
-      "source_location": "L503",
+      "source_location": "L981",
       "_callable": true,
       "_origin": "ast",
+      "id": "scripts_seed_requirements_main",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "main()",
-      "id": "scripts_seed_requirements_main"
+      "norm_label": "main()"
     },
     {
       "label": "main()",
@@ -1139,10 +1139,10 @@
       "source_location": "L29",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_audit_page_auditpage",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "auditpage()"
+      "norm_label": "auditpage()",
+      "id": "app_audit_page_auditpage"
     },
     {
       "label": "DiagnosticsNote()",
@@ -1151,10 +1151,10 @@
       "source_location": "L77",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_components_findings_diagnosticsnote",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "diagnosticsnote()"
+      "norm_label": "diagnosticsnote()",
+      "id": "app_components_findings_diagnosticsnote"
     },
     {
       "label": "FindingsTable()",
@@ -1163,10 +1163,10 @@
       "source_location": "L102",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_components_findings_findingstable",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "findingstable()"
+      "norm_label": "findingstable()",
+      "id": "app_components_findings_findingstable"
     },
     {
       "label": "SeverityBadge()",
@@ -1175,10 +1175,10 @@
       "source_location": "L37",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_components_findings_severitybadge",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "severitybadge()"
+      "norm_label": "severitybadge()",
+      "id": "app_components_findings_severitybadge"
     },
     {
       "label": "SummaryBar()",
@@ -1187,10 +1187,10 @@
       "source_location": "L49",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_components_findings_summarybar",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "summarybar()"
+      "norm_label": "summarybar()",
+      "id": "app_components_findings_summarybar"
     },
     {
       "label": "formatDate()",
@@ -1199,10 +1199,10 @@
       "source_location": "L27",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_reports_id_page_formatdate",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "formatdate()"
+      "norm_label": "formatdate()",
+      "id": "app_reports_id_page_formatdate"
     },
     {
       "label": "ReportDetailPage()",
@@ -1211,10 +1211,10 @@
       "source_location": "L37",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_reports_id_page_reportdetailpage",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "reportdetailpage()"
+      "norm_label": "reportdetailpage()",
+      "id": "app_reports_id_page_reportdetailpage"
     },
     {
       "label": "Home()",
@@ -1343,10 +1343,10 @@
       "source_location": "L64",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_collectschemasettingids",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "collectschemasettingids()"
+      "norm_label": "collectschemasettingids()",
+      "id": "lib_rules_bugs_index_collectschemasettingids"
     },
     {
       "label": "findDuplicates()",
@@ -1355,10 +1355,10 @@
       "source_location": "L134",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_findduplicates",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "findduplicates()"
+      "norm_label": "findduplicates()",
+      "id": "lib_rules_bugs_index_findduplicates"
     },
     {
       "label": "stringIdsOf()",
@@ -1367,10 +1367,10 @@
       "source_location": "L144",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_stringidsof",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "stringidsof()"
+      "norm_label": "stringidsof()",
+      "id": "lib_rules_bugs_index_stringidsof"
     },
     {
       "label": "anchorPath()",
@@ -1964,10 +1964,10 @@
       "source_file": "app/api/audit/run/route.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_api_audit_run_route",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "run/route.ts"
+      "norm_label": "run/route.ts",
+      "id": "app_api_audit_run_route"
     },
     {
       "label": "reports/[id]/route.ts",
@@ -2019,10 +2019,10 @@
       "source_file": "lib/audit/diagnostics.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_audit_diagnostics",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "diagnostics.ts"
+      "norm_label": "diagnostics.ts",
+      "id": "lib_audit_diagnostics"
     },
     {
       "label": "audit/index.ts",
@@ -2074,10 +2074,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "models_audit_run",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "audit-run.ts"
+      "norm_label": "audit-run.ts",
+      "id": "models_audit_run"
     },
     {
       "label": "AUDIT_RUN_STATUSES",
@@ -2085,10 +2085,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "id": "models_audit_run_audit_run_statuses",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "audit_run_statuses"
+      "norm_label": "audit_run_statuses",
+      "id": "models_audit_run_audit_run_statuses"
     },
     {
       "label": "AuditRun",
@@ -2096,10 +2096,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L72",
       "_origin": "ast",
-      "id": "models_audit_run_auditrun",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "auditrun"
+      "norm_label": "auditrun",
+      "id": "models_audit_run_auditrun"
     },
     {
       "label": "auditRunSchema",
@@ -2107,10 +2107,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L38",
       "_origin": "ast",
-      "id": "models_audit_run_auditrunschema",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "auditrunschema"
+      "norm_label": "auditrunschema",
+      "id": "models_audit_run_auditrunschema"
     },
     {
       "label": "auditRunSummarySchema",
@@ -2118,10 +2118,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "models_audit_run_auditrunsummaryschema",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "auditrunsummaryschema"
+      "norm_label": "auditrunsummaryschema",
+      "id": "models_audit_run_auditrunsummaryschema"
     },
     {
       "label": "diagnosticsSchema",
@@ -2129,10 +2129,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L28",
       "_origin": "ast",
-      "id": "models_audit_run_diagnosticsschema",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "diagnosticsschema"
+      "norm_label": "diagnosticsschema",
+      "id": "models_audit_run_diagnosticsschema"
     },
     {
       "label": "fileErrorSchema",
@@ -2140,10 +2140,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L20",
       "_origin": "ast",
-      "id": "models_audit_run_fileerrorschema",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "fileerrorschema"
+      "norm_label": "fileerrorschema",
+      "id": "models_audit_run_fileerrorschema"
     },
     {
       "label": "ruleErrorSchema",
@@ -2151,10 +2151,10 @@
       "source_file": "models/audit-run.ts",
       "source_location": "L24",
       "_origin": "ast",
-      "id": "models_audit_run_ruleerrorschema",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "ruleerrorschema"
+      "norm_label": "ruleerrorschema",
+      "id": "models_audit_run_ruleerrorschema"
     },
     {
       "label": "audit-settings.ts",
@@ -2404,10 +2404,10 @@
       "source_file": "scripts/seed-requirements.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "scripts_seed_requirements",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "seed-requirements.ts",
-      "id": "scripts_seed_requirements"
+      "norm_label": "seed-requirements.ts"
     },
     {
       "label": "requirements",
@@ -2415,10 +2415,10 @@
       "source_file": "scripts/seed-requirements.ts",
       "source_location": "L39",
       "_origin": "ast",
+      "id": "scripts_seed_requirements_requirements",
       "community": 0,
       "community_name": "connectToDatabase",
-      "norm_label": "requirements",
-      "id": "scripts_seed_requirements_requirements"
+      "norm_label": "requirements"
     },
     {
       "label": "seed-rules.ts",
@@ -2668,10 +2668,10 @@
       "source_file": "app/audit/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_audit_page",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "audit/page.tsx"
+      "norm_label": "audit/page.tsx",
+      "id": "app_audit_page"
     },
     {
       "label": "findings.tsx",
@@ -2679,10 +2679,10 @@
       "source_file": "app/_components/findings.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_components_findings",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "findings.tsx"
+      "norm_label": "findings.tsx",
+      "id": "app_components_findings"
     },
     {
       "label": "SEVERITY_STYLES",
@@ -2690,10 +2690,10 @@
       "source_file": "app/_components/findings.tsx",
       "source_location": "L30",
       "_origin": "ast",
-      "id": "app_components_findings_severity_styles",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "severity_styles"
+      "norm_label": "severity_styles",
+      "id": "app_components_findings_severity_styles"
     },
     {
       "label": "[id]/page.tsx",
@@ -2701,10 +2701,10 @@
       "source_file": "app/reports/[id]/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_reports_id_page",
       "community": 11,
       "community_name": "findings.tsx",
-      "norm_label": "[id]/page.tsx"
+      "norm_label": "[id]/page.tsx",
+      "id": "app_reports_id_page"
     },
     {
       "label": "app/page.tsx",
@@ -2844,10 +2844,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "bugs/index.ts"
+      "norm_label": "bugs/index.ts",
+      "id": "lib_rules_bugs_index"
     },
     {
       "label": "BUG_RULES",
@@ -2855,10 +2855,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L211",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_bug_rules",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "bug_rules"
+      "norm_label": "bug_rules",
+      "id": "lib_rules_bugs_index_bug_rules"
     },
     {
       "label": "duplicateSchemaIdRule",
@@ -2866,10 +2866,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L151",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_duplicateschemaidrule",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "duplicateschemaidrule"
+      "norm_label": "duplicateschemaidrule",
+      "id": "lib_rules_bugs_index_duplicateschemaidrule"
     },
     {
       "label": "missingScopedSettingRule",
@@ -2877,10 +2877,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L88",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_missingscopedsettingrule",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "missingscopedsettingrule"
+      "norm_label": "missingscopedsettingrule",
+      "id": "lib_rules_bugs_index_missingscopedsettingrule"
     },
     {
       "label": "validJsonLdRule",
@@ -2888,10 +2888,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L6",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_validjsonldrule",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "validjsonldrule"
+      "norm_label": "validjsonldrule",
+      "id": "lib_rules_bugs_index_validjsonldrule"
     },
     {
       "label": "validSchemaBlockRule",
@@ -2899,10 +2899,10 @@
       "source_file": "lib/rules/bugs/index.ts",
       "source_location": "L35",
       "_origin": "ast",
-      "id": "lib_rules_bugs_index_validschemablockrule",
       "community": 17,
       "community_name": "rules.ts",
-      "norm_label": "validschemablockrule"
+      "norm_label": "validschemablockrule",
+      "id": "lib_rules_bugs_index_validschemablockrule"
     },
     {
       "label": "cross-file/index.ts",
@@ -4618,9 +4618,9 @@
       "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page_reportdetailpage",
-      "target": "app_reports_id_page_formatdate",
-      "confidence_score": 1.0
+      "target": "app_reports_id_page_formatdate"
     },
     {
       "relation": "calls",
@@ -5168,7 +5168,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/seed-requirements.ts",
-      "source_location": "L504",
+      "source_location": "L982",
       "weight": 1.0,
       "_origin": "ast",
       "source": "scripts_seed_requirements_main",
@@ -5303,9 +5303,9 @@
       "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run_cascadedeletefindings",
-      "target": "models_finding",
-      "confidence_score": 1.0
+      "target": "models_finding"
     },
     {
       "relation": "imports_from",
@@ -5509,9 +5509,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_db_connect_connecttodatabase",
-      "confidence_score": 1.0
+      "target": "lib_db_connect_connecttodatabase"
     },
     {
       "relation": "imports",
@@ -5521,9 +5521,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_theme_theme",
-      "confidence_score": 1.0
+      "target": "models_theme_theme"
     },
     {
       "relation": "imports",
@@ -5533,9 +5533,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_audit_run_auditrun",
-      "confidence_score": 1.0
+      "target": "models_audit_run_auditrun"
     },
     {
       "relation": "imports",
@@ -5545,9 +5545,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_finding_finding",
-      "confidence_score": 1.0
+      "target": "models_finding_finding"
     },
     {
       "relation": "imports",
@@ -5557,9 +5557,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_theme_parser_index_parsethemezip",
-      "confidence_score": 1.0
+      "target": "lib_theme_parser_index_parsethemezip"
     },
     {
       "relation": "imports",
@@ -5569,9 +5569,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_audit_index_runauditrules",
-      "confidence_score": 1.0
+      "target": "lib_audit_index_runauditrules"
     },
     {
       "relation": "imports",
@@ -5581,9 +5581,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_audit_diagnostics_computeauditdiagnostics",
-      "confidence_score": 1.0
+      "target": "lib_audit_diagnostics_computeauditdiagnostics"
     },
     {
       "relation": "imports",
@@ -5701,9 +5701,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_auditdiagnostics",
-      "confidence_score": 1.0
+      "target": "app_components_findings_auditdiagnostics"
     },
     {
       "relation": "imports",
@@ -5713,9 +5713,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_diagnosticsnote",
-      "confidence_score": 1.0
+      "target": "app_components_findings_diagnosticsnote"
     },
     {
       "relation": "imports",
@@ -5725,9 +5725,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_findingrow",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingrow"
     },
     {
       "relation": "imports",
@@ -5737,9 +5737,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_findingstable",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingstable"
     },
     {
       "relation": "imports",
@@ -5749,9 +5749,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_findingsummary",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingsummary"
     },
     {
       "relation": "imports",
@@ -5761,9 +5761,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings_summarybar",
-      "confidence_score": 1.0
+      "target": "app_components_findings_summarybar"
     },
     {
       "relation": "imports",
@@ -5773,9 +5773,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_auditdiagnostics",
-      "confidence_score": 1.0
+      "target": "app_components_findings_auditdiagnostics"
     },
     {
       "relation": "imports",
@@ -5785,9 +5785,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_diagnosticsnote",
-      "confidence_score": 1.0
+      "target": "app_components_findings_diagnosticsnote"
     },
     {
       "relation": "imports",
@@ -5797,9 +5797,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_findingrow",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingrow"
     },
     {
       "relation": "imports",
@@ -5809,9 +5809,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_findingstable",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingstable"
     },
     {
       "relation": "imports",
@@ -5821,9 +5821,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_findingsummary",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingsummary"
     },
     {
       "relation": "imports",
@@ -5833,9 +5833,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings_summarybar",
-      "confidence_score": 1.0
+      "target": "app_components_findings_summarybar"
     },
     {
       "relation": "imports",
@@ -6073,9 +6073,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_audit_rules_rule",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules_rule"
     },
     {
       "relation": "imports",
@@ -7165,9 +7165,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "lib_db_connect_connecttodatabase"
+      "target": "lib_db_connect_connecttodatabase",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7177,9 +7177,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement_requirement"
+      "target": "models_requirement_requirement",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7189,9 +7189,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement_requirement_source_types"
+      "target": "models_requirement_requirement_source_types",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7201,9 +7201,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding_finding_categories"
+      "target": "models_finding_finding_categories",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7213,9 +7213,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding_finding_severities"
+      "target": "models_finding_finding_severities",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7321,9 +7321,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_db_connect",
-      "confidence_score": 1.0
+      "target": "lib_db_connect"
     },
     {
       "relation": "imports_from",
@@ -7333,9 +7333,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_theme",
-      "confidence_score": 1.0
+      "target": "models_theme"
     },
     {
       "relation": "imports_from",
@@ -7345,9 +7345,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_audit_run",
-      "confidence_score": 1.0
+      "target": "models_audit_run"
     },
     {
       "relation": "imports_from",
@@ -7357,9 +7357,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "models_finding",
-      "confidence_score": 1.0
+      "target": "models_finding"
     },
     {
       "relation": "imports_from",
@@ -7369,9 +7369,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_theme_parser_index",
-      "confidence_score": 1.0
+      "target": "lib_theme_parser_index"
     },
     {
       "relation": "imports_from",
@@ -7381,9 +7381,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_audit_index",
-      "confidence_score": 1.0
+      "target": "lib_audit_index"
     },
     {
       "relation": "imports_from",
@@ -7393,9 +7393,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "lib_audit_diagnostics",
-      "confidence_score": 1.0
+      "target": "lib_audit_diagnostics"
     },
     {
       "relation": "imports_from",
@@ -7513,9 +7513,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_components_findings",
-      "confidence_score": 1.0
+      "target": "app_components_findings"
     },
     {
       "relation": "imports_from",
@@ -7525,9 +7525,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_components_findings",
-      "confidence_score": 1.0
+      "target": "app_components_findings"
     },
     {
       "relation": "imports_from",
@@ -7537,9 +7537,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_diagnostics",
-      "target": "lib_theme_parser_index",
-      "confidence_score": 1.0
+      "target": "lib_theme_parser_index"
     },
     {
       "relation": "imports_from",
@@ -7741,9 +7741,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_audit_rules",
-      "confidence_score": 1.0
+      "target": "lib_audit_rules"
     },
     {
       "relation": "imports_from",
@@ -8149,9 +8149,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "lib_db_connect"
+      "target": "lib_db_connect",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8161,9 +8161,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_requirement"
+      "target": "models_requirement",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8173,9 +8173,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "models_finding"
+      "target": "models_finding",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -8278,9 +8278,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_api_audit_run_route",
-      "target": "app_api_audit_run_route_post",
-      "confidence_score": 1.0
+      "target": "app_api_audit_run_route_post"
     },
     {
       "relation": "contains",
@@ -8333,9 +8333,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_audit_page_auditrunresult",
-      "confidence_score": 1.0
+      "target": "app_audit_page_auditrunresult"
     },
     {
       "relation": "contains",
@@ -8344,9 +8344,9 @@
       "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_audit_page",
-      "target": "app_audit_page_auditpage",
-      "confidence_score": 1.0
+      "target": "app_audit_page_auditpage"
     },
     {
       "relation": "contains",
@@ -8355,9 +8355,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_findingsummary",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingsummary"
     },
     {
       "relation": "contains",
@@ -8366,9 +8366,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_auditdiagnostics",
-      "confidence_score": 1.0
+      "target": "app_components_findings_auditdiagnostics"
     },
     {
       "relation": "contains",
@@ -8377,9 +8377,9 @@
       "source_location": "L102",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_findingstable",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingstable"
     },
     {
       "relation": "contains",
@@ -8388,9 +8388,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_findingrow",
-      "confidence_score": 1.0
+      "target": "app_components_findings_findingrow"
     },
     {
       "relation": "contains",
@@ -8399,9 +8399,9 @@
       "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_severity_styles",
-      "confidence_score": 1.0
+      "target": "app_components_findings_severity_styles"
     },
     {
       "relation": "contains",
@@ -8410,9 +8410,9 @@
       "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_severitybadge",
-      "confidence_score": 1.0
+      "target": "app_components_findings_severitybadge"
     },
     {
       "relation": "contains",
@@ -8421,9 +8421,9 @@
       "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_summarybar",
-      "confidence_score": 1.0
+      "target": "app_components_findings_summarybar"
     },
     {
       "relation": "contains",
@@ -8432,9 +8432,9 @@
       "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_findings",
-      "target": "app_components_findings_diagnosticsnote",
-      "confidence_score": 1.0
+      "target": "app_components_findings_diagnosticsnote"
     },
     {
       "relation": "contains",
@@ -8520,9 +8520,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_reports_id_page_auditrundetail",
-      "confidence_score": 1.0
+      "target": "app_reports_id_page_auditrundetail"
     },
     {
       "relation": "contains",
@@ -8531,9 +8531,9 @@
       "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_reports_id_page_formatdate",
-      "confidence_score": 1.0
+      "target": "app_reports_id_page_formatdate"
     },
     {
       "relation": "contains",
@@ -8542,9 +8542,9 @@
       "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_reports_id_page",
-      "target": "app_reports_id_page_reportdetailpage",
-      "confidence_score": 1.0
+      "target": "app_reports_id_page_reportdetailpage"
     },
     {
       "relation": "contains",
@@ -8696,9 +8696,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_diagnostics",
-      "target": "lib_audit_diagnostics_computeauditdiagnostics",
-      "confidence_score": 1.0
+      "target": "lib_audit_diagnostics_computeauditdiagnostics"
     },
     {
       "relation": "contains",
@@ -8707,9 +8707,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_diagnostics",
-      "target": "lib_audit_diagnostics_auditdiagnostics",
-      "confidence_score": 1.0
+      "target": "lib_audit_diagnostics_auditdiagnostics"
     },
     {
       "relation": "contains",
@@ -9103,9 +9103,9 @@
       "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_findduplicates",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_findduplicates"
     },
     {
       "relation": "contains",
@@ -9114,9 +9114,9 @@
       "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_stringidsof",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_stringidsof"
     },
     {
       "relation": "contains",
@@ -9125,9 +9125,9 @@
       "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_duplicateschemaidrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_duplicateschemaidrule"
     },
     {
       "relation": "contains",
@@ -9136,9 +9136,9 @@
       "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_bug_rules",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_bug_rules"
     },
     {
       "relation": "contains",
@@ -9147,9 +9147,9 @@
       "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_validschemablockrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_validschemablockrule"
     },
     {
       "relation": "contains",
@@ -9158,9 +9158,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_validjsonldrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_validjsonldrule"
     },
     {
       "relation": "contains",
@@ -9169,9 +9169,9 @@
       "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_collectschemasettingids",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_collectschemasettingids"
     },
     {
       "relation": "contains",
@@ -9180,9 +9180,9 @@
       "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_rules_bugs_index",
-      "target": "lib_rules_bugs_index_missingscopedsettingrule",
-      "confidence_score": 1.0
+      "target": "lib_rules_bugs_index_missingscopedsettingrule"
     },
     {
       "relation": "contains",
@@ -10511,9 +10511,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_fileerrorschema",
-      "confidence_score": 1.0
+      "target": "models_audit_run_fileerrorschema"
     },
     {
       "relation": "contains",
@@ -10522,9 +10522,9 @@
       "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_ruleerrorschema",
-      "confidence_score": 1.0
+      "target": "models_audit_run_ruleerrorschema"
     },
     {
       "relation": "contains",
@@ -10533,9 +10533,9 @@
       "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_diagnosticsschema",
-      "confidence_score": 1.0
+      "target": "models_audit_run_diagnosticsschema"
     },
     {
       "relation": "contains",
@@ -10544,9 +10544,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_audit_run_statuses",
-      "confidence_score": 1.0
+      "target": "models_audit_run_audit_run_statuses"
     },
     {
       "relation": "contains",
@@ -10555,9 +10555,9 @@
       "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_auditrunschema",
-      "confidence_score": 1.0
+      "target": "models_audit_run_auditrunschema"
     },
     {
       "relation": "contains",
@@ -10566,9 +10566,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_auditrunsummaryschema",
-      "confidence_score": 1.0
+      "target": "models_audit_run_auditrunsummaryschema"
     },
     {
       "relation": "contains",
@@ -10577,9 +10577,9 @@
       "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_cascadedeletefindings",
-      "confidence_score": 1.0
+      "target": "models_audit_run_cascadedeletefindings"
     },
     {
       "relation": "contains",
@@ -10588,9 +10588,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_auditrundoc",
-      "confidence_score": 1.0
+      "target": "models_audit_run_auditrundoc"
     },
     {
       "relation": "contains",
@@ -10599,9 +10599,9 @@
       "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_audit_run_auditrun",
-      "confidence_score": 1.0
+      "target": "models_audit_run_auditrun"
     },
     {
       "relation": "contains",
@@ -11270,9 +11270,9 @@
       "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_sourcetype"
+      "target": "scripts_seed_requirements_sourcetype",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -11281,9 +11281,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_category"
+      "target": "scripts_seed_requirements_category",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -11292,9 +11292,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_severity"
+      "target": "scripts_seed_requirements_severity",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -11303,9 +11303,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_seedrequirement"
+      "target": "scripts_seed_requirements_seedrequirement",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -11314,20 +11314,20 @@
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_requirements"
+      "target": "scripts_seed_requirements_requirements",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/seed-requirements.ts",
-      "source_location": "L503",
+      "source_location": "L981",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "scripts_seed_requirements",
-      "target": "scripts_seed_requirements_main"
+      "target": "scripts_seed_requirements_main",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -11543,9 +11543,9 @@
       "confidence": "EXTRACTED",
       "source_file": "models/audit-run.ts",
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_audit_run",
-      "target": "models_finding",
-      "confidence_score": 1.0
+      "target": "models_finding"
     },
     {
       "relation": "dynamic_import",
@@ -11591,5 +11591,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1117e6539ac5e20a5355184d121191dfbfe4f1a6"
+  "built_at_commit": "2285bb0235ef737475d36fc04ec33b45ade3cf11"
 }
