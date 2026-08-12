@@ -5,9 +5,8 @@ import { TECHNICAL_SEO_RULES } from "./technical-seo";
 import { TECHNICAL_AEO_RULES } from "./technical-aeo";
 import { BUG_RULES } from "./bugs";
 import { CROSS_FILE_RULES } from "./cross-file";
+import { INTERNAL_RULES } from "./internal";
 
-// lib/rules/internal is intentionally empty — no internal team standards
-// have been provided to build rules from (see phase-1 seed notes).
 export const ALL_RULES: Rule[] = [
   ...SHOPIFY_RULES,
   ...ACCESSIBILITY_RULES,
@@ -15,4 +14,5 @@ export const ALL_RULES: Rule[] = [
   ...TECHNICAL_AEO_RULES,
   ...BUG_RULES,
   ...CROSS_FILE_RULES,
+  ...INTERNAL_RULES,
 ];
