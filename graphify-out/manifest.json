@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "lib/audit/headingChecks.ts": {
-    "mtime": 1786526967.8048015,
-    "ast_hash": "e5128f1e1ed0c4396f78e7a24198ad2d",
+    "mtime": 1786535870.578476,
+    "ast_hash": "2d60d01c7653d18d9903d3206e3ad654",
     "semantic_hash": ""
   },
   "lib/audit/rules.ts": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786534529.6770897,
-    "ast_hash": "8b52e9142f2acf6c570e78dca2b75a58",
+    "mtime": 1786535921.083305,
+    "ast_hash": "ab8530e36a81a133c1f6653c6bedfa3b",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {
@@ -412,6 +412,11 @@
   "lib/rules/shopify/settings.ts": {
     "mtime": 1786534456.0238042,
     "ast_hash": "3c9da403a5dffff341ad1866d5fc02b5",
+    "semantic_hash": ""
+  },
+  "lib/audit/templateComposition.ts": {
+    "mtime": 1786535857.7646155,
+    "ast_hash": "63f56483c964dbf039e1c99586ba4ade",
     "semantic_hash": ""
   }
 }
