@@ -85,8 +85,8 @@
     "semantic_hash": "e15063088dee415df4c6dba2c76566a9"
   },
   "lib/rules/accessibility/index.ts": {
-    "mtime": 1786527000.550229,
-    "ast_hash": "77eb78c12691714ac6bcf0bd8954e52c",
+    "mtime": 1786531798.0443387,
+    "ast_hash": "d5beb7c4d5ab86f3ff0320e6556d5727",
     "semantic_hash": ""
   },
   "lib/rules/bugs/index.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/extractHtmlStructure.ts": {
-    "mtime": 1786524659.1298316,
-    "ast_hash": "f62e8968382bda919e23a0f442e89375",
+    "mtime": 1786531763.435824,
+    "ast_hash": "f96c78027eb3cfe8f59452f6f395b9af",
     "semantic_hash": ""
   },
   "lib/theme-parser/extractLiquidStructure.ts": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/types.ts": {
-    "mtime": 1786531471.8741689,
-    "ast_hash": "219e85d092e98615fc04f2a93faea11f",
+    "mtime": 1786531725.0778236,
+    "ast_hash": "3f786b2c2963e42034718737cb157c61",
     "semantic_hash": ""
   },
   "lib/theme-parser/validateThemeStructure.ts": {
@@ -385,13 +385,13 @@
     "semantic_hash": ""
   },
   "lib/audit/themeIndex.ts": {
-    "mtime": 1786531181.7654757,
-    "ast_hash": "2d2f79cfeddcbacd97ad4bc1e8e4f762",
+    "mtime": 1786531789.1028233,
+    "ast_hash": "5be842d2c5a833f138c24869240f961b",
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786531488.8446517,
-    "ast_hash": "49383d6dc07b465c370e81034f57428b",
+    "mtime": 1786531807.8280878,
+    "ast_hash": "0a0a05f1d3baae7368093a91003390e1",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {
