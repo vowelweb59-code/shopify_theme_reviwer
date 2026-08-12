@@ -3,7 +3,9 @@ import { buildLineIndex } from "./lineIndex";
 import { tryParseLiquidJson } from "./liquidJson";
 import {
   emptyMetaTags,
+  type ParsedAriaReference,
   type ParsedButton,
+  type ParsedElementId,
   type ParsedForm,
   type ParsedHeading,
   type ParsedIconElement,
@@ -31,12 +33,16 @@ export type HtmlStructure = {
   inputs: ParsedInput[];
   labels: ParsedLabel[];
   interactiveElements: ParsedInteractiveElement[];
+  elementIds: ParsedElementId[];
+  ariaReferences: ParsedAriaReference[];
   scripts: ParsedScript[];
   stylesheets: ParsedStylesheet[];
   metaTags: ParsedMetaTags;
   jsonLdBlocks: ParsedJsonLdBlock[];
   parseErrors: ParsedParseError[];
 };
+
+const ARIA_REFERENCE_ATTRS = ["aria-labelledby", "aria-describedby"] as const;
 
 // Tags whose inner text we accumulate for a meaningful accessible-name-ish
 // value (link/button/label text, heading text, <title>).
@@ -79,6 +85,8 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
   const inputs: ParsedInput[] = [];
   const labels: ParsedLabel[] = [];
   const interactiveElements: ParsedInteractiveElement[] = [];
+  const elementIds: ParsedElementId[] = [];
+  const ariaReferences: ParsedAriaReference[] = [];
   const scripts: ParsedScript[] = [];
   const stylesheets: ParsedStylesheet[] = [];
   const jsonLdBlocks: ParsedJsonLdBlock[] = [];
@@ -119,6 +127,21 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
       onopentag(name, attribs) {
         const offset = parser.startIndex;
         stack.push({ name, attribs, startOffset: offset, text: [] });
+
+        // Tracked for every element (not just the "dedicated" categories
+        // below) — aria-labelledby/aria-describedby can target the id of any
+        // element, and a component's label/target elements are routinely
+        // split across snippets, so cross-file rules need a theme-wide id
+        // registry (see lib/audit/themeIndex.ts) rather than a per-tag one.
+        if (attribs.id && !isLiquidExpression(attribs.id)) {
+          elementIds.push({ line: toLine(offset), id: attribs.id });
+        }
+        for (const attr of ARIA_REFERENCE_ATTRS) {
+          const value = attribs[attr];
+          if (!value || isLiquidExpression(value)) continue;
+          const ids = value.split(/\s+/).filter(Boolean);
+          if (ids.length > 0) ariaReferences.push({ line: toLine(offset), attr, ids });
+        }
 
         switch (name) {
           case "html":
@@ -358,6 +381,8 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
     inputs,
     labels,
     interactiveElements,
+    elementIds,
+    ariaReferences,
     scripts,
     stylesheets,
     metaTags,

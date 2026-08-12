@@ -9,6 +9,12 @@ export type ThemeIndex = {
   sectionGroupsByName: Map<string, ParsedFile>; // sections/<name>.json (rendered by {% sections %}, not {% section %})
   snippetsByName: Map<string, ParsedFile>; // snippets/<name>.liquid
   assetBasenames: Set<string>; // filenames present under assets/ (Shopify's assets/ is always flat)
+  // Every element id, and every <label for> target, anywhere in the theme —
+  // theme-wide (not per-file) because a component's label/target element is
+  // routinely split across the section that renders it and a snippet it
+  // includes (phase-4 §12's explicit caution about this).
+  allElementIds: Set<string>;
+  labelForTargets: Set<string>;
   // Raw JSON trees for the storefront's default locale file(s) — usually a
   // single locales/xx.default.json. Used for translation-key existence
   // checks: a key "resolves" if the path exists in the tree at all, whether
@@ -36,6 +42,8 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
   const sectionGroupsByName = new Map<string, ParsedFile>();
   const snippetsByName = new Map<string, ParsedFile>();
   const assetBasenames = new Set<string>();
+  const allElementIds = new Set<string>();
+  const labelForTargets = new Set<string>();
   const defaultLocaleTrees: unknown[] = [];
 
   for (const f of files) {
@@ -50,9 +58,21 @@ export function buildThemeIndex(files: ParsedFile[]): ThemeIndex {
     } else if (f.path.startsWith("locales/") && /\.default\.json$/i.test(f.path) && f.jsonInfo?.json) {
       defaultLocaleTrees.push(f.jsonInfo.json);
     }
+
+    for (const el of f.elementIds) allElementIds.add(el.id);
+    for (const label of f.labels) if (label.for) labelForTargets.add(label.for);
   }
 
-  return { filesByPath, sectionsByName, sectionGroupsByName, snippetsByName, assetBasenames, defaultLocaleTrees };
+  return {
+    filesByPath,
+    sectionsByName,
+    sectionGroupsByName,
+    snippetsByName,
+    assetBasenames,
+    allElementIds,
+    labelForTargets,
+    defaultLocaleTrees,
+  };
 }
 
 function getPath(obj: unknown, parts: string[]): unknown {

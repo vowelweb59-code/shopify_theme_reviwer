@@ -89,6 +89,17 @@ export type ParsedLabel = {
   text?: string;
 };
 
+export type ParsedElementId = {
+  line: number;
+  id: string;
+};
+
+export type ParsedAriaReference = {
+  line: number;
+  attr: "aria-labelledby" | "aria-describedby";
+  ids: string[];
+};
+
 export type ParsedInteractiveElement = {
   line: number;
   tag: string;
@@ -241,6 +252,8 @@ export type ParsedFile = {
   inputs: ParsedInput[];
   labels: ParsedLabel[];
   interactiveElements: ParsedInteractiveElement[];
+  elementIds: ParsedElementId[];
+  ariaReferences: ParsedAriaReference[];
 
   schemaBlocks: ParsedSchemaBlock[];
   jsonLdBlocks: ParsedJsonLdBlock[];
@@ -288,6 +301,8 @@ export function emptyParsedFile(path: string, fileType: FileType, rawText: strin
     inputs: [],
     labels: [],
     interactiveElements: [],
+    elementIds: [],
+    ariaReferences: [],
     schemaBlocks: [],
     jsonLdBlocks: [],
     hardcodedStrings: [],

@@ -183,6 +183,33 @@ const duplicateLocaleKeyRule: Rule = {
   },
 };
 
+const brokenAriaReferenceRule: Rule = {
+  ruleId: "REF-ARIA-ID-MISSING-001",
+  category: "Accessibility",
+  defaultSeverity: "medium",
+  title: "aria-labelledby / aria-describedby must reference an existing id",
+  description:
+    "An aria-labelledby or aria-describedby attribute must reference the id of an element that actually exists somewhere in the theme — checked theme-wide, since the target is routinely defined in a different section/snippet than the element that references it.",
+  check({ files, index }) {
+    const findings = [];
+    for (const f of files) {
+      for (const ref of f.ariaReferences) {
+        const missing = ref.ids.filter((id) => !index.allElementIds.has(id));
+        if (missing.length === 0) continue;
+        findings.push({
+          filePath: f.path,
+          lineNumber: ref.line,
+          category: "Accessibility" as const,
+          severity: "medium" as const,
+          finding: `${ref.attr}="${ref.ids.join(" ")}" references id${missing.length > 1 ? "s" : ""} "${missing.join('", "')}", which do${missing.length > 1 ? "" : "es"} not exist anywhere in the theme.`,
+          recommendation: `Add an element with id="${missing[0]}", or fix the ${ref.attr} value.`,
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const CROSS_FILE_RULES: Rule[] = [
   missingSectionRule,
   missingSnippetRule,
@@ -190,4 +217,5 @@ export const CROSS_FILE_RULES: Rule[] = [
   missingAssetRule,
   missingTranslationKeyRule,
   duplicateLocaleKeyRule,
+  brokenAriaReferenceRule,
 ];

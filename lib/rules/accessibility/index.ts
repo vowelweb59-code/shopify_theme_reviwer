@@ -40,13 +40,16 @@ const formLabelRule: Rule = {
   description: "Form inputs must have a unique ID, with associated labels using a `for` attribute matching that ID.",
   sourceReference: "Shopify Theme Store requirements — Accessibility",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
-  check({ files }) {
+  // Checked theme-wide (index.labelForTargets), not per-file: a component's
+  // <label> and its <input> are routinely split across a section and the
+  // snippet it renders — phase-4 §12 explicitly warns against treating that
+  // split as a missing relationship.
+  check({ files, index }) {
     const findings = [];
     for (const f of files) {
-      const labelsFor = new Set(f.labels.map((l) => l.for).filter((x): x is string => !!x));
       for (const input of f.inputs) {
         if (input.type && NON_LABELABLE_INPUT_TYPES.has(input.type)) continue;
-        const hasAccessibleName = (input.id && labelsFor.has(input.id)) || input.ariaLabel || input.ariaLabelledBy;
+        const hasAccessibleName = (input.id && index.labelForTargets.has(input.id)) || input.ariaLabel || input.ariaLabelledBy;
         if (!hasAccessibleName) {
           findings.push({
             filePath: f.path,
