@@ -391,6 +391,90 @@ const composedSkippedHeadingRule: Rule = {
   },
 };
 
+// --- Template-level structured-data mapping (phase-4 §7) -----------------
+// Connects JSON-LD to the specific template that's supposed to render it,
+// rather than the theme-wide "does this exist anywhere" checks in
+// lib/rules/technical-aeo. Deliberately does NOT re-report "no Product/
+// Article JSON-LD anywhere in the theme" — that stays AEO-PRODUCT-SCHEMA-001
+// / AEO-ARTICLE-SCHEMA-001's job. These add the two things only composition
+// can reveal: schema that exists somewhere in the theme but isn't actually
+// reachable from the template that needs it, and duplicate schema within
+// one template's composed output.
+
+const GOOGLE_PRODUCT_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/product";
+const GOOGLE_ARTICLE_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/article";
+
+function countJsonLdType(files: { jsonLdBlocks: { types: string[] }[] }[], type: string): number {
+  return files.reduce((sum, f) => sum + f.jsonLdBlocks.filter((b) => b.types.includes(type)).length, 0);
+}
+
+function composedSchemaRule(config: {
+  ruleId: string;
+  requirementId: string;
+  jsonLdType: string;
+  templateBase: string;
+  title: string;
+  sourceUrl: string;
+}): Rule {
+  return {
+    ruleId: config.ruleId,
+    requirementId: config.requirementId,
+    category: "Technical AEO",
+    defaultSeverity: "high",
+    title: config.title,
+    description: `A ${config.jsonLdType} JSON-LD block that exists elsewhere in the theme but isn't rendered by the actual ${config.templateBase} template doesn't help that page, and rendering more than one is duplicate structured data.`,
+    sourceReference: `Google: ${config.jsonLdType} structured data`,
+    sourceUrl: config.sourceUrl,
+    check({ files, index }) {
+      const findings = [];
+      if (countJsonLdType(files, config.jsonLdType) === 0) return [];
+
+      for (const f of files) {
+        if (f.fileType !== "json" || !f.path.startsWith("templates/") || templateBaseName(f.path) !== config.templateBase) continue;
+        const composed = composeTemplate(f, index);
+        const composedCount = countJsonLdType(composed.files, config.jsonLdType);
+
+        if (composedCount === 0) {
+          findings.push({
+            filePath: f.path,
+            category: "Technical AEO" as const,
+            severity: "high" as const,
+            finding: `${config.jsonLdType} JSON-LD exists elsewhere in the theme, but none is reachable from ${f.path}'s own composed sections/snippets.`,
+            recommendation: `Move (or add) the ${config.jsonLdType} JSON-LD block to a section this template actually renders.`,
+          });
+        } else if (composedCount > 1) {
+          findings.push({
+            filePath: f.path,
+            category: "Technical AEO" as const,
+            severity: "medium" as const,
+            finding: `${composedCount} separate ${config.jsonLdType} JSON-LD blocks are reachable from ${f.path} — duplicate structured data can confuse search engines.`,
+            recommendation: `Ensure only one section renders ${config.jsonLdType} JSON-LD for this template.`,
+          });
+        }
+      }
+      return findings;
+    },
+  };
+}
+
+const composedProductSchemaRule = composedSchemaRule({
+  ruleId: "AEO-PRODUCT-SCHEMA-COMPOSED-001",
+  requirementId: "TECH-AEO-PRODUCT-001",
+  jsonLdType: "Product",
+  templateBase: "product",
+  title: "Product JSON-LD should be reachable from the product template, not just present in the theme",
+  sourceUrl: GOOGLE_PRODUCT_SD_URL,
+});
+
+const composedArticleSchemaRule = composedSchemaRule({
+  ruleId: "AEO-ARTICLE-SCHEMA-COMPOSED-001",
+  requirementId: "TECH-AEO-ARTICLE-001",
+  jsonLdType: "Article",
+  templateBase: "article",
+  title: "Article JSON-LD should be reachable from the article template, not just present in the theme",
+  sourceUrl: GOOGLE_ARTICLE_SD_URL,
+});
+
 export const CROSS_FILE_RULES: Rule[] = [
   missingSectionRule,
   missingSnippetRule,
@@ -404,4 +488,6 @@ export const CROSS_FILE_RULES: Rule[] = [
   composedH1MissingRule,
   composedMultipleH1Rule,
   composedSkippedHeadingRule,
+  composedProductSchemaRule,
+  composedArticleSchemaRule,
 ];
