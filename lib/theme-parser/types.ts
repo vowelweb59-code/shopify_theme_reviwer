@@ -63,6 +63,8 @@ export type ParsedLink = {
   target: string | null;
   rel: string | null;
   ariaLabel: string | null;
+  ariaHidden: boolean;
+  tabIndex: number | null;
 };
 
 export type ParsedButton = {
@@ -71,6 +73,8 @@ export type ParsedButton = {
   type: string | null;
   disabled: boolean;
   ariaLabel: string | null;
+  ariaHidden: boolean;
+  tabIndex: number | null;
 };
 
 export type ParsedForm = {
@@ -89,6 +93,9 @@ export type ParsedInput = {
   ariaLabelledBy?: string;
   ariaDescribedBy?: string;
   required?: boolean;
+  disabled: boolean;
+  ariaHidden: boolean;
+  tabIndex: number | null;
 };
 
 export type ParsedLabel = {
@@ -154,12 +161,14 @@ export type ParsedScript = {
   async: boolean;
   defer: boolean;
   type?: string;
+  contentLength: number | null;
 };
 
 export type ParsedStylesheet = {
   line: number;
   href: string | null;
   inline: boolean;
+  contentLength: number | null;
 };
 
 export type ParsedMetaTags = {

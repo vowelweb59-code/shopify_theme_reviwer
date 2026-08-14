@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-14 (post CSV/PDF export, re-audit diff, and responsive/image-resolution live checks).
+// Last reviewed: 2026-08-14 (post CSV/PDF export, re-audit diff, responsive/image-resolution live checks, aria-hidden-focus + large-inline-payload rules, and canonical fixture themes).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -30,7 +30,7 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 4,
     name: "Advanced static analysis",
     status: "in-progress",
-    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports all done. Validated against 3 real themes (Dawn, Skeleton, Splash) — found and fixed real parser/rule bugs each time. Remaining: broader CSS/perf coverage, more real-theme validation.",
+    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports, CSS accessibility (aria-hidden-focus added), and performance structure (large inline payload added) all done. Canonical fixture themes added for §19's named scenarios. Validated against 3 real themes (Dawn, Skeleton, Splash). Remaining: no timing/perf instrumentation (§18/21) — left as-is, out of scope for now.",
   },
   {
     phase: 5,

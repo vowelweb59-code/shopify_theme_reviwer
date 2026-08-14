@@ -291,6 +291,79 @@ const outlineRemovalRule: Rule = {
   },
 };
 
+// A focusable element hidden from assistive technology via aria-hidden="true"
+// creates an invisible-but-reachable keyboard trap: screen reader users
+// never learn it exists, while sighted keyboard users can still Tab onto
+// something with no announced purpose. tabindex="-1" is the correct escape
+// hatch (removes the element from the tab order entirely), so aria-hidden
+// paired with it is fine — only flag when the element remains genuinely
+// focusable. This mirrors axe-core's own "aria-hidden-focus" rule.
+const ariaHiddenFocusableRule: Rule = {
+  ruleId: "A11Y-ARIA-HIDDEN-FOCUS-001",
+  requirementId: "A11Y-BP-009",
+  category: "Accessibility",
+  defaultSeverity: "medium",
+  title: "aria-hidden must not be applied to a focusable element",
+  description:
+    "An element with aria-hidden=\"true\" must not remain focusable — pair it with tabindex=\"-1\", or remove aria-hidden if the element should stay in the accessibility tree.",
+  sourceReference: "Accessibility best practices for Shopify themes",
+  sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      for (const link of f.links) {
+        if (link.ariaHidden && link.tabIndex !== -1) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: link.line,
+            category: "Accessibility" as const,
+            severity: "medium" as const,
+            finding: `<a href="${link.href ?? ""}"> has aria-hidden="true" but remains keyboard-focusable, hiding it from screen readers while it's still reachable by Tab.`,
+            recommendation: 'Add tabindex="-1" to remove it from the tab order, or remove aria-hidden if it should stay accessible.',
+          });
+        }
+      }
+      for (const button of f.buttons) {
+        if (button.ariaHidden && !button.disabled && button.tabIndex !== -1) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: button.line,
+            category: "Accessibility" as const,
+            severity: "medium" as const,
+            finding: `<button>${button.text ? ` "${button.text}"` : ""} has aria-hidden="true" but remains keyboard-focusable, hiding it from screen readers while it's still reachable by Tab.`,
+            recommendation: 'Add tabindex="-1" to remove it from the tab order, or remove aria-hidden if it should stay accessible.',
+          });
+        }
+      }
+      for (const input of f.inputs) {
+        if (input.ariaHidden && !input.disabled && input.tabIndex !== -1) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: input.line,
+            category: "Accessibility" as const,
+            severity: "medium" as const,
+            finding: `<${input.tag}>${input.name ? ` (name="${input.name}")` : ""} has aria-hidden="true" but remains keyboard-focusable, hiding it from screen readers while it's still reachable by Tab.`,
+            recommendation: 'Add tabindex="-1" to remove it from the tab order, or remove aria-hidden if it should stay accessible.',
+          });
+        }
+      }
+      for (const el of f.interactiveElements) {
+        if (el.ariaAttributes["aria-hidden"] === "true" && el.tabIndex !== null && el.tabIndex >= 0) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: el.line,
+            category: "Accessibility" as const,
+            severity: "medium" as const,
+            finding: `<${el.tag}> has aria-hidden="true" but tabindex="${el.tabIndex}" keeps it keyboard-focusable, hiding it from screen readers while it's still reachable by Tab.`,
+            recommendation: 'Set tabindex="-1" to remove it from the tab order, or remove aria-hidden if it should stay accessible.',
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
 export const ACCESSIBILITY_RULES: Rule[] = [
   htmlLangRule,
   formLabelRule,
@@ -299,4 +372,5 @@ export const ACCESSIBILITY_RULES: Rule[] = [
   skippedHeadingA11yRule,
   colorContrastRule,
   outlineRemovalRule,
+  ariaHiddenFocusableRule,
 ];

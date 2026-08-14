@@ -432,6 +432,17 @@ const requirements: SeedRequirement[] = [
     sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
     severity: "medium",
   },
+  {
+    requirementId: "A11Y-BP-009",
+    sourceType: "accessibility",
+    category: "Accessibility",
+    title: "aria-hidden must not be applied to a focusable element",
+    description:
+      "An element with aria-hidden=\"true\" must not remain reachable via keyboard Tab — pair it with tabindex=\"-1\", or remove aria-hidden. Otherwise it creates an invisible-but-focusable trap: screen reader users never learn it exists, while keyboard users can still land on it with no announced purpose.",
+    sourceName: "Accessibility best practices for Shopify themes",
+    sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+    severity: "medium",
+  },
 
   // --- Technical SEO (structural only, general best practice) -----------
   {
@@ -485,6 +496,16 @@ const requirements: SeedRequirement[] = [
     category: "Bug",
     title: "No duplicate script/stylesheet loading within a file",
     description: "The same script src or stylesheet href should not be loaded more than once within the same file.",
+    sourceName: "General technical performance best practice",
+    severity: "low",
+  },
+  {
+    requirementId: "TECH-PERF-INLINE-PAYLOAD-001",
+    sourceType: "best_practice",
+    category: "Bug",
+    title: "Large inline scripts/styles should be extracted to external files",
+    description:
+      "An inline <script> or <style> block over roughly 10KB should be moved to an external, cacheable asset file instead — inline payloads are re-downloaded with every page view and can't be cached or shared across pages the way an external file can.",
     sourceName: "General technical performance best practice",
     severity: "low",
   },

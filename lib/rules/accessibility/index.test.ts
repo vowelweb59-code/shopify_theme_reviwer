@@ -93,3 +93,58 @@ describe("A11Y-TABINDEX-001", () => {
     expect(findings.some((f) => f.finding.includes("tabindex"))).toBe(true);
   });
 });
+
+function ariaHiddenFocusFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-ARIA-HIDDEN-FOCUS-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-ARIA-HIDDEN-FOCUS-001", () => {
+  it("flags a link that is aria-hidden but still keyboard-focusable", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<a href="/cart" aria-hidden="true">Cart</a>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag a link that is aria-hidden and removed from the tab order", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<a href="/cart" aria-hidden="true" tabindex="-1">Cart</a>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag a link with no aria-hidden at all", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<a href="/cart">Cart</a>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(0);
+  });
+
+  it("flags an aria-hidden button that remains focusable", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<button aria-hidden="true">Submit</button>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag an aria-hidden button that is also disabled (already unreachable)", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<button aria-hidden="true" disabled>Submit</button>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(0);
+  });
+
+  it("flags an aria-hidden input that remains focusable", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<input aria-hidden="true" name="email">' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(1);
+  });
+
+  it("flags a generic role-based interactive element that is aria-hidden with an explicit tabindex", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<div role="button" tabindex="0" aria-hidden="true">Toggle</div>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag a generic interactive element that is aria-hidden with tabindex=-1", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<div role="button" tabindex="-1" aria-hidden="true">Toggle</div>' });
+    cleanup = theme.cleanup;
+    expect(ariaHiddenFocusFindings(theme)).toHaveLength(0);
+  });
+});

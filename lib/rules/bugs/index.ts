@@ -259,10 +259,56 @@ const duplicateAssetLoadingRule: Rule = {
   },
 };
 
+// 10KB is a widely-cited rule of thumb for "large enough that caching would
+// help" (e.g. Lighthouse's own inline-script guidance) — not an exact
+// science, but a defensible, documented line rather than an arbitrary one.
+const LARGE_INLINE_PAYLOAD_BYTES = 10_000;
+
+const largeInlinePayloadRule: Rule = {
+  ruleId: "PERF-LARGE-INLINE-001",
+  requirementId: "TECH-PERF-INLINE-PAYLOAD-001",
+  category: "Bug",
+  defaultSeverity: "low",
+  title: "Large inline scripts/styles should be extracted to external files",
+  description: "An inline <script> or <style> block over roughly 10KB should be moved to an external, cacheable asset file.",
+  sourceReference: "General technical performance best practice",
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      for (const script of f.scripts) {
+        if (script.inline && (script.contentLength ?? 0) > LARGE_INLINE_PAYLOAD_BYTES) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: script.line,
+            category: "Bug" as const,
+            severity: "low" as const,
+            finding: `Inline <script> is ~${Math.round((script.contentLength ?? 0) / 1000)}KB — too large to benefit from browser caching the way an external file would.`,
+            recommendation: "Move this script's content to an external asset file loaded with a src attribute.",
+          });
+        }
+      }
+      for (const sheet of f.stylesheets) {
+        if (sheet.inline && (sheet.contentLength ?? 0) > LARGE_INLINE_PAYLOAD_BYTES) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: sheet.line,
+            category: "Bug" as const,
+            severity: "low" as const,
+            finding: `Inline <style> block is ~${Math.round((sheet.contentLength ?? 0) / 1000)}KB — too large to benefit from browser caching the way an external file would.`,
+            recommendation: "Move this CSS to an external stylesheet asset.",
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
 export const BUG_RULES: Rule[] = [
   validJsonLdRule,
   validSchemaBlockRule,
   missingScopedSettingRule,
   duplicateSchemaIdRule,
   duplicateAssetLoadingRule,
+  largeInlinePayloadRule,
 ];

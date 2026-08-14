@@ -196,32 +196,17 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
               ariaLabelledBy: attribs["aria-labelledby"],
               ariaDescribedBy: attribs["aria-describedby"],
               required: "required" in attribs,
+              disabled: "disabled" in attribs,
+              ariaHidden: attribs["aria-hidden"] === "true",
+              tabIndex: attribs.tabindex !== undefined ? Number.parseInt(attribs.tabindex, 10) : null,
             });
-            break;
-          case "script": {
-            const src = attribs.src ?? null;
-            const inHead = ancestorNames().includes("head");
-            const inBody = ancestorNames().includes("body");
-            scripts.push({
-              line: toLine(offset),
-              src,
-              inline: !src,
-              location: inHead ? "head" : inBody ? "body" : "unknown",
-              async: "async" in attribs,
-              defer: "defer" in attribs,
-              type: attribs.type,
-            });
-            break;
-          }
-          case "style":
-            stylesheets.push({ line: toLine(offset), href: null, inline: true });
             break;
           case "link":
             if ((attribs.rel ?? "").toLowerCase() === "canonical") {
               metaTags.canonical = attribs.href ?? metaTags.canonical;
             }
             if ((attribs.rel ?? "").toLowerCase().includes("stylesheet")) {
-              stylesheets.push({ line: toLine(offset), href: attribs.href ?? null, inline: false });
+              stylesheets.push({ line: toLine(offset), href: attribs.href ?? null, inline: false, contentLength: null });
             }
             break;
           case "meta": {
@@ -290,7 +275,7 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
           return;
         }
 
-        if (!TEXT_CAPTURE_TAGS.has(name) && name !== "script") return;
+        if (!TEXT_CAPTURE_TAGS.has(name) && name !== "script" && name !== "style") return;
 
         switch (name) {
           case "title":
@@ -308,6 +293,8 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
               target: frame.attribs.target ?? null,
               rel: frame.attribs.rel ?? null,
               ariaLabel: frame.attribs["aria-label"] ?? null,
+              ariaHidden: frame.attribs["aria-hidden"] === "true",
+              tabIndex: frame.attribs.tabindex !== undefined ? Number.parseInt(frame.attribs.tabindex, 10) : null,
             });
             break;
           case "button":
@@ -317,6 +304,8 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
               type: frame.attribs.type ?? null,
               disabled: "disabled" in frame.attribs,
               ariaLabel: frame.attribs["aria-label"] ?? null,
+              ariaHidden: frame.attribs["aria-hidden"] === "true",
+              tabIndex: frame.attribs.tabindex !== undefined ? Number.parseInt(frame.attribs.tabindex, 10) : null,
             });
             break;
           case "label":
@@ -330,7 +319,25 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
           case "h6":
             headings.push({ line, level: Number(name[1]) as 1 | 2 | 3 | 4 | 5 | 6, text: text || undefined });
             break;
+          case "style": {
+            stylesheets.push({ line, href: null, inline: true, contentLength: rawFrameText.length });
+            break;
+          }
           case "script": {
+            const src = frame.attribs.src ?? null;
+            const inHead = ancestorNames().includes("head");
+            const inBody = ancestorNames().includes("body");
+            scripts.push({
+              line,
+              src,
+              inline: !src,
+              location: inHead ? "head" : inBody ? "body" : "unknown",
+              async: "async" in frame.attribs,
+              defer: "defer" in frame.attribs,
+              type: frame.attribs.type,
+              contentLength: !src ? rawFrameText.length : null,
+            });
+
             const type = (frame.attribs.type ?? "").toLowerCase();
             if (type === "application/ld+json") {
               const { json, parseError } = tryParseLiquidJson(rawFrameText);
