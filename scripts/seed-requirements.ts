@@ -655,6 +655,24 @@ const requirements: SeedRequirement[] = [
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
   },
+  // Added 2026-08-14 from a review report flagging that some layout
+  // elements stay untranslated after switching languages — distinct from
+  // REF-LOCALE-KEY-MISSING-001, which only catches a `t:`/`| t` key that's
+  // referenced but missing from the locale file. This is about visible
+  // text that never goes through translation at all.
+  {
+    requirementId: "SHOPIFY-LOCALE-HARDCODED-TEXT-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Visible storefront text must go through translation, not hardcoded literals",
+    description:
+      "When a theme supports multiple languages, every visible storefront string (nav labels, buttons, form labels, empty-state messages, etc.) must be rendered through Liquid's `| t` translation filter with a locale file entry, not hardcoded literal text — otherwise switching languages leaves some layout elements untranslated.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes:
+      "Distinguishing a genuinely hardcoded, translatable string from an intentional literal (a brand name, an icon-only element, a code identifier) requires judgment a static regex/heuristic can't make reliably without heavy false positives. Requires manually switching the demo store's language and reviewing each layout element, not statically checkable from theme code.",
+  },
   {
     requirementId: "SHOPIFY-FEATURES-MULTILEVEL-MENU-001",
     sourceType: "shopify_theme_store",
@@ -1122,7 +1140,8 @@ const requirements: SeedRequirement[] = [
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
-    notes: "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content).",
+    notes:
+      "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content). Partial automated coverage added 2026-08-14: the live demo-store check (LIVE-IMAGE-RESOLUTION-001) flags images whose source resolution is measurably lower than their rendered size — a narrower, objective check than the full 'professional images, real-life scenarios, no placeholder content' judgment call, which still needs manual review.",
   },
 ];
 

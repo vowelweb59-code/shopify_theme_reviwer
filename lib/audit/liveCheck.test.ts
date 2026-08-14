@@ -1,6 +1,6 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { extractLoadedPageFacts } from "./liveCheck";
+import { checkResponsiveReachability, extractLoadedPageFacts } from "./liveCheck";
 
 // Real browser, no network — page.setContent() has no network dependency,
 // so these run against Chromium's actual layout/style engine (the same one
@@ -81,5 +81,72 @@ describe("extractLoadedPageFacts", () => {
     const facts = await extractLoadedPageFacts(page);
     expect(facts.canonical).toBe("https://example.com/");
     expect(facts.metaDescription).toBe("A test page");
+  });
+
+  it("samples an image's natural vs. rendered size and the page's device pixel ratio", async () => {
+    await page.setContent(
+      `<body><img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'/>" style="width:300px;height:300px"></body>`
+    );
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.imageSamples).toHaveLength(1);
+    expect(facts.imageSamples[0]).toMatchObject({ naturalWidth: 20, naturalHeight: 20, renderedWidth: 300, renderedHeight: 300 });
+    expect(facts.devicePixelRatio).toBeGreaterThan(0);
+  });
+
+  it("skips icon-sized images when sampling for resolution", async () => {
+    await page.setContent(
+      `<body><img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'/>" style="width:20px;height:20px"></body>`
+    );
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.imageSamples).toHaveLength(0);
+  });
+});
+
+describe("checkResponsiveReachability", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await chromium.launch();
+    page = await browser.newPage();
+  }, 30_000);
+
+  afterAll(async () => {
+    await browser.close();
+  });
+
+  it("flags social links that are hidden with no visible menu control to reveal them", async () => {
+    await page.setContent('<body><footer><a href="https://facebook.com/store" style="display:none">FB</a></footer></body>');
+    const findings = await checkResponsiveReachability(page);
+    expect(findings.map((f) => f.ruleId)).toContain("LIVE-RESPONSIVE-SOCIAL-001");
+  });
+
+  it("does not flag social links revealed by clicking a visible menu control", async () => {
+    await page.setContent(
+      '<body>' +
+        '<footer><a id="fb" href="https://facebook.com/store" style="display:none">FB</a></footer>' +
+        '<button aria-label="Menu" onclick="document.getElementById(\'fb\').style.display=\'inline\'">Menu</button>' +
+        "</body>"
+    );
+    const findings = await checkResponsiveReachability(page);
+    expect(findings.map((f) => f.ruleId)).not.toContain("LIVE-RESPONSIVE-SOCIAL-001");
+  });
+
+  it("does not flag anything when the theme has no social links at all", async () => {
+    await page.setContent("<body><footer></footer></body>");
+    const findings = await checkResponsiveReachability(page);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("flags a hidden language/country selector with no visible menu control to reveal it", async () => {
+    await page.setContent('<body><select name="locale_code" style="display:none"><option>EN</option></select></body>');
+    const findings = await checkResponsiveReachability(page);
+    expect(findings.map((f) => f.ruleId)).toContain("LIVE-RESPONSIVE-LOCALIZATION-001");
+  });
+
+  it("does not flag a visible, reachable language selector", async () => {
+    await page.setContent('<body><select name="locale_code"><option>EN</option></select></body>');
+    const findings = await checkResponsiveReachability(page);
+    expect(findings).toHaveLength(0);
   });
 });
