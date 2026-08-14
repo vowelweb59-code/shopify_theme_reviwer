@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-14 (post CSV/PDF export + re-audit diff).
+// Last reviewed: 2026-08-14 (post CSV/PDF export, re-audit diff, and responsive/image-resolution live checks).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -36,7 +36,7 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 5,
     name: "Reporting & exports",
     status: "in-progress",
-    note: "Report UI, live demo-store checking, and CSV/PDF export done. XLSX/JSON/HTML export, finding lifecycle (open/resolved/ignored), category dashboards, and search are not built.",
+    note: "Report UI, CSV/PDF export done. Live demo-store checking now covers contrast, JSON-LD/meta, responsive visibility of the language/country selector and social icons at medium viewport widths, and image-resolution/pixelation. XLSX/JSON/HTML export, finding lifecycle (open/resolved/ignored), category dashboards, and search are not built.",
   },
   {
     phase: 6,
