@@ -21,6 +21,10 @@ export type FindingRow = {
   lineNumber?: number | null;
   category: string;
   severity: "blocker" | "high" | "medium" | "low";
+  // "live" findings come from actually rendering a real demo store URL
+  // (real computed contrast, real rendered JSON-LD) rather than parsing
+  // theme source — filePath holds the page URL checked, not a file.
+  layer?: "static" | "live";
   finding: string;
   recommendation?: string | null;
   sourceReference?: string | null;
@@ -114,6 +118,7 @@ export function FindingsTable({ findings }: { findings: FindingRow[] }) {
         <thead className="border-b border-black/[.08] bg-black/[.02] text-xs uppercase text-zinc-500 dark:border-white/[.145] dark:bg-white/[.03] dark:text-zinc-400">
           <tr>
             <th className="px-4 py-3 font-medium">Severity</th>
+            <th className="px-4 py-3 font-medium">Source</th>
             <th className="px-4 py-3 font-medium">Category</th>
             <th className="px-4 py-3 font-medium">File</th>
             <th className="px-4 py-3 font-medium">Finding</th>
@@ -129,10 +134,29 @@ export function FindingsTable({ findings }: { findings: FindingRow[] }) {
               <td className="px-4 py-3">
                 <SeverityBadge severity={f.severity} />
               </td>
+              <td className="px-4 py-3">
+                {f.layer === "live" ? (
+                  <span className="inline-block rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-200">
+                    Live
+                  </span>
+                ) : (
+                  <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    Static
+                  </span>
+                )}
+              </td>
               <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{f.category}</td>
               <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-zinc-500">
-                {f.filePath}
-                {f.lineNumber ? `:${f.lineNumber}` : ""}
+                {f.layer === "live" ? (
+                  <a href={f.filePath} target="_blank" rel="noreferrer" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+                    {f.filePath}
+                  </a>
+                ) : (
+                  <>
+                    {f.filePath}
+                    {f.lineNumber ? `:${f.lineNumber}` : ""}
+                  </>
+                )}
               </td>
               <td className="px-4 py-3">
                 <div className="text-zinc-950 dark:text-zinc-50">{f.finding}</div>

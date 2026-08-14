@@ -22,6 +22,8 @@ type AuditRunResult = {
     fileErrors?: { path: string; error: string }[];
     summary?: FindingSummary;
     diagnostics?: AuditDiagnostics;
+    demoStoreUrl?: string | null;
+    liveCheckError?: { url: string; error: string } | null;
   };
   findings?: FindingRow[];
 };
@@ -29,6 +31,7 @@ type AuditRunResult = {
 export default function AuditPage() {
   const [themeName, setThemeName] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [demoStoreUrl, setDemoStoreUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<AuditRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +49,7 @@ export default function AuditPage() {
     const formData = new FormData();
     formData.set("themeName", themeName);
     formData.set("file", file);
+    if (demoStoreUrl.trim()) formData.set("demoStoreUrl", demoStoreUrl.trim());
 
     const res = await fetch("/api/audit/run", { method: "POST", body: formData });
     const data = await res.json().catch(() => ({}));
@@ -66,7 +70,9 @@ export default function AuditPage() {
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Upload a Shopify theme .zip. The parser extracts structural facts (images, headings, schema
           blocks, Liquid references, and more), then the deterministic rule engine evaluates them against
-          Shopify Theme Store, accessibility, and technical SEO/AEO requirements.
+          Shopify Theme Store, accessibility, and technical SEO/AEO requirements. Optionally add a live demo
+          store URL (the theme installed with real content) to also check things static theme code can&apos;t —
+          real rendered contrast and real rendered JSON-LD.
         </p>
       </div>
 
@@ -91,12 +97,26 @@ export default function AuditPage() {
             className="text-sm"
           />
         </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-700 dark:text-zinc-300">Demo store URL (optional)</span>
+          <input
+            type="url"
+            value={demoStoreUrl}
+            onChange={(e) => setDemoStoreUrl(e.target.value)}
+            className="rounded-md border border-black/[.12] bg-transparent px-3 py-2 dark:border-white/[.15]"
+            placeholder="https://your-demo-store.myshopify.com"
+          />
+          <span className="text-xs text-zinc-500">
+            A real, running store with this theme and actual content installed — checked live for real contrast and
+            rendered JSON-LD alongside the static findings above. Leave blank to skip.
+          </span>
+        </label>
         <button
           type="submit"
           disabled={submitting}
           className="w-fit rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
         >
-          {submitting ? "Parsing…" : "Run audit"}
+          {submitting ? (demoStoreUrl.trim() ? "Parsing + checking live store…" : "Parsing…") : "Run audit"}
         </button>
       </form>
 
@@ -121,6 +141,19 @@ export default function AuditPage() {
               )}
             </p>
             {result.auditRun.error && <p className="mt-2 text-red-700 dark:text-red-300">{result.auditRun.error}</p>}
+            {result.auditRun.demoStoreUrl && (
+              <p className="mt-2 text-zinc-500">
+                Live-checked:{" "}
+                <a href={result.auditRun.demoStoreUrl} target="_blank" rel="noreferrer" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+                  {result.auditRun.demoStoreUrl}
+                </a>
+              </p>
+            )}
+            {result.auditRun.liveCheckError && (
+              <p className="mt-2 text-amber-700 dark:text-amber-400">
+                Could not check the live demo store: {result.auditRun.liveCheckError.error}
+              </p>
+            )}
             {result.auditRun.fileStats && (
               <div className="mt-3">
                 <p className="text-zinc-500">Files parsed:</p>

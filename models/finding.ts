@@ -11,10 +11,14 @@ export const FINDING_CATEGORIES = [
 
 export const FINDING_SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 
-// Only 'static' exists for now — the deterministic rule engine built in
-// Phase 3 onward. An 'llm' layer could be added later without changing this
-// shape, but AI-assisted review is explicitly not part of the core pipeline.
-export const FINDING_LAYERS = ["static"] as const;
+// 'static' is the deterministic rule engine (Phase 3+), running against
+// theme source code. 'live' (added 2026-08-14) runs against a real,
+// running store URL the user supplies — real computed contrast, real
+// rendered JSON-LD/meta tags — for the checks static source analysis
+// structurally cannot make (CSS custom properties, app-injected schema,
+// actual merchant content). Still fully deterministic; no AI/LLM call
+// involved, just a real browser rendering a real page.
+export const FINDING_LAYERS = ["static", "live"] as const;
 
 const findingSchema = new Schema(
   {

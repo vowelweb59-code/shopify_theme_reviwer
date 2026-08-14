@@ -32,6 +32,17 @@ function dedupeKey(f: ExecutedFinding): string {
 
 const EMPTY_SUMMARY = (): RunRulesSummary => ({ total: 0, blocker: 0, high: 0, medium: 0, low: 0, byCategory: {} });
 
+/** Shared by runRules() and the live-check merge in the audit API route, so a summary always reflects the same counting logic regardless of which layer(s) contributed findings. */
+export function summarizeFindings(findings: { severity: Severity; category: FindingCategory }[]): RunRulesSummary {
+  const summary = EMPTY_SUMMARY();
+  for (const f of findings) {
+    summary.total++;
+    summary[f.severity]++;
+    summary.byCategory[f.category] = (summary.byCategory[f.category] ?? 0) + 1;
+  }
+  return summary;
+}
+
 /** Runs every rule against every parsed file. A failing rule is recorded and skipped — it never aborts the rest of the audit. */
 export function runRules(files: ParsedFile[], rules: Rule[] = ALL_RULES): RunRulesResult {
   const index = buildThemeIndex(files);
@@ -58,12 +69,7 @@ export function runRules(files: ParsedFile[], rules: Rule[] = ALL_RULES): RunRul
   }
 
   const findings = [...findingsByKey.values()];
-  const summary = EMPTY_SUMMARY();
-  for (const f of findings) {
-    summary.total++;
-    summary[f.severity as Severity]++;
-    summary.byCategory[f.category as FindingCategory] = (summary.byCategory[f.category] ?? 0) + 1;
-  }
+  const summary = summarizeFindings(findings);
 
   return { findings, summary, ruleErrors };
 }

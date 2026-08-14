@@ -22,6 +22,8 @@ type AuditRunDetail = {
   fileStats?: Record<string, number>;
   skippedFileCount?: number;
   diagnostics?: AuditDiagnostics;
+  demoStoreUrl?: string | null;
+  liveCheckError?: { url: string; error: string } | null;
 };
 
 function formatDate(iso: string) {
@@ -85,6 +87,19 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
               {auditRun.completedAt ? ` — completed ${formatDate(auditRun.completedAt)}` : ""}
             </p>
             {auditRun.error && <p className="mt-2 text-red-700 dark:text-red-300">{auditRun.error}</p>}
+            {auditRun.demoStoreUrl && (
+              <p className="mt-2 text-zinc-500">
+                Live-checked:{" "}
+                <a href={auditRun.demoStoreUrl} target="_blank" rel="noreferrer" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+                  {auditRun.demoStoreUrl}
+                </a>
+              </p>
+            )}
+            {auditRun.liveCheckError && (
+              <p className="mt-2 text-amber-700 dark:text-amber-400">
+                Could not check the live demo store: {auditRun.liveCheckError.error}
+              </p>
+            )}
           </div>
 
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}

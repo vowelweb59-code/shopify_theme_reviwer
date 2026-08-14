@@ -35,6 +35,10 @@ const diagnosticsSchema = new Schema(
   { _id: false }
 );
 
+// A live check failing (unreachable URL, navigation timeout) must not fail
+// the whole audit run — the static results still stand on their own.
+const liveCheckErrorSchema = new Schema({ url: String, error: String }, { _id: false });
+
 const auditRunSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
@@ -48,6 +52,11 @@ const auditRunSchema = new Schema(
     fileErrors: { type: [fileErrorSchema], default: undefined },
     ruleErrors: { type: [ruleErrorSchema], default: undefined },
     diagnostics: { type: diagnosticsSchema, default: undefined },
+    // A real, running store URL with the theme + actual merchant content
+    // installed — checked live (real computed contrast, rendered JSON-LD/
+    // meta tags) alongside the static theme-code findings above.
+    demoStoreUrl: { type: String, default: null },
+    liveCheckError: { type: liveCheckErrorSchema, default: undefined },
   },
   { timestamps: false }
 );
