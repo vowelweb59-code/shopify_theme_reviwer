@@ -40,9 +40,9 @@
     "semantic_hash": ""
   },
   "app/layout.tsx": {
-    "mtime": 1786520155.4767685,
-    "ast_hash": "ec9c4d0203cd908f2d960b2789f131ed",
-    "semantic_hash": "ec9c4d0203cd908f2d960b2789f131ed"
+    "mtime": 1786689581.228821,
+    "ast_hash": "af326e517b8b40ec662d807b4dd14325",
+    "semantic_hash": ""
   },
   "app/page.tsx": {
     "mtime": 1786520167.0903995,
@@ -487,6 +487,31 @@
   "Landing Page 2.png": {
     "mtime": 1786688227.5069122,
     "ast_hash": "835f89ebdbdd7f666aef3bece8600e27",
+    "semantic_hash": ""
+  },
+  "app/_components/ProjectStatusWidget.tsx": {
+    "mtime": 1786689566.1137097,
+    "ast_hash": "3140e1d2677cc6fb33fdd74465eed55c",
+    "semantic_hash": ""
+  },
+  "lib/projectStatus.ts": {
+    "mtime": 1786689332.3215165,
+    "ast_hash": "d8579095ded8b05013830c573eb403f8",
+    "semantic_hash": ""
+  },
+  "Organic_Theme_Shopify_Approval_Audit.pdf": {
+    "mtime": 1786690659.160346,
+    "ast_hash": "bc2b4a14a7c7435e7a48cdceec4a420b",
+    "semantic_hash": ""
+  },
+  "Red Homepage.pdf": {
+    "mtime": 1786690737.5632386,
+    "ast_hash": "404041d9f6e58094976bf630dacb3652",
+    "semantic_hash": ""
+  },
+  "Homepage 4.png": {
+    "mtime": 1786691220.0238614,
+    "ast_hash": "c507ab806a08146b33ebbd686b6a1f03",
     "semantic_hash": ""
   }
 }
