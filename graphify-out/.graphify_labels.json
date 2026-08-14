@@ -21,7 +21,7 @@
   "19": "finding.ts",
   "20": "export/route.ts",
   "21": "shopify/index.ts",
-  "22": "run/route.ts",
+  "22": "liveCheck.ts",
   "23": "cross-file/index.ts",
   "24": "audit-run.ts",
   "25": "audit-settings.ts",
