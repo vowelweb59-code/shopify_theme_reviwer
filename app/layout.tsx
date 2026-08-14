@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ProjectStatusWidget } from "./_components/ProjectStatusWidget";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         <main className="flex flex-1 flex-col">{children}</main>
+        <ProjectStatusWidget />
       </body>
     </html>
   );
