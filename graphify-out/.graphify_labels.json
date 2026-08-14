@@ -32,5 +32,11 @@
   "30": "registry.ts",
   "31": "bugs/index.ts",
   "32": "technical-aeo/index.ts",
-  "33": "rules.ts"
+  "33": "rules.ts",
+  "34": "extractLiquidStructure.ts",
+  "35": "buildLineIndex",
+  "36": "zip.ts",
+  "37": "extractCssStructure.ts",
+  "38": "liquidJson.ts",
+  "39": "validateThemeStructure.ts"
 }
