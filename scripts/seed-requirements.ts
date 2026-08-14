@@ -35,6 +35,9 @@ const GOOGLE_ORG_SD_URL = "https://developers.google.com/search/docs/appearance/
 const GOOGLE_ARTICLE_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/article";
 const GOOGLE_SD_POLICIES_URL = "https://developers.google.com/search/docs/appearance/structured-data/sd-policies";
 const SECTION_SCHEMA_URL = "https://shopify.dev/docs/storefronts/themes/architecture/sections/section-schema";
+const GOOGLE_BREADCRUMB_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb";
+const SCHEMA_ORG_WEBSITE_URL = "https://schema.org/WebSite";
+const GOOGLE_FAQ_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/faqpage";
 
 const requirements: SeedRequirement[] = [
   // --- Shopify Theme Store Compliance: structure -----------------------
@@ -528,6 +531,50 @@ const requirements: SeedRequirement[] = [
     severity: "blocker",
   },
 
+  // --- Technical AEO: additional schema types -----------------------------
+  // Added 2026-08-14 from a schema.org/JSON-LD implementation review of a
+  // live Shopify store. That review's site-specific JSON-LD payloads (a
+  // particular brand's name/logo/socials) aren't generalizable and weren't
+  // added — only the underlying schema *types* it flagged as commonly
+  // missing on Shopify stores, verified against current official docs
+  // rather than trusted from the source review.
+  {
+    requirementId: "TECH-AEO-BREADCRUMB-001",
+    sourceType: "technical_aeo",
+    category: "Technical AEO",
+    title: "Non-homepage templates should include BreadcrumbList JSON-LD",
+    description:
+      "Collection, product, and article templates should include a BreadcrumbList JSON-LD block (at least two ListItems: position, name, item URL) reflecting the page's place in the site hierarchy.",
+    sourceName: "Google: Breadcrumb structured data",
+    sourceUrl: GOOGLE_BREADCRUMB_SD_URL,
+    severity: "medium",
+  },
+  {
+    requirementId: "TECH-AEO-WEBSITE-001",
+    sourceType: "technical_aeo",
+    category: "Technical AEO",
+    title: "Theme should include a sitewide WebSite JSON-LD entity",
+    description:
+      "Theme should include a WebSite JSON-LD block (name, url) with a stable @id, so other structured data (WebPage, BreadcrumbList, Article) can reference it via isPartOf rather than repeating site identity.",
+    sourceName: "schema.org: WebSite",
+    sourceUrl: SCHEMA_ORG_WEBSITE_URL,
+    severity: "low",
+    notes:
+      "Not for the sitelinks search box (WebSite + SearchAction) — Google retired that feature in November 2024. The value here is establishing a stable entity other schema can cross-reference, not a SERP feature.",
+  },
+  {
+    requirementId: "TECH-AEO-FAQ-001",
+    sourceType: "technical_aeo",
+    category: "Technical AEO",
+    title: "Pages with FAQ content should include FAQPage JSON-LD",
+    description: "A page or section presenting a Q&A/FAQ accordion should mark it up with FAQPage JSON-LD (mainEntity: Question/Answer pairs).",
+    sourceName: "Google: FAQPage structured data",
+    sourceUrl: GOOGLE_FAQ_SD_URL,
+    severity: "low",
+    notes:
+      "Google discontinued the FAQ rich-result SERP feature (June 2026) — this is no longer worth prioritizing for rich results. Kept at low severity for structural/entity completeness only; downgrade further or drop if that's no longer a priority.",
+  },
+
   // --- Shopify Theme Store Compliance: features & OS 2.0 compatibility ---
   // Added 2026-08-12 from real Shopify Theme Store review feedback the team
   // received on multiple theme submissions (Master Shopify Theme Testing
@@ -1004,6 +1051,78 @@ const requirements: SeedRequirement[] = [
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
     notes: "Full verification requires runtime/browser interaction testing; static analysis can only catch obvious structural indicators (e.g. hover-only dropdown triggers with no keyboard handler).",
+  },
+
+  // --- Shopify Theme Store Compliance: Design & UX (visual review only) --
+  // Added 2026-08-14. These were deliberately left out when the rest of
+  // Shopify's Theme Store requirements page was seeded (2026-08-12) — they're
+  // editorial/design-taste judgment calls ("professional-quality visuals",
+  // "clear page structure"), not deterministically checkable from theme
+  // code, and inventing a static heuristic for them would risk exactly the
+  // false-positive/false-confidence problem this project has been careful
+  // to avoid everywhere else. They're real Theme Store review criteria
+  // though, so they belong in the knowledge base as a manual-review
+  // checklist — each needs a live demo store or design reference (Figma,
+  // screenshots) to actually evaluate, not theme source code.
+  {
+    requirementId: "SHOPIFY-DESIGN-VISUAL-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Visual design must be professional-quality and use a cohesive color palette",
+    description:
+      "Images, graphics, and icons must be high-quality, clear, appropriately sized, and consistent. The theme should use a simple, complementary color palette that works together without clashing, with an intentional design that stands apart and targets a specific merchant type/industry.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes: "Editorial/design-taste judgment — requires visual review against a live demo store or design reference, not statically checkable from theme code.",
+  },
+  {
+    requirementId: "SHOPIFY-DESIGN-LAYOUT-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Layout must have a clear, logical structure and stay flexible across content variation",
+    description:
+      "The design should clearly follow a logical grid structure, use size/color/contrast/position to emphasize key details, and remain visually appealing when content length or quantity varies (short vs. long titles, few vs. many products, etc.).",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes: "Editorial/design-taste judgment — requires visual review against a live demo store or design reference, not statically checkable from theme code.",
+  },
+  {
+    requirementId: "SHOPIFY-DESIGN-CONSISTENCY-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Typography and UI patterns must be visually consistent throughout",
+    description:
+      "Avoid an abundance of fonts; use complementary font pairings. Buttons, links, and forms should use consistent styles, sizes, colors, and behaviors across the theme, and theme editor settings should be organized in a way that's easy for merchants to use.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "low",
+    notes: "Editorial/design-taste judgment — requires visual review against a live demo store or design reference, not statically checkable from theme code.",
+  },
+  {
+    requirementId: "SHOPIFY-DESIGN-UX-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Customer shopping experience must be clear and frictionless",
+    description:
+      "Customers should be able to easily navigate from homepage to product discovery, product pages, cart, and checkout. The design should thoughtfully guide customers toward relevant products/collections, and key customer actions should be clear, intuitive, and immediately responsive.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes: "Editorial/design-taste judgment — requires interacting with a live demo store, not statically checkable from theme code.",
+  },
+  {
+    requirementId: "SHOPIFY-DESIGN-DEMOSTORE-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Demo store must be complete, realistic, and free of placeholder content",
+    description:
+      "The demo store should use thoughtfully selected products, professional images, and real-life scenarios matching the theme's target industry — every section/feature shown should fit that business type, with no Lorem Ipsum or placeholder text anywhere.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes: "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content).",
   },
 ];
 

@@ -3,6 +3,9 @@ import type { Rule } from "@/lib/audit/rules";
 const GOOGLE_PRODUCT_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/product";
 const GOOGLE_ORG_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/organization";
 const GOOGLE_ARTICLE_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/article";
+const GOOGLE_BREADCRUMB_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb";
+const SCHEMA_ORG_WEBSITE_URL = "https://schema.org/WebSite";
+const GOOGLE_FAQ_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/faqpage";
 
 function anchorPath(files: { path: string }[]): string {
   return files.find((f) => f.path.startsWith("layout/"))?.path ?? files[0]?.path ?? "layout/theme.liquid";
@@ -98,4 +101,89 @@ const articleSchemaRule: Rule = {
   },
 };
 
-export const TECHNICAL_AEO_RULES: Rule[] = [productSchemaRule, organizationSchemaRule, articleSchemaRule];
+const breadcrumbSchemaRule: Rule = {
+  ruleId: "AEO-BREADCRUMB-SCHEMA-001",
+  requirementId: "TECH-AEO-BREADCRUMB-001",
+  category: "Technical AEO",
+  defaultSeverity: "medium",
+  title: "Non-homepage templates should include BreadcrumbList JSON-LD",
+  description: "Collection, product, and article templates should include a BreadcrumbList JSON-LD block reflecting the page's place in the site hierarchy.",
+  sourceReference: "Google: Breadcrumb structured data",
+  sourceUrl: GOOGLE_BREADCRUMB_SD_URL,
+  // Gated on the theme actually having collection/product/article
+  // templates — virtually every real theme does, but a stripped-down or
+  // highly custom one might genuinely have nothing to check here.
+  check({ files }) {
+    const hasNonHomeTemplates = files.some((f) => /^templates\/(collection|product|article)\b/i.test(f.path));
+    if (!hasNonHomeTemplates || hasJsonLdType(files, "BreadcrumbList")) return [];
+    return [
+      {
+        filePath: anchorPath(files),
+        category: "Technical AEO" as const,
+        severity: "medium" as const,
+        finding: "Theme has collection/product/article templates but no BreadcrumbList JSON-LD block was found anywhere.",
+        recommendation: "Add a BreadcrumbList JSON-LD block (at least two ListItems: position, name, item URL) to non-homepage templates.",
+      },
+    ];
+  },
+};
+
+const websiteSchemaRule: Rule = {
+  ruleId: "AEO-WEBSITE-SCHEMA-001",
+  requirementId: "TECH-AEO-WEBSITE-001",
+  category: "Technical AEO",
+  defaultSeverity: "low",
+  title: "Theme should include a sitewide WebSite JSON-LD entity",
+  description:
+    "Theme should include a WebSite JSON-LD block (name, url) with a stable @id, so other structured data can reference it via isPartOf rather than repeating site identity. Not for the sitelinks search box — Google retired that feature in November 2024.",
+  sourceReference: "schema.org: WebSite",
+  sourceUrl: SCHEMA_ORG_WEBSITE_URL,
+  check({ files }) {
+    if (hasJsonLdType(files, "WebSite")) return [];
+    return [
+      {
+        filePath: anchorPath(files),
+        category: "Technical AEO" as const,
+        severity: "low" as const,
+        finding: "No WebSite JSON-LD block was found anywhere in the theme.",
+        recommendation: "Add a WebSite JSON-LD block (name, url, stable @id) to the layout so other schema can reference it via isPartOf.",
+      },
+    ];
+  },
+};
+
+const faqSchemaRule: Rule = {
+  ruleId: "AEO-FAQ-SCHEMA-001",
+  requirementId: "TECH-AEO-FAQ-001",
+  category: "Technical AEO",
+  defaultSeverity: "low",
+  title: "Pages with FAQ content should include FAQPage JSON-LD",
+  description:
+    "A page or section presenting a Q&A/FAQ accordion should mark it up with FAQPage JSON-LD (mainEntity: Question/Answer pairs). Google discontinued the FAQ rich-result SERP feature (June 2026); this is now about structural/entity completeness, not SERP appearance.",
+  sourceReference: "Google: FAQPage structured data",
+  sourceUrl: GOOGLE_FAQ_SD_URL,
+  // Gated on the theme actually having an FAQ-named file — there's no
+  // reliable theme-wide way to know FAQ content exists otherwise.
+  check({ files }) {
+    const hasFaqFiles = files.some((f) => /faq/i.test(f.path));
+    if (!hasFaqFiles || hasJsonLdType(files, "FAQPage")) return [];
+    return [
+      {
+        filePath: anchorPath(files),
+        category: "Technical AEO" as const,
+        severity: "low" as const,
+        finding: "Theme has FAQ-related content but no FAQPage JSON-LD block was found anywhere.",
+        recommendation: "Add a FAQPage JSON-LD block built from the same source as the visible FAQ content, so they never drift apart.",
+      },
+    ];
+  },
+};
+
+export const TECHNICAL_AEO_RULES: Rule[] = [
+  productSchemaRule,
+  organizationSchemaRule,
+  articleSchemaRule,
+  breadcrumbSchemaRule,
+  websiteSchemaRule,
+  faqSchemaRule,
+];

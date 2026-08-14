@@ -68,3 +68,50 @@ describe("AEO-ARTICLE-SCHEMA-001", () => {
     expect(findingsFor("AEO-ARTICLE-SCHEMA-001", theme)).toHaveLength(0);
   });
 });
+
+describe("AEO-BREADCRUMB-SCHEMA-001", () => {
+  it("flags a theme with collection/product templates and no BreadcrumbList anywhere", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": "<html></html>",
+      "templates/product.json": '{"sections": {}}',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-BREADCRUMB-SCHEMA-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag when BreadcrumbList JSON-LD is present", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": "<html></html>",
+      "templates/product.json": '{"sections": {}}',
+      "sections/main-product.liquid":
+        '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"BreadcrumbList","itemListElement":[]}</script>',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-BREADCRUMB-SCHEMA-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("AEO-WEBSITE-SCHEMA-001", () => {
+  it("flags a theme with no WebSite JSON-LD anywhere", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<html></html>" });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-WEBSITE-SCHEMA-001", theme)).toHaveLength(1);
+  });
+});
+
+describe("AEO-FAQ-SCHEMA-001", () => {
+  it("flags an FAQ page with no FAQPage JSON-LD", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": "<html></html>",
+      "templates/page.faq.json": '{"sections": {}}',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-FAQ-SCHEMA-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag a theme with no FAQ content at all", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<html></html>" });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-FAQ-SCHEMA-001", theme)).toHaveLength(0);
+  });
+});
