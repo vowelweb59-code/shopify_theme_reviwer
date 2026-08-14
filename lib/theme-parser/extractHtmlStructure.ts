@@ -1,6 +1,6 @@
 import { Parser } from "htmlparser2";
 import { buildLineIndex } from "./lineIndex";
-import { tryParseLiquidJson } from "./liquidJson";
+import { extractLiteralJsonLdTypes, tryParseLiquidJson } from "./liquidJson";
 import {
   emptyMetaTags,
   type ParsedAriaReference,
@@ -334,11 +334,11 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
             const type = (frame.attribs.type ?? "").toLowerCase();
             if (type === "application/ld+json") {
               const { json, parseError } = tryParseLiquidJson(rawFrameText);
-              const types: string[] = [];
+              const types = new Set<string>(extractLiteralJsonLdTypes(rawFrameText));
               if (json && typeof json === "object") {
                 const t = (json as Record<string, unknown>)["@type"];
-                if (typeof t === "string") types.push(t);
-                else if (Array.isArray(t)) types.push(...t.filter((x): x is string => typeof x === "string"));
+                if (typeof t === "string") types.add(t);
+                else if (Array.isArray(t)) t.filter((x): x is string => typeof x === "string").forEach((x) => types.add(x));
               }
               jsonLdBlocks.push({
                 line,
@@ -346,7 +346,7 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
                 json,
                 parseError,
                 rawJson: rawFrameText.trim(),
-                types,
+                types: [...types],
               });
             }
             break;

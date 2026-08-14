@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-14.
+// Last reviewed: 2026-08-14 (post CSV/PDF export + re-audit diff).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -30,15 +30,20 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 4,
     name: "Advanced static analysis",
     status: "in-progress",
-    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports all done. Remaining: broader CSS/perf coverage, more real-theme validation.",
+    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports all done. Validated against 3 real themes (Dawn, Skeleton, Splash) — found and fixed real parser/rule bugs each time. Remaining: broader CSS/perf coverage, more real-theme validation.",
   },
   {
     phase: 5,
     name: "Reporting & exports",
     status: "in-progress",
-    note: "Report UI + live demo-store checking done. No PDF/CSV/Google Sheets export yet.",
+    note: "Report UI, live demo-store checking, and CSV/PDF export done. XLSX/JSON/HTML export, finding lifecycle (open/resolved/ignored), category dashboards, and search are not built.",
   },
-  { phase: 6, name: "Re-audit / diff", status: "not-started", note: "Comparing two audit runs of the same theme over time." },
+  {
+    phase: 6,
+    name: "Re-audit / diff",
+    status: "in-progress",
+    note: "Core comparison works: resolved/still-present/new/changed detection via stable ruleId+category+filePath+message signatures, verified against a real fixed-then-regressed theme. Manual finding status, ignored-finding persistence, reintroduced-issue tracking, and diff exports are not built.",
+  },
   { phase: 7, name: "Submission-readiness & maintenance", status: "not-started", note: "Go/no-go dashboard, ongoing tracking." },
   {
     phase: 8,

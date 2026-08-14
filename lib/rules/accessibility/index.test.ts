@@ -59,3 +59,37 @@ describe("A11Y-OUTLINE-REMOVAL-001", () => {
     expect(findings[0].finding).not.toContain("\n");
   });
 });
+
+function focusOrderFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-TABINDEX-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-TABINDEX-001", () => {
+  it("flags a plain autofocus attribute (page-load focus theft)", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<input autofocus>" });
+    cleanup = theme.cleanup;
+    expect(focusOrderFindings(theme)).toHaveLength(1);
+  });
+
+  // Regression test: found auditing a real theme (Splash), whose contact
+  // form uses <h2 tabindex="-1" autofocus> to shift focus to a
+  // success/error status message after submission — a standard, deliberate
+  // accessibility technique, not the page-load focus-theft anti-pattern
+  // this rule targets. Flagging it would tell a developer to remove
+  // something that makes the theme *more* accessible, not less.
+  it("does not flag autofocus paired with tabindex=\"-1\" (focus management for a dynamic status message)", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": '<h2 tabindex="-1" autofocus>Submitted successfully</h2>',
+    });
+    cleanup = theme.cleanup;
+    expect(focusOrderFindings(theme)).toHaveLength(0);
+  });
+
+  it("still flags a positive tabindex value", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<div tabindex="3"></div>' });
+    cleanup = theme.cleanup;
+    const findings = focusOrderFindings(theme);
+    expect(findings.some((f) => f.finding.includes("tabindex"))).toBe(true);
+  });
+});

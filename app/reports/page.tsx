@@ -46,7 +46,8 @@ export default function ReportsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Reports</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Audit run history. Open a run to see its findings and severity summary — exports land in Phase 5.
+          Audit run history. Open a run to see its findings and severity summary, export to CSV/PDF, or compare it
+          against a previous audit of the same theme.
         </p>
       </div>
 

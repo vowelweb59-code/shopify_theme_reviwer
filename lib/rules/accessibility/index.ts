@@ -124,7 +124,15 @@ const focusOrderRule: Rule = {
       if (f.fileType === "liquid") {
         const lines = f.rawText.split("\n");
         for (let i = 0; i < lines.length; i++) {
-          if (/\bautofocus\b/i.test(lines[i])) {
+          // tabindex="-1" alongside autofocus is the standard idiom for
+          // shifting focus to a dynamic status message (e.g. a form's
+          // success/error heading) rather than the page-load focus-theft
+          // anti-pattern this rule targets — found auditing a real theme
+          // (Splash) using exactly this pattern on <h2 tabindex="-1"
+          // autofocus> form status messages. A normally-focusable control
+          // (an <input>) would never carry tabindex="-1" alongside
+          // autofocus, since that would remove it from the tab order.
+          if (/\bautofocus\b/i.test(lines[i]) && !/tabindex\s*=\s*["']-1["']/i.test(lines[i])) {
             findings.push({
               filePath: f.path,
               lineNumber: i + 1,
