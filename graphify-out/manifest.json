@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/parseJsonFile.ts": {
-    "mtime": 1786534488.0338717,
-    "ast_hash": "5ed30ea5243ce8ca8e33f1e78c0fc0b4",
+    "mtime": 1786538878.878585,
+    "ast_hash": "87c4bbbf2b696c7575e266957ece57be",
     "semantic_hash": ""
   },
   "lib/theme-parser/types.ts": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.ts": {
-    "mtime": 1786537602.6701908,
-    "ast_hash": "7a4f9f11d9e6709da056faae7a1358fb",
+    "mtime": 1786539266.464171,
+    "ast_hash": "c8a393d21699479c572317ae80a6b0d9",
     "semantic_hash": ""
   },
   "lib/theme-parser/duplicateJsonKeys.ts": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "lib/audit/templateComposition.ts": {
-    "mtime": 1786535857.7646155,
-    "ast_hash": "63f56483c964dbf039e1c99586ba4ade",
+    "mtime": 1786539214.2637317,
+    "ast_hash": "f36cccc0510a62d306a8df4aa5ee0978",
     "semantic_hash": ""
   },
   "lib/theme-parser/extractJsStructure.ts": {
