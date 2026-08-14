@@ -50,8 +50,8 @@
     "semantic_hash": "67fa2d4edd436bb5072ea9d93289c0df"
   },
   "app/reports/page.tsx": {
-    "mtime": 1786529047.795626,
-    "ast_hash": "d6277241a180ca7cf95d1d147695c0ea",
+    "mtime": 1786694558.9647596,
+    "ast_hash": "232c761875d3debaddda531414b07b2e",
     "semantic_hash": ""
   },
   "app/rules/page.tsx": {
@@ -85,8 +85,8 @@
     "semantic_hash": "e15063088dee415df4c6dba2c76566a9"
   },
   "lib/rules/accessibility/index.ts": {
-    "mtime": 1786538369.2919507,
-    "ast_hash": "5ed2adc19cc06ca88d1fc61d8ffcaeda",
+    "mtime": 1786704272.3079672,
+    "ast_hash": "b7b735dc955bfde2179bbde611bda0e8",
     "semantic_hash": ""
   },
   "lib/rules/bugs/index.ts": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "app/reports/[id]/page.tsx": {
-    "mtime": 1786686053.4838803,
-    "ast_hash": "6431369e65a5da5602328f01ee4670b2",
+    "mtime": 1786694526.9502175,
+    "ast_hash": "800ea5774474fefa5361130817fc591d",
     "semantic_hash": ""
   },
   "lib/audit/colorContrast.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/extractHtmlStructure.ts": {
-    "mtime": 1786531763.435824,
-    "ast_hash": "f96c78027eb3cfe8f59452f6f395b9af",
+    "mtime": 1786696594.7560778,
+    "ast_hash": "604073a220baee1caed929a60496019f",
     "semantic_hash": ""
   },
   "lib/theme-parser/extractLiquidStructure.ts": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/liquidJson.ts": {
-    "mtime": 1786524609.9598207,
-    "ast_hash": "356d9e782e0e469ff2ad103fc760acac",
+    "mtime": 1786696579.3605545,
+    "ast_hash": "19df574bc1edc109f105b7135a257aec",
     "semantic_hash": ""
   },
   "lib/theme-parser/parseJsonFile.ts": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "lib/rules/accessibility/index.test.ts": {
-    "mtime": 1786683496.890097,
-    "ast_hash": "4c82e6afda2c0c9bb534b6836ad56f45",
+    "mtime": 1786704303.583006,
+    "ast_hash": "c9a7bc4eaa0e29afdcc329e6cb2d3194",
     "semantic_hash": ""
   },
   "lib/rules/cross-file/index.test.ts": {
@@ -495,8 +495,8 @@
     "semantic_hash": ""
   },
   "lib/projectStatus.ts": {
-    "mtime": 1786689332.3215165,
-    "ast_hash": "d8579095ded8b05013830c573eb403f8",
+    "mtime": 1786705176.1772444,
+    "ast_hash": "4b27c59d04ed229663b52eb5b66b4d05",
     "semantic_hash": ""
   },
   "Organic_Theme_Shopify_Approval_Audit.pdf": {
@@ -512,6 +512,66 @@
   "Homepage 4.png": {
     "mtime": 1786691220.0238614,
     "ast_hash": "c507ab806a08146b33ebbd686b6a1f03",
+    "semantic_hash": ""
+  },
+  "app/_components/diff.tsx": {
+    "mtime": 1786694215.0154333,
+    "ast_hash": "63944320d9cae42463aa79888a430b3c",
+    "semantic_hash": ""
+  },
+  "app/api/reports/[id]/diff/route.ts": {
+    "mtime": 1786694189.0783699,
+    "ast_hash": "96e84d7ea028bc806bb5fa9a323ecac2",
+    "semantic_hash": ""
+  },
+  "app/api/reports/[id]/export/route.ts": {
+    "mtime": 1786694496.6103468,
+    "ast_hash": "ea6a2400e5ef1d6dc540e583970551f9",
+    "semantic_hash": ""
+  },
+  "lib/audit/diffFindings.test.ts": {
+    "mtime": 1786694165.4056141,
+    "ast_hash": "e54bd51ef9a1026f728d985bc488d920",
+    "semantic_hash": ""
+  },
+  "lib/audit/diffFindings.ts": {
+    "mtime": 1786694150.389225,
+    "ast_hash": "7c072195aa0a8e1a3a150b5bed9a4848",
+    "semantic_hash": ""
+  },
+  "lib/export/csv.test.ts": {
+    "mtime": 1786694284.2370687,
+    "ast_hash": "460c61cdb98301b66303c771bce91ed8",
+    "semantic_hash": ""
+  },
+  "lib/export/csv.ts": {
+    "mtime": 1786694274.2108805,
+    "ast_hash": "d89646f9b3eead3641acbdcf4a101d8c",
+    "semantic_hash": ""
+  },
+  "lib/export/pdf.test.ts": {
+    "mtime": 1786694319.6450915,
+    "ast_hash": "eb913354ae893607311369610910cf2e",
+    "semantic_hash": ""
+  },
+  "lib/export/pdf.ts": {
+    "mtime": 1786694310.01775,
+    "ast_hash": "f66eae19df85026284e28fbea8240290",
+    "semantic_hash": ""
+  },
+  "lib/theme-parser/liquidJson.test.ts": {
+    "mtime": 1786696608.153279,
+    "ast_hash": "5802f2638c05250526a3cfcd6a5f9cbf",
+    "semantic_hash": ""
+  },
+  "Kids_Fashion_Shopify_Theme_Approval_Audit.pdf": {
+    "mtime": 1786694811.3069963,
+    "ast_hash": "bc21535349dd8f58034ebc5dc62a8da5",
+    "semantic_hash": ""
+  },
+  "Home Page.png": {
+    "mtime": 1786694907.2068741,
+    "ast_hash": "a18002113f3f3c308d5dc53819436e7a",
     "semantic_hash": ""
   }
 }
