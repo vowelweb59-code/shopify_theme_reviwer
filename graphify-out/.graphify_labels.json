@@ -1,7 +1,7 @@
 {
   "0": "connectToDatabase",
   "1": "devDependencies",
-  "2": "scripts",
+  "2": "dependencies",
   "3": "compilerOptions",
   "4": "types.ts",
   "5": "theme-parser/index.ts",
@@ -19,13 +19,13 @@
   "17": "parseJsonFile.ts",
   "18": "reports/index.ts",
   "19": "accessibility/index.ts",
-  "20": "rules.ts",
-  "21": "bugs/index.ts",
-  "22": "runRules.ts",
+  "20": "headingChecks.ts",
+  "21": "registry.ts",
+  "22": "run/route.ts",
   "23": "cross-file/index.ts",
   "24": "technical-aeo/index.ts",
-  "25": "registry.ts",
+  "25": "playwright",
   "26": "Shopify Theme Auditor",
   "27": "vitest.config.mts",
-  "28": "cross-file/index.test.ts"
+  "28": "rules.ts"
 }
