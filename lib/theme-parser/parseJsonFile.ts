@@ -18,6 +18,34 @@ function isLocaleFilePath(path: string): boolean {
   return path.startsWith("locales/");
 }
 
+// Shopify's own tooling (the admin theme editor, `shopify theme pull`)
+// writes an auto-generated block comment — sometimes several, and
+// sometimes a line comment — at the very top of JSON files it manages
+// (templates, settings_data.json). Strict JSON has no comment syntax, so
+// JSON.parse rejects the entire file outright. Found auditing Shopify's
+// own Skeleton theme, where this silently broke section-reference/setting
+// extraction for the large majority of its JSON files (14 of 17) — not an
+// edge case, but the normal shape of any theme that's been through
+// Shopify's own tooling. Only strips from the absolute start of the file
+// (never mid-content), so it can't misfire on a string value that happens
+// to contain a comment-like substring.
+function stripLeadingComments(text: string): string {
+  let result = text;
+  for (;;) {
+    const trimmed = result.trimStart();
+    if (trimmed.startsWith("/*")) {
+      const end = trimmed.indexOf("*/");
+      if (end === -1) return result;
+      result = trimmed.slice(end + 2);
+    } else if (trimmed.startsWith("//")) {
+      const nl = trimmed.indexOf("\n");
+      result = nl === -1 ? "" : trimmed.slice(nl + 1);
+    } else {
+      return trimmed;
+    }
+  }
+}
+
 /** Best-effort line lookup: JSON.parse discards source positions, so this searches the raw text for a distinguishing substring. Falls back to line 1 (not a crash) when the text can't be found — e.g. a value that happens to appear more than once. */
 function findLine(rawText: string, toLine: (offset: number) => number, ...needles: string[]): number {
   for (const needle of needles) {
@@ -79,7 +107,7 @@ export function parseJsonFile(path: string, rawText: string): ParsedJsonFileInfo
   let json: unknown = null;
   let parseError: string | null = null;
   try {
-    json = JSON.parse(rawText);
+    json = JSON.parse(stripLeadingComments(rawText));
   } catch (err) {
     parseError = err instanceof Error ? err.message : "Invalid JSON";
   }

@@ -13,7 +13,7 @@
 // to resolve which section a header/footer group actually renders.
 import type { Rule } from "@/lib/audit/rules";
 import { isExternalReference, localeKeyExists } from "@/lib/audit/themeIndex";
-import { composeTemplate, templateBaseName } from "@/lib/audit/templateComposition";
+import { composeTemplate, composeTemplateMainContent, templateBaseName } from "@/lib/audit/templateComposition";
 import { findMultipleH1Across, findSkippedHeadingLevelsAcross, type ComposedHeading } from "@/lib/audit/headingChecks";
 
 const missingSectionRule: Rule = {
@@ -333,7 +333,7 @@ const sectionsScopeRule: Rule = {
 
 const TEMPLATES_REQUIRING_H1 = new Set(["index", "collection", "product", "page", "blog", "article", "list-collections", "search"]);
 
-function composedHeadingEntries(files: ReturnType<typeof composeTemplate>["files"]): ComposedHeading[] {
+function composedHeadingEntries(files: ReturnType<typeof composeTemplateMainContent>["files"]): ComposedHeading[] {
   return files.flatMap((f) => f.headings.map((heading) => ({ filePath: f.path, heading })));
 }
 
@@ -352,7 +352,7 @@ const composedH1MissingRule: Rule = {
       if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
       if (!TEMPLATES_REQUIRING_H1.has(templateBaseName(f.path))) continue;
 
-      const composed = composeTemplate(f, index);
+      const composed = composeTemplateMainContent(f, index);
       const totalH1 = composed.files.reduce((sum, cf) => sum + cf.headings.filter((h) => h.level === 1).length, 0);
       if (totalH1 === 0) {
         findings.push({
@@ -380,7 +380,7 @@ const composedMultipleH1Rule: Rule = {
     const findings = [];
     for (const f of files) {
       if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
-      const composed = composeTemplate(f, index);
+      const composed = composeTemplateMainContent(f, index);
       for (const issue of findMultipleH1Across(composedHeadingEntries(composed.files))) {
         findings.push({
           filePath: issue.filePath,
@@ -409,7 +409,7 @@ const composedSkippedHeadingRule: Rule = {
     const findings = [];
     for (const f of files) {
       if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
-      const composed = composeTemplate(f, index);
+      const composed = composeTemplateMainContent(f, index);
       for (const issue of findSkippedHeadingLevelsAcross(composedHeadingEntries(composed.files))) {
         findings.push({
           filePath: issue.filePath,
