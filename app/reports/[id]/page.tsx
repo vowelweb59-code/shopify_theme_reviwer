@@ -17,7 +17,14 @@ import {
   type RequirementInfo,
 } from "@/app/_components/findings";
 import { CategoryDashboard } from "@/app/_components/categoryDashboard";
-import { DiffFindingsView, DiffSummaryBar, type FindingsDiffResult } from "@/app/_components/diff";
+import {
+  CategoryDiffTable,
+  DiffFindingsView,
+  DiffSummaryBar,
+  RegressionAlert,
+  SeverityDiffTable,
+  type FindingsDiffResult,
+} from "@/app/_components/diff";
 import type { CoverageResult } from "@/lib/audit/coverage";
 import { computeReadiness } from "@/lib/audit/readiness";
 
@@ -265,7 +272,20 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
               {diffError && <p className="text-sm text-red-700 dark:text-red-300">{diffError}</p>}
               {diff && (
                 <>
+                  <a
+                    href={`/api/reports/${id}/diff/export?baseline=${baselineId}&format=csv`}
+                    className="w-fit rounded-full border border-black/[.12] px-3 py-1.5 text-xs text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
+                  >
+                    Export comparison CSV
+                  </a>
+                  {typeof diff.newOrEscalatedHighRiskCount === "number" && <RegressionAlert count={diff.newOrEscalatedHighRiskCount} />}
                   <DiffSummaryBar summary={diff.summary} />
+                  {diff.categorySummary && diff.severitySummary && (
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <CategoryDiffTable summary={diff.categorySummary} />
+                      <SeverityDiffTable summary={diff.severitySummary} />
+                    </div>
+                  )}
                   <DiffFindingsView findings={diff.findings} />
                 </>
               )}

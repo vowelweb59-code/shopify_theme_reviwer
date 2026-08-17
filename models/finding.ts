@@ -27,6 +27,13 @@ export const FINDING_LAYERS = ["static", "live"] as const;
 // being silently overwritten just because the same issue is detected again.
 export const FINDING_STATUSES = ["open", "resolved", "ignored"] as const;
 
+// Automatic re-audit history (phase-6 §13) — distinct from FINDING_STATUSES:
+// this describes whether the *signature* has been seen before across the
+// theme's audit history, computed once at persist time from the theme's
+// prior runs. "reintroduced" specifically means the issue looked resolved
+// (absent from the immediately preceding run) but has come back.
+export const FINDING_HISTORICAL_STATES = ["first_seen", "persistent", "reintroduced"] as const;
+
 const findingSchema = new Schema(
   {
     auditRunId: { type: Schema.Types.ObjectId, required: true, ref: "AuditRun", index: true },
@@ -45,6 +52,7 @@ const findingSchema = new Schema(
     status: { type: String, required: true, enum: FINDING_STATUSES, default: "open", index: true },
     ignoredReason: { type: String, default: null },
     statusUpdatedAt: { type: Date, default: null },
+    historicalState: { type: String, enum: FINDING_HISTORICAL_STATES, default: "first_seen", index: true },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } }
 );

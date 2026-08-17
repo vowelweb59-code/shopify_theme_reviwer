@@ -4,17 +4,12 @@
 // source-context/line-shift fallback (phase-6's Stage 3) — an unmatched
 // finding is reported as resolved/new rather than guessed at, which is
 // exactly what the phase doc's own Stage 4 asks for when no reliable match
-// exists. Manual finding status (open/resolved/ignored), rule-version
-// tracking, and reintroduced-issue history are not implemented here.
+// exists. Rule-version tracking is not implemented here. Manual finding
+// status carry-forward and reintroduced-issue history are handled
+// separately at persist time — see lib/audit/findingHistory.ts.
+import { exactSignature, locationSignature, type DiffableFinding } from "./findingSignature";
 
-export type DiffableFinding = {
-  ruleId: string;
-  category: string;
-  filePath: string;
-  severity: "blocker" | "high" | "medium" | "low";
-  finding: string;
-  layer?: "static" | "live";
-};
+export type { DiffableFinding };
 
 export type DiffStatus = "resolved" | "still_present" | "new" | "changed";
 
@@ -37,18 +32,6 @@ export type FindingsDiff<T extends DiffableFinding = DiffableFinding> = {
   summary: FindingsDiffSummary;
   findings: DiffFinding<T>[];
 };
-
-function normalizeMessage(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, " ").replace(/['"]/g, '"');
-}
-
-function exactSignature(f: DiffableFinding): string {
-  return `${f.ruleId}::${f.category}::${f.filePath}::${normalizeMessage(f.finding)}`;
-}
-
-function locationSignature(f: DiffableFinding): string {
-  return `${f.ruleId}::${f.category}::${f.filePath}`;
-}
 
 /**
  * Deterministically compares two sets of findings from the same theme's
@@ -113,4 +96,58 @@ export function computeFindingsDiff<T extends DiffableFinding>(previous: T[], cu
   };
 
   return { summary, findings };
+}
+
+export type CategoryDiffSummary = {
+  category: string;
+  resolved: number;
+  new: number;
+  stillPresent: number;
+  changed: number;
+};
+
+/** Per-category breakdown of a diff (phase-6 §8's category-change example). */
+export function summarizeDiffByCategory<T extends DiffableFinding>(diff: FindingsDiff<T>): CategoryDiffSummary[] {
+  const byCategory = new Map<string, CategoryDiffSummary>();
+  for (const f of diff.findings) {
+    const category = (f.current ?? f.previous)!.category;
+    const entry = byCategory.get(category) ?? { category, resolved: 0, new: 0, stillPresent: 0, changed: 0 };
+    if (f.status === "resolved") entry.resolved++;
+    else if (f.status === "new") entry.new++;
+    else if (f.status === "still_present") entry.stillPresent++;
+    else if (f.status === "changed") entry.changed++;
+    byCategory.set(category, entry);
+  }
+  return [...byCategory.values()].sort((a, b) => a.category.localeCompare(b.category));
+}
+
+export type SeverityDiffSummary = {
+  severity: string;
+  previousCount: number;
+  currentCount: number;
+  resolved: number;
+  new: number;
+};
+
+const SEVERITY_ORDER = ["blocker", "high", "medium", "low"];
+
+/** Per-severity before/after counts (phase-6 §8's blocker example) — the basis for a "new blockers introduced" regression callout. */
+export function summarizeDiffBySeverity<T extends DiffableFinding>(diff: FindingsDiff<T>): SeverityDiffSummary[] {
+  return SEVERITY_ORDER.map((severity) => {
+    const previousCount = diff.findings.filter((f) => f.previous?.severity === severity).length;
+    const currentCount = diff.findings.filter((f) => f.current?.severity === severity).length;
+    const resolved = diff.findings.filter((f) => f.status === "resolved" && f.previous?.severity === severity).length;
+    const newCount = diff.findings.filter((f) => f.status === "new" && f.current?.severity === severity).length;
+    return { severity, previousCount, currentCount, resolved, new: newCount };
+  });
+}
+
+/** New or severity-escalated blocker/high findings — the regression signal phase-6 §20 asks to make prominent. */
+export function countNewOrEscalatedHighRiskFindings<T extends DiffableFinding>(diff: FindingsDiff<T>): number {
+  const highRisk = new Set(["blocker", "high"]);
+  return diff.findings.filter((f) => {
+    if (f.status === "new") return highRisk.has(f.current!.severity);
+    if (f.status === "changed") return highRisk.has(f.current!.severity) && !highRisk.has(f.previous!.severity);
+    return false;
+  }).length;
 }

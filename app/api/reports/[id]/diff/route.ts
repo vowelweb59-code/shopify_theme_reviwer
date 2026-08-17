@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
-import { computeFindingsDiff, type DiffableFinding } from "@/lib/audit/diffFindings";
+import {
+  computeFindingsDiff,
+  countNewOrEscalatedHighRiskFindings,
+  summarizeDiffByCategory,
+  summarizeDiffBySeverity,
+  type DiffableFinding,
+} from "@/lib/audit/diffFindings";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -29,6 +35,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   ]);
 
   const diff = computeFindingsDiff(baselineFindings as unknown as DiffableFinding[], currentFindings as unknown as DiffableFinding[]);
+  const categorySummary = summarizeDiffByCategory(diff);
+  const severitySummary = summarizeDiffBySeverity(diff);
+  const newOrEscalatedHighRiskCount = countNewOrEscalatedHighRiskFindings(diff);
 
-  return NextResponse.json({ baselineAuditId: baselineId, currentAuditId: id, ...diff });
+  return NextResponse.json({
+    baselineAuditId: baselineId,
+    currentAuditId: id,
+    ...diff,
+    categorySummary,
+    severitySummary,
+    newOrEscalatedHighRiskCount,
+  });
 }

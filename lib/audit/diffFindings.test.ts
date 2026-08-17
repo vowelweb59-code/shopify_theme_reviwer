@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeFindingsDiff, type DiffableFinding } from "./diffFindings";
+import {
+  computeFindingsDiff,
+  countNewOrEscalatedHighRiskFindings,
+  summarizeDiffByCategory,
+  summarizeDiffBySeverity,
+  type DiffableFinding,
+} from "./diffFindings";
 
 function finding(overrides: Partial<DiffableFinding>): DiffableFinding {
   return {
@@ -68,5 +74,62 @@ describe("computeFindingsDiff", () => {
     const cur = [finding({ filePath: "sections/hero.liquid" })];
     const diff = computeFindingsDiff(prev, cur);
     expect(diff.summary).toMatchObject({ resolved: 1, new: 1, stillPresent: 0, changed: 0 });
+  });
+});
+
+describe("summarizeDiffByCategory", () => {
+  it("buckets each diff finding under its own category", () => {
+    const prev = [finding({ category: "Accessibility" }), finding({ category: "Bug", filePath: "sections/b.liquid" })];
+    const cur = [finding({ category: "Accessibility" })];
+    const diff = computeFindingsDiff(prev, cur);
+    const summary = summarizeDiffByCategory(diff);
+    expect(summary).toEqual([
+      { category: "Accessibility", resolved: 0, new: 0, stillPresent: 1, changed: 0 },
+      { category: "Bug", resolved: 1, new: 0, stillPresent: 0, changed: 0 },
+    ]);
+  });
+});
+
+describe("summarizeDiffBySeverity", () => {
+  it("computes before/after counts and resolved/new per severity", () => {
+    const prev = [finding({ severity: "blocker" }), finding({ severity: "blocker", filePath: "sections/b.liquid" })];
+    const cur = [finding({ severity: "blocker" }), finding({ severity: "low", filePath: "sections/c.liquid" })];
+    const diff = computeFindingsDiff(prev, cur);
+    const summary = summarizeDiffBySeverity(diff);
+    const blocker = summary.find((s) => s.severity === "blocker")!;
+    expect(blocker).toEqual({ severity: "blocker", previousCount: 2, currentCount: 1, resolved: 1, new: 0 });
+    const low = summary.find((s) => s.severity === "low")!;
+    expect(low).toMatchObject({ previousCount: 0, currentCount: 1, new: 1 });
+  });
+});
+
+describe("countNewOrEscalatedHighRiskFindings", () => {
+  it("counts a brand-new blocker/high finding", () => {
+    const diff = computeFindingsDiff([], [finding({ severity: "blocker" })]);
+    expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(1);
+  });
+
+  it("does not count a new low/medium finding", () => {
+    const diff = computeFindingsDiff([], [finding({ severity: "low" })]);
+    expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(0);
+  });
+
+  it("counts a changed finding whose severity escalated into blocker/high", () => {
+    const prev = [finding({ severity: "low", finding: "Old wording." })];
+    const cur = [finding({ severity: "blocker", finding: "New wording entirely." })];
+    const diff = computeFindingsDiff(prev, cur);
+    expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(1);
+  });
+
+  it("does not count a changed finding that was already high-risk and stays high-risk", () => {
+    const prev = [finding({ severity: "high", finding: "Old wording." })];
+    const cur = [finding({ severity: "blocker", finding: "New wording entirely." })];
+    const diff = computeFindingsDiff(prev, cur);
+    expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(0);
+  });
+
+  it("does not count a resolved finding", () => {
+    const diff = computeFindingsDiff([finding({ severity: "blocker" })], []);
+    expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(0);
   });
 });

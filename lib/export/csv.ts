@@ -1,3 +1,5 @@
+import { escapeCsvField } from "./csvUtil";
+
 export type CsvFindingRow = {
   ruleId: string;
   requirementId?: string | null;
@@ -25,13 +27,6 @@ const COLUMNS = [
   "Line",
   "Source",
 ] as const;
-
-function escapeCsvField(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
 
 /** Flat CSV export per phase-5 §13 — only fields the data model actually has; no fabricated Confidence/Status columns. */
 export function buildFindingsCsv(auditRunId: string, themeName: string, findings: CsvFindingRow[]): string {

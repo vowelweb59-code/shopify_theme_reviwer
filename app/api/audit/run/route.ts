@@ -8,8 +8,35 @@ import { runAuditRules } from "@/lib/audit";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
 import { runLiveChecks } from "@/lib/audit/liveCheck";
+import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
+import type { DiffableFinding } from "@/lib/audit/findingSignature";
 
 const SNIPPET_CONTEXT_LINES = 3;
+
+/**
+ * Fetches the theme's finding history needed to classify this new run's
+ * findings (phase-6 §10-13): the immediately preceding complete run's
+ * findings (for status carry-forward + "persistent"), and every signature
+ * ever seen across all of the theme's prior complete runs (for detecting
+ * "reintroduced"). A theme with no prior complete run returns empty
+ * arrays, so every finding classifies as first_seen with nothing to carry.
+ */
+async function loadThemeFindingHistory(
+  themeId: unknown,
+  currentAuditRunId: unknown
+): Promise<{ mostRecentPriorFindings: CarriedFinding[]; allPriorFindings: DiffableFinding[] }> {
+  const priorRuns = await AuditRun.find({ themeId, status: "complete", _id: { $ne: currentAuditRunId } })
+    .sort({ startedAt: -1 })
+    .select("_id")
+    .lean();
+  if (priorRuns.length === 0) return { mostRecentPriorFindings: [], allPriorFindings: [] };
+
+  const [mostRecentPriorFindings, allPriorFindings] = await Promise.all([
+    Finding.find({ auditRunId: priorRuns[0]._id }).select("ruleId category filePath severity finding status ignoredReason").lean(),
+    Finding.find({ auditRunId: { $in: priorRuns.map((r) => r._id) } }).select("ruleId category filePath severity finding").lean(),
+  ]);
+  return { mostRecentPriorFindings, allPriorFindings };
+}
 
 // Captured once at persist time, from the same parsed source the finding
 // came from — the original ZIP isn't kept, so this is the only chance to
@@ -29,8 +56,14 @@ function extractSourceSnippet(files: ParsedFile[], filePath: string, lineNumber:
     .join("\n");
 }
 
-function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: "static" | "live", files: ParsedFile[]) {
-  return findings.map((f) => ({
+function toFindingDocs(
+  findings: ExecutedFinding[],
+  auditRunId: unknown,
+  layer: "static" | "live",
+  files: ParsedFile[],
+  history: HistoryClassification[]
+) {
+  return findings.map((f, i) => ({
     auditRunId,
     ruleId: f.ruleId,
     requirementId: f.requirementId ?? null,
@@ -44,6 +77,9 @@ function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: 
     sourceReference: f.sourceReference ?? null,
     sourceUrl: f.sourceUrl ?? null,
     sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
+    historicalState: history[i].historicalState,
+    status: history[i].carriedStatus ?? "open",
+    ignoredReason: history[i].carriedIgnoredReason,
   }));
 }
 
@@ -91,9 +127,15 @@ export async function POST(request: Request) {
       liveCheckError = liveResult.error;
     }
 
+    const { mostRecentPriorFindings, allPriorFindings } = await loadThemeFindingHistory(theme._id, auditRun._id);
+    const allNewFindings = [...staticFindings, ...liveFindings];
+    const history = classifyFindingHistory(mostRecentPriorFindings, allPriorFindings, allNewFindings);
+    const staticHistory = history.slice(0, staticFindings.length);
+    const liveHistory = history.slice(staticFindings.length);
+
     const findingDocs = [
-      ...toFindingDocs(staticFindings, auditRun._id, "static", result.files),
-      ...toFindingDocs(liveFindings, auditRun._id, "live", result.files),
+      ...toFindingDocs(staticFindings, auditRun._id, "static", result.files, staticHistory),
+      ...toFindingDocs(liveFindings, auditRun._id, "live", result.files, liveHistory),
     ];
     if (findingDocs.length > 0) await Finding.insertMany(findingDocs);
 

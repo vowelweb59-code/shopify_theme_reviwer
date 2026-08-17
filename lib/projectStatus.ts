@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-17 (post phase-5 completion: finding lifecycle, submission readiness, coverage, category dashboards, source traceability, JSON/XLSX/HTML export).
+// Last reviewed: 2026-08-17 (post phase-6 work: status carry-forward, reintroduced tracking, severity/category diff summaries, before/after snippets, diff export).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -42,7 +42,7 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 6,
     name: "Re-audit / diff",
     status: "in-progress",
-    note: "Core comparison works: resolved/still-present/new/changed detection via stable ruleId+category+filePath+message signatures, verified against a real fixed-then-regressed theme. Manual finding status, ignored-finding persistence, reintroduced-issue tracking, and diff exports are not built.",
+    note: "Resolved/still-present/new/changed detection, manual status (open/resolved/ignored) now carries forward across re-audits on an exact signature match, reintroduced-issue tracking, severity/category diff breakdowns, a prominent new-blocker regression alert, before/after source snippets, and CSV diff export — all verified against a real multi-run theme history (first_seen → resolved → reintroduced → persistent, confirmed end to end). Remaining: rule/parser version tracking (distinguishing 'new because of a rule change' from 'new because of a real regression') isn't built — no rule has ever had a second version yet, so this was deferred rather than built prematurely against an untested need.",
   },
   { phase: 7, name: "Submission-readiness & maintenance", status: "not-started", note: "Go/no-go dashboard, ongoing tracking." },
   {
