@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "lib/export/sheetRows.ts": {
-    "mtime": 1786968555.7214284,
-    "ast_hash": "f538d09370f7ef71309e1374a7ed0966",
+    "mtime": 1786970696.456277,
+    "ast_hash": "416db5fdd1131d20eca3ddeec48cc649",
     "semantic_hash": ""
   },
   "lib/google/oauth.ts": {
@@ -805,13 +805,23 @@
     "semantic_hash": ""
   },
   "lib/google/sheetsExport.ts": {
-    "mtime": 1786968577.0728688,
-    "ast_hash": "20364bc2b74d9600643566b12088e4db",
+    "mtime": 1786970756.5769732,
+    "ast_hash": "447153313ee71786aac55e370a573ca1",
     "semantic_hash": ""
   },
   "models/google-auth.ts": {
     "mtime": 1786967335.331959,
     "ast_hash": "addb3d7adec40884da8ce4316e905e9a",
+    "semantic_hash": ""
+  },
+  "lib/google/sheetsFormatting.test.ts": {
+    "mtime": 1786970736.2814312,
+    "ast_hash": "550d8856d0cbc40eafb98a2a415cb39f",
+    "semantic_hash": ""
+  },
+  "lib/google/sheetsFormatting.ts": {
+    "mtime": 1786970787.8404167,
+    "ast_hash": "e85bc9b6bdc6713d69c31b89bd5d1be8",
     "semantic_hash": ""
   }
 }
