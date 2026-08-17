@@ -443,6 +443,22 @@ const requirements: SeedRequirement[] = [
     sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
     severity: "medium",
   },
+  // Added 2026-08-17 from reviewing the user's Shopify theme audit
+  // methodology doc, which flags motion-heavy sections (parallax, scroll
+  // zoom, folding cards) as needing an accessible reduced-motion
+  // experience. Verified against the actual WCAG success criterion rather
+  // than trusted from the source doc's paraphrase.
+  {
+    requirementId: "A11Y-BP-010",
+    sourceType: "accessibility",
+    category: "Accessibility",
+    title: "Meaningful CSS animation should respect prefers-reduced-motion",
+    description:
+      "Motion animation triggered by interaction should be reducible or disableable, unless the animation is essential to the functionality or information being conveyed — non-essential motion (parallax, scroll-driven zoom/video effects, folding/unfolding cards, decorative transitions) should honor the prefers-reduced-motion media query, since some users experience dizziness, nausea, or headaches from motion effects.",
+    sourceName: "WCAG 2.3.3 Animation from Interactions",
+    sourceUrl: "https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html",
+    severity: "medium",
+  },
 
   // --- Technical SEO (structural only, general best practice) -----------
   {
@@ -1183,12 +1199,26 @@ const requirements: SeedRequirement[] = [
     category: "Theme Store Compliance",
     title: "Section differentiation must be structural/functional, not cosmetic",
     description:
-      "A theme must be fundamentally different from other themes on the Theme Store — including the same developer's own prior themes — through meaningful design and functional innovation. Cosmetic or additive changes are not sufficient: spacing tweaks, color/typography swaps, gradients, shape dividers, background effects, animation/transition tweaks, or adding a few settings/sections to an existing codebase do not count. Uniqueness must be embedded at the architectural level so the theme stays distinctly its own as settings/sections/features are added; reused components/libraries are fine, but how they're assembled must be substantially different.",
+      "A theme must be fundamentally different from other themes on the Theme Store — including the same developer's own prior themes — through meaningful design and functional innovation. Cosmetic or additive changes are not sufficient: spacing tweaks, color/typography swaps, gradients, shape dividers, background effects, animation/transition tweaks, or adding a few settings/sections to an existing codebase do not count. Uniqueness must be embedded at the architectural level so the theme stays distinctly its own as settings/sections/features are added; reused components/libraries are fine, but how they're assembled must be substantially different. This bar applies to a theme's important/signature sections — it should not be forced onto standard utility components (product grids, navigation, cart, testimonials, countdowns, footers) where a conventional pattern is the right choice.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
     notes:
-      "This is Shopify's own most-emphasized rejection criterion, but it's an architectural/design judgment call — requires comparing the theme's actual section structure and interaction design against current Theme Store themes, not statically checkable from theme code alone.",
+      "This is Shopify's own most-emphasized rejection criterion, but it's an architectural/design judgment call — requires comparing the theme's actual section structure and interaction design against current Theme Store themes, not statically checkable from theme code alone. " +
+      "Scoring rubric for how strong a given section's differentiation actually is, low to high: (1) Cosmetic — colors/typography/imagery/spacing/decorative styling only, no real credit; (2) Animation — zoom/fade/fold/parallax/scroll motion, moderate presentation credit but not functional innovation on its own; (3) Interaction — a selection/scroll action actually changes displayed products or content (e.g. a visual selector that switches merchandising), strong credit when it has a genuine customer purpose; (4) Shopping workflow — build-a-set, personalized finder, routine builder, complete-the-look, strong functional differentiation; (5) Connected ecosystem — multiple unique experiences feed into one coherent customer journey, the strongest form. When assessing a section's interaction, ask: does it change what the customer can discover/select/combine/purchase; is it meaningful to the specific industry/category; is it merchant-configurable; does it connect to other theme experiences?",
+  },
+  {
+    requirementId: "SHOPIFY-DESIGN-SECTION-CONFIGURABILITY-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Signature/differentiated sections should expose real merchant settings, not hardcoded content",
+    description:
+      "A custom or signature section (e.g. a collection/video hero, a set/routine builder, a product finder, a material/content-driven highlight section) should let merchants configure its actual content and behavior through theme settings and blocks — which collections/media it uses, what questions or rules drive it, what content/product relationships it displays — rather than shipping with hardcoded, non-configurable content. Settings should be clearly named and structured to align with merchant expectations.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes:
+      "Shopify's docs emphasize merchant customization via sections/blocks/settings broadly, without an explicit blanket 'never hardcode content' rule — this requirement applies that emphasis specifically to a theme's unique/signature sections, where hardcoded content is both a compliance risk and undermines the section's reusability. Whether a specific section's content is genuinely hardcoded vs. intentionally fixed (e.g. a structural wrapper) requires editorial judgment, not statically checkable from a simple settings-count heuristic.",
   },
   {
     requirementId: "INTERNAL-DESIGN-SECTION-PURPOSE-001",
@@ -1196,7 +1226,7 @@ const requirements: SeedRequirement[] = [
     category: "Internal Standard",
     title: "Each major section should serve a distinct customer job, not duplicate another section's purpose",
     description:
-      "When a theme has several merchandising or content sections (e.g. multiple product-grid variants, a featured-product block, a recommendation engine, a routine/bundle builder), each should serve a clearly different customer job — browse, filter by need, get a personalized recommendation, learn about one product in depth, or assemble a set/routine — rather than presenting the same underlying browsing experience with a different visual skin. Overlapping sections raise internal-repetition risk and weaken submission strength even when each section is individually well designed.",
+      "When a theme has several merchandising or content sections (e.g. multiple product-grid variants, a featured-product block, a recommendation engine, a routine/bundle builder), each should serve a clearly different customer job — browse, filter by need, get a personalized recommendation, learn about one product in depth, or assemble a set/routine — rather than presenting the same underlying browsing experience with a different visual skin. Overlapping sections raise internal-repetition risk and weaken submission strength even when each section is individually well designed. Two sections aren't repetitive merely because both involve products — compare their actual purpose and interaction; a collection browser, a personalized finder, a featured product, and a set builder can validly coexist as long as each has a distinct job. Recommend consolidating sections only when they materially duplicate each other, and prefer adding duplicate filters/discovery controls only when the theme doesn't already have a working equivalent mechanism.",
     sourceName: "Internal design-review standard (originality audit framework)",
     severity: "low",
     notes: "Editorial/structural judgment — requires reviewing what each section's interaction actually accomplishes for the customer, not just its visual template. Not an official Shopify requirement.",
@@ -1207,7 +1237,7 @@ const requirements: SeedRequirement[] = [
     category: "Internal Standard",
     title: "Sections should connect into one coherent customer workflow, not stand alone as disconnected blocks",
     description:
-      "A theme reads as more distinctive when its sections build toward a specific, connected customer journey (e.g. a concern/need → guided recommendation → product → routine/bundle → cart flow) rather than existing as an unconnected list of individually attractive sections. When reviewing a theme, check whether adjacent sections reference or build on each other's outputs rather than just sitting side by side with no relationship.",
+      "A theme reads as more distinctive when its sections build toward a specific, connected customer journey (e.g. a concern/need → guided recommendation → product → routine/bundle → cart flow) rather than existing as an unconnected list of individually attractive sections. When reviewing a theme, check whether adjacent sections reference or build on each other's outputs rather than just sitting side by side with no relationship. Prefer connecting a theme's existing sections into a coherent journey over adding more sections — a strong, cohesive workflow across a few sections beats many isolated unusual ones.",
     sourceName: "Internal design-review standard (originality audit framework)",
     severity: "low",
     notes: "Editorial/structural judgment, not statically checkable — requires reviewing the actual customer journey across sections. Not an official Shopify requirement.",

@@ -257,6 +257,7 @@ export type ParsedCssInfo = {
   outlineRemovals: { line: number; selector: string }[];
   colorDeclarations: { line: number; selector: string; property: string; value: string }[];
   mediaQueries: { line: number; params: string }[];
+  animationDeclarations: { line: number; selector: string; property: string; value: string }[];
 };
 
 // Plain-JSON-file structured data (templates/*.json, config/*.json,

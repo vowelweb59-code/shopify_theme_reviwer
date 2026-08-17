@@ -12,6 +12,12 @@ const COLOR_PROPERTIES = new Set([
   "stroke",
 ]);
 
+const ANIMATION_PROPERTIES = new Set(["animation", "animation-name", "transition", "transition-property"]);
+// A declaration that explicitly turns motion off doesn't need a
+// reduced-motion accommodation of its own — only meaningfully-animating
+// declarations count toward "this theme uses motion".
+const TRIVIAL_ANIMATION_VALUE_RE = /^(none|0s?|0ms|initial|inherit|unset)$/i;
+
 export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; parseErrors: ParsedParseError[] } {
   const cssInfo: ParsedCssInfo = {
     focusRules: [],
@@ -19,6 +25,7 @@ export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; 
     outlineRemovals: [],
     colorDeclarations: [],
     mediaQueries: [],
+    animationDeclarations: [],
   };
   const parseErrors: ParsedParseError[] = [];
 
@@ -42,6 +49,9 @@ export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; 
         // alone, so it's recorded as-is rather than guessing a value.
         if (COLOR_PROPERTIES.has(prop) && (looksLikeColorValue(decl.value) || decl.value.includes("var("))) {
           cssInfo.colorDeclarations.push({ line: declLine, selector, property: decl.prop, value: decl.value });
+        }
+        if (ANIMATION_PROPERTIES.has(prop) && !TRIVIAL_ANIMATION_VALUE_RE.test(decl.value.trim())) {
+          cssInfo.animationDeclarations.push({ line: declLine, selector, property: decl.prop, value: decl.value });
         }
       });
     });

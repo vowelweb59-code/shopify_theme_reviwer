@@ -148,3 +148,38 @@ describe("A11Y-ARIA-HIDDEN-FOCUS-001", () => {
     expect(ariaHiddenFocusFindings(theme)).toHaveLength(0);
   });
 });
+
+function reducedMotionFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-REDUCED-MOTION-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-REDUCED-MOTION-001", () => {
+  it("flags meaningful CSS animation with no prefers-reduced-motion accommodation anywhere", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".hero { transition: transform 0.6s ease; }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(reducedMotionFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag when a prefers-reduced-motion media query exists, even in a different file", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".hero { transition: transform 0.6s ease; }",
+      "assets/base.css": "@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(reducedMotionFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag a theme with no meaningful animation at all", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".hero { transition: none; color: red; }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(reducedMotionFindings(theme)).toHaveLength(0);
+  });
+});

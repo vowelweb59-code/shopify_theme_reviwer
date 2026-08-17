@@ -291,6 +291,47 @@ const outlineRemovalRule: Rule = {
   },
 };
 
+// WCAG 2.3.3 (Animation from Interactions): motion-triggered animation
+// should be disableable, unless essential — prefers-reduced-motion is the
+// standard mechanism, since it respects the OS-level setting motion-
+// sensitive users already have to configure once. A theme with meaningful
+// CSS animation/transition usage but no @media (prefers-reduced-motion)
+// rule anywhere gives those users no way to reduce it. Deliberately a
+// single theme-wide finding (not one per declaration) — the question is
+// "does an accommodation exist anywhere", not "which declaration lacks
+// one", since the accommodation is typically centralized in one
+// stylesheet regardless of where the animations themselves are declared.
+const reducedMotionRule: Rule = {
+  ruleId: "A11Y-REDUCED-MOTION-001",
+  requirementId: "A11Y-BP-010",
+  category: "Accessibility",
+  defaultSeverity: "medium",
+  title: "Meaningful CSS animation should respect prefers-reduced-motion",
+  description:
+    "When a theme uses CSS animations or transitions beyond trivial/disabled values, it should include a @media (prefers-reduced-motion: reduce) rule somewhere that reduces or disables that motion — otherwise motion-sensitive users (who may experience dizziness, nausea, or headaches from motion effects) have no way to turn it off.",
+  sourceReference: "WCAG 2.3.3 Animation from Interactions",
+  sourceUrl: "https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html",
+  check({ files }) {
+    const firstAnimated = files.find((f) => f.cssInfo && f.cssInfo.animationDeclarations.length > 0);
+    if (!firstAnimated) return [];
+
+    const hasReducedMotionQuery = files.some((f) => f.cssInfo?.mediaQueries.some((mq) => /prefers-reduced-motion/i.test(mq.params)));
+    if (hasReducedMotionQuery) return [];
+
+    const sample = firstAnimated.cssInfo!.animationDeclarations[0];
+    return [
+      {
+        filePath: firstAnimated.path,
+        lineNumber: sample.line,
+        category: "Accessibility" as const,
+        severity: "medium" as const,
+        finding: `Theme uses CSS animation/transition (e.g. "${sample.selector}" ${sample.property}: ${sample.value}) but no @media (prefers-reduced-motion: reduce) rule was found anywhere in the theme.`,
+        recommendation: "Add a @media (prefers-reduced-motion: reduce) rule that disables or significantly reduces non-essential animations/transitions.",
+      },
+    ];
+  },
+};
+
 // A focusable element hidden from assistive technology via aria-hidden="true"
 // creates an invisible-but-reachable keyboard trap: screen reader users
 // never learn it exists, while sighted keyboard users can still Tab onto
@@ -372,5 +413,6 @@ export const ACCESSIBILITY_RULES: Rule[] = [
   skippedHeadingA11yRule,
   colorContrastRule,
   outlineRemovalRule,
+  reducedMotionRule,
   ariaHiddenFocusableRule,
 ];
