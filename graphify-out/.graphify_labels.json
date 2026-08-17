@@ -18,8 +18,8 @@
   "16": "postcss.config.mjs",
   "17": "parseJsonFile.ts",
   "18": "reports/index.ts",
-  "19": "connect.ts",
-  "20": "rules.ts",
+  "19": "requirement.ts",
+  "20": "shopify/index.ts",
   "21": "bugs/index.ts",
   "22": "accessibility/index.ts",
   "23": "cross-file/index.ts",
@@ -40,7 +40,8 @@
   "38": "pdf.ts",
   "39": "liquidJson.ts",
   "40": "zip.ts",
-  "41": "sheetRows.ts",
+  "41": "registry.ts",
   "42": "maintenance/page.tsx",
-  "43": "audit-settings.ts"
+  "43": "audit-settings.ts",
+  "44": "rules.ts"
 }
