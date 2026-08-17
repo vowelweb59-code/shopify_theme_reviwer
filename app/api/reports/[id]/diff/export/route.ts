@@ -7,10 +7,12 @@ import { buildDiffCsv, type DiffCsvFinding } from "@/lib/export/diffCsv";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
   const url = new URL(request.url);
   const baselineId = url.searchParams.get("baseline");
   const format = url.searchParams.get("format") ?? "csv";
@@ -18,6 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!baselineId) {
     return NextResponse.json({ error: "A baseline audit run id is required (?baseline=<id>)." }, { status: 400 });
   }
+  if (!isValidObjectId(baselineId)) return invalidIdResponse("Baseline audit run id");
   if (format !== "csv") {
     return NextResponse.json({ error: "format must be 'csv'." }, { status: 400 });
   }

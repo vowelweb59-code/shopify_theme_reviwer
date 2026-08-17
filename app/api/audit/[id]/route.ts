@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { AuditRun } from "@/models/audit-run";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
@@ -8,6 +9,7 @@ import "@/models/theme";
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
 
   const auditRun = await AuditRun.findById(id).populate("themeId", "name sourceFileName").lean();
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Finding, FINDING_STATUSES } from "@/models/finding";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Finding id");
   const body = await request.json().catch(() => null);
 
   const status = body?.status;

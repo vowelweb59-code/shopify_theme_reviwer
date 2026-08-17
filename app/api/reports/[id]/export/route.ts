@@ -13,6 +13,7 @@ import { buildReportXlsx } from "@/lib/export/xlsx";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 
 const FORMATS = ["csv", "pdf", "html", "json", "xlsx"] as const;
 type Format = (typeof FORMATS)[number];
@@ -28,6 +29,7 @@ const CONTENT_TYPES: Record<Format, string> = {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
   const format = new URL(request.url).searchParams.get("format") as Format | null;
 
   if (!format || !FORMATS.includes(format)) {

@@ -10,6 +10,7 @@ import {
   summarizeDiffBySeverity,
   type DiffableFinding,
 } from "@/lib/audit/diffFindings";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 
 // Mongoose Map-typed fields normally come back as plain objects through
 // .lean(), but that's an implementation detail, not a contract — handle a
@@ -22,11 +23,13 @@ function toPlainRecord(value: unknown): Record<string, number> {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
   const baselineId = new URL(request.url).searchParams.get("baseline");
 
   if (!baselineId) {
     return NextResponse.json({ error: "A baseline audit run id is required (?baseline=<id>)." }, { status: 400 });
   }
+  if (!isValidObjectId(baselineId)) return invalidIdResponse("Baseline audit run id");
 
   const [currentRun, baselineRun] = await Promise.all([
     AuditRun.findById(id).lean(),

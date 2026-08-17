@@ -9,10 +9,12 @@ import "@/models/theme";
 import { computeCoverage, computeCoverageByCategory } from "@/lib/audit/coverage";
 import { computeReadiness } from "@/lib/audit/readiness";
 import { loadReadinessConfig } from "@/lib/audit/readinessConfigStore";
+import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
   const { id } = await params;
+  if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
 
   const auditRun = await AuditRun.findById(id).populate("themeId", "name sourceFileName").lean();
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
