@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-08-17)
 
 ## Corpus Check
-- 116 files · ~1,470,699 words
+- 117 files · ~1,473,103 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8df05c1f`
+- Built from commit: `521412d8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -56,24 +56,24 @@
 2. `compilerOptions` - 16 edges
 3. `parseJsonFile()` - 14 edges
 4. `Rule` - 12 edges
-5. `buildLineIndex()` - 11 edges
-6. `buildTestTheme()` - 11 edges
+5. `buildTestTheme()` - 11 edges
+6. `buildLineIndex()` - 11 edges
 7. `GET()` - 10 edges
 8. `computeReadiness()` - 9 edges
 9. `scripts` - 9 edges
-10. `POST()` - 8 edges
+10. `runLiveChecks()` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/rules/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/requirements/route.ts → lib/db/connect.ts
 - `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
   scripts/seed-requirements.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/requirements/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/rules/route.ts → lib/db/connect.ts
 - `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
   scripts/seed-rules.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/audit/[id]/route.ts → lib/db/connect.ts
+  app/api/audit/[id]/findings/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -201,7 +201,7 @@ Cohesion: 0.60
 Nodes (4): extractLiteralJsonLdTypes(), neutralizeConditionals(), neutralizeOutputs(), tryParseLiquidJson()
 
 ## Knowledge Gaps
-- **246 isolated node(s):** `CATEGORY_ORDER`, `ReadinessStatus`, `SEVERITY_STYLES`, `STATUS_STYLES`, `READINESS_STYLES` (+241 more)
+- **246 isolated node(s):** `SourceType`, `Category`, `Severity`, `SeedRequirement`, `requirements` (+241 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -214,7 +214,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Why does `Rule` connect `registry.ts` to `technical-aeo/index.ts`, `theme-parser/index.ts`, `settings.ts`, `rules.ts`, `cross-file/index.ts`, `accessibility/index.ts`, `bugs/index.ts`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **What connects `CATEGORY_ORDER`, `ReadinessStatus`, `SEVERITY_STYLES` to the rest of the system?**
+- **What connects `SourceType`, `Category`, `Severity` to the rest of the system?**
   _246 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._

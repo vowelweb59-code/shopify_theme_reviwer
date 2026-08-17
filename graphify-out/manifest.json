@@ -170,8 +170,8 @@
     "semantic_hash": "239f3ebf717465dc636818a1a619398d"
   },
   "scripts/seed-requirements.ts": {
-    "mtime": 1786707842.400906,
-    "ast_hash": "c75b2afd06f21e7e6d398a7edf66154f",
+    "mtime": 1786942253.6181076,
+    "ast_hash": "154899db6844f2f02b97226af2de0c4d",
     "semantic_hash": ""
   },
   "tsconfig.json": {
@@ -637,6 +637,21 @@
   "lib/export/xlsx.ts": {
     "mtime": 1786711470.4826188,
     "ast_hash": "8939b397e4487c41ef56273488916e95",
+    "semantic_hash": ""
+  },
+  "Shopify_Theme_Approval_Audit_Project_Rules.md": {
+    "mtime": 1786942304.487213,
+    "ast_hash": "0316b3027e3d76ed2bdc0235b7b20797",
+    "semantic_hash": ""
+  },
+  "Shopify_Theme_Audit_Chat_Export (1).pdf": {
+    "mtime": 1786942210.0552406,
+    "ast_hash": "a8005a8e034cde41b0a18ae56e0dc443",
+    "semantic_hash": ""
+  },
+  "Shopify_Theme_Audit_Chat_Export.pdf": {
+    "mtime": 1786942015.2455795,
+    "ast_hash": "a8005a8e034cde41b0a18ae56e0dc443",
     "semantic_hash": ""
   }
 }
