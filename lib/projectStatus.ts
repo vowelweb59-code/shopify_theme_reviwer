@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-17 (post phase-6 completion: rule/parser version snapshot + new-finding attribution).
+// Last reviewed: 2026-08-17 (post phase-7 work: configurable readiness, critical-rule classification, test-coverage tracking, maintenance dashboard + traceability matrix).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -44,7 +44,12 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     status: "done",
     note: "Resolved/still-present/new/changed detection, manual status (open/resolved/ignored) carries forward across re-audits on an exact signature match, reintroduced-issue tracking, severity/category diff breakdowns, a prominent new-blocker regression alert, before/after source snippets, CSV diff export, and a rule-version snapshot per run that attributes a 'new' finding to a new/changed rule vs. a genuine theme change — all verified end to end against a real multi-run theme history.",
   },
-  { phase: 7, name: "Submission-readiness & maintenance", status: "not-started", note: "Go/no-go dashboard, ongoing tracking." },
+  {
+    phase: 7,
+    name: "Submission-readiness & maintenance",
+    status: "in-progress",
+    note: "Readiness is now configurable (blocker severities, minimum coverage %) via /settings, rather than hardcoded. Rules are classified critical/important/informational and tracked for test coverage (heuristic: does any test reference the ruleId), both surfaced on a new /maintenance dashboard alongside a full requirement↔rule traceability matrix — already found 3 real critical-but-untested rules on first use. Deliberately not built (confirmed with the user): rule/requirement version changelogs beyond the bare version number, and Shopify-update impact analysis that depends on them — no rule/requirement has ever had a second version, so a full changelog UI would be speculative. Also not built: a 'not_applicable' coverage state, structured partial-rule ✓/✗ limitations UI, and cross-audit quality metrics (findings-per-theme, false-positive rate, avg duration) beyond what the maintenance dashboard already shows.",
+  },
   {
     phase: 8,
     name: "Testing, security, deployment",

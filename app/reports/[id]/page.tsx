@@ -26,7 +26,7 @@ import {
   type FindingsDiffResult,
 } from "@/app/_components/diff";
 import type { CoverageResult } from "@/lib/audit/coverage";
-import { computeReadiness } from "@/lib/audit/readiness";
+import { computeReadiness, DEFAULT_READINESS_CONFIG, type ReadinessConfig } from "@/lib/audit/readiness";
 
 type AuditRunDetail = {
   _id: string;
@@ -68,6 +68,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const [coverageByCategory, setCoverageByCategory] = useState<Record<string, CoverageResult> | undefined>(undefined);
   const [readiness, setReadiness] = useState<ReadinessSummary | null>(null);
   const [requirementsById, setRequirementsById] = useState<Record<string, RequirementInfo>>({});
+  const [readinessConfig, setReadinessConfig] = useState<ReadinessConfig>(DEFAULT_READINESS_CONFIG);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -117,6 +118,18 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   }, []);
 
   useEffect(() => {
+    let active = true;
+    fetch("/api/settings/readiness")
+      .then((res) => res.json())
+      .then((data) => {
+        if (active && data.config) setReadinessConfig(data.config);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!auditRun?.themeId) return;
     let active = true;
     fetch("/api/reports")
@@ -138,7 +151,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   function handleStatusChange(findingId: string, status: FindingStatus, ignoredReason?: string) {
     const updated = findings.map((f) => (f._id === findingId ? { ...f, status, ignoredReason: ignoredReason ?? null } : f));
     setFindings(updated);
-    if (coverage) setReadiness(computeReadiness(updated, coverage.percentage));
+    if (coverage) setReadiness(computeReadiness(updated, coverage.percentage, readinessConfig));
 
     fetch(`/api/findings/${findingId}`, {
       method: "PATCH",

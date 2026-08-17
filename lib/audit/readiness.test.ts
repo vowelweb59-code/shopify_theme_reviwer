@@ -39,4 +39,27 @@ describe("computeReadiness", () => {
   it("is READY with zero findings and sufficient coverage", () => {
     expect(computeReadiness([], 90).status).toBe("READY");
   });
+
+  it("treats a high-severity finding as a blocker when configured to", () => {
+    const result = computeReadiness([{ severity: "high", status: "open" }], 100, {
+      blockerSeverities: ["blocker", "high"],
+      minimumCoveragePercent: 70,
+    });
+    expect(result.status).toBe("NOT_READY");
+  });
+
+  it("does not treat a high-severity finding as a blocker under the default config", () => {
+    const result = computeReadiness([{ severity: "high", status: "open" }], 100);
+    expect(result.status).toBe("READY");
+  });
+
+  it("respects a custom, lower minimum coverage threshold", () => {
+    const result = computeReadiness([], 50, { blockerSeverities: ["blocker"], minimumCoveragePercent: 40 });
+    expect(result.status).toBe("READY");
+  });
+
+  it("respects a custom, higher minimum coverage threshold", () => {
+    const result = computeReadiness([], 80, { blockerSeverities: ["blocker"], minimumCoveragePercent: 90 });
+    expect(result.status).toBe("INCOMPLETE");
+  });
 });

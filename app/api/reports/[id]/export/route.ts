@@ -5,6 +5,7 @@ import { Finding } from "@/models/finding";
 import { Requirement } from "@/models/requirement";
 import { computeCoverage, computeCoverageByCategory } from "@/lib/audit/coverage";
 import { computeReadiness } from "@/lib/audit/readiness";
+import { loadReadinessConfig } from "@/lib/audit/readinessConfigStore";
 import { buildFindingsCsv } from "@/lib/export/csv";
 import { buildReportHtml, renderReportPdf } from "@/lib/export/pdf";
 import { buildAuditReportJson } from "@/lib/export/json";
@@ -36,13 +37,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const auditRun = await AuditRun.findById(id).populate("themeId", "name").lean();
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
 
-  const [findings, requirements] = await Promise.all([
+  const [findings, requirements, readinessConfig] = await Promise.all([
     Finding.find({ auditRunId: id }).sort({ severity: 1, filePath: 1 }).lean(),
     Requirement.find().select("ruleStatus category").lean(),
+    loadReadinessConfig(),
   ]);
   const coverage = computeCoverage(requirements);
   const coverageByCategory = computeCoverageByCategory(requirements);
-  const readiness = auditRun.status === "complete" ? computeReadiness(findings, coverage.percentage) : null;
+  const readiness = auditRun.status === "complete" ? computeReadiness(findings, coverage.percentage, readinessConfig) : null;
 
   const themeName =
     auditRun.themeId && typeof auditRun.themeId === "object" && "name" in auditRun.themeId

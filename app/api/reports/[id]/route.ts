@@ -8,6 +8,7 @@ import { Requirement } from "@/models/requirement";
 import "@/models/theme";
 import { computeCoverage, computeCoverageByCategory } from "@/lib/audit/coverage";
 import { computeReadiness } from "@/lib/audit/readiness";
+import { loadReadinessConfig } from "@/lib/audit/readinessConfigStore";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -16,14 +17,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const auditRun = await AuditRun.findById(id).populate("themeId", "name sourceFileName").lean();
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
 
-  const [findings, requirements] = await Promise.all([
+  const [findings, requirements, readinessConfig] = await Promise.all([
     Finding.find({ auditRunId: id }).sort({ createdAt: -1 }).lean(),
     Requirement.find().select("ruleStatus category").lean(),
+    loadReadinessConfig(),
   ]);
 
   const coverage = computeCoverage(requirements);
   const coverageByCategory = computeCoverageByCategory(requirements);
-  const readiness = auditRun.status === "complete" ? computeReadiness(findings, coverage.percentage) : null;
+  const readiness = auditRun.status === "complete" ? computeReadiness(findings, coverage.percentage, readinessConfig) : null;
 
   return NextResponse.json({ auditRun, findings, coverage, coverageByCategory, readiness });
 }
