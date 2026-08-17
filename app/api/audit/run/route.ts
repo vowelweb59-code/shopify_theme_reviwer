@@ -4,7 +4,7 @@ import { Theme } from "@/models/theme";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Rule } from "@/models/rule";
-import { PARSER_VERSION } from "@/lib/audit/version";
+import { APPLICATION_VERSION, PARSER_VERSION, REQUIREMENTS_VERSION, RULE_ENGINE_VERSION } from "@/lib/audit/version";
 import { Stopwatch } from "@/lib/audit/timing";
 import { parseThemeZip, ThemeZipError, InvalidThemeError, type ParsedFile } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
@@ -183,6 +183,9 @@ export async function POST(request: Request) {
     if (liveCheckError) auditRun.liveCheckError = liveCheckError;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;
+    auditRun.applicationVersion = APPLICATION_VERSION;
+    auditRun.ruleEngineVersion = RULE_ENGINE_VERSION;
+    auditRun.requirementsVersion = REQUIREMENTS_VERSION;
     auditRun.timingMs = timer.toRecord();
     await auditRun.save();
 

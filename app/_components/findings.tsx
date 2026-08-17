@@ -237,6 +237,30 @@ export function TimingNote({ timingMs }: { timingMs: Record<string, number> }) {
   );
 }
 
+export type EngineVersions = {
+  applicationVersion?: string | null;
+  parserVersion?: string | null;
+  ruleEngineVersion?: string | null;
+  requirementsVersion?: string | null;
+};
+
+/** The whole-of-app version snapshot for this run (phase-8 §28) — makes a historical result explainable/reproducible after the app itself has since moved on. */
+export function EngineVersionsNote({ versions }: { versions: EngineVersions }) {
+  const parts = [
+    ["App", versions.applicationVersion],
+    ["Parser", versions.parserVersion],
+    ["Rule engine", versions.ruleEngineVersion],
+    ["Requirements", versions.requirementsVersion],
+  ].filter(([, v]) => v) as [string, string][];
+  if (parts.length === 0) return null;
+
+  return (
+    <p className="text-xs text-zinc-500">
+      Versions: {parts.map(([label, v]) => `${label} ${v}`).join(" · ")}
+    </p>
+  );
+}
+
 const CATEGORIES = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Bug", "Internal Standard"] as const;
 const SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 const STATUSES: FindingStatus[] = ["open", "resolved", "ignored"];

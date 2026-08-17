@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CoverageSummaryBar,
   DiagnosticsNote,
+  EngineVersionsNote,
   FindingsTable,
   ReadinessPanel,
   SummaryBar,
@@ -41,6 +42,10 @@ type AuditRunDetail = {
   skippedFileCount?: number;
   diagnostics?: AuditDiagnostics;
   timingMs?: Record<string, number>;
+  parserVersion?: string | null;
+  applicationVersion?: string | null;
+  ruleEngineVersion?: string | null;
+  requirementsVersion?: string | null;
   demoStoreUrl?: string | null;
   liveCheckError?: { url: string; error: string } | null;
 };
@@ -253,6 +258,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           {coverage && <CoverageSummaryBar coverage={coverage} />}
           {auditRun.diagnostics && <DiagnosticsNote diagnostics={auditRun.diagnostics} />}
           {auditRun.timingMs && <TimingNote timingMs={auditRun.timingMs} />}
+          <EngineVersionsNote versions={auditRun} />
 
           {findings.length > 0 && (
             <div>
