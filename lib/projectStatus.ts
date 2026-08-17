@@ -54,7 +54,7 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 8,
     name: "Testing, security, deployment",
     status: "in-progress",
-    note: "Automated test suite (67 tests) added. Security review and deployment not addressed.",
+    note: "Test suite now 187 tests. ZIP security (path traversal, size/count/archive-bomb limits, guaranteed cleanup) was already fully in place. Added since: the 3 missing MongoDB indexes plus a themeId+status+startedAt compound index, per-stage audit timing (extraction/validation/parsing/index/rules/persistence) stored on every run and shown on the report page, a GET /api/health endpoint, object-id and filter-enum validation across every API route (previously an invalid id crashed with a raw 500), and an application/rule-engine/requirements version snapshot per run alongside the existing parser/rule versions. Not yet done, deliberately deferred pending a future scoping decision: frontend pagination/virtualization, structured production logging, MongoDB auth/backup/release-checklist documentation (ops concerns for an internal single-user tool), the optional API-auth boundary, and a final consolidated phase-8 §29 acceptance run (individual pieces of it have been verified live throughout this session, but not as one end-to-end pass).",
   },
 ];
 
