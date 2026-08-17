@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "app/api/audit/run/route.ts": {
-    "mtime": 1786709248.1293175,
-    "ast_hash": "8a67be1fd513ae5d2e98e9fd80be73c2",
+    "mtime": 1786944947.4174178,
+    "ast_hash": "5f2813cee430d86875e3b2317604cb46",
     "semantic_hash": ""
   },
   "app/api/reports/[id]/route.ts": {
@@ -130,8 +130,8 @@
     "semantic_hash": "7fecfde96e1364924c7f62b778300551"
   },
   "models/finding.ts": {
-    "mtime": 1786709191.6038017,
-    "ast_hash": "69eb4b42fc7aa1486e24025bf48d8f5f",
+    "mtime": 1786944914.00105,
+    "ast_hash": "5f3eaf25b1b260f57997d8be0cdf708c",
     "semantic_hash": ""
   },
   "models/index.ts": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "app/reports/[id]/page.tsx": {
-    "mtime": 1786711982.2416108,
-    "ast_hash": "ff52f2cfe4ea72ed933de149f77b6086",
+    "mtime": 1786948098.7818964,
+    "ast_hash": "203e573913886791f7d796b2f8b931d5",
     "semantic_hash": ""
   },
   "lib/audit/colorContrast.ts": {
@@ -495,8 +495,8 @@
     "semantic_hash": ""
   },
   "lib/projectStatus.ts": {
-    "mtime": 1786941727.561656,
-    "ast_hash": "f636348d4217be7633730e566f8edcd1",
+    "mtime": 1786948407.4448276,
+    "ast_hash": "7caa6aa7bd0d40bb9f3457b9968e56cd",
     "semantic_hash": ""
   },
   "Organic_Theme_Shopify_Approval_Audit.pdf": {
@@ -515,13 +515,13 @@
     "semantic_hash": ""
   },
   "app/_components/diff.tsx": {
-    "mtime": 1786694215.0154333,
-    "ast_hash": "63944320d9cae42463aa79888a430b3c",
+    "mtime": 1786947861.9567764,
+    "ast_hash": "250a4e428c64739dd6ef69aab1a09c00",
     "semantic_hash": ""
   },
   "app/api/reports/[id]/diff/route.ts": {
-    "mtime": 1786694189.0783699,
-    "ast_hash": "96e84d7ea028bc806bb5fa9a323ecac2",
+    "mtime": 1786947789.9057527,
+    "ast_hash": "4a552d9c210f51bf6b8c1810fdce36a1",
     "semantic_hash": ""
   },
   "app/api/reports/[id]/export/route.ts": {
@@ -530,13 +530,13 @@
     "semantic_hash": ""
   },
   "lib/audit/diffFindings.test.ts": {
-    "mtime": 1786694165.4056141,
-    "ast_hash": "e54bd51ef9a1026f728d985bc488d920",
+    "mtime": 1786947748.241411,
+    "ast_hash": "e6b38cad57f48efcdca6af3493c5886c",
     "semantic_hash": ""
   },
   "lib/audit/diffFindings.ts": {
-    "mtime": 1786694150.389225,
-    "ast_hash": "7c072195aa0a8e1a3a150b5bed9a4848",
+    "mtime": 1786947721.575691,
+    "ast_hash": "06b9cc44ef3d42a4717abd8a5cab3791",
     "semantic_hash": ""
   },
   "lib/export/csv.test.ts": {
@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "lib/export/csv.ts": {
-    "mtime": 1786694274.2108805,
-    "ast_hash": "d89646f9b3eead3641acbdcf4a101d8c",
+    "mtime": 1786947970.9644415,
+    "ast_hash": "633290fa448db01a663d987c22f286a4",
     "semantic_hash": ""
   },
   "lib/export/pdf.test.ts": {
@@ -652,6 +652,41 @@
   "Shopify_Theme_Audit_Chat_Export.pdf": {
     "mtime": 1786942015.2455795,
     "ast_hash": "a8005a8e034cde41b0a18ae56e0dc443",
+    "semantic_hash": ""
+  },
+  "app/api/reports/[id]/diff/export/route.ts": {
+    "mtime": 1786948043.5008628,
+    "ast_hash": "6611f3a4d1198b36e65b3d210548e451",
+    "semantic_hash": ""
+  },
+  "lib/audit/findingHistory.test.ts": {
+    "mtime": 1786944885.047805,
+    "ast_hash": "8619672eb870a1f2d32f489fb48ebe72",
+    "semantic_hash": ""
+  },
+  "lib/audit/findingHistory.ts": {
+    "mtime": 1786944868.5508578,
+    "ast_hash": "f0e64954f4f831629b31a8dfb6f79d87",
+    "semantic_hash": ""
+  },
+  "lib/audit/findingSignature.ts": {
+    "mtime": 1786944815.3078308,
+    "ast_hash": "83872d5262c557cc6881b38de0ac9e6c",
+    "semantic_hash": ""
+  },
+  "lib/export/csvUtil.ts": {
+    "mtime": 1786947958.9020753,
+    "ast_hash": "30ec32c1b4eb2de82c33e84d2f7d0eb1",
+    "semantic_hash": ""
+  },
+  "lib/export/diffCsv.test.ts": {
+    "mtime": 1786947991.0564928,
+    "ast_hash": "5c459a34255b9a2c0678a1e4709f9212",
+    "semantic_hash": ""
+  },
+  "lib/export/diffCsv.ts": {
+    "mtime": 1786948049.8258636,
+    "ast_hash": "5656a46e7212075dd14f9bd991d5d3af",
     "semantic_hash": ""
   }
 }
