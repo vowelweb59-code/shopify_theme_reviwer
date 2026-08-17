@@ -65,6 +65,11 @@ const auditRunSchema = new Schema(
     // on, but what mattered for THIS historical run must stay fixed.
     ruleVersionSnapshot: { type: Map, of: Number, default: undefined },
     parserVersion: { type: String, default: null },
+    // Per-stage wall-clock ms for this run (phase-8 §14 / phase-4 §21) —
+    // extraction, validation, parsing, themeIndex, ruleExecution,
+    // liveChecks (if run), findingPersistence, total. Lets a report
+    // surface "where did the time go" and catch regressions over time.
+    timingMs: { type: Map, of: Number, default: undefined },
   },
   { timestamps: false }
 );

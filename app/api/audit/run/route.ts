@@ -5,6 +5,7 @@ import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Rule } from "@/models/rule";
 import { PARSER_VERSION } from "@/lib/audit/version";
+import { Stopwatch } from "@/lib/audit/timing";
 import { parseThemeZip, ThemeZipError, InvalidThemeError, type ParsedFile } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
@@ -130,17 +131,27 @@ export async function POST(request: Request) {
     startedAt: new Date(),
   });
 
+  const timer = new Stopwatch();
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await parseThemeZip(buffer);
-    const { findings: staticFindings, summary: staticSummary, ruleErrors } = await runAuditRules(result.files);
+    timer.record("extraction", result.timing.extraction);
+    timer.record("validation", result.timing.validation);
+    timer.record("parsing", result.timing.parsing);
+
+    const { findings: staticFindings, summary: staticSummary, ruleErrors, timing: rulesTiming } =
+      await runAuditRules(result.files);
+    timer.record("themeIndex", rulesTiming.themeIndex);
+    timer.record("ruleExecution", rulesTiming.ruleExecution);
 
     let liveFindings: ExecutedFinding[] = [];
     let liveCheckError: { url: string; error: string } | undefined;
     if (demoStoreUrl) {
+      const liveCheckStart = Date.now();
       const liveResult = await runLiveChecks(demoStoreUrl);
       liveFindings = liveResult.findings;
       liveCheckError = liveResult.error;
+      timer.record("liveChecks", Date.now() - liveCheckStart);
     }
 
     const { mostRecentPriorFindings, allPriorFindings } = await loadThemeFindingHistory(theme._id, auditRun._id);
@@ -149,11 +160,13 @@ export async function POST(request: Request) {
     const staticHistory = history.slice(0, staticFindings.length);
     const liveHistory = history.slice(staticFindings.length);
 
+    const persistStart = Date.now();
     const findingDocs = [
       ...toFindingDocs(staticFindings, auditRun._id, "static", result.files, staticHistory),
       ...toFindingDocs(liveFindings, auditRun._id, "live", result.files, liveHistory),
     ];
     if (findingDocs.length > 0) await Finding.insertMany(findingDocs);
+    timer.record("findingPersistence", Date.now() - persistStart);
 
     auditRun.status = "complete";
     auditRun.completedAt = new Date();
@@ -170,6 +183,7 @@ export async function POST(request: Request) {
     if (liveCheckError) auditRun.liveCheckError = liveCheckError;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;
+    auditRun.timingMs = timer.toRecord();
     await auditRun.save();
 
     const findings = [
@@ -186,6 +200,7 @@ export async function POST(request: Request) {
     auditRun.status = "failed";
     auditRun.completedAt = new Date();
     auditRun.error = message;
+    auditRun.timingMs = timer.toRecord();
     await auditRun.save();
 
     return NextResponse.json({ theme, auditRun, error: message }, { status: 400 });

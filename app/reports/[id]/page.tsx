@@ -8,6 +8,7 @@ import {
   FindingsTable,
   ReadinessPanel,
   SummaryBar,
+  TimingNote,
   type AuditDiagnostics,
   type CoverageSummary,
   type FindingRow,
@@ -39,6 +40,7 @@ type AuditRunDetail = {
   fileStats?: Record<string, number>;
   skippedFileCount?: number;
   diagnostics?: AuditDiagnostics;
+  timingMs?: Record<string, number>;
   demoStoreUrl?: string | null;
   liveCheckError?: { url: string; error: string } | null;
 };
@@ -250,6 +252,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}
           {coverage && <CoverageSummaryBar coverage={coverage} />}
           {auditRun.diagnostics && <DiagnosticsNote diagnostics={auditRun.diagnostics} />}
+          {auditRun.timingMs && <TimingNote timingMs={auditRun.timingMs} />}
 
           {findings.length > 0 && (
             <div>

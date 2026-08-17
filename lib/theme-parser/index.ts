@@ -45,15 +45,31 @@ function parseOneFile(relativePath: string, fileType: FileType, rawText: string)
   return parsedFile;
 }
 
+export type ThemeParseTiming = { extraction: number; validation: number; parsing: number };
+
 /**
  * Full pipeline: theme ZIP buffer -> extracted+validated temp dir -> ParsedFile[].
- * Always cleans up the temp extraction directory, even on failure.
+ * Always cleans up the temp extraction directory, even on failure. Times
+ * its three stages separately (phase-8 §14) since they have meaningfully
+ * different failure modes and costs (I/O-bound extraction vs. CPU-bound
+ * parsing).
  */
-export async function parseThemeZip(zipBuffer: Buffer): Promise<ThemeParseResult> {
+export async function parseThemeZip(
+  zipBuffer: Buffer
+): Promise<ThemeParseResult & { timing: ThemeParseTiming }> {
+  const extractStart = Date.now();
   const { dir, cleanup } = await extractThemeZip(zipBuffer);
+  const extraction = Date.now() - extractStart;
   try {
+    const validateStart = Date.now();
     const themeRoot = resolveThemeRoot(dir);
-    return parseThemeDirectory(themeRoot);
+    const validation = Date.now() - validateStart;
+
+    const parseStart = Date.now();
+    const result = parseThemeDirectory(themeRoot);
+    const parsing = Date.now() - parseStart;
+
+    return { ...result, timing: { extraction, validation, parsing } };
   } finally {
     await cleanup();
   }

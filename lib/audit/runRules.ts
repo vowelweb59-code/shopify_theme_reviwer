@@ -23,6 +23,7 @@ export type RunRulesResult = {
   findings: ExecutedFinding[];
   summary: RunRulesSummary;
   ruleErrors: { ruleId: string; error: string }[];
+  timing: { themeIndex: number; ruleExecution: number };
 };
 
 function dedupeKey(f: ExecutedFinding): string {
@@ -45,7 +46,11 @@ export function summarizeFindings(findings: { severity: Severity; category: Find
 
 /** Runs every rule against every parsed file. A failing rule is recorded and skipped — it never aborts the rest of the audit. */
 export function runRules(files: ParsedFile[], rules: Rule[] = ALL_RULES): RunRulesResult {
+  const indexStart = Date.now();
   const index = buildThemeIndex(files);
+  const themeIndex = Date.now() - indexStart;
+
+  const rulesStart = Date.now();
   const findingsByKey = new Map<string, ExecutedFinding>();
   const ruleErrors: { ruleId: string; error: string }[] = [];
 
@@ -68,8 +73,9 @@ export function runRules(files: ParsedFile[], rules: Rule[] = ALL_RULES): RunRul
     }
   }
 
+  const ruleExecution = Date.now() - rulesStart;
   const findings = [...findingsByKey.values()];
   const summary = summarizeFindings(findings);
 
-  return { findings, summary, ruleErrors };
+  return { findings, summary, ruleErrors, timing: { themeIndex, ruleExecution } };
 }

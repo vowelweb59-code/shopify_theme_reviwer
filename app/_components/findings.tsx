@@ -204,6 +204,39 @@ export function DiagnosticsNote({ diagnostics }: { diagnostics: AuditDiagnostics
   );
 }
 
+const TIMING_STAGE_LABEL: Record<string, string> = {
+  extraction: "ZIP extraction",
+  validation: "Theme validation",
+  parsing: "Parsing",
+  themeIndex: "Theme index",
+  ruleExecution: "Rule execution",
+  liveChecks: "Live checks",
+  findingPersistence: "Finding persistence",
+};
+
+const TIMING_STAGE_ORDER = Object.keys(TIMING_STAGE_LABEL);
+
+/** Per-stage timing breakdown for this run (phase-8 §14) — surfaces where the time actually went so a slowdown is visible at a glance, not just a black-box total. */
+export function TimingNote({ timingMs }: { timingMs: Record<string, number> }) {
+  const stages = TIMING_STAGE_ORDER.filter((key) => typeof timingMs[key] === "number");
+  if (stages.length === 0) return null;
+
+  return (
+    <details className="text-xs text-zinc-500">
+      <summary className="cursor-pointer select-none">
+        Audit duration: {((timingMs.total ?? 0) / 1000).toFixed(1)}s
+      </summary>
+      <ul className="mt-1 ml-4 list-disc">
+        {stages.map((key) => (
+          <li key={key}>
+            {TIMING_STAGE_LABEL[key]}: {timingMs[key]}ms
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 const CATEGORIES = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Bug", "Internal Standard"] as const;
 const SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 const STATUSES: FindingStatus[] = ["open", "resolved", "ignored"];
