@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildFindingsSheetRows } from "./sheetRows";
+import { buildCategorySheetTabs } from "./sheetRows";
 
-describe("buildFindingsSheetRows", () => {
-  it("returns a header row followed by one row per finding", () => {
-    const rows = buildFindingsSheetRows("audit-1", "Dawn", [
+describe("buildCategorySheetTabs", () => {
+  it("groups findings into one tab per category, each with its own header row", () => {
+    const tabs = buildCategorySheetTabs("audit-1", "Dawn", [
       {
         ruleId: "A11Y-IMG-ALT-001",
         requirementId: "SHOPIFY-A11Y-001",
@@ -15,13 +15,32 @@ describe("buildFindingsSheetRows", () => {
         recommendation: "Add alt text",
         sourceUrl: "https://example.com",
       },
+      {
+        ruleId: "SHOPIFY-SEO-METADATA-001",
+        filePath: "layout/theme.liquid",
+        category: "Technical SEO",
+        severity: "medium",
+        finding: "No meta description",
+        sourceReference: "General SEO best practice",
+      },
+      {
+        ruleId: "A11Y-CONTRAST-001",
+        filePath: "assets/base.css",
+        category: "Accessibility",
+        severity: "low",
+        finding: "Low contrast text",
+      },
     ]);
 
-    expect(rows[0]).toEqual([
+    // Ordered by FINDING_CATEGORIES' canonical order (Theme Store
+    // Compliance, Accessibility, Technical SEO, ...), not first-seen.
+    expect(tabs.map((t) => t.title)).toEqual(["Accessibility", "Technical SEO"]);
+
+    const accessibilityTab = tabs[0];
+    expect(accessibilityTab.rows[0]).toEqual([
       "Audit ID",
       "Theme",
       "Severity",
-      "Category",
       "Rule ID",
       "Requirement ID",
       "Finding",
@@ -30,11 +49,11 @@ describe("buildFindingsSheetRows", () => {
       "Line",
       "Source",
     ]);
-    expect(rows[1]).toEqual([
+    expect(accessibilityTab.rows).toHaveLength(3); // header + 2 accessibility findings
+    expect(accessibilityTab.rows[1]).toEqual([
       "audit-1",
       "Dawn",
       "high",
-      "Accessibility",
       "A11Y-IMG-ALT-001",
       "SHOPIFY-A11Y-001",
       "Missing alt text",
@@ -43,32 +62,32 @@ describe("buildFindingsSheetRows", () => {
       "12",
       "https://example.com",
     ]);
-  });
 
-  it("falls back to sourceReference when sourceUrl is absent, and blanks missing optional fields", () => {
-    const rows = buildFindingsSheetRows("audit-1", "Dawn", [
-      {
-        ruleId: "RULE-001",
-        filePath: "layout/theme.liquid",
-        category: "Bug",
-        severity: "low",
-        finding: "Something",
-        sourceReference: "Internal standard",
-      },
-    ]);
-
-    expect(rows[1]).toEqual([
+    const seoTab = tabs[1];
+    expect(seoTab.rows).toHaveLength(2); // header + 1 SEO finding
+    expect(seoTab.rows[1]).toEqual([
       "audit-1",
       "Dawn",
-      "low",
-      "Bug",
-      "RULE-001",
+      "medium",
+      "SHOPIFY-SEO-METADATA-001",
       "",
-      "Something",
+      "No meta description",
       "",
       "layout/theme.liquid",
       "",
-      "Internal standard",
+      "General SEO best practice",
     ]);
+  });
+
+  it("omits categories with no findings rather than emitting empty tabs", () => {
+    const tabs = buildCategorySheetTabs("audit-1", "Dawn", [
+      { ruleId: "RULE-001", filePath: "layout/theme.liquid", category: "Bug", severity: "low", finding: "Something" },
+    ]);
+    expect(tabs).toHaveLength(1);
+    expect(tabs[0].title).toBe("Bug");
+  });
+
+  it("returns no tabs when there are no findings", () => {
+    expect(buildCategorySheetTabs("audit-1", "Dawn", [])).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
-import { buildFindingsSheetRows } from "@/lib/export/sheetRows";
+import { buildCategorySheetTabs } from "@/lib/export/sheetRows";
 import { createGoogleSheet, GoogleSheetsNotConnectedError } from "@/lib/google/sheetsExport";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
@@ -26,11 +26,14 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       ? String(auditRun.themeId.name)
       : "Unknown theme";
 
-  const rows = buildFindingsSheetRows(id, themeName, findings);
+  const tabs = buildCategorySheetTabs(id, themeName, findings);
+  if (tabs.length === 0) {
+    return NextResponse.json({ error: "This audit run has no findings to export." }, { status: 400 });
+  }
   const title = `${themeName} audit — ${new Date(auditRun.startedAt).toLocaleDateString()}`;
 
   try {
-    const { url } = await createGoogleSheet(title, rows);
+    const { url } = await createGoogleSheet(title, tabs);
     return NextResponse.json({ url });
   } catch (err) {
     if (err instanceof GoogleSheetsNotConnectedError) {
