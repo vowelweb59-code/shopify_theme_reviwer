@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-08-17)
 
 ## Corpus Check
-- 134 files · ~1,480,582 words
+- 134 files · ~1,480,635 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `557c2f39`
+- Built from commit: `cc9fa576`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -63,10 +63,10 @@
 2. `compilerOptions` - 16 edges
 3. `parseJsonFile()` - 14 edges
 4. `Rule` - 12 edges
-5. `GET()` - 11 edges
-6. `buildLineIndex()` - 11 edges
-7. `POST()` - 11 edges
-8. `buildTestTheme()` - 11 edges
+5. `buildLineIndex()` - 11 edges
+6. `GET()` - 11 edges
+7. `buildTestTheme()` - 11 edges
+8. `POST()` - 11 edges
 9. `computeReadiness()` - 9 edges
 10. `computeFindingsDiff()` - 9 edges
 
@@ -80,7 +80,7 @@
 - `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
   scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/maintenance/route.ts → lib/db/connect.ts
+  app/api/audit/[id]/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -232,7 +232,7 @@ Cohesion: 0.40
 Nodes (3): AuditSettings, AuditSettingsDoc, auditSettingsSchema
 
 ## Knowledge Gaps
-- **265 isolated node(s):** `FORMATS`, `Format`, `CONTENT_TYPES`, `geistSans`, `geistMono` (+260 more)
+- **265 isolated node(s):** `AUDIT_RUN_STATUSES`, `auditRunSummarySchema`, `fileErrorSchema`, `ruleErrorSchema`, `diagnosticsSchema` (+260 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -245,7 +245,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Why does `Rule` connect `registry.ts` to `technical-aeo/index.ts`, `runRules.ts`, `settings.ts`, `shopify/index.ts`, `accessibility/index.ts`, `cross-file/index.ts`, `rules.ts`, `bugs/index.ts`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **What connects `FORMATS`, `Format`, `CONTENT_TYPES` to the rest of the system?**
+- **What connects `AUDIT_RUN_STATUSES`, `auditRunSummarySchema`, `fileErrorSchema` to the rest of the system?**
   _265 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
