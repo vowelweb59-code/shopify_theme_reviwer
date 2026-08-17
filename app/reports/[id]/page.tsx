@@ -79,6 +79,27 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  const [creatingSheet, setCreatingSheet] = useState(false);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [sheetUrl, setSheetUrl] = useState<string | null>(null);
+
+  function createGoogleSheet() {
+    setCreatingSheet(true);
+    setSheetError(null);
+    setSheetUrl(null);
+    fetch(`/api/reports/${id}/export/google-sheet`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        setCreatingSheet(false);
+        if (data.error) setSheetError(data.error);
+        else setSheetUrl(data.url);
+      })
+      .catch(() => {
+        setCreatingSheet(false);
+        setSheetError("Failed to create the Google Sheet.");
+      });
+  }
+
   const [siblingRuns, setSiblingRuns] = useState<AuditRunListItem[]>([]);
   const [baselineId, setBaselineId] = useState("");
   const [diff, setDiff] = useState<FindingsDiffResult | null>(null);
@@ -230,9 +251,36 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                       {format}
                     </a>
                   ))}
+                  <button
+                    type="button"
+                    onClick={createGoogleSheet}
+                    disabled={creatingSheet}
+                    className="rounded-full border border-black/[.12] px-3 py-1.5 text-zinc-700 hover:text-zinc-950 disabled:opacity-50 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
+                  >
+                    {creatingSheet ? "Creating…" : "Google Sheet"}
+                  </button>
                 </div>
               )}
             </div>
+            {sheetError && (
+              <p className="mt-2 text-xs text-red-700 dark:text-red-300">
+                {sheetError}{" "}
+                {sheetError.includes("not connected") && (
+                  <Link href="/settings" className="underline">
+                    Connect it in Settings.
+                  </Link>
+                )}
+              </p>
+            )}
+            {sheetUrl && (
+              <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+                Sheet created —{" "}
+                <a href={sheetUrl} target="_blank" rel="noreferrer" className="underline">
+                  open it
+                </a>
+                .
+              </p>
+            )}
             <p className="mt-1 text-zinc-500">
               Started {formatDate(auditRun.startedAt)}
               {auditRun.completedAt ? ` — completed ${formatDate(auditRun.completedAt)}` : ""}
