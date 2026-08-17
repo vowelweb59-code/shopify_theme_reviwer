@@ -29,7 +29,7 @@ const requirementSchema = new Schema(
     sourceReference: { type: String, default: null },
     sourceUrl: { type: String, default: null },
     severity: { type: String, required: true, enum: FINDING_SEVERITIES },
-    status: { type: String, required: true, enum: REQUIREMENT_STATUSES, default: "active" },
+    status: { type: String, index: true, required: true, enum: REQUIREMENT_STATUSES, default: "active" },
     ruleStatus: { type: String, required: true, enum: RULE_STATUSES, default: "not_implemented", index: true },
     notes: { type: String, default: null },
   },

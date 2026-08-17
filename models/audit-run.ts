@@ -42,8 +42,8 @@ const liveCheckErrorSchema = new Schema({ url: String, error: String }, { _id: f
 const auditRunSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
-    status: { type: String, required: true, enum: AUDIT_RUN_STATUSES, default: "pending" },
-    startedAt: { type: Date, required: true, default: () => new Date() },
+    status: { type: String, required: true, enum: AUDIT_RUN_STATUSES, default: "pending", index: true },
+    startedAt: { type: Date, required: true, default: () => new Date(), index: true },
     completedAt: { type: Date, default: null },
     error: { type: String, default: null },
     summary: { type: auditRunSummarySchema, default: undefined },
@@ -68,6 +68,12 @@ const auditRunSchema = new Schema(
   },
   { timestamps: false }
 );
+
+// Matches the exact query shape app/api/audit/run/route.ts's
+// loadThemeFindingHistory runs on every single audit: find this theme's
+// prior complete runs, newest first (phase-8 §17 asks for indexes based
+// on actual query patterns, not a blanket "index everything").
+auditRunSchema.index({ themeId: 1, status: 1, startedAt: -1 });
 
 async function cascadeDeleteFindings(auditRunId: unknown) {
   if (!auditRunId) return;
