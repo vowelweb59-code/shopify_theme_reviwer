@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "app/api/audit/run/route.ts": {
-    "mtime": 1786949375.6564975,
-    "ast_hash": "592b32c3d2c2ed73a81ef0faf861447e",
+    "mtime": 1786952714.069759,
+    "ast_hash": "cb33f4af9112024876b5bd12e2640735",
     "semantic_hash": ""
   },
   "app/api/reports/[id]/route.ts": {
@@ -115,13 +115,13 @@
     "semantic_hash": ""
   },
   "lib/theme-parser/index.ts": {
-    "mtime": 1786537215.1304958,
-    "ast_hash": "7b501424b299c3576103ccca9a56a93b",
+    "mtime": 1786952628.6119506,
+    "ast_hash": "867c23a3a76f684434995f4cc3dd1987",
     "semantic_hash": ""
   },
   "models/audit-run.ts": {
-    "mtime": 1786952041.002265,
-    "ast_hash": "26a4f8a81e5e09e8ae8c377c6f19c494",
+    "mtime": 1786952719.861448,
+    "ast_hash": "680be96a0a2c73b3eac6119b476aa970",
     "semantic_hash": ""
   },
   "models/audit-settings.ts": {
@@ -285,13 +285,13 @@
     "semantic_hash": ""
   },
   "app/_components/findings.tsx": {
-    "mtime": 1786711261.0816488,
-    "ast_hash": "4eed68e68a7bda94f6d3e57bb9a13d67",
+    "mtime": 1786952742.1041634,
+    "ast_hash": "559944de3c64062580b94d16d3e3e3a3",
     "semantic_hash": ""
   },
   "app/reports/[id]/page.tsx": {
-    "mtime": 1786950900.8769598,
-    "ast_hash": "9b8d428dc4d0e006fc66fb2868b25b9d",
+    "mtime": 1786952757.096179,
+    "ast_hash": "22ced5c1c68124fd9b0814d02999887e",
     "semantic_hash": ""
   },
   "lib/audit/colorContrast.ts": {
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "lib/audit/runRules.ts": {
-    "mtime": 1786685858.4582157,
-    "ast_hash": "f0062e1d542adf90557976407b110b9a",
+    "mtime": 1786952644.602479,
+    "ast_hash": "ee50c0331defebf7c75ca235cd580d71",
     "semantic_hash": ""
   },
   "lib/rules/registry.ts": {
@@ -737,6 +737,16 @@
   "models/readiness-config.ts": {
     "mtime": 1786950731.1552577,
     "ast_hash": "ad68af933aa1dcc02f188832016e1d21",
+    "semantic_hash": ""
+  },
+  "lib/audit/timing.test.ts": {
+    "mtime": 1786952620.5601883,
+    "ast_hash": "eb0f8148f2e138f0415871f6f26d5914",
+    "semantic_hash": ""
+  },
+  "lib/audit/timing.ts": {
+    "mtime": 1786952676.38255,
+    "ast_hash": "1de0935142fc3ab52da65d579a6f5fd4",
     "semantic_hash": ""
   }
 }
