@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import { getAuthorizedClient } from "./oauth";
+import { buildSheetFormattingRequests } from "./sheetsFormatting";
 import type { SheetTab } from "@/lib/export/sheetRows";
 
 export class GoogleSheetsNotConnectedError extends Error {}
@@ -12,7 +13,7 @@ function sanitizeTabTitle(title: string): string {
   return title.replace(/[:\\/?*[\]]/g, "-").slice(0, 100);
 }
 
-/** Creates a new spreadsheet with one tab per entry in `tabs`, each tab's own header+rows starting at A1. Returns the sheet's edit URL. */
+/** Creates a new spreadsheet with one tab per entry in `tabs`, each tab's own header+rows starting at A1, then applies formatting (frozen/styled header, column widths, severity color-coding, tab colors). Returns the sheet's edit URL. */
 export async function createGoogleSheet(title: string, tabs: SheetTab[]): Promise<{ url: string; spreadsheetId: string }> {
   const client = await getAuthorizedClient();
   if (!client) {
@@ -39,6 +40,24 @@ export async function createGoogleSheet(title: string, tabs: SheetTab[]): Promis
       data: tabs.map((tab) => ({ range: `'${sanitizeTabTitle(tab.title)}'!A1`, values: tab.rows })),
     },
   });
+
+  // Matches each tab back to the sheetId Google assigned it, by title
+  // (created in the same order as `tabs`, but matching by title rather
+  // than assuming index order lines up is one less thing that can drift).
+  const sheetIdByTitle = new Map(
+    (data.sheets ?? []).map((sheet) => [sheet.properties?.title, sheet.properties?.sheetId])
+  );
+
+  const formattingRequests = tabs.flatMap((tab) => {
+    const sheetId = sheetIdByTitle.get(sanitizeTabTitle(tab.title));
+    if (sheetId == null) return [];
+    const dataRowCount = tab.rows.length - 1; // rows[0] is the header
+    return buildSheetFormattingRequests(sheetId, dataRowCount, tab.title);
+  });
+
+  if (formattingRequests.length > 0) {
+    await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests: formattingRequests } });
+  }
 
   return { url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`, spreadsheetId };
 }

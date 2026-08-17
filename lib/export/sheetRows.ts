@@ -16,8 +16,10 @@ export type SheetFindingRow = {
 export type SheetTab = { title: string; rows: string[][] };
 
 // No "Category" column here — the tab itself is the category, so
-// repeating it on every row would be redundant.
-const TAB_COLUMNS = [
+// repeating it on every row would be redundant. Exported so
+// lib/google/sheetsFormatting.ts can look up column indices by name
+// instead of duplicating this order as magic numbers.
+export const TAB_COLUMNS = [
   "Audit ID",
   "Theme",
   "Severity",
