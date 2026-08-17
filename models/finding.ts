@@ -20,6 +20,13 @@ export const FINDING_SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 // involved, just a real browser rendering a real page.
 export const FINDING_LAYERS = ["static", "live"] as const;
 
+// Manual lifecycle status (phase-5 §6) — deliberately independent of any
+// automated diff status (phase-6's resolved/still_present/new/changed):
+// a user can mark a finding "ignored" with a reason (e.g. an accepted
+// exception) and that decision must persist across re-audits rather than
+// being silently overwritten just because the same issue is detected again.
+export const FINDING_STATUSES = ["open", "resolved", "ignored"] as const;
+
 const findingSchema = new Schema(
   {
     auditRunId: { type: Schema.Types.ObjectId, required: true, ref: "AuditRun", index: true },
@@ -34,6 +41,10 @@ const findingSchema = new Schema(
     recommendation: { type: String, default: null },
     sourceReference: { type: String, default: null },
     sourceUrl: { type: String, default: null },
+    sourceSnippet: { type: String, default: null },
+    status: { type: String, required: true, enum: FINDING_STATUSES, default: "open", index: true },
+    ignoredReason: { type: String, default: null },
+    statusUpdatedAt: { type: Date, default: null },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } }
 );

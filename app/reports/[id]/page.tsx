@@ -3,14 +3,23 @@
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  CoverageSummaryBar,
   DiagnosticsNote,
   FindingsTable,
+  ReadinessPanel,
   SummaryBar,
   type AuditDiagnostics,
+  type CoverageSummary,
   type FindingRow,
+  type FindingStatus,
   type FindingSummary,
+  type ReadinessSummary,
+  type RequirementInfo,
 } from "@/app/_components/findings";
+import { CategoryDashboard } from "@/app/_components/categoryDashboard";
 import { DiffFindingsView, DiffSummaryBar, type FindingsDiffResult } from "@/app/_components/diff";
+import type { CoverageResult } from "@/lib/audit/coverage";
+import { computeReadiness } from "@/lib/audit/readiness";
 
 type AuditRunDetail = {
   _id: string;
@@ -48,6 +57,10 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const [auditRun, setAuditRun] = useState<AuditRunDetail | null>(null);
   const [findings, setFindings] = useState<FindingRow[]>([]);
+  const [coverage, setCoverage] = useState<CoverageSummary | null>(null);
+  const [coverageByCategory, setCoverageByCategory] = useState<Record<string, CoverageResult> | undefined>(undefined);
+  const [readiness, setReadiness] = useState<ReadinessSummary | null>(null);
+  const [requirementsById, setRequirementsById] = useState<Record<string, RequirementInfo>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -68,6 +81,9 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
         } else {
           setAuditRun(data.auditRun);
           setFindings(data.findings ?? []);
+          setCoverage(data.coverage ?? null);
+          setCoverageByCategory(data.coverageByCategory ?? undefined);
+          setReadiness(data.readiness ?? null);
         }
         setLoading(false);
       });
@@ -75,6 +91,23 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/requirements")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        const map: Record<string, RequirementInfo> = {};
+        for (const r of data.requirements ?? []) {
+          map[r.requirementId] = { title: r.title, description: r.description, sourceName: r.sourceName, sourceUrl: r.sourceUrl };
+        }
+        setRequirementsById(map);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!auditRun?.themeId) return;
@@ -94,6 +127,30 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     const themeId = auditRun.themeId._id;
     return siblingRuns.filter((r) => r._id !== id && r.status === "complete" && r.themeId?._id === themeId);
   }, [siblingRuns, auditRun, id]);
+
+  function handleStatusChange(findingId: string, status: FindingStatus, ignoredReason?: string) {
+    const updated = findings.map((f) => (f._id === findingId ? { ...f, status, ignoredReason: ignoredReason ?? null } : f));
+    setFindings(updated);
+    if (coverage) setReadiness(computeReadiness(updated, coverage.percentage));
+
+    fetch(`/api/findings/${findingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, ignoredReason }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          // Revert on failure — the optimistic update above assumed success.
+          fetch(`/api/reports/${id}`)
+            .then((r) => r.json())
+            .then((d) => {
+              setFindings(d.findings ?? []);
+              setReadiness(d.readiness ?? null);
+            });
+        }
+      });
+  }
 
   function runComparison(newBaselineId: string) {
     setBaselineId(newBaselineId);
@@ -136,19 +193,16 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                 Status: <strong>{auditRun.status}</strong>
               </p>
               {auditRun.status === "complete" && (
-                <div className="flex gap-3 text-xs">
-                  <a
-                    href={`/api/reports/${id}/export?format=csv`}
-                    className="rounded-full border border-black/[.12] px-3 py-1.5 text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    Export CSV
-                  </a>
-                  <a
-                    href={`/api/reports/${id}/export?format=pdf`}
-                    className="rounded-full border border-black/[.12] px-3 py-1.5 text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    Export PDF
-                  </a>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {(["csv", "xlsx", "json", "html", "pdf"] as const).map((format) => (
+                    <a
+                      key={format}
+                      href={`/api/reports/${id}/export?format=${format}`}
+                      className="rounded-full border border-black/[.12] px-3 py-1.5 uppercase text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
+                    >
+                      {format}
+                    </a>
+                  ))}
                 </div>
               )}
             </div>
@@ -172,9 +226,19 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
             )}
           </div>
 
+          {readiness && <ReadinessPanel readiness={readiness} />}
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}
+          {coverage && <CoverageSummaryBar coverage={coverage} />}
           {auditRun.diagnostics && <DiagnosticsNote diagnostics={auditRun.diagnostics} />}
-          <FindingsTable findings={findings} />
+
+          {findings.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-lg font-semibold text-zinc-950 dark:text-zinc-50">By category</h2>
+              <CategoryDashboard findings={findings} coverageByCategory={coverageByCategory} />
+            </div>
+          )}
+
+          <FindingsTable findings={findings} onStatusChange={handleStatusChange} requirementsById={requirementsById} />
 
           {comparableRuns.length > 0 && (
             <div className="flex flex-col gap-4 border-t border-black/[.08] pt-8 dark:border-white/[.145]">

@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-14 (post CSV/PDF export, re-audit diff, responsive/image-resolution live checks, aria-hidden-focus + large-inline-payload rules, and canonical fixture themes).
+// Last reviewed: 2026-08-17 (post phase-5 completion: finding lifecycle, submission readiness, coverage, category dashboards, source traceability, JSON/XLSX/HTML export).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -35,8 +35,8 @@ export const PROJECT_PHASES: PhaseEntry[] = [
   {
     phase: 5,
     name: "Reporting & exports",
-    status: "in-progress",
-    note: "Report UI, CSV/PDF export done. Live demo-store checking now covers contrast, JSON-LD/meta, responsive visibility of the language/country selector and social icons at medium viewport widths, and image-resolution/pixelation. XLSX/JSON/HTML export, finding lifecycle (open/resolved/ignored), category dashboards, and search are not built.",
+    status: "done",
+    note: "Finding lifecycle (open/resolved/ignored with required reason), submission readiness (READY/NOT_READY/INCOMPLETE), per-category and overall requirement coverage, category dashboards, filter/sort/search, source-context snippets, rule→requirement→source traceability, and CSV/XLSX/JSON/HTML/PDF export all done and verified end-to-end. Google Sheets integration skipped — the phase doc marks it explicitly optional.",
   },
   {
     phase: 6,

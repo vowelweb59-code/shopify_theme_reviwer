@@ -1,0 +1,42 @@
+import { describe, expect, it } from "vitest";
+import { computeReadiness } from "./readiness";
+
+describe("computeReadiness", () => {
+  it("is READY with no blockers and sufficient coverage", () => {
+    expect(computeReadiness([{ severity: "medium" }], 80).status).toBe("READY");
+  });
+
+  it("is NOT_READY when an unresolved blocker exists, even with full coverage", () => {
+    const result = computeReadiness([{ severity: "blocker", status: "open" }], 100);
+    expect(result.status).toBe("NOT_READY");
+  });
+
+  it("treats a finding with no status field at all as open (pre-migration data)", () => {
+    const result = computeReadiness([{ severity: "blocker" }], 100);
+    expect(result.status).toBe("NOT_READY");
+  });
+
+  it("does not count a resolved blocker against readiness", () => {
+    const result = computeReadiness([{ severity: "blocker", status: "resolved" }], 100);
+    expect(result.status).toBe("READY");
+  });
+
+  it("does not count an ignored blocker against readiness", () => {
+    const result = computeReadiness([{ severity: "blocker", status: "ignored" }], 100);
+    expect(result.status).toBe("READY");
+  });
+
+  it("is INCOMPLETE when there are no blockers but coverage is too low", () => {
+    const result = computeReadiness([{ severity: "low" }], 40);
+    expect(result.status).toBe("INCOMPLETE");
+  });
+
+  it("prefers NOT_READY over INCOMPLETE when both conditions are true", () => {
+    const result = computeReadiness([{ severity: "blocker", status: "open" }], 10);
+    expect(result.status).toBe("NOT_READY");
+  });
+
+  it("is READY with zero findings and sufficient coverage", () => {
+    expect(computeReadiness([], 90).status).toBe("READY");
+  });
+});

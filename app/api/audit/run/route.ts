@@ -3,13 +3,33 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
-import { parseThemeZip, ThemeZipError, InvalidThemeError } from "@/lib/theme-parser";
+import { parseThemeZip, ThemeZipError, InvalidThemeError, type ParsedFile } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
 import { runLiveChecks } from "@/lib/audit/liveCheck";
 
-function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: "static" | "live") {
+const SNIPPET_CONTEXT_LINES = 3;
+
+// Captured once at persist time, from the same parsed source the finding
+// came from — the original ZIP isn't kept, so this is the only chance to
+// preserve source context for later (phase-5 §8's "code context" panel).
+// A live finding's filePath is a page URL, not a theme file, so this is
+// null for those (the "static" layer's own domain, not live-check's).
+function extractSourceSnippet(files: ParsedFile[], filePath: string, lineNumber: number | undefined | null): string | null {
+  if (!lineNumber) return null;
+  const file = files.find((f) => f.path === filePath);
+  if (!file) return null;
+  const lines = file.rawText.split("\n");
+  const start = Math.max(0, lineNumber - 1 - SNIPPET_CONTEXT_LINES);
+  const end = Math.min(lines.length, lineNumber + SNIPPET_CONTEXT_LINES);
+  return lines
+    .slice(start, end)
+    .map((line, i) => `${start + i + 1}${start + i + 1 === lineNumber ? " >" : "  "} ${line}`)
+    .join("\n");
+}
+
+function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: "static" | "live", files: ParsedFile[]) {
   return findings.map((f) => ({
     auditRunId,
     ruleId: f.ruleId,
@@ -23,6 +43,7 @@ function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: 
     recommendation: f.recommendation ?? null,
     sourceReference: f.sourceReference ?? null,
     sourceUrl: f.sourceUrl ?? null,
+    sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
   }));
 }
 
@@ -70,7 +91,10 @@ export async function POST(request: Request) {
       liveCheckError = liveResult.error;
     }
 
-    const findingDocs = [...toFindingDocs(staticFindings, auditRun._id, "static"), ...toFindingDocs(liveFindings, auditRun._id, "live")];
+    const findingDocs = [
+      ...toFindingDocs(staticFindings, auditRun._id, "static", result.files),
+      ...toFindingDocs(liveFindings, auditRun._id, "live", result.files),
+    ];
     if (findingDocs.length > 0) await Finding.insertMany(findingDocs);
 
     auditRun.status = "complete";
