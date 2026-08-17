@@ -1164,6 +1164,54 @@ const requirements: SeedRequirement[] = [
     notes:
       "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content). Partial automated coverage added 2026-08-14: the live demo-store check (LIVE-IMAGE-RESOLUTION-001) flags images whose source resolution is measurably lower than their rendered size — a narrower, objective check than the full 'professional images, real-life scenarios, no placeholder content' judgment call, which still needs manual review.",
   },
+
+  // Added 2026-08-17 from a ChatGPT-based design-originality audit export
+  // the user runs against their own theme submissions. The export's
+  // site-specific findings (named custom sections of two particular
+  // themes) aren't generalizable and weren't added — only the underlying
+  // review principles, split by how well-grounded each one actually is:
+  // the first is Shopify's own stated primary rejection criterion (its
+  // wording below is quoted/paraphrased directly from a live fetch of the
+  // official requirements page, which is sharper than the export's own
+  // paraphrase of it); the other two are the export's own synthesized
+  // best-practice heuristic with no official Shopify citation, so they're
+  // recorded as this project's internal standard rather than misattributed
+  // to Shopify.
+  {
+    requirementId: "SHOPIFY-DESIGN-STRUCTURAL-UNIQUENESS-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Section differentiation must be structural/functional, not cosmetic",
+    description:
+      "A theme must be fundamentally different from other themes on the Theme Store — including the same developer's own prior themes — through meaningful design and functional innovation. Cosmetic or additive changes are not sufficient: spacing tweaks, color/typography swaps, gradients, shape dividers, background effects, animation/transition tweaks, or adding a few settings/sections to an existing codebase do not count. Uniqueness must be embedded at the architectural level so the theme stays distinctly its own as settings/sections/features are added; reused components/libraries are fine, but how they're assembled must be substantially different.",
+    sourceName: "Shopify Theme Store requirements",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "high",
+    notes:
+      "This is Shopify's own most-emphasized rejection criterion, but it's an architectural/design judgment call — requires comparing the theme's actual section structure and interaction design against current Theme Store themes, not statically checkable from theme code alone.",
+  },
+  {
+    requirementId: "INTERNAL-DESIGN-SECTION-PURPOSE-001",
+    sourceType: "internal_standard",
+    category: "Internal Standard",
+    title: "Each major section should serve a distinct customer job, not duplicate another section's purpose",
+    description:
+      "When a theme has several merchandising or content sections (e.g. multiple product-grid variants, a featured-product block, a recommendation engine, a routine/bundle builder), each should serve a clearly different customer job — browse, filter by need, get a personalized recommendation, learn about one product in depth, or assemble a set/routine — rather than presenting the same underlying browsing experience with a different visual skin. Overlapping sections raise internal-repetition risk and weaken submission strength even when each section is individually well designed.",
+    sourceName: "Internal design-review standard (originality audit framework)",
+    severity: "low",
+    notes: "Editorial/structural judgment — requires reviewing what each section's interaction actually accomplishes for the customer, not just its visual template. Not an official Shopify requirement.",
+  },
+  {
+    requirementId: "INTERNAL-DESIGN-WORKFLOW-COHERENCE-001",
+    sourceType: "internal_standard",
+    category: "Internal Standard",
+    title: "Sections should connect into one coherent customer workflow, not stand alone as disconnected blocks",
+    description:
+      "A theme reads as more distinctive when its sections build toward a specific, connected customer journey (e.g. a concern/need → guided recommendation → product → routine/bundle → cart flow) rather than existing as an unconnected list of individually attractive sections. When reviewing a theme, check whether adjacent sections reference or build on each other's outputs rather than just sitting side by side with no relationship.",
+    sourceName: "Internal design-review standard (originality audit framework)",
+    severity: "low",
+    notes: "Editorial/structural judgment, not statically checkable — requires reviewing the actual customer journey across sections. Not an official Shopify requirement.",
+  },
 ];
 
 async function main() {
