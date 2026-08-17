@@ -4,19 +4,26 @@
 // source-context/line-shift fallback (phase-6's Stage 3) — an unmatched
 // finding is reported as resolved/new rather than guessed at, which is
 // exactly what the phase doc's own Stage 4 asks for when no reliable match
-// exists. Rule-version tracking is not implemented here. Manual finding
-// status carry-forward and reintroduced-issue history are handled
-// separately at persist time — see lib/audit/findingHistory.ts.
+// exists. Manual finding status carry-forward and reintroduced-issue
+// history are handled separately at persist time — see
+// lib/audit/findingHistory.ts. Rule-version attribution for "new"
+// findings is a separate enrichment pass — see attributeNewFindings below.
 import { exactSignature, locationSignature, type DiffableFinding } from "./findingSignature";
 
 export type { DiffableFinding };
 
 export type DiffStatus = "resolved" | "still_present" | "new" | "changed";
 
+// Only ever set on a "new" finding, by attributeNewFindings — distinguishes
+// a finding that's new because a rule was added/changed (phase-6 §14) from
+// one that's new because the theme itself changed.
+export type NewFindingAttribution = "new_rule" | "rule_changed" | "theme_change";
+
 export type DiffFinding<T extends DiffableFinding = DiffableFinding> = {
   status: DiffStatus;
   previous?: T;
   current?: T;
+  newFindingAttribution?: NewFindingAttribution;
 };
 
 export type FindingsDiffSummary = {
@@ -142,12 +149,39 @@ export function summarizeDiffBySeverity<T extends DiffableFinding>(diff: Finding
   });
 }
 
-/** New or severity-escalated blocker/high findings — the regression signal phase-6 §20 asks to make prominent. */
+/** New or severity-escalated blocker/high findings — the regression signal phase-6 §20 asks to make prominent. Excludes "new_rule"-attributed findings (see attributeNewFindings) so shipping a new rule doesn't itself trigger a false regression alert. */
 export function countNewOrEscalatedHighRiskFindings<T extends DiffableFinding>(diff: FindingsDiff<T>): number {
   const highRisk = new Set(["blocker", "high"]);
   return diff.findings.filter((f) => {
-    if (f.status === "new") return highRisk.has(f.current!.severity);
+    if (f.status === "new") return highRisk.has(f.current!.severity) && f.newFindingAttribution !== "new_rule";
     if (f.status === "changed") return highRisk.has(f.current!.severity) && !highRisk.has(f.previous!.severity);
     return false;
   }).length;
+}
+
+/**
+ * Distinguishes a "new" finding caused by a newly-added or changed rule
+ * from one caused by an actual theme change (phase-6 §14) — otherwise the
+ * very first audit run after shipping a new rule would report every one
+ * of its findings as a fresh regression, even though nothing in the theme
+ * changed. Only ever annotates "new" findings; every other status passes
+ * through unchanged. Both version maps come from AuditRun.ruleVersionSnapshot,
+ * captured at persist time for exactly this comparison.
+ */
+export function attributeNewFindings<T extends DiffableFinding>(
+  findings: DiffFinding<T>[],
+  baselineRuleVersions: Record<string, number>,
+  currentRuleVersions: Record<string, number>
+): DiffFinding<T>[] {
+  return findings.map((f) => {
+    if (f.status !== "new") return f;
+    const ruleId = f.current!.ruleId;
+    const baselineVersion = baselineRuleVersions[ruleId];
+    const currentVersion = currentRuleVersions[ruleId];
+    let attribution: NewFindingAttribution;
+    if (baselineVersion === undefined) attribution = "new_rule";
+    else if (baselineVersion !== currentVersion) attribution = "rule_changed";
+    else attribution = "theme_change";
+    return { ...f, newFindingAttribution: attribution };
+  });
 }

@@ -57,6 +57,14 @@ const auditRunSchema = new Schema(
     // meta tags) alongside the static theme-code findings above.
     demoStoreUrl: { type: String, default: null },
     liveCheckError: { type: liveCheckErrorSchema, default: undefined },
+    // Snapshot of every rule's version (ruleId -> Rule.version) at the
+    // moment this audit ran (phase-6 §14) — lets a later diff tell "this
+    // finding is new because a rule was added/changed" apart from "this
+    // finding is new because the theme actually changed". Deliberately a
+    // snapshot, not a live lookup: the Rule collection's versions can move
+    // on, but what mattered for THIS historical run must stay fixed.
+    ruleVersionSnapshot: { type: Map, of: Number, default: undefined },
+    parserVersion: { type: String, default: null },
   },
   { timestamps: false }
 );

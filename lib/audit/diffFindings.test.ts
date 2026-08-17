@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  attributeNewFindings,
   computeFindingsDiff,
   countNewOrEscalatedHighRiskFindings,
   summarizeDiffByCategory,
@@ -131,5 +132,45 @@ describe("countNewOrEscalatedHighRiskFindings", () => {
   it("does not count a resolved finding", () => {
     const diff = computeFindingsDiff([finding({ severity: "blocker" })], []);
     expect(countNewOrEscalatedHighRiskFindings(diff)).toBe(0);
+  });
+});
+
+describe("attributeNewFindings", () => {
+  it("attributes a new finding to new_rule when its ruleId wasn't active in the baseline run at all", () => {
+    const diff = computeFindingsDiff([], [finding({ ruleId: "BRAND-NEW-RULE-001" })]);
+    const attributed = attributeNewFindings(diff.findings, { "OTHER-RULE-001": 1 }, { "OTHER-RULE-001": 1, "BRAND-NEW-RULE-001": 1 });
+    expect(attributed[0].newFindingAttribution).toBe("new_rule");
+  });
+
+  it("attributes a new finding to rule_changed when the ruleId existed in both runs but its version differs", () => {
+    const diff = computeFindingsDiff([], [finding({ ruleId: "A11Y-IMG-ALT-001" })]);
+    const attributed = attributeNewFindings(diff.findings, { "A11Y-IMG-ALT-001": 1 }, { "A11Y-IMG-ALT-001": 2 });
+    expect(attributed[0].newFindingAttribution).toBe("rule_changed");
+  });
+
+  it("attributes a new finding to theme_change when the rule existed unchanged in both runs", () => {
+    const diff = computeFindingsDiff([], [finding({ ruleId: "A11Y-IMG-ALT-001" })]);
+    const attributed = attributeNewFindings(diff.findings, { "A11Y-IMG-ALT-001": 1 }, { "A11Y-IMG-ALT-001": 1 });
+    expect(attributed[0].newFindingAttribution).toBe("theme_change");
+  });
+
+  it("does not annotate resolved/still_present/changed findings", () => {
+    const diff = computeFindingsDiff([finding({})], [finding({})]);
+    const attributed = attributeNewFindings(diff.findings, {}, {});
+    expect(attributed[0].newFindingAttribution).toBeUndefined();
+  });
+
+  it("excludes a new_rule-attributed high-risk finding from the regression count", () => {
+    const diff = computeFindingsDiff([], [finding({ ruleId: "BRAND-NEW-RULE-001", severity: "blocker" })]);
+    const attributedFindings = attributeNewFindings(diff.findings, {}, { "BRAND-NEW-RULE-001": 1 });
+    const attributedDiff = { ...diff, findings: attributedFindings };
+    expect(countNewOrEscalatedHighRiskFindings(attributedDiff)).toBe(0);
+  });
+
+  it("still counts a theme_change-attributed high-risk finding in the regression count", () => {
+    const diff = computeFindingsDiff([], [finding({ severity: "blocker" })]);
+    const attributedFindings = attributeNewFindings(diff.findings, { "A11Y-IMG-ALT-001": 1 }, { "A11Y-IMG-ALT-001": 1 });
+    const attributedDiff = { ...diff, findings: attributedFindings };
+    expect(countNewOrEscalatedHighRiskFindings(attributedDiff)).toBe(1);
   });
 });

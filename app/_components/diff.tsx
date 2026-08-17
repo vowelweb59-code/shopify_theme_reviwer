@@ -21,6 +21,13 @@ export type DiffFindingRow = {
   status: "resolved" | "still_present" | "new" | "changed";
   previous?: DiffFindingDetail;
   current?: DiffFindingDetail;
+  newFindingAttribution?: "new_rule" | "rule_changed" | "theme_change";
+};
+
+const ATTRIBUTION_LABEL: Record<NonNullable<DiffFindingRow["newFindingAttribution"]>, string> = {
+  new_rule: "New rule",
+  rule_changed: "Rule changed",
+  theme_change: "Theme change",
 };
 
 export type CategoryDiffSummary = { category: string; resolved: number; new: number; stillPresent: number; changed: number };
@@ -207,6 +214,11 @@ export function DiffFindingsView({ findings }: { findings: DiffFindingRow[] }) {
                       </span>
                       {row.status === "new" && row.current?.historicalState === "reintroduced" && (
                         <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">↺ Reintroduced</span>
+                      )}
+                      {row.status === "new" && row.newFindingAttribution && row.newFindingAttribution !== "theme_change" && (
+                        <span className="mt-1 block text-xs text-zinc-500" title="This rule was added or changed since the baseline audit — not necessarily a change in the theme itself.">
+                          {ATTRIBUTION_LABEL[row.newFindingAttribution]}
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3">

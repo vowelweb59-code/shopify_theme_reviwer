@@ -3,6 +3,8 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
+import { Rule } from "@/models/rule";
+import { PARSER_VERSION } from "@/lib/audit/version";
 import { parseThemeZip, ThemeZipError, InvalidThemeError, type ParsedFile } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
@@ -12,6 +14,20 @@ import { classifyFindingHistory, type CarriedFinding, type HistoryClassification
 import type { DiffableFinding } from "@/lib/audit/findingSignature";
 
 const SNIPPET_CONTEXT_LINES = 3;
+
+/**
+ * Snapshots every rule's current version onto this audit run (phase-6
+ * §14) — cheap and complete (all rules, not just enabled ones) rather
+ * than trying to guess which will matter later. Lets a later diff tell
+ * "this finding is new because a rule was added or changed" apart from
+ * "this finding is new because the theme actually changed".
+ */
+async function captureRuleVersionSnapshot(): Promise<Record<string, number>> {
+  const rules = await Rule.find().select("ruleId version").lean();
+  const snapshot: Record<string, number> = {};
+  for (const r of rules) snapshot[r.ruleId] = r.version;
+  return snapshot;
+}
 
 /**
  * Fetches the theme's finding history needed to classify this new run's
@@ -152,6 +168,8 @@ export async function POST(request: Request) {
     });
     if (demoStoreUrl) auditRun.demoStoreUrl = demoStoreUrl;
     if (liveCheckError) auditRun.liveCheckError = liveCheckError;
+    auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
+    auditRun.parserVersion = PARSER_VERSION;
     await auditRun.save();
 
     const findings = [

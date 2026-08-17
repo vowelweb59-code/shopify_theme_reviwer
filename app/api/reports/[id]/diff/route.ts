@@ -3,12 +3,21 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import {
+  attributeNewFindings,
   computeFindingsDiff,
   countNewOrEscalatedHighRiskFindings,
   summarizeDiffByCategory,
   summarizeDiffBySeverity,
   type DiffableFinding,
 } from "@/lib/audit/diffFindings";
+
+// Mongoose Map-typed fields normally come back as plain objects through
+// .lean(), but that's an implementation detail, not a contract — handle a
+// real Map too rather than assuming.
+function toPlainRecord(value: unknown): Record<string, number> {
+  if (value instanceof Map) return Object.fromEntries(value);
+  return (value as Record<string, number> | undefined) ?? {};
+}
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -35,14 +44,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   ]);
 
   const diff = computeFindingsDiff(baselineFindings as unknown as DiffableFinding[], currentFindings as unknown as DiffableFinding[]);
-  const categorySummary = summarizeDiffByCategory(diff);
-  const severitySummary = summarizeDiffBySeverity(diff);
-  const newOrEscalatedHighRiskCount = countNewOrEscalatedHighRiskFindings(diff);
+  const attributedFindings = attributeNewFindings(
+    diff.findings,
+    toPlainRecord(baselineRun.ruleVersionSnapshot),
+    toPlainRecord(currentRun.ruleVersionSnapshot)
+  );
+  const attributedDiff = { ...diff, findings: attributedFindings };
+  const categorySummary = summarizeDiffByCategory(attributedDiff);
+  const severitySummary = summarizeDiffBySeverity(attributedDiff);
+  const newOrEscalatedHighRiskCount = countNewOrEscalatedHighRiskFindings(attributedDiff);
 
   return NextResponse.json({
     baselineAuditId: baselineId,
     currentAuditId: id,
-    ...diff,
+    ...attributedDiff,
     categorySummary,
     severitySummary,
     newOrEscalatedHighRiskCount,

@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-17 (post phase-6 work: status carry-forward, reintroduced tracking, severity/category diff summaries, before/after snippets, diff export).
+// Last reviewed: 2026-08-17 (post phase-6 completion: rule/parser version snapshot + new-finding attribution).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -41,8 +41,8 @@ export const PROJECT_PHASES: PhaseEntry[] = [
   {
     phase: 6,
     name: "Re-audit / diff",
-    status: "in-progress",
-    note: "Resolved/still-present/new/changed detection, manual status (open/resolved/ignored) now carries forward across re-audits on an exact signature match, reintroduced-issue tracking, severity/category diff breakdowns, a prominent new-blocker regression alert, before/after source snippets, and CSV diff export — all verified against a real multi-run theme history (first_seen → resolved → reintroduced → persistent, confirmed end to end). Remaining: rule/parser version tracking (distinguishing 'new because of a rule change' from 'new because of a real regression') isn't built — no rule has ever had a second version yet, so this was deferred rather than built prematurely against an untested need.",
+    status: "done",
+    note: "Resolved/still-present/new/changed detection, manual status (open/resolved/ignored) carries forward across re-audits on an exact signature match, reintroduced-issue tracking, severity/category diff breakdowns, a prominent new-blocker regression alert, before/after source snippets, CSV diff export, and a rule-version snapshot per run that attributes a 'new' finding to a new/changed rule vs. a genuine theme change — all verified end to end against a real multi-run theme history.",
   },
   { phase: 7, name: "Submission-readiness & maintenance", status: "not-started", note: "Go/no-go dashboard, ongoing tracking." },
   {
