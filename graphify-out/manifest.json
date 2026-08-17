@@ -60,8 +60,8 @@
     "semantic_hash": "e01c625577b835439f53818842c9ae19"
   },
   "app/settings/page.tsx": {
-    "mtime": 1786950977.5626996,
-    "ast_hash": "64d6573282e24ba00cb3caf1b7d1e45d",
+    "mtime": 1786967456.5740416,
+    "ast_hash": "3e850c33c0b2a6e73775c1c16abcb6fc",
     "semantic_hash": ""
   },
   "eslint.config.mjs": {
@@ -160,8 +160,8 @@
     "semantic_hash": "9b77af189a21a7a64e4bd7a426f64176"
   },
   "package.json": {
-    "mtime": 1786711429.7984524,
-    "ast_hash": "baf88de0c66837d85b6b3f6cdf332e26",
+    "mtime": 1786967314.3339899,
+    "ast_hash": "f4430e09323a61deed5db37e2513a1ae",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "app/reports/[id]/page.tsx": {
-    "mtime": 1786954004.3083432,
-    "ast_hash": "0ab15e60ca2bbf66e8a219a7ee3ef82b",
+    "mtime": 1786967499.1566482,
+    "ast_hash": "74e9caf53f8c3abc0803453f468526fc",
     "semantic_hash": ""
   },
   "lib/audit/colorContrast.ts": {
@@ -495,8 +495,8 @@
     "semantic_hash": ""
   },
   "lib/projectStatus.ts": {
-    "mtime": 1786951759.9740093,
-    "ast_hash": "52df9e4fb55e21d9c6268101f06345d1",
+    "mtime": 1786955728.4054806,
+    "ast_hash": "abe1ef9048cfe2f0962166ee3239b820",
     "semantic_hash": ""
   },
   "Organic_Theme_Shopify_Approval_Audit.pdf": {
@@ -762,6 +762,56 @@
   "lib/api/validation.ts": {
     "mtime": 1786953264.8684657,
     "ast_hash": "5a952a0c73ed7f41998ce20860948abf",
+    "semantic_hash": ""
+  },
+  "app/api/auth/google/callback/route.ts": {
+    "mtime": 1786967410.4320805,
+    "ast_hash": "720dd4890d531a3fc0c1e7af2e45670d",
+    "semantic_hash": ""
+  },
+  "app/api/auth/google/disconnect/route.ts": {
+    "mtime": 1786967419.248284,
+    "ast_hash": "196b24305ae824e2d2335ca5302f021c",
+    "semantic_hash": ""
+  },
+  "app/api/auth/google/route.ts": {
+    "mtime": 1786967975.5509565,
+    "ast_hash": "9a28fe35d1d9fd19414609a84fe0ad03",
+    "semantic_hash": ""
+  },
+  "app/api/auth/google/status/route.ts": {
+    "mtime": 1786967414.9273028,
+    "ast_hash": "055f31a4dbd4af53a09aeb8ce6cdc79c",
+    "semantic_hash": ""
+  },
+  "app/api/reports/[id]/export/google-sheet/route.ts": {
+    "mtime": 1786967430.2001925,
+    "ast_hash": "9b387862f4f8976448bab31a89b22505",
+    "semantic_hash": ""
+  },
+  "lib/export/sheetRows.test.ts": {
+    "mtime": 1786967396.2584257,
+    "ast_hash": "338fbd0f78034bbd86d1299dd81b9cc3",
+    "semantic_hash": ""
+  },
+  "lib/export/sheetRows.ts": {
+    "mtime": 1786967386.664876,
+    "ast_hash": "709e637052ba08921084ec497c94cd74",
+    "semantic_hash": ""
+  },
+  "lib/google/oauth.ts": {
+    "mtime": 1786967371.067258,
+    "ast_hash": "4ad80a4a9f97d75567be80e59f599e9b",
+    "semantic_hash": ""
+  },
+  "lib/google/sheetsExport.ts": {
+    "mtime": 1786967379.6303163,
+    "ast_hash": "e12e8ef1bea191a055994533ecc758ff",
+    "semantic_hash": ""
+  },
+  "models/google-auth.ts": {
+    "mtime": 1786967335.331959,
+    "ast_hash": "addb3d7adec40884da8ce4316e905e9a",
     "semantic_hash": ""
   }
 }
