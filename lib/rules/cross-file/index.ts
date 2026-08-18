@@ -382,12 +382,16 @@ const composedMultipleH1Rule: Rule = {
       if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
       const composed = composeTemplateMainContent(f, index);
       for (const issue of findMultipleH1Across(composedHeadingEntries(composed.files))) {
+        // filePath is the template itself, not the nested section this
+        // specific extra <h1> lives in — a merchant needs to know which
+        // storefront page this affects, and "sections/hero.liquid" alone
+        // doesn't tell them that (the same section can render on several
+        // templates). The section detail stays in the finding text.
         findings.push({
-          filePath: issue.filePath,
-          lineNumber: issue.line,
+          filePath: f.path,
           category: "Technical SEO" as const,
           severity: "medium" as const,
-          finding: `${f.path}: ${issue.message}`,
+          finding: `${issue.message} This occurrence is in ${issue.filePath}${issue.line ? `:${issue.line}` : ""}.`,
           recommendation: "Ensure only one section in this template outputs an <h1>; use lower heading levels elsewhere.",
         });
       }
@@ -411,12 +415,14 @@ const composedSkippedHeadingRule: Rule = {
       if (f.fileType !== "json" || !f.path.startsWith("templates/")) continue;
       const composed = composeTemplateMainContent(f, index);
       for (const issue of findSkippedHeadingLevelsAcross(composedHeadingEntries(composed.files))) {
+        // Same reasoning as composedMultipleH1Rule above: filePath is the
+        // template (the actual storefront page), the specific section is
+        // named in the finding text instead.
         findings.push({
-          filePath: issue.filePath,
-          lineNumber: issue.line,
+          filePath: f.path,
           category: "Technical SEO" as const,
           severity: "low" as const,
-          finding: `${f.path}: ${issue.message}`,
+          finding: `${issue.message} This heading is in ${issue.filePath}${issue.line ? `:${issue.line}` : ""}.`,
           recommendation: "Use heading levels in sequence across the sections this template renders.",
         });
       }

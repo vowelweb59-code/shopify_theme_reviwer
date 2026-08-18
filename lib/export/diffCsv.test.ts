@@ -22,7 +22,7 @@ describe("buildDiffCsv", () => {
     const csv = buildDiffCsv(diff.findings);
     const lines = csv.split("\r\n");
     expect(lines[0]).toBe(
-      "Diff Status,Severity,Category,Rule ID,Requirement ID,File,Previous Line,Current Line,Previous Finding,Current Finding,Source"
+      "Diff Status,Severity,Category,Rule ID,Requirement ID,Page,File,Previous Line,Current Line,Previous Finding,Current Finding,Source"
     );
     expect(lines[1]).toContain("still_present,high,Accessibility,A11Y-IMG-ALT-001");
   });

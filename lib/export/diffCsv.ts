@@ -1,5 +1,6 @@
 import type { DiffFinding, DiffableFinding } from "@/lib/audit/diffFindings";
 import { escapeCsvField } from "./csvUtil";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type DiffCsvFinding = DiffableFinding & { requirementId?: string | null; lineNumber?: number | null; sourceUrl?: string | null };
 
@@ -9,6 +10,7 @@ const COLUMNS = [
   "Category",
   "Rule ID",
   "Requirement ID",
+  "Page",
   "File",
   "Previous Line",
   "Current Line",
@@ -28,6 +30,7 @@ export function buildDiffCsv(findings: DiffFinding<DiffCsvFinding>[]): string {
       shown.category,
       shown.ruleId,
       shown.requirementId ?? "",
+      getPageLabel(shown.filePath) ?? "",
       shown.filePath,
       f.previous?.lineNumber != null ? String(f.previous.lineNumber) : "",
       f.current?.lineNumber != null ? String(f.current.lineNumber) : "",

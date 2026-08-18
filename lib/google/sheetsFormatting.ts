@@ -40,6 +40,7 @@ const COLUMN_WIDTHS: Record<string, number> = {
   "Requirement ID": 180,
   Finding: 320,
   Recommendation: 320,
+  Page: 130,
   File: 200,
   Line: 60,
   Source: 220,

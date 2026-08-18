@@ -21,7 +21,7 @@ describe("buildFindingsCsv", () => {
     const csv = buildFindingsCsv("run1", "Adorn", [row({})]);
     const lines = csv.split("\r\n");
     expect(lines[0]).toBe(
-      "Audit ID,Theme,Severity,Category,Rule ID,Requirement ID,Finding,Recommendation,File,Line,Source"
+      "Audit ID,Theme,Severity,Category,Rule ID,Requirement ID,Finding,Recommendation,Page,File,Line,Source"
     );
     expect(lines[1]).toContain("run1,Adorn,high,Accessibility,A11Y-IMG-ALT-001");
   });

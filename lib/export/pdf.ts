@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type PdfFindingRow = {
   ruleId: string;
@@ -51,6 +52,7 @@ export function buildReportHtml(opts: {
         <tr>
           <td style="color:${SEVERITY_COLOR[f.severity] ?? "#52525b"};font-weight:600;text-transform:capitalize;">${escapeHtml(f.severity)}</td>
           <td>${escapeHtml(f.category)}</td>
+          <td style="font-size:11px;">${escapeHtml(getPageLabel(f.filePath) ?? "")}</td>
           <td style="font-family:monospace;font-size:11px;">${escapeHtml(f.filePath)}${f.lineNumber ? `:${f.lineNumber}` : ""}</td>
           <td>
             <div>${escapeHtml(f.finding)}</div>
@@ -93,7 +95,7 @@ export function buildReportHtml(opts: {
       : ""
   }
   <table>
-    <thead><tr><th>Severity</th><th>Category</th><th>File</th><th>Finding</th><th>Rule</th></tr></thead>
+    <thead><tr><th>Severity</th><th>Category</th><th>Page</th><th>File</th><th>Finding</th><th>Rule</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
 </body>

@@ -1,4 +1,5 @@
 import { FINDING_CATEGORIES } from "@/models/finding";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type SheetFindingRow = {
   ruleId: string;
@@ -27,6 +28,7 @@ export const TAB_COLUMNS = [
   "Requirement ID",
   "Finding",
   "Recommendation",
+  "Page",
   "File",
   "Line",
   "Source",
@@ -42,6 +44,7 @@ function buildRow(auditRunId: string, themeName: string, f: SheetFindingRow): st
     f.requirementId ?? "",
     f.finding,
     f.recommendation ?? "",
+    getPageLabel(f.filePath) ?? "",
     f.filePath,
     f.lineNumber != null ? String(f.lineNumber) : "",
     source,

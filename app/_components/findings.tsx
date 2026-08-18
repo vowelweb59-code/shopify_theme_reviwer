@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type FindingSummary = {
   total: number;
@@ -474,15 +475,25 @@ export function FindingsTable({
                       )}
                     </td>
                     <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{f.category}</td>
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-zinc-500">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs">
                       {f.layer === "live" ? (
-                        <a href={f.filePath} target="_blank" rel="noreferrer" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+                        <a
+                          href={f.filePath}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-zinc-500 underline hover:text-zinc-950 dark:hover:text-zinc-50"
+                        >
                           {f.filePath}
                         </a>
                       ) : (
                         <>
-                          {f.filePath}
-                          {f.lineNumber ? `:${f.lineNumber}` : ""}
+                          {getPageLabel(f.filePath) && (
+                            <div className="font-medium text-zinc-700 dark:text-zinc-300">{getPageLabel(f.filePath)}</div>
+                          )}
+                          <div className="font-mono text-zinc-500">
+                            {f.filePath}
+                            {f.lineNumber ? `:${f.lineNumber}` : ""}
+                          </div>
                         </>
                       )}
                     </td>

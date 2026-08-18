@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { CoverageResult } from "@/lib/audit/coverage";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type XlsxFinding = {
   ruleId: string;
@@ -23,12 +24,16 @@ const FINDING_COLUMNS: Partial<ExcelJS.Column>[] = [
   { header: "Requirement ID", key: "requirementId", width: 22 },
   { header: "Finding", key: "finding", width: 60 },
   { header: "Recommendation", key: "recommendation", width: 40 },
+  { header: "Page", key: "pageLabel", width: 20 },
   { header: "File", key: "filePath", width: 30 },
   { header: "Line", key: "lineNumber", width: 8 },
   { header: "Status", key: "status", width: 10 },
   { header: "Source", key: "sourceUrl", width: 30 },
 ];
 
+// "Page" is derived from "File" (see lib/audit/pageLabel.ts) — the
+// storefront page a merchant would recognize (e.g. "Home page" for
+// templates/index.json), not a stored field on the finding itself.
 function addFindingsSheet(workbook: ExcelJS.Workbook, name: string, findings: XlsxFinding[]) {
   const sheet = workbook.addWorksheet(name);
   sheet.columns = FINDING_COLUMNS;
@@ -41,6 +46,7 @@ function addFindingsSheet(workbook: ExcelJS.Workbook, name: string, findings: Xl
       requirementId: f.requirementId ?? "",
       finding: f.finding,
       recommendation: f.recommendation ?? "",
+      pageLabel: getPageLabel(f.filePath) ?? "",
       filePath: f.filePath,
       lineNumber: f.lineNumber ?? "",
       status: f.status ?? "open",

@@ -1,4 +1,5 @@
 import { escapeCsvField } from "./csvUtil";
+import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type CsvFindingRow = {
   ruleId: string;
@@ -23,12 +24,13 @@ const COLUMNS = [
   "Requirement ID",
   "Finding",
   "Recommendation",
+  "Page",
   "File",
   "Line",
   "Source",
 ] as const;
 
-/** Flat CSV export per phase-5 §13 — only fields the data model actually has; no fabricated Confidence/Status columns. */
+/** Flat CSV export per phase-5 §13 — only fields the data model actually has; no fabricated Confidence/Status columns. "Page" is derived from "File" (see lib/audit/pageLabel.ts), not a stored field. */
 export function buildFindingsCsv(auditRunId: string, themeName: string, findings: CsvFindingRow[]): string {
   const rows = [COLUMNS.join(",")];
   for (const f of findings) {
@@ -42,6 +44,7 @@ export function buildFindingsCsv(auditRunId: string, themeName: string, findings
       f.requirementId ?? "",
       f.finding,
       f.recommendation ?? "",
+      getPageLabel(f.filePath) ?? "",
       f.filePath,
       f.lineNumber != null ? String(f.lineNumber) : "",
       source,

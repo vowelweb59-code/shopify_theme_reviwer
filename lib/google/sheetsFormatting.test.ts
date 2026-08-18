@@ -27,14 +27,14 @@ describe("buildSheetFormattingRequests", () => {
       (r: any) => r.range.startRowIndex === 0
     ) as any[];
 
-    expect(headerRule.range).toEqual({ sheetId: 1, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 10 });
+    expect(headerRule.range).toEqual({ sheetId: 1, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11 });
     expect(headerRule.cell.userEnteredFormat.textFormat.bold).toBe(true);
   });
 
   it("sets one column-width request per column, in TAB_COLUMNS order", () => {
     const requests = buildSheetFormattingRequests(1, 5, "Bug");
     const widths = findRequests(requests, "updateDimensionProperties") as any[];
-    expect(widths).toHaveLength(10);
+    expect(widths).toHaveLength(11);
     expect(widths[0].range).toEqual({ sheetId: 1, dimension: "COLUMNS", startIndex: 0, endIndex: 1 });
     // "Finding" (index 5) and "Recommendation" (index 6) get the widest columns.
     expect(widths[5].properties.pixelSize).toBe(320);
@@ -72,7 +72,7 @@ describe("buildSheetFormattingRequests", () => {
       startRowIndex: 1,
       endRowIndex: 6,
       startColumnIndex: 0,
-      endColumnIndex: 10,
+      endColumnIndex: 11,
     });
   });
 });
