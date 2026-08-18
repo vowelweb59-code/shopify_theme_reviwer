@@ -4,6 +4,12 @@ const themeSchema = new Schema(
   {
     name: { type: String, required: true },
     sourceFileName: { type: String, default: null },
+    // The persistent Google Sheet checklist tied to this theme (phase-5
+    // §14 follow-up) — one spreadsheet reused across every audit run of
+    // this theme, not a new one per export. See
+    // app/api/reports/[id]/export/google-sheet/route.ts.
+    googleSpreadsheetId: { type: String, default: null },
+    googleSheetUrl: { type: String, default: null },
   },
   { timestamps: true }
 );

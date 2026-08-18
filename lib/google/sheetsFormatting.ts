@@ -20,6 +20,16 @@ const SEVERITY_COLORS: Record<string, { background: RGB; text: RGB }> = {
   low: { background: hexToRgb("#f4f4f5"), text: hexToRgb("#3f3f46") },
 };
 
+// Same green/zinc/red-family logic as SEVERITY_COLORS, applied to the
+// diff Status column instead: resolved reads as unambiguously "done",
+// still-open/changed stays neutral, new is the one that should stand out.
+const STATUS_COLORS: Record<string, { background: RGB; text: RGB }> = {
+  Resolved: { background: hexToRgb("#dcfce7"), text: hexToRgb("#166534") },
+  "Still Open": { background: hexToRgb("#f4f4f5"), text: hexToRgb("#3f3f46") },
+  New: { background: hexToRgb("#fee2e2"), text: hexToRgb("#991b1b") },
+  Changed: { background: hexToRgb("#ffedd5"), text: hexToRgb("#9a3412") },
+};
+
 // Purely cosmetic tab-navigation colors, one per category, so a multi-tab
 // workbook is easy to scan at a glance. The app has no existing
 // category color mapping to mirror, unlike severity above.
@@ -36,6 +46,8 @@ const COLUMN_WIDTHS: Record<string, number> = {
   "Audit ID": 90,
   Theme: 140,
   Severity: 90,
+  Status: 110,
+  Resolved: 90,
   "Rule ID": 220,
   "Requirement ID": 180,
   Finding: 320,
@@ -48,6 +60,8 @@ const COLUMN_WIDTHS: Record<string, number> = {
 
 const WRAP_COLUMNS = ["Finding", "Recommendation"] as const;
 const SEVERITY_COLUMN_INDEX = TAB_COLUMNS.indexOf("Severity");
+const STATUS_COLUMN_INDEX = TAB_COLUMNS.indexOf("Status");
+const RESOLVED_COLUMN_INDEX = TAB_COLUMNS.indexOf("Resolved");
 
 // Loosely typed on purpose — these are opaque request objects passed
 // straight through to the Sheets API's spreadsheets.batchUpdate. Modeling
@@ -58,9 +72,10 @@ export type SheetFormattingRequest = Record<string, unknown>;
 /**
  * One tab's worth of cosmetic formatting: a styled + frozen header row,
  * sensible column widths, text wrapping on the long Finding/Recommendation
- * columns, severity color-coding (matching the app's own badge colors),
- * zebra striping, and a per-category tab color. `dataRowCount` excludes
- * the header row and must be >= 1 (buildCategorySheetTabs never emits an
+ * columns, severity and diff-status color-coding (matching the app's own
+ * badge colors), a real checkbox widget on the Resolved column, zebra
+ * striping, and a per-category tab color. `dataRowCount` excludes the
+ * header row and must be >= 1 (buildChecklistSheetTabs never emits an
  * empty tab, so this is always true for a real tab).
  */
 export function buildSheetFormattingRequests(sheetId: number, dataRowCount: number, category: string): SheetFormattingRequest[] {
@@ -122,6 +137,28 @@ export function buildSheetFormattingRequests(sheetId: number, dataRowCount: numb
         index: 0,
       },
     })),
+    ...Object.entries(STATUS_COLORS).map(([status, colors]) => ({
+      addConditionalFormatRule: {
+        rule: {
+          ranges: [
+            { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: STATUS_COLUMN_INDEX, endColumnIndex: STATUS_COLUMN_INDEX + 1 },
+          ],
+          booleanRule: {
+            condition: { type: "TEXT_EQ", values: [{ userEnteredValue: status }] },
+            format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },
+          },
+        },
+        index: 0,
+      },
+    })),
+    // Renders the Resolved column as a real checkbox widget rather than
+    // plain "TRUE"/"FALSE" text — the literal checklist the user asked for.
+    {
+      setDataValidation: {
+        range: { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: RESOLVED_COLUMN_INDEX, endColumnIndex: RESOLVED_COLUMN_INDEX + 1 },
+        rule: { condition: { type: "BOOLEAN" }, strict: true, showCustomUi: true },
+      },
+    },
     {
       addBanding: {
         bandedRange: {

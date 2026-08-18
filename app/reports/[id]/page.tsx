@@ -32,7 +32,7 @@ import { computeReadiness, DEFAULT_READINESS_CONFIG, type ReadinessConfig } from
 
 type AuditRunDetail = {
   _id: string;
-  themeId: { _id: string; name: string } | null;
+  themeId: { _id: string; name: string; googleSpreadsheetId?: string | null; googleSheetUrl?: string | null } | null;
   status: string;
   startedAt: string;
   completedAt: string | null;
@@ -82,21 +82,28 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const [creatingSheet, setCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [sheetUrl, setSheetUrl] = useState<string | null>(null);
+  const [sheetRecreated, setSheetRecreated] = useState(false);
+
+  const hasExistingSheet = Boolean(auditRun?.themeId?.googleSheetUrl);
 
   function createGoogleSheet() {
     setCreatingSheet(true);
     setSheetError(null);
     setSheetUrl(null);
+    setSheetRecreated(false);
     fetch(`/api/reports/${id}/export/google-sheet`, { method: "POST" })
       .then((res) => res.json())
       .then((data) => {
         setCreatingSheet(false);
         if (data.error) setSheetError(data.error);
-        else setSheetUrl(data.url);
+        else {
+          setSheetUrl(data.url);
+          setSheetRecreated(Boolean(data.recreated));
+        }
       })
       .catch(() => {
         setCreatingSheet(false);
-        setSheetError("Failed to create the Google Sheet.");
+        setSheetError("Failed to update the Google Sheet.");
       });
   }
 
@@ -257,7 +264,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                     disabled={creatingSheet}
                     className="rounded-full border border-black/[.12] px-3 py-1.5 text-zinc-700 hover:text-zinc-950 disabled:opacity-50 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    {creatingSheet ? "Creating…" : "Google Sheet"}
+                    {creatingSheet ? "Updating…" : hasExistingSheet ? "Update Google Sheet" : "Google Sheet"}
                   </button>
                 </div>
               )}
@@ -274,11 +281,11 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
             )}
             {sheetUrl && (
               <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
-                Sheet created —{" "}
+                {hasExistingSheet && !sheetRecreated ? "Sheet updated" : "Sheet created"} —{" "}
                 <a href={sheetUrl} target="_blank" rel="noreferrer" className="underline">
                   open it
                 </a>
-                .
+                . {sheetRecreated && "The previous sheet for this theme was no longer accessible in Google Drive, so a new one was created."}
               </p>
             )}
             <p className="mt-1 text-zinc-500">

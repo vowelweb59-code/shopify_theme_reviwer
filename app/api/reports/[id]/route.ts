@@ -16,7 +16,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!isValidObjectId(id)) return invalidIdResponse("Audit run id");
 
-  const auditRun = await AuditRun.findById(id).populate("themeId", "name sourceFileName").lean();
+  const auditRun = await AuditRun.findById(id)
+    .populate("themeId", "name sourceFileName googleSpreadsheetId googleSheetUrl")
+    .lean();
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
 
   const [findings, requirements, readinessConfig] = await Promise.all([
