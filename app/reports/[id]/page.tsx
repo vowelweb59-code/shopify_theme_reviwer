@@ -19,6 +19,7 @@ import {
   type RequirementInfo,
 } from "@/app/_components/findings";
 import { CategoryDashboard } from "@/app/_components/categoryDashboard";
+import { EnhancementReportSection, type EnhancementReportPoint } from "@/app/_components/enhancementReport";
 import {
   CategoryDiffTable,
   DiffFindingsView,
@@ -78,6 +79,9 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const [readinessConfig, setReadinessConfig] = useState<ReadinessConfig>(DEFAULT_READINESS_CONFIG);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [enhancementPoints, setEnhancementPoints] = useState<EnhancementReportPoint[]>([]);
+  const [enhancementDetectionAvailable, setEnhancementDetectionAvailable] = useState(false);
+  const [activeTab, setActiveTab] = useState<"findings" | "future-updates">("findings");
 
   const [creatingSheet, setCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
@@ -127,6 +131,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           setCoverage(data.coverage ?? null);
           setCoverageByCategory(data.coverageByCategory ?? undefined);
           setReadiness(data.readiness ?? null);
+          setEnhancementPoints(data.enhancementPoints ?? []);
+          setEnhancementDetectionAvailable(Boolean(data.enhancementDetectionAvailable));
         }
         setLoading(false);
       });
@@ -308,6 +314,29 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
             )}
           </div>
 
+          <div className="flex w-fit gap-1 rounded-full border border-black/[.08] p-1 text-sm dark:border-white/[.145]">
+            {(["findings", "future-updates"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`rounded-full px-3 py-1.5 ${
+                  activeTab === tab
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+                }`}
+              >
+                {tab === "findings" ? "Findings" : "Future updates"}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "future-updates" && (
+            <EnhancementReportSection points={enhancementPoints} detectionAvailable={enhancementDetectionAvailable} />
+          )}
+
+          {activeTab === "findings" && (
+            <>
           {readiness && <ReadinessPanel readiness={readiness} />}
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}
           {coverage && <CoverageSummaryBar coverage={coverage} />}
@@ -367,6 +396,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                 </>
               )}
             </div>
+          )}
+            </>
           )}
         </>
       )}

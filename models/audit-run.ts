@@ -39,6 +39,25 @@ const diagnosticsSchema = new Schema(
 // the whole audit run — the static results still stand on their own.
 const liveCheckErrorSchema = new Schema({ url: String, error: String }, { _id: false });
 
+// Heuristic presence check for one "Future updates" EnhancementPoint (see
+// lib/audit/detectEnhancements.ts) against THIS run's parsed theme source.
+// Captured once, at audit time, because the original ZIP is never
+// persisted — this is the only chance to check for these patterns. Never
+// contributes to severity, coverage, or readiness; a run created before
+// this feature shipped simply has no enhancementDetections at all, which
+// the report UI treats as "re-run this audit to see detection".
+const enhancementDetectionSchema = new Schema(
+  {
+    pointId: { type: String, required: true },
+    detected: { type: Boolean, required: true },
+    matches: {
+      type: [{ filePath: { type: String, required: true }, lineNumber: { type: Number, default: null } }],
+      default: undefined,
+    },
+  },
+  { _id: false }
+);
+
 const auditRunSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
@@ -57,6 +76,7 @@ const auditRunSchema = new Schema(
     // meta tags) alongside the static theme-code findings above.
     demoStoreUrl: { type: String, default: null },
     liveCheckError: { type: liveCheckErrorSchema, default: undefined },
+    enhancementDetections: { type: [enhancementDetectionSchema], default: undefined },
     // Snapshot of every rule's version (ruleId -> Rule.version) at the
     // moment this audit ran (phase-6 §14) — lets a later diff tell "this
     // finding is new because a rule was added/changed" apart from "this

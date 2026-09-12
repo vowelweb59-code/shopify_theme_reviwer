@@ -4,10 +4,12 @@ import { Theme } from "@/models/theme";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Rule } from "@/models/rule";
+import { EnhancementPoint } from "@/models/enhancement-point";
 import { APPLICATION_VERSION, PARSER_VERSION, REQUIREMENTS_VERSION, RULE_ENGINE_VERSION } from "@/lib/audit/version";
 import { Stopwatch } from "@/lib/audit/timing";
 import { parseThemeZip, ThemeZipError, InvalidThemeError, type ParsedFile } from "@/lib/theme-parser";
 import { runAuditRules } from "@/lib/audit";
+import { detectEnhancementPoints, type EnhancementDetectionResult } from "@/lib/audit/detectEnhancements";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
 import { runLiveChecks } from "@/lib/audit/liveCheck";
@@ -28,6 +30,25 @@ async function captureRuleVersionSnapshot(): Promise<Record<string, number>> {
   const snapshot: Record<string, number> = {};
   for (const r of rules) snapshot[r.ruleId] = r.version;
   return snapshot;
+}
+
+/**
+ * Runs the "Future updates" enhancement-point detectors (lib/audit/
+ * detectEnhancements.ts) against this run's parsed theme source, restricted
+ * to whatever points currently exist in the EnhancementPoint collection.
+ * Deliberately independent of the rule engine and never allowed to fail the
+ * audit: if the EnhancementPoint collection isn't seeded yet (or the lookup
+ * throws for any reason), the run still completes — it just has no
+ * enhancementDetections, same as a run from before this feature existed.
+ */
+async function detectEnhancementsForRun(files: ParsedFile[]): Promise<EnhancementDetectionResult[]> {
+  try {
+    const pointIds = await EnhancementPoint.find().distinct("pointId");
+    if (pointIds.length === 0) return [];
+    return detectEnhancementPoints(files, pointIds);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -144,6 +165,10 @@ export async function POST(request: Request) {
     timer.record("themeIndex", rulesTiming.themeIndex);
     timer.record("ruleExecution", rulesTiming.ruleExecution);
 
+    const enhancementDetectionStart = Date.now();
+    const enhancementDetections = await detectEnhancementsForRun(result.files);
+    timer.record("enhancementDetection", Date.now() - enhancementDetectionStart);
+
     let liveFindings: ExecutedFinding[] = [];
     let liveCheckError: { url: string; error: string } | undefined;
     if (demoStoreUrl) {
@@ -181,6 +206,7 @@ export async function POST(request: Request) {
     });
     if (demoStoreUrl) auditRun.demoStoreUrl = demoStoreUrl;
     if (liveCheckError) auditRun.liveCheckError = liveCheckError;
+    if (enhancementDetections.length > 0) auditRun.enhancementDetections = enhancementDetections;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;
     auditRun.applicationVersion = APPLICATION_VERSION;

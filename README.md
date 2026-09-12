@@ -33,7 +33,7 @@ The core audit pipeline is fully deterministic — **no AI API, no embeddings, n
    npm run dev
    ```
 
-App runs at [http://localhost:3000](http://localhost:3000), with `/audit`, `/rules`, `/reports`, `/settings` pages navigable from the nav bar.
+App runs at [http://localhost:3000](http://localhost:3000), with `/audit`, `/rules`, `/reports`, `/enhancements`, `/settings` pages navigable from the nav bar. `/enhancements` starts empty until you also run `npm run seed:enhancements` and/or `npm run seed:native-capabilities` — both optional, see "Future updates" below.
 
 ## Database
 
@@ -45,6 +45,7 @@ No migration framework — Mongoose models in `/models` define the schema (valid
 - `Requirement` — the structured, sourced knowledge base of what must be checked and why (Shopify Theme Store requirements, accessibility, technical SEO/AEO, best practices). Seeded via `npm run seed:requirements`, idempotent by `requirementId`.
 - `Rule` — executable rule metadata, seeded via `npm run seed:rules` from `lib/rules/registry.ts`. Marks the requirements it covers as `implemented`.
 - `AuditSettings` — minimal singleton for app-level config, expanded in later phases.
+- `EnhancementPoint` — optional, non-blocking capability trends measured from Shopify Theme Store release notes. Deliberately a **separate collection** from `Requirement`; see "Future updates" below.
 
 Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mongoose hooks since MongoDB has no native `ON DELETE CASCADE`.
 
@@ -56,6 +57,55 @@ Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mong
 
 `scripts/seed-requirements.ts` seeds ~40 requirements grounded in real, fetched source text (Shopify Theme Store requirements/accessibility/testing docs, Google Search Central structured-data docs — see `sourceUrl` on each record). Internal team standards are deliberately **not** seeded — those need to come from the team's actual conventions, not something to invent. Re-run the seed script any time; it upserts by `requirementId` and never duplicates.
 
+## Future updates (enhancement points)
+
+`/enhancements` tracks **optional** capability points from two different kinds of evidence (`EnhancementPoint.source`) — things competing themes already ship (`theme-store-trend`) and documented Shopify platform features a theme can build without installing any app (`native-capability`). Both are explicitly *not* approval requirements: nothing on that page affects submission readiness, requirement coverage, or any finding.
+
+This isolation is the reason `EnhancementPoint` is its own collection rather than a flagged subset of `Requirement`. `app/api/reports/[id]/route.ts` and `app/api/reports/[id]/export/route.ts` both call `Requirement.find()` **unfiltered** and feed the result straight into coverage %, which readiness thresholds are compared against. Adding 47 optional records there would have silently dropped every theme's coverage and could have flipped passing themes to `NOT_READY`.
+
+Unlike the requirements knowledge base, these numbers are *measured*, not transcribed from docs:
+
+1. `scripts/research/harvest-release-notes.mjs` walks the public Theme Store listing (~53 pages) to collect every theme slug, then pulls each theme's full release-note history from the store's own version-details endpoint. Raw output lands in `.scratch/release-notes/` (gitignored, ~50MB) so it can be re-parsed without re-fetching.
+2. `scripts/research/aggregate-release-notes.mjs` reduces that to `data/theme-trend-points.json` — per capability: how many distinct themes ship it, when it first and last appeared, and verbatim sample notes as evidence. Topic regexes live in `scripts/research/topics.mjs` and were derived from the highest-frequency n-grams actually present in the corpus.
+3. `npm run seed:enhancements` joins that measured data to hand-written `description`/`auditHint` copy in `scripts/seed-enhancement-points.ts`.
+
+```bash
+npm run harvest:trends      # steps 1 + 2 (network; resumable, skips already-harvested themes)
+npm run seed:enhancements   # step 3 (idempotent by pointId)
+```
+
+Current corpus: **335 themes, 5,771 versions, 47,977 release-note entries** → 55 points (47 from the initial pass, +8 mined deeper from the same corpus on 2026-09-11 — no re-fetch needed, see `scripts/research/topics.mjs`'s "Round 2" comment). Note the store's advertised "1,262 themes" counts preset/style *cards*; there are 335 distinct themes behind them, and release notes are per theme.
+
+Adding a point is additive and safe to do repeatedly: append to `TOPICS` in `topics.mjs` (checking new candidates against the existing regexes first — see the overlap-check approach in that file's Round 2 comment — so you don't add a near-duplicate of something already covered), add matching hand-written copy to `COPY` in `seed-enhancement-points.ts`, add a matching entry to `ENHANCEMENT_DETECTORS` in `lib/audit/enhancementDetectors.ts`, then `npm run harvest:trends && npm run seed:enhancements`. Existing points' stats and every theme's triage status are untouched by an additive run. Skipping the detector step (or adding a point without re-running audits against it) isn't silently misleading — the report tab's "Not yet checked" bucket (see below) is exactly for a point that exists but has no detection result for a given run, so it never gets mistaken for "confirmed absent".
+
+Points are bucketed by measured adoption — `established` (>50% of themes), `common` (20–50%), `emerging` (5–20%), `experimental` (<5%) — and each carries a per-theme triage status (`backlog`/`planned`/`implemented`/`dismissed`). **Re-seeding never overwrites a status or note**, so a triage decision survives a refreshed harvest. Tier thresholds/labels live in one place, `lib/enhancements/tiers.ts` (kept mongoose-free so the client page can import it), and both `scripts/seed-enhancement-points.ts` and the UI read from it.
+
+### Native capabilities (no app required)
+
+14 points (2026-09-11), each grounded in a real shopify.dev doc: `data/native-capabilities.json`, hand-curated (not aggregated) and seeded via `npm run seed:native-capabilities` (idempotent by `pointId`, same additive/non-destructive contract as the trend seed). Deliberately excludes Shopify Functions/Extensions and Shopify Flow — those still require deploying an app (even a free first-party one) — scoped strictly to pure Liquid/JS/CSS/theme-settings capabilities, so "no app" actually means zero app installs of any kind.
+
+Every point names the specific Liquid object/tag/filter that implements it and what paid app category it replaces (`appCategoryReplaced`), and is honestly flagged `nativeCapabilityCompleteness: "full"` or `"partial"` — e.g. custom line-item properties fully replace a personalizer app's *data capture*, but the polished date-picker/engraving *UI* still needs hand-building. Detection reuses the exact same pipeline as trend points (`lib/audit/enhancementDetectors.ts`) — for these, precision is much higher, since a theme either calls `color_contrast`/`metafield_tag`/`payment_terms` somewhere in its source or it doesn't, unlike matching natural-language release-note phrasing.
+
+**Adoption is also measured for 12 of the 14**, reusing the exact same corpus/pipeline as the trend points — e.g. native contact forms (45.1%, 151/335), the password/"coming soon" page (27.8%, 93/335), unit pricing (20.6%, 69/335), down to genuinely-0/335 for the newest/most invisible ones (llms.txt, custom robots.txt, hreflang, automatic metafield rendering — themes don't write release notes about things that are either brand-new or automatic-by-default). **The other 2 are deliberately left unmeasured** (`adoptionTier: null`, shown in the UI as "Adoption not reliably measurable" rather than a fake 0%): an overlap check against the existing 55 trend points (same rigor used when the point set grew from 47→55) showed "Shop Pay Installments" and "color_contrast" release-note matches were really just re-detecting notes already counted by a broader existing point ("Shop Pay and accelerated checkout", "Accessibility remediation"), not a distinct signal — see `UNRELIABLE_ADOPTION_MEASUREMENT` in `scripts/seed-native-capabilities.ts` for the exact overlap percentages and reasoning.
+
+Researched via a forked agent instructed to fetch real shopify.dev pages only (never blogs — a first attempt at this via WebSearch surfaced nothing but SEO content-farm "2026 guide" spam, explicitly rejected) and cross-check every candidate against the existing trend-point list to avoid re-describing something already covered. The two most surprising, independently spot-checked findings: **`llms.txt.liquid`/`agents.md.liquid`** (a native alternative to "AI SEO" apps, first documented mid-2026) and the **`color_contrast`** filter (computes a real WCAG contrast ratio in Liquid).
+
+### Per-theme detection
+
+Every audit report also gets a **Future updates** tab showing which of these points this specific theme's source already has. This is heuristic pattern-matching (`lib/audit/enhancementDetectors.ts` + `lib/audit/detectEnhancements.ts`), same spirit as `lib/rules/shopify/features.ts`'s presence checks — a regex match is evidence, not proof; a miss doesn't prove absence, and a hit doesn't prove correctness. It runs alongside the rule engine in `app/api/audit/run/route.ts` and is captured once onto `AuditRun.enhancementDetections`, because (like everywhere else in this app) the original theme ZIP is never persisted — this is the only chance to check for these patterns. **Never affects severity, coverage, or readiness.**
+
+A run from before this feature shipped has no `enhancementDetections` at all; the report tab detects this (`enhancementDetectionAvailable: false`) and tells the user to re-run the audit rather than implying every point is absent. A run from before a *specific* point existed is different but handled the same way: that one point has no entry in `enhancementDetections` even though the run has others, so it lands in a **"Not yet checked"** bucket rather than "not detected" or vanishing from the list — found (and fixed) the day the point count grew from 47 to 55, by actually re-checking an existing older audit run against the newly expanded list rather than assuming it would just work.
+
+⚠️ **Mongoose + `next dev` gotcha**: adding a field to a model (like `AuditRun.enhancementDetections`) requires an actual dev-server restart, or `mongoose.models.AuditRun` keeps serving the old cached schema and the new field silently never appears — confirmed a third time during this feature's build. On Windows, `pkill -f "next dev"` from Git Bash can fail to kill the real process while `npm run dev` happily starts a *second* server on a fallback port; verify with `Get-Process node` / kill by PID (`Stop-Process -Id <pid> -Force`), and confirm the fix by checking the actual API response, not just that a new process started.
+
+### Google Sheets export
+
+`/enhancements` has its own "Export to Google Sheet" button, separate from a theme report's checklist export. One tab per category (`Content & Media`, `Merchandising`, …), mixing `theme-store-trend` and `native-capability` points within a tab — someone working through "what should we add" wants both kinds of evidence for the same feature area together, not split by how the point was discovered. Unlike the audit checklist's diff/merge export, there's no baseline to reconcile against: a point's `status` already lives in the database and is the single source of truth, so every export is a full rewrite, not a merge.
+
+The spreadsheet id/url persist on a new singleton model, `EnhancementSheet` (`models/enhancement-sheet.ts`) — global, not per-theme, following the same "one small dedicated model per concern" convention as `ReadinessConfig`/`GoogleAuth` rather than growing the (already unused) `AuditSettings` model to cover something unrelated.
+
+This reuses `lib/google/sheetsExport.ts`'s `createGoogleSheet`/`updateGoogleSheet` — the substantial create/update/temp-title-swap orchestration — rather than duplicating it, via a new optional `SheetWriteOptions` parameter (`booleanColumnIndex`, `buildFormatting`) that defaults to the audit checklist's exact existing behavior when omitted. That mattered here: the checklist's shared formatting step unconditionally re-writes a hardcoded "Resolved" boolean column, which doesn't exist in the enhancement-points schema — reusing it unmodified would have corrupted a real data column (`Themes`, e.g. `"151/335"`) by trying to parse it as a boolean. `lib/export/enhancementSheetRows.ts` + `lib/google/enhancementSheetFormatting.ts` hold the schema-specific column list, row-building, and formatting (tier/status color-coding mirroring the app's own badge colors) — verified after the refactor that the *existing* audit-checklist export (its own "Resolved" checkbox column included) still works byte-for-byte the same, not just that the new one does.
+
 ## Folder structure
 
 ```
@@ -63,17 +113,25 @@ Cascading deletes (`Theme` → `AuditRun` → `Finding`) are implemented as Mong
   /audit                        — upload a theme, run it, see findings inline
   /rules                        — requirement knowledge base + rule coverage
   /reports, /reports/[id]       — audit run history + per-run findings detail
+  /enhancements                 — optional capability trends ("Future updates"), non-blocking
   /settings                     — placeholder until Phase 7
   /api/audit/run, /api/audit/[id], /api/audit/[id]/findings
-  /api/rules, /api/requirements
+  /api/rules, /api/requirements, /api/enhancements (GET list/filter, PATCH triage), /api/enhancements/export/google-sheet
   /api/reports, /api/reports/[id]
   /_components/findings.tsx     — shared SummaryBar/FindingsTable used by /audit and /reports/[id]
+  /_components/enhancementReport.tsx  — the report page's "Future updates" tab
 /lib
   /db               — Mongoose connection helper
   /theme-parser     — Phase 2: ZIP -> ParsedFile[]
   /rules/{shopify,accessibility,technical-seo,technical-aeo,bugs,internal}  — Phase 3 rule implementations
   /audit            — runs the enabled rule set against a ParsedFile[] (lib/audit/runRules.ts)
-/models             — Theme, AuditRun, Finding, Requirement, Rule, AuditSettings
+                       + per-theme enhancement-point detection (detectEnhancements.ts, enhancementDetectors.ts)
+  /enhancements/tiers.ts  — single source of truth for adoption-tier thresholds/labels (mongoose-free)
+/models             — Theme, AuditRun, Finding, Requirement, Rule, AuditSettings, EnhancementPoint, EnhancementSheet
 /scripts
-  seed-requirements.ts, seed-rules.ts
+  seed-requirements.ts, seed-rules.ts, seed-enhancement-points.ts, seed-native-capabilities.ts
+  /research         — one-off Theme Store release-note harvest + aggregation (not app runtime)
+/data
+  theme-trend-points.json       — committed aggregation output the trend-point seed reads
+  native-capabilities.json      — hand-curated, doc-sourced native-capability points
 ```

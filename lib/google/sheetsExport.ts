@@ -1,6 +1,6 @@
 import { google, type sheets_v4 } from "googleapis";
 import { getAuthorizedClient } from "./oauth";
-import { buildSheetFormattingRequests } from "./sheetsFormatting";
+import { buildSheetFormattingRequests, type SheetFormattingRequest } from "./sheetsFormatting";
 import { TAB_COLUMNS, type SheetTab } from "@/lib/export/sheetRows";
 
 export class GoogleSheetsNotConnectedError extends Error {}
@@ -37,6 +37,18 @@ function columnLetter(index: number): string {
 
 type TabSheetInfo = { sheetId: number; rangeTitle: string };
 
+// Lets a caller with a different SheetTab column schema reuse the
+// create/update/temp-title-swap orchestration below (the actually
+// substantial logic) without inheriting the audit-checklist's specific
+// assumptions: a "Resolved" boolean column to re-write as USER_ENTERED,
+// and severity/status/checkbox formatting keyed to its exact column names.
+// Omitting both keeps every existing call site's behavior byte-for-byte
+// identical to before this type existed.
+export type SheetWriteOptions = {
+  booleanColumnIndex?: number;
+  buildFormatting?: (sheetId: number, dataRowCount: number, category: string) => SheetFormattingRequest[];
+};
+
 /**
  * Writes each tab's rows starting at A1 and applies formatting — shared by
  * createGoogleSheet (brand-new spreadsheet) and updateGoogleSheet (tabs
@@ -52,8 +64,12 @@ async function writeTabValuesAndFormatting(
   sheets: sheets_v4.Sheets,
   spreadsheetId: string,
   tabs: SheetTab[],
-  sheetInfoByTitle: Map<string, TabSheetInfo>
+  sheetInfoByTitle: Map<string, TabSheetInfo>,
+  options: SheetWriteOptions = {}
 ) {
+  const booleanColumnIndex = options.booleanColumnIndex ?? RESOLVED_COLUMN_INDEX;
+  const buildFormatting = options.buildFormatting ?? buildSheetFormattingRequests;
+
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
     requestBody: {
@@ -62,34 +78,36 @@ async function writeTabValuesAndFormatting(
     },
   });
 
-  // The write above lands the whole grid as RAW text, so the Resolved
+  // The write above lands the whole grid as RAW text, so a boolean
   // column's "TRUE"/"FALSE" strings are plain text, not real booleans —
-  // the BOOLEAN data-validation checkbox needs an actual boolean value to
+  // a BOOLEAN data-validation checkbox needs an actual boolean value to
   // reflect checked/unchecked state. Re-write just that column with
   // USER_ENTERED so Sheets parses it as a boolean, without risking Sheets
   // reinterpreting rule IDs/paths/finding text elsewhere as numbers/dates.
-  const resolvedColumnLetter = columnLetter(RESOLVED_COLUMN_INDEX);
-  const resolvedUpdates = tabs
-    .filter((tab) => tab.rows.length > 1)
-    .map((tab) => {
-      const rangeTitle = sheetInfoByTitle.get(sanitizeTabTitle(tab.title))!.rangeTitle;
-      return {
-        range: `'${rangeTitle}'!${resolvedColumnLetter}2:${resolvedColumnLetter}${tab.rows.length}`,
-        values: tab.rows.slice(1).map((row) => [row[RESOLVED_COLUMN_INDEX]]),
-      };
-    });
-  if (resolvedUpdates.length > 0) {
-    await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId,
-      requestBody: { valueInputOption: "USER_ENTERED", data: resolvedUpdates },
-    });
+  if (booleanColumnIndex >= 0) {
+    const booleanColumnLetter = columnLetter(booleanColumnIndex);
+    const booleanUpdates = tabs
+      .filter((tab) => tab.rows.length > 1)
+      .map((tab) => {
+        const rangeTitle = sheetInfoByTitle.get(sanitizeTabTitle(tab.title))!.rangeTitle;
+        return {
+          range: `'${rangeTitle}'!${booleanColumnLetter}2:${booleanColumnLetter}${tab.rows.length}`,
+          values: tab.rows.slice(1).map((row) => [row[booleanColumnIndex]]),
+        };
+      });
+    if (booleanUpdates.length > 0) {
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: { valueInputOption: "USER_ENTERED", data: booleanUpdates },
+      });
+    }
   }
 
   const formattingRequests = tabs.flatMap((tab) => {
     const info = sheetInfoByTitle.get(sanitizeTabTitle(tab.title));
     if (!info) return [];
     const dataRowCount = tab.rows.length - 1; // rows[0] is the header
-    return buildSheetFormattingRequests(info.sheetId, dataRowCount, tab.title);
+    return buildFormatting(info.sheetId, dataRowCount, tab.title);
   });
 
   if (formattingRequests.length > 0) {
@@ -98,7 +116,11 @@ async function writeTabValuesAndFormatting(
 }
 
 /** Creates a new spreadsheet with one tab per entry in `tabs`, each tab's own header+rows starting at A1, then applies formatting (frozen/styled header, column widths, severity/status color-coding, resolved checkboxes, tab colors). Returns the sheet's edit URL. Used for a theme's first-ever export — see updateGoogleSheet for re-exports against an already-existing spreadsheet. */
-export async function createGoogleSheet(title: string, tabs: SheetTab[]): Promise<{ url: string; spreadsheetId: string }> {
+export async function createGoogleSheet(
+  title: string,
+  tabs: SheetTab[],
+  options: SheetWriteOptions = {}
+): Promise<{ url: string; spreadsheetId: string }> {
   const client = await getAuthorizedClient();
   if (!client) {
     throw new GoogleSheetsNotConnectedError("Google Sheets is not connected. Connect it from Settings first.");
@@ -125,7 +147,7 @@ export async function createGoogleSheet(title: string, tabs: SheetTab[]): Promis
       .filter((sheet) => sheet.properties?.title != null && sheet.properties?.sheetId != null)
       .map((sheet) => [sheet.properties!.title!, { sheetId: sheet.properties!.sheetId!, rangeTitle: sheet.properties!.title! }])
   );
-  await writeTabValuesAndFormatting(sheets, spreadsheetId, tabs, sheetInfoByTitle);
+  await writeTabValuesAndFormatting(sheets, spreadsheetId, tabs, sheetInfoByTitle, options);
 
   return { url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`, spreadsheetId };
 }
@@ -201,7 +223,8 @@ function tempTitleFor(title: string): string {
 export async function updateGoogleSheet(
   spreadsheetId: string,
   tabs: SheetTab[],
-  existingSheets: SpreadsheetSheetInfo[]
+  existingSheets: SpreadsheetSheetInfo[],
+  options: SheetWriteOptions = {}
 ): Promise<{ url: string; spreadsheetId: string }> {
   const client = await getAuthorizedClient();
   if (!client) {
@@ -227,7 +250,7 @@ export async function updateGoogleSheet(
       .map(({ properties, tab }) => [sanitizeTabTitle(tab.title), { sheetId: properties.sheetId!, rangeTitle: properties.title! }] as const)
   );
 
-  await writeTabValuesAndFormatting(sheets, spreadsheetId, tabs, sheetInfoByTitle);
+  await writeTabValuesAndFormatting(sheets, spreadsheetId, tabs, sheetInfoByTitle, options);
 
   const incomingTitles = new Set(tabs.map((tab) => sanitizeTabTitle(tab.title)));
   const finalizeRequests = [

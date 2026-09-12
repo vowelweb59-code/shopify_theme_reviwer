@@ -1,0 +1,156 @@
+[
+  {
+    "pointId": "NATIVE-SEO-001",
+    "name": "AI agent discovery files (llms.txt / agents.md)",
+    "category": "SEO & AEO",
+    "description": "Shopify serves managed default content at /llms.txt, /llms-full.txt and /agents.md so AI agents and answer engines (ChatGPT, Claude, Perplexity, etc.) can discover what the store sells and how to interact with it. A theme can override the default entirely with its own template — a direct native alternative to third-party 'AI SEO' / llms.txt-generator apps.",
+    "auditHint": "Check for templates/llms.txt.liquid, templates/llms-full.txt.liquid, or templates/agents.md.liquid in the theme. Note the restricted Liquid context these templates get: only `request` and `agents` are available — not `shop`, `collections`, etc.",
+    "appCategoryReplaced": "AI/LLM SEO optimization apps, llms.txt generator apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme architecture: llms.txt.liquid",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/architecture/templates/llms-txt-liquid"
+  },
+  {
+    "pointId": "NATIVE-SEO-002",
+    "name": "Custom robots.txt control",
+    "category": "SEO & AEO",
+    "description": "A theme can add a robots.txt.liquid template to fully customize which crawlers may access which paths — per-user-agent rule groups, sitemap pointers — overriding Shopify's generated robots.txt. Replaces 'robots.txt editor' SEO apps.",
+    "auditHint": "Check for templates/robots.txt.liquid, and whether it builds on the `robots` object (`robots.default_groups`, `group.user_agent`, `group.rules`, `group.sitemap`) rather than a hand-written static file — Shopify's own docs call the object approach 'strongly recommended' since its default rules are updated regularly.",
+    "appCategoryReplaced": "Robots.txt / crawl-control SEO apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme architecture: robots.txt.liquid",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/architecture/templates/robots-txt-liquid"
+  },
+  {
+    "pointId": "NATIVE-SEO-003",
+    "name": "Automatic and custom hreflang tags",
+    "category": "SEO & AEO",
+    "description": "Shopify automatically injects region/language-qualified hreflang tags into <head> for every active Market via content_for_header, and a theme can hand-build additional custom hreflang tags from the localization object when more control is needed. Replaces 'international SEO / hreflang' apps.",
+    "auditHint": "Check whether the theme relies on the automatic hreflang tags from `content_for_header` (the common, sufficient case) or builds custom ones from `localization.available_languages`/`localization.available_countries` for finer control.",
+    "appCategoryReplaced": "International SEO / hreflang tag apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme SEO: hreflang",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/seo/hreflang"
+  },
+  {
+    "pointId": "NATIVE-SEO-004",
+    "name": "Canonical URL tag",
+    "category": "SEO & AEO",
+    "description": "A global canonical_url Liquid object exposes the canonical URL for the current page, for use in a <link rel=\"canonical\"> tag in theme.liquid — preventing duplicate-content SEO penalties without an app.",
+    "auditHint": "Check theme.liquid's <head> for a canonical link tag built from the `canonical_url` object, rather than a hardcoded or missing canonical URL.",
+    "appCategoryReplaced": "Canonical-tag / duplicate-content SEO apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme SEO: metadata",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/seo/metadata"
+  },
+  {
+    "pointId": "NATIVE-CART-001",
+    "name": "Shop Pay Installments (buy-now-pay-later) messaging",
+    "category": "Cart & Checkout",
+    "description": "Applying the payment_terms filter to a product or cart form object renders a native installments banner (e.g. \"4 interest-free payments of $X\") that auto-updates with the selected variant or cart subtotal — no app or third-party BNPL widget needed. No separate release-note-measured adoption % is shown for this point: every note matching an installments-specific search also matched the broader 'Shop Pay and accelerated checkout' point, so release notes don't reliably distinguish installments messaging from dynamic-checkout-button adoption generally.",
+    "auditHint": "Check the product and cart templates for `{{ form | payment_terms }}` (or equivalent) rather than an embedded Affirm/Klarna/Sezzle-style third-party script.",
+    "appCategoryReplaced": "Buy-now-pay-later widget apps (e.g. Affirm/Klarna/Sezzle messaging apps)",
+    "nativeCapabilityCompleteness": "partial",
+    "sourceName": "Shopify theme pricing & payments: installments",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/pricing-payments/installments"
+  },
+  {
+    "pointId": "NATIVE-TRUST-001",
+    "name": "Unit pricing (price-per-unit-of-measurement) display",
+    "category": "Trust & Compliance",
+    "description": "Native support for displaying legally-required price-per-unit labels (e.g. price per 100g) on variants and line items via unit_price_measurement and the unit_price_with_measurement filter — satisfying EU/Switzerland unit-pricing disclosure regulations without an app. Release-note adoption (20.6%, 69/335 themes) partly overlaps with the existing 'Volume and quantity pricing' point — unit price is often mentioned in the same bullet as a B2B/volume-pricing feature bundle — so treat the % as directionally right rather than a fully isolated measurement of unit pricing alone.",
+    "auditHint": "For merchants selling in the EU/Switzerland, check product/cart templates for `variant.unit_price`, `line_item.unit_price`, and the `unit_price_with_measurement` filter rather than a manually-typed price-per-unit string.",
+    "appCategoryReplaced": "Unit-price / price-per-unit compliance apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme pricing & payments: unit pricing",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/pricing-payments/unit-pricing"
+  },
+  {
+    "pointId": "NATIVE-CART-002",
+    "name": "Custom line-item properties and cart attributes",
+    "category": "Cart & Checkout",
+    "description": "Product forms can capture arbitrary custom key/value data per cart line (engraving text, gift message, requested delivery date/instructions) via `properties[Name]` inputs — prefixing a name with an underscore hides it from the customer at checkout — plus a single order-level note via cart.note. This is the native building block behind most product-personalizer, gift-note, and delivery-date-picker apps.",
+    "auditHint": "Check product forms for `properties[...]` inputs (and `properties[_...]` for hidden ones) and cart templates for `cart.note`/the AJAX Cart API's note field, rather than a bundled personalization app handling this via its own metafields.",
+    "appCategoryReplaced": "Product personalizer apps, gift-note apps, delivery-date-picker / special-instructions apps",
+    "nativeCapabilityCompleteness": "partial",
+    "sourceName": "Shopify Liquid objects: line_item",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/objects/line_item"
+  },
+  {
+    "pointId": "NATIVE-CART-003",
+    "name": "Native gift card issuance page (QR code / Apple Wallet)",
+    "category": "Cart & Checkout",
+    "description": "The gift_card.liquid template renders the page shown to a customer after a gift card purchase, including a QR code for in-store redemption and an Apple Wallet pass via gift_card.pass_url — hosted on checkout.shopify.com but fully theme-customizable. Distinct from the cart-side gift-card recipient form already tracked as a Theme Store trend.",
+    "auditHint": "Check for templates/gift_card.liquid using `gift_card.balance` and `gift_card.pass_url` (Apple Wallet), rather than the bare Shopify default with no theming applied.",
+    "appCategoryReplaced": "Gift card wallet-pass / QR-redemption apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme architecture: gift_card.liquid",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/architecture/templates/gift-card-liquid"
+  },
+  {
+    "pointId": "NATIVE-CUSTOM-001",
+    "name": "Native storefront password / \"coming soon\" page",
+    "category": "Theme Customization",
+    "description": "When a store is set to private, Shopify shows a fully theme-customizable password.liquid page — editable merchant message, storefront password login form, and an optional email signup form — instead of the storefront. A native pre-launch \"coming soon\" landing page, no app required.",
+    "auditHint": "Check for templates/password.liquid using `shop.password_message`, `{% form 'storefront_password' %}`, and (for lead capture) `{% form 'customer' %}`, rather than Shopify's bare unstyled default.",
+    "appCategoryReplaced": "Coming-soon / under-construction / launch-countdown page apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify theme architecture: password.liquid",
+    "sourceUrl": "https://shopify.dev/docs/storefronts/themes/architecture/templates/password"
+  },
+  {
+    "pointId": "NATIVE-PLATFORM-001",
+    "name": "Native contact form",
+    "category": "Platform Integration",
+    "description": "The {% form 'contact' %} tag generates a form that posts visitor messages directly to the merchant's store email, no backend code required — replacing basic contact-form-builder apps.",
+    "auditHint": "Check the contact/page templates for `{% form 'contact' %}` rather than an embedded third-party form-builder widget.",
+    "appCategoryReplaced": "Contact form / simple helpdesk-widget apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify Liquid tags: form",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/tags/form"
+  },
+  {
+    "pointId": "NATIVE-MEDIA-001",
+    "name": "Native blog post comments",
+    "category": "Content & Media",
+    "description": "Themes can render reader comments on blog articles using the comment object (author, content, timestamps) together with the {% form 'new_comment' %} tag, respecting the merchant's moderation setting via blog.moderated? — a native alternative to third-party blog comment widgets.",
+    "auditHint": "Check the article template for the `comment` object and `{% form 'new_comment' %}`, and whether it checks `blog.moderated?`/`blog.comments_enabled?` rather than embedding a Disqus-style third-party widget.",
+    "appCategoryReplaced": "Blog comment apps (e.g. Disqus-style embeds)",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify Liquid objects: comment",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/objects/comment"
+  },
+  {
+    "pointId": "NATIVE-PLATFORM-002",
+    "name": "Automatic semantic metafield rendering",
+    "category": "Platform Integration",
+    "description": "The metafield_tag filter generates the correct semantic HTML element for a metafield's type automatically — <time> with a datetime attribute for dates, <img>/<video> for files, <a> for references, <ul>/<ol> for lists, a rich-text <div> for rich text — saving theme code (and often an app-based custom-field display block) that would otherwise hand-roll markup per metafield type.",
+    "auditHint": "Check for `| metafield_tag` on metafield output, rather than a hand-rolled `<span>`/`<div>` per metafield type or a bundled 'custom fields' app handling display.",
+    "appCategoryReplaced": "Custom-field / spec-table display apps built on top of metafields",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify Liquid filters: metafield_tag",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/filters/metafield_tag"
+  },
+  {
+    "pointId": "NATIVE-A11Y-001",
+    "name": "Programmatic color-contrast calculation",
+    "category": "Accessibility",
+    "description": "The color_contrast filter computes the WCAG contrast ratio between two colors directly in Liquid, letting a theme automatically pick a legible text color against a merchant-chosen background (e.g. in color-scheme settings) rather than relying on merchants to manually verify contrast or install an accessibility-checker app. No release-note-measured adoption % is shown: the phrase 'color contrast' in a release note is almost always a general accessibility bug-fix mention (67% overlap with the existing 'Accessibility remediation' point on inspection), not evidence a theme uses this specific filter.",
+    "auditHint": "Check color-scheme logic for `| color_contrast` used to pick text color against a merchant-configurable background, rather than a single hardcoded text color that can go illegible against some scheme choices.",
+    "appCategoryReplaced": "Color-contrast / accessibility-checker apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify Liquid filters: color_contrast",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/filters/color_contrast"
+  },
+  {
+    "pointId": "NATIVE-PERF-001",
+    "name": "Native CDN image transformation and next-gen format delivery",
+    "category": "Performance",
+    "description": "The image_url filter resizes, crops, and pads images on Shopify's CDN on the fly, and Shopify automatically serves WebP/AVIF (or the best format the requesting browser supports) with no theme-side conversion step — a built-in replacement for image-optimization/compression apps. The measured adoption (2.4%, 8/335) almost certainly understates real usage: this happens automatically and invisibly for any theme using `image_url` correctly, so most themes never write a release-note bullet about it — the notes actually found were mostly incidental bug-fix mentions of WebP/AVIF display issues, not feature announcements.",
+    "auditHint": "Check images are served through `| image_url` with explicit `width`/`height` (or `srcset` built from it), rather than raw uploaded-file URLs or a bundled image-optimization app doing the resizing.",
+    "appCategoryReplaced": "Image optimization / compression apps",
+    "nativeCapabilityCompleteness": "full",
+    "sourceName": "Shopify Liquid filters: image_url",
+    "sourceUrl": "https://shopify.dev/docs/api/liquid/filters/image_url"
+  }
+]

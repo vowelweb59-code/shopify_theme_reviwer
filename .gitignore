@@ -48,3 +48,6 @@ graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# one-off research harvest cache (raw Theme Store release notes, ~50MB)
+.scratch/

@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:requirements": "tsx scripts/seed-requirements.ts",
-    "seed:rules": "tsx scripts/seed-rules.ts"
+    "seed:rules": "tsx scripts/seed-rules.ts",
+    "seed:enhancements": "tsx --env-file-if-exists=.env.local scripts/seed-enhancement-points.ts",
+    "seed:native-capabilities": "tsx --env-file-if-exists=.env.local scripts/seed-native-capabilities.ts",
+    "harvest:trends": "node scripts/research/harvest-release-notes.mjs && node scripts/research/aggregate-release-notes.mjs"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
