@@ -49,6 +49,8 @@ type AuditRunDetail = {
   requirementsVersion?: string | null;
   demoStoreUrl?: string | null;
   liveCheckError?: { url: string; error: string } | null;
+  demoStorePresets?: { label: string; url: string }[];
+  liveCheckErrors?: { label: string; url: string; error: string }[];
 };
 
 type AuditRunListItem = {
@@ -299,6 +301,21 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
               {auditRun.completedAt ? ` — completed ${formatDate(auditRun.completedAt)}` : ""}
             </p>
             {auditRun.error && <p className="mt-2 text-red-700 dark:text-red-300">{auditRun.error}</p>}
+            {auditRun.demoStorePresets && auditRun.demoStorePresets.length > 0 && (
+              <div className="mt-2 text-zinc-500">
+                <p>Live-checked presets:</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {auditRun.demoStorePresets.map((p) => (
+                    <li key={p.url}>
+                      <strong className="text-zinc-700 dark:text-zinc-300">{p.label}</strong>:{" "}
+                      <a href={p.url} target="_blank" rel="noreferrer" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+                        {p.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {auditRun.demoStoreUrl && (
               <p className="mt-2 text-zinc-500">
                 Live-checked:{" "}
@@ -306,6 +323,15 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                   {auditRun.demoStoreUrl}
                 </a>
               </p>
+            )}
+            {auditRun.liveCheckErrors && auditRun.liveCheckErrors.length > 0 && (
+              <div className="mt-2 text-amber-700 dark:text-amber-400">
+                {auditRun.liveCheckErrors.map((e) => (
+                  <p key={e.url}>
+                    Could not check preset &quot;{e.label}&quot; ({e.url}): {e.error}
+                  </p>
+                ))}
+              </div>
             )}
             {auditRun.liveCheckError && (
               <p className="mt-2 text-amber-700 dark:text-amber-400">

@@ -1242,6 +1242,17 @@ const requirements: SeedRequirement[] = [
     severity: "low",
     notes: "Editorial/structural judgment, not statically checkable — requires reviewing the actual customer journey across sections. Not an official Shopify requirement.",
   },
+  {
+    requirementId: "INTERNAL-PRESET-SYNC-001",
+    sourceType: "internal_standard",
+    category: "Internal Standard",
+    title: "A theme's presets should stay structurally in sync with each other",
+    description:
+      "When a theme ships multiple presets (style variants of the same codebase, each typically published as its own live demo store), the presets should present a comparably complete, structurally consistent experience — similar homepage/product-page section composition, and the same structured data (JSON-LD, canonical, meta description) — the way established multi-preset Theme Store themes (e.g. Prestige) keep their own presets in sync. A preset that renders noticeably fewer sections, or is missing structured data another preset has, has likely fallen out of sync as the theme evolved (a setting or section added to one preset but never carried over to its siblings), not a deliberate design choice.",
+    sourceName: "Internal quality standard (multi-preset consistency)",
+    severity: "medium",
+    notes: "Checked live, per preset's actual rendered demo store (lib/audit/liveCheck.ts's comparePresets), not from config/settings_data.json — each preset is a separately published, independently admin-configured store, so live rendered output is what can genuinely drift, and what a merchant/reviewer actually sees. Requires 2+ preset demo URLs supplied on the audit run; the first one supplied is treated as the baseline every other preset is compared against. Not an official Shopify requirement — sourced from the user's own quality bar for this project, informed by studying top multi-preset Theme Store themes.",
+  },
 ];
 
 async function main() {

@@ -39,6 +39,15 @@ const diagnosticsSchema = new Schema(
 // the whole audit run — the static results still stand on their own.
 const liveCheckErrorSchema = new Schema({ url: String, error: String }, { _id: false });
 
+// One entry per preset demo URL supplied for this run — a theme ZIP can
+// ship several presets (style variants) of the same codebase, each
+// published as its own live store (see lib/audit/liveCheck.ts's
+// runLiveChecksForPresets). Plural counterpart to demoStoreUrl/
+// liveCheckError below, which stay untouched for pre-existing runs'
+// historical display; new runs populate this instead.
+const demoStorePresetSchema = new Schema({ label: { type: String, required: true }, url: { type: String, required: true } }, { _id: false });
+const presetLiveCheckErrorSchema = new Schema({ label: String, url: String, error: String }, { _id: false });
+
 // Heuristic presence check for one "Future updates" EnhancementPoint (see
 // lib/audit/detectEnhancements.ts) against THIS run's parsed theme source.
 // Captured once, at audit time, because the original ZIP is never
@@ -76,6 +85,11 @@ const auditRunSchema = new Schema(
     // meta tags) alongside the static theme-code findings above.
     demoStoreUrl: { type: String, default: null },
     liveCheckError: { type: liveCheckErrorSchema, default: undefined },
+    // Plural — see demoStorePresetSchema's comment above. Populated
+    // instead of the singular fields above whenever the run was submitted
+    // with one or more preset links.
+    demoStorePresets: { type: [demoStorePresetSchema], default: undefined },
+    liveCheckErrors: { type: [presetLiveCheckErrorSchema], default: undefined },
     enhancementDetections: { type: [enhancementDetectionSchema], default: undefined },
     // Snapshot of every rule's version (ruleId -> Rule.version) at the
     // moment this audit ran (phase-6 §14) — lets a later diff tell "this

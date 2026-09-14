@@ -44,6 +44,12 @@ export type FindingRow = {
   // (real computed contrast, real rendered JSON-LD) rather than parsing
   // theme source — filePath holds the page URL checked, not a file.
   layer?: "static" | "live";
+  // Which preset's demo URL this live finding came from, when an audit
+  // ran against more than one (see lib/audit/liveCheck.ts's
+  // runLiveChecksForPresets). null/undefined for a single-preset run, for
+  // static findings, and for the cross-preset comparison findings
+  // themselves (distinguishable instead by their LIVE-PRESET-SYNC-* ruleId).
+  presetLabel?: string | null;
   finding: string;
   recommendation?: string | null;
   sourceReference?: string | null;
@@ -471,6 +477,16 @@ export function FindingsTable({
                       ) : (
                         <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
                           Static
+                        </span>
+                      )}
+                      {f.presetLabel && (
+                        <span className="ml-1 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-200">
+                          {f.presetLabel}
+                        </span>
+                      )}
+                      {f.layer === "live" && !f.presetLabel && f.ruleId.startsWith("LIVE-PRESET-SYNC-") && (
+                        <span className="ml-1 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-200">
+                          Cross-preset
                         </span>
                       )}
                     </td>

@@ -44,6 +44,12 @@ const findingSchema = new Schema(
     category: { type: String, required: true, enum: FINDING_CATEGORIES, index: true },
     severity: { type: String, required: true, enum: FINDING_SEVERITIES, index: true },
     layer: { type: String, required: true, enum: FINDING_LAYERS, default: "static" },
+    // Which preset (of possibly several live demo URLs on this run) this
+    // finding came from — see lib/audit/liveCheck.ts's runLiveChecksForPresets.
+    // null for every static finding, for live findings from a single-URL
+    // run, and for the cross-preset comparison findings themselves (those
+    // are about the relationship between presets, not one of them).
+    presetLabel: { type: String, default: null, index: true },
     finding: { type: String, required: true },
     recommendation: { type: String, default: null },
     sourceReference: { type: String, default: null },

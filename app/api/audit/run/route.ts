@@ -12,11 +12,43 @@ import { runAuditRules } from "@/lib/audit";
 import { detectEnhancementPoints, type EnhancementDetectionResult } from "@/lib/audit/detectEnhancements";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
-import { runLiveChecks } from "@/lib/audit/liveCheck";
+import { runLiveChecksForPresets, type PresetLink } from "@/lib/audit/liveCheck";
 import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
 import type { DiffableFinding } from "@/lib/audit/findingSignature";
 
 const SNIPPET_CONTEXT_LINES = 3;
+
+const HTTP_URL_RE = /^https?:\/\//i;
+
+/**
+ * Parses the `demoStorePresets` form field — the client JSON.stringify()s
+ * an array of {label, url} — and falls back to the legacy singular
+ * `demoStoreUrl` field (as a single "Demo store"-labeled preset) so an
+ * older client/request shape still works exactly as before. Malformed
+ * JSON, a non-array, or an entry missing a valid http(s) url is dropped
+ * rather than failing the whole request — this is an optional, best-effort
+ * input, same as the single-URL field always was.
+ */
+function parseDemoStorePresets(formData: FormData): PresetLink[] {
+  const raw = formData.get("demoStorePresets")?.toString();
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((entry) => ({ label: String(entry?.label ?? "").trim(), url: String(entry?.url ?? "").trim() }))
+          .filter((p) => p.url && HTTP_URL_RE.test(p.url))
+          .map((p, i) => ({ label: p.label || `Preset ${i + 1}`, url: p.url }));
+      }
+    } catch {
+      // malformed JSON — treat as no presets supplied, same as an empty field
+    }
+  }
+
+  const legacyUrl = formData.get("demoStoreUrl")?.toString().trim();
+  if (legacyUrl && HTTP_URL_RE.test(legacyUrl)) return [{ label: "Demo store", url: legacyUrl }];
+  return [];
+}
 
 /**
  * Snapshots every rule's current version onto this audit run (phase-6
@@ -110,6 +142,7 @@ function toFindingDocs(
     category: f.category,
     severity: f.severity,
     layer,
+    presetLabel: f.presetLabel ?? null,
     finding: f.finding,
     recommendation: f.recommendation ?? null,
     sourceReference: f.sourceReference ?? null,
@@ -127,10 +160,9 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const themeName = formData.get("themeName")?.toString().trim();
   const file = formData.get("file");
-  const demoStoreUrlRaw = formData.get("demoStoreUrl")?.toString().trim();
-  // Only http(s) — never file://, javascript:, etc. — this is fetched
+  // Only http(s) — never file://, javascript:, etc. — these are fetched
   // server-side via a real browser, not just linked.
-  const demoStoreUrl = demoStoreUrlRaw && /^https?:\/\//i.test(demoStoreUrlRaw) ? demoStoreUrlRaw : undefined;
+  const demoStorePresets = parseDemoStorePresets(formData);
 
   if (!themeName) {
     return NextResponse.json({ error: "themeName is required." }, { status: 400 });
@@ -170,12 +202,12 @@ export async function POST(request: Request) {
     timer.record("enhancementDetection", Date.now() - enhancementDetectionStart);
 
     let liveFindings: ExecutedFinding[] = [];
-    let liveCheckError: { url: string; error: string } | undefined;
-    if (demoStoreUrl) {
+    let liveCheckErrors: { label: string; url: string; error: string }[] = [];
+    if (demoStorePresets.length > 0) {
       const liveCheckStart = Date.now();
-      const liveResult = await runLiveChecks(demoStoreUrl);
+      const liveResult = await runLiveChecksForPresets(demoStorePresets);
       liveFindings = liveResult.findings;
-      liveCheckError = liveResult.error;
+      liveCheckErrors = liveResult.errors;
       timer.record("liveChecks", Date.now() - liveCheckStart);
     }
 
@@ -198,14 +230,14 @@ export async function POST(request: Request) {
     auditRun.fileStats = result.fileStats;
     auditRun.skippedFileCount = result.skippedFileCount;
     if (result.fileErrors.length > 0) auditRun.fileErrors = result.fileErrors;
-    auditRun.summary = demoStoreUrl ? summarizeFindings([...staticFindings, ...liveFindings]) : staticSummary;
+    auditRun.summary = demoStorePresets.length > 0 ? summarizeFindings([...staticFindings, ...liveFindings]) : staticSummary;
     if (ruleErrors.length > 0) auditRun.ruleErrors = ruleErrors;
     auditRun.diagnostics = computeAuditDiagnostics(result.files, {
       filesSkipped: result.skippedFileCount,
       rulesSkippedDueToError: ruleErrors.length,
     });
-    if (demoStoreUrl) auditRun.demoStoreUrl = demoStoreUrl;
-    if (liveCheckError) auditRun.liveCheckError = liveCheckError;
+    if (demoStorePresets.length > 0) auditRun.demoStorePresets = demoStorePresets;
+    if (liveCheckErrors.length > 0) auditRun.liveCheckErrors = liveCheckErrors;
     if (enhancementDetections.length > 0) auditRun.enhancementDetections = enhancementDetections;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;

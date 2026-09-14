@@ -7,6 +7,14 @@ export type LiveCheckResult = {
   error?: { url: string; error: string };
 };
 
+export type PresetLink = { label: string; url: string };
+export type PresetLiveCheckError = { label: string; url: string; error: string };
+
+export type MultiPresetLiveCheckResult = {
+  findings: ExecutedFinding[];
+  errors: PresetLiveCheckError[];
+};
+
 const NAV_TIMEOUT_MS = 20_000;
 const MAX_CONTRAST_SAMPLES = 80;
 const MAX_IMAGE_SAMPLES = 60;
@@ -24,7 +32,7 @@ const MEDIUM_VIEWPORT = { width: 900, height: 800 };
 type ContrastSample = { selector: string; text: string; color: string; background: string };
 type ImageSample = { selector: string; naturalWidth: number; naturalHeight: number; renderedWidth: number; renderedHeight: number };
 
-type PageFacts = {
+export type PageFacts = {
   url: string;
   jsonLdTypes: string[];
   canonical: string | null;
@@ -32,6 +40,14 @@ type PageFacts = {
   contrastSamples: ContrastSample[];
   imageSamples: ImageSample[];
   devicePixelRatio: number;
+  /**
+   * Every `.shopify-section` wrapper's id (the `shopify-section-` prefix
+   * stripped) — Shopify's layout rendering wraps every section in this
+   * exact markup unconditionally, so this is a reliable, theme-agnostic
+   * read of "which sections are actually rendered on this page", useful
+   * for comparePresets() below without any extra page load.
+   */
+  sectionIds: string[];
 };
 
 /**
@@ -163,7 +179,19 @@ export async function extractLoadedPageFacts(
       });
     }
 
-    return { jsonLdTypes, canonical, metaDescription, contrastSamples, imageSamples, devicePixelRatio: window.devicePixelRatio };
+    const sectionIds = Array.from(document.querySelectorAll(".shopify-section"))
+      .map((el) => el.id.replace(/^shopify-section-/, ""))
+      .filter(Boolean);
+
+    return {
+      jsonLdTypes,
+      canonical,
+      metaDescription,
+      contrastSamples,
+      imageSamples,
+      devicePixelRatio: window.devicePixelRatio,
+      sectionIds,
+    };
   }, { maxSamples, maxImageSamples });
 }
 
@@ -431,32 +459,177 @@ export async function checkResponsiveReachability(page: Page): Promise<ExecutedF
  * thrown — the static findings for this audit run must stand on their own
  * regardless of whether the live store was reachable.
  */
-export async function runLiveChecks(demoStoreUrl: string): Promise<LiveCheckResult> {
+type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; product?: PageFacts };
+
+/** The actual check battery, given a page already inside some browser context — shared by the single- and multi-preset entry points below so there's exactly one implementation of "what checks run against one preset". */
+async function runChecksForLoadedPreset(page: Page, label: string | null, demoStoreUrl: string): Promise<PresetCheckOutcome> {
+  const homeFacts = await extractPageFacts(page, demoStoreUrl);
+  const findings = homepageFindings(homeFacts);
+  findings.push(...(await checkResponsiveReachability(page)));
+
+  let productFacts: PageFacts | undefined;
+  const productHref = await findFirstProductLink(page);
+  if (productHref) {
+    try {
+      productFacts = await extractPageFacts(page, productHref);
+      findings.push(...productPageFindings(productFacts));
+    } catch {
+      // Product page navigation failing doesn't invalidate the homepage
+      // findings already collected — skip it and move on.
+    }
+  }
+
+  if (label) for (const f of findings) f.presetLabel = label;
+  return { findings, home: homeFacts, product: productFacts };
+}
+
+/**
+ * Visits a real, running store (homepage, plus the first product page it
+ * can find a link to) and checks the things static theme-source analysis
+ * structurally cannot: real computed contrast, and JSON-LD/meta tags as
+ * actually rendered rather than as they appear in source. A failure here
+ * (unreachable URL, navigation timeout) is returned as `error`, never
+ * thrown — the static findings for this audit run must stand on their own
+ * regardless of whether the live store was reachable.
+ */
+export async function runLiveChecksForPreset(label: string, demoStoreUrl: string): Promise<LiveCheckResult> {
   let browser: import("playwright").Browser | undefined;
   try {
     browser = await chromium.launch();
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
-
-    const homeFacts = await extractPageFacts(page, demoStoreUrl);
-    const findings = homepageFindings(homeFacts);
-    findings.push(...(await checkResponsiveReachability(page)));
-
-    const productHref = await findFirstProductLink(page);
-    if (productHref) {
-      try {
-        const productFacts = await extractPageFacts(page, productHref);
-        findings.push(...productPageFindings(productFacts));
-      } catch {
-        // Product page navigation failing doesn't invalidate the homepage
-        // findings already collected — skip it and move on.
-      }
-    }
-
+    const { findings } = await runChecksForLoadedPreset(page, label, demoStoreUrl);
     return { findings };
   } catch (err) {
     return { findings: [], error: { url: demoStoreUrl, error: err instanceof Error ? err.message : String(err) } };
   } finally {
     await browser?.close();
   }
+}
+
+// The margin at which two presets' rendered section counts are treated as
+// "the same layout, presets are allowed to differ a little" rather than a
+// real structural drift worth flagging — one section added/removed for
+// seasonal content is normal; a homepage with half as many sections as its
+// sibling preset is a genuine inconsistency.
+const SECTION_COUNT_DRIFT_THRESHOLD = 2;
+
+type PresetFacts = { label: string; home: PageFacts; product?: PageFacts };
+
+/**
+ * The "presets should be in sync" check (an internal quality standard, not
+ * a documented Shopify rule — see INTERNAL-PRESET-SYNC-001), comparing
+ * every preset's *actually rendered* homepage (and product page, where
+ * both sides have one) against the first-listed preset, treated as "the
+ * main theme" baseline the way the user framed it. Deliberately compares
+ * rendered output, not config/settings_data.json: each preset is a
+ * genuinely separate published theme install with its own admin-configured
+ * content, so a live comparison catches real drift a static file diff
+ * can't — verified against the Theme Store's own multi-preset themes
+ * (e.g. Prestige), where each preset resolves to a distinct live store.
+ */
+export function comparePresets(presets: PresetFacts[]): ExecutedFinding[] {
+  if (presets.length < 2) return [];
+  const [baseline, ...rest] = presets;
+  const findings: ExecutedFinding[] = [];
+
+  for (const preset of rest) {
+    for (const page of ["home", "product"] as const) {
+      const basePage = baseline[page];
+      const thisPage = preset[page];
+      if (!basePage || !thisPage) continue; // one preset has no product page found — nothing to compare there
+
+      const pageLabel = page === "home" ? "homepage" : "product page";
+      const sectionDiff = Math.abs(basePage.sectionIds.length - thisPage.sectionIds.length);
+      if (sectionDiff >= SECTION_COUNT_DRIFT_THRESHOLD) {
+        findings.push({
+          ruleId: "LIVE-PRESET-SYNC-SECTIONS-001",
+          requirementId: "INTERNAL-PRESET-SYNC-001",
+          filePath: thisPage.url,
+          category: "Internal Standard",
+          severity: "medium",
+          finding: `Preset "${preset.label}"'s ${pageLabel} renders ${thisPage.sectionIds.length} sections, versus ${basePage.sectionIds.length} on the baseline preset "${baseline.label}"'s ${pageLabel} (${basePage.url}) — a structural difference of ${sectionDiff}. Confirm this is an intentional design difference between presets, not a preset that's fallen out of sync.`,
+          recommendation: `Compare the ${pageLabel} section composition between "${baseline.label}" and "${preset.label}" and reconcile any sections that were added to one preset but not carried over to the other.`,
+        });
+      }
+
+      const missingTypes = basePage.jsonLdTypes.filter((t) => !thisPage.jsonLdTypes.includes(t));
+      if (missingTypes.length > 0) {
+        findings.push({
+          ruleId: "LIVE-PRESET-SYNC-JSONLD-001",
+          requirementId: "INTERNAL-PRESET-SYNC-001",
+          filePath: thisPage.url,
+          category: "Internal Standard",
+          severity: "medium",
+          finding: `Preset "${preset.label}"'s ${pageLabel} is missing ${missingTypes.join(", ")} JSON-LD that the baseline preset "${baseline.label}"'s ${pageLabel} (${basePage.url}) has.`,
+          recommendation: `Check why "${preset.label}" doesn't render the same structured data as "${baseline.label}" on this page — a disabled app/section, or a genuine regression in this preset.`,
+        });
+      }
+
+      if (basePage.canonical && !thisPage.canonical) {
+        findings.push({
+          ruleId: "LIVE-PRESET-SYNC-METADATA-001",
+          requirementId: "INTERNAL-PRESET-SYNC-001",
+          filePath: thisPage.url,
+          category: "Internal Standard",
+          severity: "medium",
+          finding: `Preset "${preset.label}"'s ${pageLabel} has no canonical link tag, but the baseline preset "${baseline.label}"'s ${pageLabel} does.`,
+          recommendation: `Add a canonical link tag to "${preset.label}"'s ${pageLabel}, matching "${baseline.label}".`,
+        });
+      }
+      if (basePage.metaDescription && !thisPage.metaDescription) {
+        findings.push({
+          ruleId: "LIVE-PRESET-SYNC-METADATA-001",
+          requirementId: "INTERNAL-PRESET-SYNC-001",
+          filePath: thisPage.url,
+          category: "Internal Standard",
+          severity: "medium",
+          finding: `Preset "${preset.label}"'s ${pageLabel} has no meta description, but the baseline preset "${baseline.label}"'s ${pageLabel} does.`,
+          recommendation: `Add a meta description to "${preset.label}"'s ${pageLabel}, matching "${baseline.label}".`,
+        });
+      }
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * Runs the full live-check battery against every preset's demo URL, using
+ * one browser (a fresh context per preset, not N separate browser
+ * processes), then — once 2+ presets actually succeeded — runs
+ * comparePresets() across their collected page facts and appends its
+ * findings too. A single preset's demo being unreachable is recorded in
+ * `errors` and does not prevent the others (or the comparison, if 2+ of
+ * the rest still succeeded) from running.
+ */
+export async function runLiveChecksForPresets(presets: PresetLink[]): Promise<MultiPresetLiveCheckResult> {
+  const findings: ExecutedFinding[] = [];
+  const errors: PresetLiveCheckError[] = [];
+  const presetFacts: PresetFacts[] = [];
+
+  let browser: import("playwright").Browser | undefined;
+  try {
+    browser = await chromium.launch();
+    for (const preset of presets) {
+      let context: import("playwright").BrowserContext | undefined;
+      try {
+        context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+        const page = await context.newPage();
+        const outcome = await runChecksForLoadedPreset(page, preset.label, preset.url);
+        findings.push(...outcome.findings);
+        presetFacts.push({ label: preset.label, home: outcome.home, product: outcome.product });
+      } catch (err) {
+        errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
+      } finally {
+        await context?.close();
+      }
+    }
+  } finally {
+    await browser?.close();
+  }
+
+  if (presetFacts.length >= 2) findings.push(...comparePresets(presetFacts));
+
+  return { findings, errors };
 }

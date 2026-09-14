@@ -1,6 +1,6 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { checkResponsiveReachability, extractLoadedPageFacts } from "./liveCheck";
+import { checkResponsiveReachability, comparePresets, extractLoadedPageFacts, type PageFacts } from "./liveCheck";
 
 // Real browser, no network — page.setContent() has no network dependency,
 // so these run against Chromium's actual layout/style engine (the same one
@@ -99,6 +99,123 @@ describe("extractLoadedPageFacts", () => {
     );
     const facts = await extractLoadedPageFacts(page);
     expect(facts.imageSamples).toHaveLength(0);
+  });
+
+  it("reads rendered section ids from .shopify-section wrappers", async () => {
+    await page.setContent(
+      '<body>' +
+        '<div id="shopify-section-hero" class="shopify-section">Hero</div>' +
+        '<div id="shopify-section-featured-collection" class="shopify-section">Collection</div>' +
+        '<div id="not-a-section">Ignore me</div>' +
+        "</body>"
+    );
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.sectionIds.sort()).toEqual(["featured-collection", "hero"]);
+  });
+
+  it("returns no section ids when the page has none", async () => {
+    await page.setContent("<body><div>No sections here</div></body>");
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.sectionIds).toEqual([]);
+  });
+});
+
+// Pure function — no browser needed, just hand-built PageFacts.
+function makeFacts(overrides: Partial<PageFacts> = {}): PageFacts {
+  return {
+    url: "https://example.myshopify.com/",
+    jsonLdTypes: ["Organization", "WebSite"],
+    canonical: "https://example.myshopify.com/",
+    metaDescription: "A test store",
+    contrastSamples: [],
+    imageSamples: [],
+    devicePixelRatio: 1,
+    sectionIds: ["hero", "featured-collection", "footer"],
+    ...overrides,
+  };
+}
+
+describe("comparePresets", () => {
+  it("reports nothing for a single preset — there's nothing to compare against", () => {
+    expect(comparePresets([{ label: "Only preset", home: makeFacts() }])).toEqual([]);
+  });
+
+  it("reports nothing when two presets' homepages render the same structure", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts() },
+      { label: "Sibling", home: makeFacts() },
+    ]);
+    expect(findings).toEqual([]);
+  });
+
+  it("flags a preset whose homepage renders materially fewer sections than the baseline", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts({ sectionIds: ["hero", "featured-collection", "footer", "testimonials"] }) },
+      { label: "Thin", home: makeFacts({ sectionIds: ["hero"] }) },
+    ]);
+    const sectionFinding = findings.find((f) => f.ruleId === "LIVE-PRESET-SYNC-SECTIONS-001");
+    expect(sectionFinding).toBeDefined();
+    expect(sectionFinding?.finding).toContain("Thin");
+    expect(sectionFinding?.finding).toContain("Baseline");
+    expect(sectionFinding?.requirementId).toBe("INTERNAL-PRESET-SYNC-001");
+  });
+
+  it("does not flag a small, expected section-count difference", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts({ sectionIds: ["hero", "featured-collection", "footer"] }) },
+      { label: "Sibling", home: makeFacts({ sectionIds: ["hero", "featured-collection"] }) },
+    ]);
+    expect(findings.find((f) => f.ruleId === "LIVE-PRESET-SYNC-SECTIONS-001")).toBeUndefined();
+  });
+
+  it("flags a preset missing JSON-LD the baseline has", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts({ jsonLdTypes: ["Organization", "WebSite"] }) },
+      { label: "Missing schema", home: makeFacts({ jsonLdTypes: ["WebSite"] }) },
+    ]);
+    const jsonLdFinding = findings.find((f) => f.ruleId === "LIVE-PRESET-SYNC-JSONLD-001");
+    expect(jsonLdFinding).toBeDefined();
+    expect(jsonLdFinding?.finding).toContain("Organization");
+  });
+
+  it("flags a preset missing canonical/meta description the baseline has", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts({ canonical: "https://a.myshopify.com/", metaDescription: "Has one" }) },
+      { label: "Missing metadata", home: makeFacts({ canonical: null, metaDescription: null }) },
+    ]);
+    const metadataFindings = findings.filter((f) => f.ruleId === "LIVE-PRESET-SYNC-METADATA-001");
+    expect(metadataFindings).toHaveLength(2); // canonical AND meta description
+  });
+
+  it("compares the product page too when both presets have one", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts(), product: makeFacts({ jsonLdTypes: ["Product", "BreadcrumbList"] }) },
+      { label: "Sibling", home: makeFacts(), product: makeFacts({ jsonLdTypes: ["BreadcrumbList"] }) },
+    ]);
+    const jsonLdFinding = findings.find((f) => f.ruleId === "LIVE-PRESET-SYNC-JSONLD-001");
+    expect(jsonLdFinding?.finding).toContain("product page");
+    expect(jsonLdFinding?.finding).toContain("Product");
+  });
+
+  it("skips a page comparison when only one side has that page at all", () => {
+    // Baseline has no product page found; sibling does — nothing to compare against.
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts() },
+      { label: "Sibling", home: makeFacts(), product: makeFacts({ jsonLdTypes: [] }) },
+    ]);
+    expect(findings.find((f) => f.finding.includes("product page"))).toBeUndefined();
+  });
+
+  it("compares every non-baseline preset against the first-listed baseline, not against each other", () => {
+    const findings = comparePresets([
+      { label: "Baseline", home: makeFacts({ sectionIds: ["hero", "featured-collection", "footer", "testimonials"] }) },
+      { label: "Thin A", home: makeFacts({ sectionIds: ["hero"] }) },
+      { label: "Thin B", home: makeFacts({ sectionIds: ["hero", "footer"] }) },
+    ]);
+    const labels = findings.filter((f) => f.ruleId === "LIVE-PRESET-SYNC-SECTIONS-001").map((f) => f.finding);
+    expect(labels.some((f) => f.includes("Thin A"))).toBe(true);
+    expect(labels.some((f) => f.includes("Thin B"))).toBe(true);
+    expect(labels.every((f) => f.includes("Baseline"))).toBe(true);
   });
 });
 
