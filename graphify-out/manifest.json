@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "app/api/reports/[id]/route.ts": {
-    "mtime": 1789118582.8893862,
-    "ast_hash": "c70ee2ff86301a2723b12a933a9b33ca",
+    "mtime": 1789377782.2611372,
+    "ast_hash": "6d27313bc8336f90fb84422b6a53acc9",
     "semantic_hash": ""
   },
   "app/api/reports/route.ts": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1789207605.4546852,
-    "ast_hash": "7eae20709bd42515c051d924a78178b2",
+    "mtime": 1789378202.2056048,
+    "ast_hash": "dfd53d47c5b321d65184e375b577385b",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -785,8 +785,8 @@
     "semantic_hash": ""
   },
   "app/api/reports/[id]/export/google-sheet/route.ts": {
-    "mtime": 1787031637.3083932,
-    "ast_hash": "cdf2640ac3cfbfda053df035c505acda",
+    "mtime": 1789377948.2964356,
+    "ast_hash": "c916683c01d87d5ce6c5deee1409187e",
     "semantic_hash": ""
   },
   "lib/export/sheetRows.test.ts": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "lib/export/sheetRows.ts": {
-    "mtime": 1787031459.8309412,
-    "ast_hash": "a07d4c295fb91554faa75d89fc11d85e",
+    "mtime": 1789377595.0462048,
+    "ast_hash": "f38b4c0e338f77706cb3251f9a08f3c7",
     "semantic_hash": ""
   },
   "lib/google/oauth.ts": {
@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "lib/google/sheetsExport.ts": {
-    "mtime": 1789207226.7205825,
-    "ast_hash": "8de8949cbcab7313593f3df53bb40a68",
+    "mtime": 1789377660.9321413,
+    "ast_hash": "97f9ff6b23670ba8fb8052f840fec068",
     "semantic_hash": ""
   },
   "models/google-auth.ts": {
@@ -820,8 +820,8 @@
     "semantic_hash": ""
   },
   "lib/google/sheetsFormatting.ts": {
-    "mtime": 1787031529.2517767,
-    "ast_hash": "befff6846548fac98aca33d2a73e0186",
+    "mtime": 1789377607.5542126,
+    "ast_hash": "303a822557ae231d195f3a190f739039",
     "semantic_hash": ""
   },
   "lib/audit/pageLabel.test.ts": {
@@ -850,8 +850,8 @@
     "semantic_hash": ""
   },
   "app/api/enhancements/export/google-sheet/route.ts": {
-    "mtime": 1789207290.5047278,
-    "ast_hash": "191f7667cb6f851aac19a1c0eb512eb4",
+    "mtime": 1789377720.05363,
+    "ast_hash": "bac38c013f032da65728281a0e3744e6",
     "semantic_hash": ""
   },
   "app/api/enhancements/route.ts": {
@@ -890,13 +890,13 @@
     "semantic_hash": ""
   },
   "lib/export/enhancementSheetRows.ts": {
-    "mtime": 1789207102.727123,
-    "ast_hash": "95c6b1088438f8f76931d81bccc6cc93",
+    "mtime": 1789377835.5933743,
+    "ast_hash": "3160f80c155bce1b4b1bc548d3d1d275",
     "semantic_hash": ""
   },
   "lib/google/enhancementSheetFormatting.ts": {
-    "mtime": 1789207275.6197255,
-    "ast_hash": "13304529def012a849dbbb35646a283e",
+    "mtime": 1789377885.7547815,
+    "ast_hash": "c438ff4845af1e933046d9c282cc4234",
     "semantic_hash": ""
   },
   "models/enhancement-point.ts": {
@@ -932,6 +932,21 @@
   "scripts/seed-native-capabilities.ts": {
     "mtime": 1789125881.5952437,
     "ast_hash": "2220a1e0a04bef6cc4b649b31684de07",
+    "semantic_hash": ""
+  },
+  "data/native-capabilities.json": {
+    "mtime": 1789125916.1152823,
+    "ast_hash": "157db234f12bf994ae6c420879502a55",
+    "semantic_hash": ""
+  },
+  "data/theme-trend-points.json": {
+    "mtime": 1789125754.8433251,
+    "ast_hash": "fc3249dc375f24e697dec277f980f8f4",
+    "semantic_hash": ""
+  },
+  "lib/audit/enhancementReport.ts": {
+    "mtime": 1789377757.4780095,
+    "ast_hash": "9d49d86a230fc545b1bfcfaa8f186b95",
     "semantic_hash": ""
   }
 }
