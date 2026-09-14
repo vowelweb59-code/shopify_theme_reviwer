@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { EnhancementPoint } from "@/models/enhancement-point";
 import { EnhancementSheet } from "@/models/enhancement-sheet";
 import { buildEnhancementSheetTabs, type SheetEnhancementPoint } from "@/lib/export/enhancementSheetRows";
-import { buildEnhancementSheetFormattingRequests } from "@/lib/google/enhancementSheetFormatting";
+import { withEnhancementSheetFormatting } from "@/lib/google/enhancementSheetFormatting";
 import {
   createGoogleSheet,
   updateGoogleSheet,
@@ -11,16 +11,7 @@ import {
   GoogleSheetsNotConnectedError,
   GoogleSheetSpreadsheetNotFoundError,
   type SpreadsheetSheetInfo,
-  type SheetWriteOptions,
 } from "@/lib/google/sheetsExport";
-
-// No boolean/checkbox column in this schema (unlike the audit checklist's
-// "Resolved") — status here is a 4-value enum, not a boolean, so it's
-// color-coded text instead (see buildEnhancementSheetFormattingRequests).
-const SHEET_OPTIONS: SheetWriteOptions = {
-  booleanColumnIndex: -1,
-  buildFormatting: buildEnhancementSheetFormattingRequests,
-};
 
 const SHEET_TITLE = "Shopify Theme Auditor — Future Updates";
 
@@ -35,7 +26,7 @@ export async function POST() {
   await connectToDatabase();
 
   const points = (await EnhancementPoint.find().lean()) as unknown as SheetEnhancementPoint[];
-  const tabs = buildEnhancementSheetTabs(points);
+  const tabs = withEnhancementSheetFormatting(buildEnhancementSheetTabs(points));
   if (tabs.length === 0) {
     return NextResponse.json({ error: "There are no enhancement points to export yet." }, { status: 400 });
   }
@@ -70,8 +61,8 @@ export async function POST() {
   try {
     const result =
       reused && sheetDoc.googleSpreadsheetId && existingSheets
-        ? await updateGoogleSheet(sheetDoc.googleSpreadsheetId, tabs, existingSheets, SHEET_OPTIONS)
-        : await createGoogleSheet(SHEET_TITLE, tabs, SHEET_OPTIONS);
+        ? await updateGoogleSheet(sheetDoc.googleSpreadsheetId, tabs, existingSheets)
+        : await createGoogleSheet(SHEET_TITLE, tabs);
 
     sheetDoc.googleSpreadsheetId = result.spreadsheetId;
     sheetDoc.googleSheetUrl = result.url;

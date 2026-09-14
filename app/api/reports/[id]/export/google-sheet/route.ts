@@ -3,10 +3,14 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Theme } from "@/models/theme";
+import { EnhancementPoint } from "@/models/enhancement-point";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
 import { computeFindingsDiff } from "@/lib/audit/diffFindings";
+import { buildEnhancementReportForRun, type EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
 import { buildChecklistSheetTabs, type SheetChecklistFinding, type SheetTab } from "@/lib/export/sheetRows";
+import { buildFutureUpdatesTab, type SheetFutureUpdatesPoint } from "@/lib/export/enhancementSheetRows";
 import { mergeChecklistRows } from "@/lib/export/checklistMerge";
+import { withFutureUpdatesFormatting } from "@/lib/google/enhancementSheetFormatting";
 import {
   createGoogleSheet,
   updateGoogleSheet,
@@ -55,6 +59,23 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const diff = computeFindingsDiff<SheetChecklistFinding>(baselineFindings, currentFindings);
   const freshTabs = buildChecklistSheetTabs(id, theme.name, diff.findings);
 
+  // Built separately from the checklist tabs above and kept out of the
+  // merge/diff logic below entirely: unlike a finding, an enhancement
+  // point's `status` already lives in the database as the single source
+  // of truth, so this tab is always a full rewrite of current state, the
+  // same "no reconciliation against last export" contract the standalone
+  // /enhancements sheet export uses — never "resolved"/carried-forward
+  // like a checklist row.
+  const enhancementPoints = await EnhancementPoint.find().lean();
+  const { points: futureUpdatesPoints } = buildEnhancementReportForRun(
+    auditRun.enhancementDetections as EnhancementDetectionRecord[] | undefined,
+    enhancementPoints
+  );
+  const futureUpdatesTab =
+    futureUpdatesPoints.length > 0
+      ? withFutureUpdatesFormatting(buildFutureUpdatesTab(futureUpdatesPoints as unknown as SheetFutureUpdatesPoint[]))
+      : null;
+
   let tabsToWrite: SheetTab[] = freshTabs;
   let reused = false;
   let existingSheets: SpreadsheetSheetInfo[] | null = null;
@@ -88,8 +109,12 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     }
   }
 
+  // Appended after the merge step above, never through it — see this
+  // tab's own construction comment for why.
+  if (futureUpdatesTab) tabsToWrite = [...tabsToWrite, futureUpdatesTab];
+
   if (tabsToWrite.length === 0) {
-    return NextResponse.json({ error: "This theme has no findings to export." }, { status: 400 });
+    return NextResponse.json({ error: "This theme has no findings or enhancement points to export." }, { status: 400 });
   }
 
   const recreated = Boolean(theme.googleSpreadsheetId) && !reused;

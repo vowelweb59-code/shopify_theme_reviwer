@@ -11,7 +11,26 @@ export type SheetChecklistFinding = DiffableFinding & {
   sourceUrl?: string | null;
 };
 
-export type SheetTab = { title: string; rows: string[][] };
+// Loosely typed on purpose — these are opaque request objects passed
+// straight through to the Sheets API's spreadsheets.batchUpdate. Modeling
+// every variant of its Request union here would be pure ceremony. Lives
+// here (not lib/google/sheetsFormatting.ts, which imports TAB_COLUMNS from
+// this file) so SheetTab below can reference it without a circular import.
+export type SheetFormattingRequest = Record<string, unknown>;
+
+// A tab optionally carries its OWN boolean-column index and formatting
+// builder, defaulting to the audit-checklist's when omitted (see
+// lib/google/sheetsExport.ts's writeTabValuesAndFormatting) — this is what
+// lets a single spreadsheet mix tabs with genuinely different column
+// schemas, e.g. a theme's audit-checklist tabs (which have a "Resolved"
+// boolean column) alongside a "Future Updates" tab (which doesn't) in
+// app/api/reports/[id]/export/google-sheet/route.ts.
+export type SheetTab = {
+  title: string;
+  rows: string[][];
+  booleanColumnIndex?: number;
+  formatting?: (sheetId: number, dataRowCount: number, category: string) => SheetFormattingRequest[];
+};
 
 // No "Category" column here — the tab itself is the category, so
 // repeating it on every row would be redundant. Exported so

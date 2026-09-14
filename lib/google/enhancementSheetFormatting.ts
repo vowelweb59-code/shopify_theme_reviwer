@@ -1,5 +1,5 @@
-import { ENHANCEMENT_TAB_COLUMNS } from "@/lib/export/enhancementSheetRows";
-import type { SheetFormattingRequest } from "./sheetsFormatting";
+import { ENHANCEMENT_TAB_COLUMNS, FUTURE_UPDATES_TAB_COLUMNS } from "@/lib/export/enhancementSheetRows";
+import type { SheetFormattingRequest, SheetTab } from "@/lib/export/sheetRows";
 
 type RGB = { red: number; green: number; blue: number };
 
@@ -68,12 +68,15 @@ function tabColorFor(category: string): RGB {
 const COLUMN_WIDTHS: Record<string, number> = {
   "Point ID": 130,
   Name: 260,
+  Category: 160,
   Source: 130,
   "Adoption %": 90,
   Themes: 90,
   Tier: 100,
   "Replaces (app category)": 220,
   Completeness: 100,
+  Detected: 100,
+  "Detected In": 260,
   Status: 110,
   Description: 380,
   "What to check": 320,
@@ -81,27 +84,47 @@ const COLUMN_WIDTHS: Record<string, number> = {
   Notes: 220,
 };
 
-const WRAP_COLUMNS = ["Description", "What to check", "Notes"] as const;
-const TIER_COLUMN_INDEX = ENHANCEMENT_TAB_COLUMNS.indexOf("Tier");
-const STATUS_COLUMN_INDEX = ENHANCEMENT_TAB_COLUMNS.indexOf("Status");
+const WRAP_COLUMNS = ["Description", "What to check", "Notes", "Detected In"] as const;
+
+const DETECTED_COLORS: Record<string, { background: RGB; text: RGB }> = {
+  Yes: { background: hexToRgb("#dcfce7"), text: hexToRgb("#166534") },
+  No: { background: hexToRgb("#f4f4f5"), text: hexToRgb("#3f3f46") },
+  "Not checked": { background: hexToRgb("#fef3c7"), text: hexToRgb("#92400e") },
+};
 
 /**
- * The enhancement-sheet counterpart to lib/google/sheetsFormatting.ts's
- * buildSheetFormattingRequests — same visual treatment (frozen/styled
- * header, column widths, wrapped long-text columns, tier/status
- * color-coding, zebra striping, per-category tab color), but built against
- * ENHANCEMENT_TAB_COLUMNS instead of the audit checklist's TAB_COLUMNS.
- * Kept as a separate function rather than parameterizing the audit one
- * further — the two column schemas share no columns in common by name or
- * position, so trying to unify them would just move the audit-specific
- * assumptions into more parameters instead of removing them.
+ * The shared body of both formatting builders below: frozen/styled header,
+ * column widths, wrapped long-text columns, tier/status/detected
+ * color-coding (whichever of those three columns actually exist in
+ * `columns`), zebra striping, per-category tab color. Column-name lookups
+ * throughout resolve against whichever `columns` list is passed in, so the
+ * one-tab-per-category enhancement sheet and the single consolidated
+ * per-theme "Future Updates" tab — genuinely different column orders and
+ * counts — can share this instead of two near-identical copies.
  */
-export function buildEnhancementSheetFormattingRequests(
+function buildFormattingForColumns(
   sheetId: number,
   dataRowCount: number,
-  category: string
+  category: string,
+  columns: readonly string[]
 ): SheetFormattingRequest[] {
   const endRowIndex = dataRowCount + 1;
+  const tierColumnIndex = columns.indexOf("Tier");
+  const statusColumnIndex = columns.indexOf("Status");
+  const detectedColumnIndex = columns.indexOf("Detected");
+
+  const colorRule = (columnIndex: number, value: string, colors: { background: RGB; text: RGB }) => ({
+    addConditionalFormatRule: {
+      rule: {
+        ranges: [{ sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: columnIndex, endColumnIndex: columnIndex + 1 }],
+        booleanRule: {
+          condition: { type: "TEXT_EQ", values: [{ userEnteredValue: value }] },
+          format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },
+        },
+      },
+      index: 0,
+    },
+  });
 
   return [
     {
@@ -112,7 +135,7 @@ export function buildEnhancementSheetFormattingRequests(
     },
     {
       repeatCell: {
-        range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: ENHANCEMENT_TAB_COLUMNS.length },
+        range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: columns.length },
         cell: {
           userEnteredFormat: {
             backgroundColor: HEADER_BACKGROUND,
@@ -124,15 +147,15 @@ export function buildEnhancementSheetFormattingRequests(
         fields: "userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy)",
       },
     },
-    ...ENHANCEMENT_TAB_COLUMNS.map((column, index) => ({
+    ...columns.map((column, index) => ({
       updateDimensionProperties: {
         range: { sheetId, dimension: "COLUMNS", startIndex: index, endIndex: index + 1 },
         properties: { pixelSize: COLUMN_WIDTHS[column] ?? 150 },
         fields: "pixelSize",
       },
     })),
-    ...WRAP_COLUMNS.map((column) => {
-      const columnIndex = ENHANCEMENT_TAB_COLUMNS.indexOf(column);
+    ...WRAP_COLUMNS.filter((column) => columns.includes(column)).map((column) => {
+      const columnIndex = columns.indexOf(column);
       return {
         repeatCell: {
           range: { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: columnIndex, endColumnIndex: columnIndex + 1 },
@@ -141,34 +164,17 @@ export function buildEnhancementSheetFormattingRequests(
         },
       };
     }),
-    ...Object.entries(TIER_COLORS).map(([tier, colors]) => ({
-      addConditionalFormatRule: {
-        rule: {
-          ranges: [{ sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: TIER_COLUMN_INDEX, endColumnIndex: TIER_COLUMN_INDEX + 1 }],
-          booleanRule: {
-            condition: { type: "TEXT_EQ", values: [{ userEnteredValue: tier }] },
-            format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },
-          },
-        },
-        index: 0,
-      },
-    })),
-    ...Object.entries(STATUS_COLORS).map(([status, colors]) => ({
-      addConditionalFormatRule: {
-        rule: {
-          ranges: [{ sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: STATUS_COLUMN_INDEX, endColumnIndex: STATUS_COLUMN_INDEX + 1 }],
-          booleanRule: {
-            condition: { type: "TEXT_EQ", values: [{ userEnteredValue: status }] },
-            format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },
-          },
-        },
-        index: 0,
-      },
-    })),
+    ...(tierColumnIndex >= 0 ? Object.entries(TIER_COLORS).map(([tier, colors]) => colorRule(tierColumnIndex, tier, colors)) : []),
+    ...(statusColumnIndex >= 0
+      ? Object.entries(STATUS_COLORS).map(([status, colors]) => colorRule(statusColumnIndex, status, colors))
+      : []),
+    ...(detectedColumnIndex >= 0
+      ? Object.entries(DETECTED_COLORS).map(([detected, colors]) => colorRule(detectedColumnIndex, detected, colors))
+      : []),
     {
       addBanding: {
         bandedRange: {
-          range: { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: 0, endColumnIndex: ENHANCEMENT_TAB_COLUMNS.length },
+          range: { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: 0, endColumnIndex: columns.length },
           rowProperties: {
             firstBandColor: { red: 1, green: 1, blue: 1 },
             secondBandColor: { red: 0.97, green: 0.97, blue: 0.98 },
@@ -177,4 +183,51 @@ export function buildEnhancementSheetFormattingRequests(
       },
     },
   ];
+}
+
+/**
+ * The enhancement-sheet counterpart to lib/google/sheetsFormatting.ts's
+ * buildSheetFormattingRequests, for the one-tab-per-category standalone
+ * "Future updates" backlog export.
+ */
+export function buildEnhancementSheetFormattingRequests(
+  sheetId: number,
+  dataRowCount: number,
+  category: string
+): SheetFormattingRequest[] {
+  return buildFormattingForColumns(sheetId, dataRowCount, category, ENHANCEMENT_TAB_COLUMNS);
+}
+
+/**
+ * Formatting for the single consolidated "Future Updates" tab folded into
+ * a theme's audit-checklist spreadsheet (see
+ * lib/export/enhancementSheetRows.ts's buildFutureUpdatesTab). `category`
+ * here is always the tab's own title ("Future Updates", not a real
+ * category), so its tab color falls through tabColorFor's default rather
+ * than being meaningful — this tab doesn't need a category-specific color
+ * since there's only one of it per spreadsheet.
+ */
+export function buildFutureUpdatesFormattingRequests(sheetId: number, dataRowCount: number, category: string): SheetFormattingRequest[] {
+  return buildFormattingForColumns(sheetId, dataRowCount, category, FUTURE_UPDATES_TAB_COLUMNS);
+}
+
+/**
+ * Tags a batch of one-tab-per-category enhancement tabs (built by
+ * lib/export/enhancementSheetRows.ts's buildEnhancementSheetTabs) with
+ * this module's formatting and "no boolean column" — kept here rather
+ * than inside that file to avoid a circular import (this file already
+ * imports ENHANCEMENT_TAB_COLUMNS from it). Used by the standalone
+ * "Future updates" backlog export.
+ */
+export function withEnhancementSheetFormatting(tabs: SheetTab[]): SheetTab[] {
+  return tabs.map((tab) => ({ ...tab, booleanColumnIndex: -1, formatting: buildEnhancementSheetFormattingRequests }));
+}
+
+/**
+ * Same idea as withEnhancementSheetFormatting, for the single consolidated
+ * "Future Updates" tab (buildFutureUpdatesTab) folded into a theme's
+ * audit-checklist spreadsheet.
+ */
+export function withFutureUpdatesFormatting(tab: SheetTab): SheetTab {
+  return { ...tab, booleanColumnIndex: -1, formatting: buildFutureUpdatesFormattingRequests };
 }

@@ -4,6 +4,7 @@ import { AuditRun } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Requirement } from "@/models/requirement";
 import { EnhancementPoint } from "@/models/enhancement-point";
+import { buildEnhancementReportForRun, type EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
@@ -36,16 +37,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   // enhancementDetections only exists on runs audited after this feature
   // shipped — older runs report enhancementDetectionAvailable: false so the
   // UI can say "re-run this audit" instead of implying every point is absent.
-  type EnhancementDetection = { pointId: string; detected: boolean; matches?: { filePath: string; lineNumber: number | null }[] };
-  const enhancementDetections = auditRun.enhancementDetections as EnhancementDetection[] | undefined;
-  const detectionAvailable = Array.isArray(enhancementDetections);
-  const detectionByPointId = new Map((enhancementDetections ?? []).map((d) => [d.pointId, d]));
-  const enhancementReport = enhancementPoints
-    .map((p) => {
-      const detection = detectionByPointId.get(p.pointId);
-      return { ...p, detected: detection?.detected ?? null, matches: detection?.matches ?? [] };
-    })
-    .sort((a, b) => b.themeCount - a.themeCount);
+  const { points: enhancementReport, detectionAvailable } = buildEnhancementReportForRun(
+    auditRun.enhancementDetections as EnhancementDetectionRecord[] | undefined,
+    enhancementPoints
+  );
 
   return NextResponse.json({
     auditRun,

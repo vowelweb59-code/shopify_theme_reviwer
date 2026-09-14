@@ -1,4 +1,6 @@
-import { TAB_COLUMNS } from "@/lib/export/sheetRows";
+import { TAB_COLUMNS, type SheetFormattingRequest } from "@/lib/export/sheetRows";
+
+export type { SheetFormattingRequest };
 
 type RGB = { red: number; green: number; blue: number };
 
@@ -62,12 +64,6 @@ const WRAP_COLUMNS = ["Finding", "Recommendation"] as const;
 const SEVERITY_COLUMN_INDEX = TAB_COLUMNS.indexOf("Severity");
 const STATUS_COLUMN_INDEX = TAB_COLUMNS.indexOf("Status");
 const RESOLVED_COLUMN_INDEX = TAB_COLUMNS.indexOf("Resolved");
-
-// Loosely typed on purpose — these are opaque request objects passed
-// straight through to the Sheets API's spreadsheets.batchUpdate. Modeling
-// every variant of its Request union here would be pure ceremony for a
-// single internal caller.
-export type SheetFormattingRequest = Record<string, unknown>;
 
 /**
  * One tab's worth of cosmetic formatting: a styled + frozen header row,
