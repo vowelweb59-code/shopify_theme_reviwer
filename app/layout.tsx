@@ -24,6 +24,7 @@ const NAV_LINKS = [
   { href: "/rules", label: "Rules" },
   { href: "/reports", label: "Reports" },
   { href: "/page-speed", label: "Page Speed" },
+  { href: "/available-features", label: "Available Features" },
   { href: "/enhancements", label: "Future updates" },
   { href: "/maintenance", label: "Maintenance" },
   { href: "/settings", label: "Settings" },

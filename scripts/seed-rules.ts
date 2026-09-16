@@ -14,6 +14,32 @@ import { ALL_RULES } from "../lib/rules/registry";
 import { computeRuleCriticality } from "../lib/audit/ruleCriticality";
 import { ruleHasTestCoverage } from "../lib/audit/ruleTestCoverage";
 
+// Live-check rules (the LIVE-* ruleId convention, in lib/audit/liveCheck.ts
+// and lib/audit/pageSpeed.ts) are deliberately never registered as Rule
+// documents — see ALL_RULES's own scope (static, source-code checks only).
+// But their requirementId references are just as real a coverage signal as
+// a static rule's, and without this, a requirement only ever checked live
+// (e.g. PERF-BP-003 through 008) stays stuck at "not_implemented" forever —
+// a false negative in /rules' coverage dashboard, not a real gap. Extracted
+// by regex over the source text rather than importing the modules, since
+// their finding-producing functions build ExecutedFinding objects at
+// runtime (no static list of "requirementIds this file covers" to import).
+const LIVE_CHECK_FILES = [
+  path.join(__dirname, "..", "lib", "audit", "liveCheck.ts"),
+  path.join(__dirname, "..", "lib", "audit", "pageSpeed.ts"),
+];
+
+function extractLiveCheckRequirementIds(): string[] {
+  const ids = new Set<string>();
+  for (const filePath of LIVE_CHECK_FILES) {
+    const content = fs.readFileSync(filePath, "utf-8");
+    for (const match of content.matchAll(/requirementId:\s*"([^"]+)"/g)) {
+      ids.add(match[1]);
+    }
+  }
+  return [...ids];
+}
+
 // Walks lib/ (fs access only needed here — a Node CLI script, never
 // imported into the Next.js app runtime) and concatenates every *.test.ts
 // file's content into one corpus, so ruleHasTestCoverage can do a single
@@ -78,9 +104,20 @@ async function main() {
     }
   }
 
+  const liveCheckRequirementIds = extractLiveCheckRequirementIds();
+  let liveCheckRequirementsMarked = 0;
+  for (const requirementId of liveCheckRequirementIds) {
+    const result = await Requirement.updateOne(
+      { requirementId, ruleStatus: { $ne: "implemented" } },
+      { $set: { ruleStatus: "implemented" } }
+    );
+    if (result.modifiedCount > 0) liveCheckRequirementsMarked++;
+  }
+
   console.log(
     `Seed complete: ${created} rules created, ${updated} updated, ${ALL_RULES.length} total. ` +
-      `${requirementsMarkedImplemented} requirement(s) marked implemented. ${withTests}/${ALL_RULES.length} rules have test coverage.`
+      `${requirementsMarkedImplemented} requirement(s) marked implemented. ${withTests}/${ALL_RULES.length} rules have test coverage. ` +
+      `${liveCheckRequirementsMarked}/${liveCheckRequirementIds.length} live-check-only requirement(s) also marked implemented.`
   );
   process.exit(0);
 }
