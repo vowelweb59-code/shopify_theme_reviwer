@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env*.local
+.scratch
+graphify-out
+npm-debug.log*
+
+# Root-level report/screenshot artifacts (not app assets — those live
+# under public/, which this leaves untouched).
+/*.md
+/*.pdf
+/*.png
+/*.xlsx
