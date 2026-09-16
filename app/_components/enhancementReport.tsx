@@ -154,7 +154,7 @@ export function EnhancementReportSection({
         <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Future updates</h2>
         <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
           Theme Store adoption trends and documented native-Shopify capabilities this theme could add (see{" "}
-          <Link href="/enhancements" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+          <Link href="/insights?tab=future-updates" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
             Future updates
           </Link>{" "}
           for the full backlog, including sources). <strong>Not</strong> approval requirements — nothing here affects

@@ -7,9 +7,9 @@ const SECTIONS = [
     description: "Upload a theme zip and run a deterministic Theme Store compliance audit.",
   },
   {
-    href: "/rules",
-    title: "Rules",
-    description: "Browse Shopify requirements and the rules that check them.",
+    href: "/insights",
+    title: "Insights",
+    description: "Rule coverage, live page-speed results, and the future-updates backlog.",
   },
   {
     href: "/reports",
