@@ -7,6 +7,7 @@ export const REQUIREMENT_SOURCE_TYPES = [
   "technical_seo",
   "technical_aeo",
   "accessibility",
+  "performance",
   "best_practice",
 ] as const;
 

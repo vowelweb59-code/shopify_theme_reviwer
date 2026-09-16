@@ -5,7 +5,7 @@
 // database can answer by itself. Update this as work on each phase
 // progresses — it's the source of truth for the ProjectStatusWidget.
 //
-// Last reviewed: 2026-08-17 (post phase-7 work: configurable readiness, critical-rule classification, test-coverage tracking, maintenance dashboard + traceability matrix).
+// Last reviewed: 2026-09-15 (added the "Performance" finding category: 2 static rules, a live PageSpeed Insights/Playwright-fallback check now surfacing PSI's full Lighthouse "Opportunities"/"Diagnostics" audit list — not just the headline score/Core Web Vitals — as its own prioritized "Suggested fixes" list on the report page, and a new /page-speed dashboard tab).
 
 export type PhaseStatus = "done" | "in-progress" | "not-started";
 
@@ -30,7 +30,7 @@ export const PROJECT_PHASES: PhaseEntry[] = [
     phase: 4,
     name: "Advanced static analysis",
     status: "in-progress",
-    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports, CSS accessibility (aria-hidden-focus added), and performance structure (large inline payload added) all done. Canonical fixture themes added for §19's named scenarios. Validated against 3 real themes (Dawn, Skeleton, Splash). Remaining: no timing/perf instrumentation (§18/21) — left as-is, out of scope for now.",
+    note: "Theme index, cross-file resolution, template composition, JSON-LD mapping, JS imports, CSS accessibility (aria-hidden-focus added), and performance structure (large inline payload added) all done. Canonical fixture themes added for §19's named scenarios. Validated against 3 real themes (Dawn, Skeleton, Splash). §18/21's timing/perf instrumentation gap (2026-09-15): a new \"Performance\" finding category adds 2 static rules (image dimensions, render-blocking head scripts) plus a live check (lib/audit/pageSpeed.ts) that reads a real Lighthouse score + Core Web Vitals via Google's PageSpeed Insights API, falling back to Playwright-based Navigation Timing heuristics when no API key is configured — surfaced on every audit's report and on a new /page-speed cross-theme dashboard.",
   },
   {
     phase: 5,

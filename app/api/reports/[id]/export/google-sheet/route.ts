@@ -97,9 +97,19 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     }
 
     if (existingSheets) {
+      // Google's Sheets API rejects a values.batchGet range outright
+      // ("Unable to parse range: '<title>'!A2:M") when it names a tab that
+      // doesn't exist on the spreadsheet at all — unlike an empty range on
+      // a tab that does exist, which just comes back with no rows. A tab
+      // can be brand new here whenever a category is added after a theme's
+      // spreadsheet was first created (e.g. the "Performance" category) or
+      // this is simply the first run to produce any finding in it — so only
+      // ask for tabs that already exist; anything else has no prior rows to
+      // merge forward by definition.
+      const existingTitles = new Set(existingSheets.map((s) => s.title));
       const existingRowsByTitle = await readExistingChecklistRows(
         theme.googleSpreadsheetId,
-        freshTabs.map((tab) => tab.title)
+        freshTabs.map((tab) => tab.title).filter((title) => existingTitles.has(title))
       );
       tabsToWrite = freshTabs.map((tab) => ({
         title: tab.title,

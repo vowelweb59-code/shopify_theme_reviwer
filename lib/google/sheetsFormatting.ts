@@ -40,6 +40,7 @@ const CATEGORY_TAB_COLORS: Record<string, RGB> = {
   Accessibility: hexToRgb("#a855f7"),
   "Technical SEO": hexToRgb("#22c55e"),
   "Technical AEO": hexToRgb("#14b8a6"),
+  Performance: hexToRgb("#f59e0b"),
   Bug: hexToRgb("#ef4444"),
   "Internal Standard": hexToRgb("#71717a"),
 };

@@ -48,6 +48,28 @@ const liveCheckErrorSchema = new Schema({ url: String, error: String }, { _id: f
 const demoStorePresetSchema = new Schema({ label: { type: String, required: true }, url: { type: String, required: true } }, { _id: false });
 const presetLiveCheckErrorSchema = new Schema({ label: String, url: String, error: String }, { _id: false });
 
+// Raw page-speed numbers per preset (lib/audit/pageSpeed.ts) — kept
+// alongside the Performance-category Finding rows (which describe *why*
+// something's flagged) so a report can also show the plain numbers (score/
+// LCP/CLS/TBT) at a glance. `source` records which measurement produced
+// these: a real Lighthouse read via Google's PageSpeed Insights API, or the
+// Playwright-based fallback used when PSI isn't configured/fails.
+const pageSpeedMetricSchema = new Schema(
+  {
+    label: { type: String, required: true },
+    url: { type: String, required: true },
+    source: { type: String, required: true, enum: ["psi", "playwright"] },
+    performanceScore: { type: Number, default: null },
+    lcpMs: { type: Number, default: null },
+    clsScore: { type: Number, default: null },
+    tbtMs: { type: Number, default: null },
+    fcpMs: { type: Number, default: null },
+    ttfbMs: { type: Number, default: null },
+    pageWeightBytes: { type: Number, default: null },
+  },
+  { _id: false }
+);
+
 // Heuristic presence check for one "Future updates" EnhancementPoint (see
 // lib/audit/detectEnhancements.ts) against THIS run's parsed theme source.
 // Captured once, at audit time, because the original ZIP is never
@@ -90,6 +112,7 @@ const auditRunSchema = new Schema(
     // with one or more preset links.
     demoStorePresets: { type: [demoStorePresetSchema], default: undefined },
     liveCheckErrors: { type: [presetLiveCheckErrorSchema], default: undefined },
+    pageSpeed: { type: [pageSpeedMetricSchema], default: undefined },
     enhancementDetections: { type: [enhancementDetectionSchema], default: undefined },
     // Snapshot of every rule's version (ruleId -> Rule.version) at the
     // moment this audit ran (phase-6 §14) — lets a later diff tell "this

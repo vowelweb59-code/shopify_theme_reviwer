@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { CoverageResult } from "@/lib/audit/coverage";
 import type { FindingRow } from "./findings";
 
-const CATEGORY_ORDER = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Bug", "Internal Standard"] as const;
+const CATEGORY_ORDER = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Performance", "Bug", "Internal Standard"] as const;
 
 // phase-5 §10 asks for finer sub-breakdowns per category (e.g. Accessibility's
 // "Image issues" vs "Form/label issues" vs "ARIA issues"). Rules aren't

@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { href: "/audit", label: "Audit" },
   { href: "/rules", label: "Rules" },
   { href: "/reports", label: "Reports" },
+  { href: "/page-speed", label: "Page Speed" },
   { href: "/enhancements", label: "Future updates" },
   { href: "/maintenance", label: "Maintenance" },
   { href: "/settings", label: "Settings" },

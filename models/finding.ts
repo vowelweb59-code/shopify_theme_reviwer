@@ -5,6 +5,7 @@ export const FINDING_CATEGORIES = [
   "Accessibility",
   "Technical SEO",
   "Technical AEO",
+  "Performance",
   "Bug",
   "Internal Standard",
 ] as const;

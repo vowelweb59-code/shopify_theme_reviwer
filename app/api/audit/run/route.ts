@@ -13,6 +13,7 @@ import { detectEnhancementPoints, type EnhancementDetectionResult } from "@/lib/
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
 import { runLiveChecksForPresets, type PresetLink } from "@/lib/audit/liveCheck";
+import { runPageSpeedChecksForPresets, type PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
 import type { DiffableFinding } from "@/lib/audit/findingSignature";
 
@@ -203,12 +204,20 @@ export async function POST(request: Request) {
 
     let liveFindings: ExecutedFinding[] = [];
     let liveCheckErrors: { label: string; url: string; error: string }[] = [];
+    let pageSpeedMetrics: PageSpeedMetric[] = [];
     if (demoStorePresets.length > 0) {
       const liveCheckStart = Date.now();
       const liveResult = await runLiveChecksForPresets(demoStorePresets);
       liveFindings = liveResult.findings;
       liveCheckErrors = liveResult.errors;
       timer.record("liveChecks", Date.now() - liveCheckStart);
+
+      const pageSpeedStart = Date.now();
+      const pageSpeedResult = await runPageSpeedChecksForPresets(demoStorePresets);
+      liveFindings = [...liveFindings, ...pageSpeedResult.findings];
+      liveCheckErrors = [...liveCheckErrors, ...pageSpeedResult.errors];
+      pageSpeedMetrics = pageSpeedResult.metrics;
+      timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);
     }
 
     const { mostRecentPriorFindings, allPriorFindings } = await loadThemeFindingHistory(theme._id, auditRun._id);
@@ -238,6 +247,7 @@ export async function POST(request: Request) {
     });
     if (demoStorePresets.length > 0) auditRun.demoStorePresets = demoStorePresets;
     if (liveCheckErrors.length > 0) auditRun.liveCheckErrors = liveCheckErrors;
+    if (pageSpeedMetrics.length > 0) auditRun.pageSpeed = pageSpeedMetrics;
     if (enhancementDetections.length > 0) auditRun.enhancementDetections = enhancementDetections;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;

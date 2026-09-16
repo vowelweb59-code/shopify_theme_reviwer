@@ -98,6 +98,7 @@ export async function buildReportXlsx(opts: {
     Accessibility: "Accessibility",
     "Technical SEO": "Technical SEO",
     "Technical AEO": "Technical AEO",
+    Performance: "Performance",
     Bug: "Bugs",
     "Internal Standard": "Internal Standards",
   };

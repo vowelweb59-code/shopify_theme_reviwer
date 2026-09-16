@@ -7,6 +7,7 @@ import {
   DiagnosticsNote,
   EngineVersionsNote,
   FindingsTable,
+  PageSpeedPanel,
   ReadinessPanel,
   SummaryBar,
   TimingNote,
@@ -30,6 +31,7 @@ import {
 } from "@/app/_components/diff";
 import type { CoverageResult } from "@/lib/audit/coverage";
 import { computeReadiness, DEFAULT_READINESS_CONFIG, type ReadinessConfig } from "@/lib/audit/readiness";
+import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 
 type AuditRunDetail = {
   _id: string;
@@ -51,6 +53,7 @@ type AuditRunDetail = {
   liveCheckError?: { url: string; error: string } | null;
   demoStorePresets?: { label: string; url: string }[];
   liveCheckErrors?: { label: string; url: string; error: string }[];
+  pageSpeed?: PageSpeedMetric[];
 };
 
 type AuditRunListItem = {
@@ -366,6 +369,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           {readiness && <ReadinessPanel readiness={readiness} />}
           {auditRun.summary && <SummaryBar summary={auditRun.summary} />}
           {coverage && <CoverageSummaryBar coverage={coverage} />}
+          {auditRun.pageSpeed && <PageSpeedPanel metrics={auditRun.pageSpeed} findings={findings} />}
           {auditRun.diagnostics && <DiagnosticsNote diagnostics={auditRun.diagnostics} />}
           {auditRun.timingMs && <TimingNote timingMs={auditRun.timingMs} />}
           <EngineVersionsNote versions={auditRun} />

@@ -22,6 +22,7 @@ const SOURCE_TYPE_LABELS: Record<string, string> = {
   technical_seo: "Technical SEO",
   technical_aeo: "Technical AEO",
   accessibility: "Accessibility",
+  performance: "Performance",
   best_practice: "Best practice",
 };
 

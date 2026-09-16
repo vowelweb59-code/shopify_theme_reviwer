@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { getPageLabel } from "@/lib/audit/pageLabel";
+import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 
 export type FindingSummary = {
   total: number;
@@ -244,6 +245,121 @@ export function TimingNote({ timingMs }: { timingMs: Record<string, number> }) {
   );
 }
 
+function formatMs(ms: number | undefined): string {
+  return typeof ms === "number" ? `${(ms / 1000).toFixed(2)}s` : "—";
+}
+
+function scoreBandClass(score: number | undefined): string {
+  if (typeof score !== "number") return "text-zinc-500";
+  if (score >= 90) return "text-emerald-700 dark:text-emerald-400";
+  if (score >= 50) return "text-amber-700 dark:text-amber-400";
+  return "text-red-700 dark:text-red-400";
+}
+
+const SEVERITY_DOT: Record<string, string> = {
+  blocker: "bg-red-600",
+  high: "bg-red-500",
+  medium: "bg-amber-500",
+  low: "bg-zinc-400",
+};
+
+// Every finding lib/audit/pageSpeed.ts's extractOpportunityFindings produces
+// uses this ruleId prefix — distinguishes the per-issue "what to fix" list
+// from the 4 headline scorecard findings (LIVE-PERF-SCORE/LCP/CLS/TBT-001,
+// already shown in the metrics table above) and the Playwright-only
+// fallback heuristics (LIVE-PERF-TTFB/WEIGHT-001), which get their own note
+// instead since they're not real Lighthouse audits.
+const OPPORTUNITY_RULE_PREFIX = "LIVE-PERF-LH-";
+const SEVERITY_SORT: Record<string, number> = { blocker: 0, high: 1, medium: 2, low: 3 };
+
+export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric[]; findings: FindingRow[] }) {
+  if (metrics.length === 0) return null;
+
+  const opportunities = findings
+    .filter((f) => f.category === "Performance" && f.ruleId.startsWith(OPPORTUNITY_RULE_PREFIX))
+    .sort((a, b) => SEVERITY_SORT[a.severity] - SEVERITY_SORT[b.severity]);
+  const fallbackHeuristics = findings.filter(
+    (f) => f.category === "Performance" && (f.ruleId === "LIVE-PERF-TTFB-001" || f.ruleId === "LIVE-PERF-WEIGHT-001")
+  );
+  const multiplePresets = metrics.length > 1;
+
+  return (
+    <div className="rounded-lg border border-black/[.08] p-4 text-sm dark:border-white/[.145]">
+      <h3 className="font-medium text-zinc-950 dark:text-zinc-50">Page speed</h3>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[560px] text-left text-xs">
+          <thead className="text-zinc-500">
+            <tr>
+              <th className="py-1 pr-3 font-medium">Preset</th>
+              <th className="py-1 pr-3 font-medium">Source</th>
+              <th className="py-1 pr-3 font-medium">Score</th>
+              <th className="py-1 pr-3 font-medium">LCP</th>
+              <th className="py-1 pr-3 font-medium">CLS</th>
+              <th className="py-1 pr-3 font-medium">TBT</th>
+            </tr>
+          </thead>
+          <tbody className="text-zinc-700 dark:text-zinc-300">
+            {metrics.map((m) => (
+              <tr key={`${m.label}-${m.url}`} className="border-t border-black/[.06] dark:border-white/[.08]">
+                <td className="py-1.5 pr-3 font-medium text-zinc-950 dark:text-zinc-50">{m.label}</td>
+                <td className="py-1.5 pr-3">{m.source === "psi" ? "Lighthouse (PSI)" : "Playwright (fallback)"}</td>
+                <td className={`py-1.5 pr-3 font-medium ${scoreBandClass(m.performanceScore)}`}>
+                  {typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}
+                </td>
+                <td className="py-1.5 pr-3">{formatMs(m.lcpMs)}</td>
+                <td className="py-1.5 pr-3">{typeof m.clsScore === "number" ? m.clsScore.toFixed(2) : "—"}</td>
+                <td className="py-1.5 pr-3">{typeof m.tbtMs === "number" ? `${Math.round(m.tbtMs)}ms` : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {opportunities.length > 0 && (
+        <div className="mt-4 border-t border-black/[.08] pt-3 dark:border-white/[.145]">
+          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">
+            Suggested fixes ({opportunities.length})
+          </h4>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Lighthouse&apos;s own opportunities and diagnostics, most impactful first — the same &quot;what to
+            fix&quot; list PageSpeed Insights/GTmetrix show.
+          </p>
+          <ul className="mt-2 flex flex-col gap-3">
+            {opportunities.map((f, i) => (
+              <li key={`${f.ruleId}-${f.presetLabel ?? i}`} className="flex gap-2 text-xs">
+                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[f.severity]}`} aria-hidden />
+                <div>
+                  <p className="text-zinc-800 dark:text-zinc-200">
+                    {multiplePresets && f.presetLabel && (
+                      <span className="font-medium text-zinc-500">[{f.presetLabel}] </span>
+                    )}
+                    {f.finding}
+                  </p>
+                  {f.recommendation && <p className="mt-0.5 text-zinc-500">{f.recommendation}</p>}
+                  {f.sourceUrl && (
+                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="mt-0.5 inline-block underline text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50">
+                      Learn more
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {fallbackHeuristics.length > 0 && (
+        <div className="mt-4 border-t border-black/[.08] pt-3 text-xs text-zinc-500 dark:border-white/[.145]">
+          <p>
+            No PageSpeed Insights API key configured — only basic timing heuristics were checked. Configure
+            PAGESPEED_API_KEY for the full Lighthouse opportunities/diagnostics list above.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export type EngineVersions = {
   applicationVersion?: string | null;
   parserVersion?: string | null;
@@ -268,7 +384,7 @@ export function EngineVersionsNote({ versions }: { versions: EngineVersions }) {
   );
 }
 
-const CATEGORIES = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Bug", "Internal Standard"] as const;
+const CATEGORIES = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Performance", "Bug", "Internal Standard"] as const;
 const SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 const STATUSES: FindingStatus[] = ["open", "resolved", "ignored"];
 

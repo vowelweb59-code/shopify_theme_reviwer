@@ -38,6 +38,14 @@ const SECTION_SCHEMA_URL = "https://shopify.dev/docs/storefronts/themes/architec
 const GOOGLE_BREADCRUMB_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb";
 const SCHEMA_ORG_WEBSITE_URL = "https://schema.org/WebSite";
 const GOOGLE_FAQ_SD_URL = "https://developers.google.com/search/docs/appearance/structured-data/faqpage";
+const WEB_DEV_CLS_URL = "https://web.dev/articles/optimize-cls#images_without_dimensions";
+const WEB_DEV_RENDER_BLOCKING_URL = "https://web.dev/articles/render-blocking-resources";
+const WEB_DEV_LCP_URL = "https://web.dev/articles/lcp";
+const WEB_DEV_CLS_METRIC_URL = "https://web.dev/articles/cls";
+const WEB_DEV_TBT_URL = "https://web.dev/articles/tbt";
+const PSI_ABOUT_URL = "https://developers.google.com/speed/docs/insights/v5/about";
+const WEB_DEV_TTFB_URL = "https://web.dev/articles/ttfb";
+const LIGHTHOUSE_PERFORMANCE_SCORING_URL = "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring";
 
 const requirements: SeedRequirement[] = [
   // --- Shopify Theme Store Compliance: structure -----------------------
@@ -1252,6 +1260,108 @@ const requirements: SeedRequirement[] = [
     sourceName: "Internal quality standard (multi-preset consistency)",
     severity: "medium",
     notes: "Checked live, per preset's actual rendered demo store (lib/audit/liveCheck.ts's comparePresets), not from config/settings_data.json — each preset is a separately published, independently admin-configured store, so live rendered output is what can genuinely drift, and what a merchant/reviewer actually sees. Requires 2+ preset demo URLs supplied on the audit run; the first one supplied is treated as the baseline every other preset is compared against. Not an official Shopify requirement — sourced from the user's own quality bar for this project, informed by studying top multi-preset Theme Store themes.",
+  },
+
+  // --- Performance -------------------------------------------------------
+  // The first two are statically checkable from theme source
+  // (lib/rules/performance/index.ts); the rest are checked against a real,
+  // running demo store via Google's PageSpeed Insights API — including its
+  // full Lighthouse "Opportunities"/"Diagnostics" audit list (PERF-BP-008),
+  // not just the headline score and Core Web Vitals — falling back to
+  // Playwright-based timing metrics when PSI is unavailable
+  // (lib/audit/pageSpeed.ts). All thresholds are Google's own published
+  // guidance, not invented numbers.
+  {
+    requirementId: "PERF-BP-001",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Images should specify explicit width and height",
+    description:
+      "An <img>/<source> with no width and height (and no aspect-ratio reservation) gives the browser no size to lay out before the image loads, causing a layout shift once it does.",
+    sourceName: "web.dev — Optimize Cumulative Layout Shift",
+    sourceUrl: WEB_DEV_CLS_URL,
+    severity: "medium",
+  },
+  {
+    requirementId: "PERF-BP-002",
+    sourceType: "performance",
+    category: "Performance",
+    title: "External scripts in <head> should not block rendering",
+    description:
+      "An external <script src=\"...\"> placed in <head> without async, defer, or type=\"module\" blocks HTML parsing until it downloads and executes, delaying first render.",
+    sourceName: "web.dev — Eliminate render-blocking resources",
+    sourceUrl: WEB_DEV_RENDER_BLOCKING_URL,
+    severity: "high",
+  },
+  {
+    requirementId: "PERF-BP-003",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Lighthouse performance score should stay in the 'good' range",
+    description:
+      "A live Lighthouse performance audit (via Google's PageSpeed Insights API, mobile strategy) scoring below 90 is 'needs improvement', and below 50 is 'poor', per Google's own published Lighthouse scoring bands.",
+    sourceName: "Google — PageSpeed Insights API (about)",
+    sourceUrl: PSI_ABOUT_URL,
+    severity: "high",
+    notes: "Advisory, not a hard Theme Store submission rule — capped at 'high' severity, never 'blocker'.",
+  },
+  {
+    requirementId: "PERF-BP-004",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Largest Contentful Paint should meet Core Web Vitals thresholds",
+    description: "LCP should be at or under 2.5s ('good'); 2.5–4s is 'needs improvement'; over 4s is 'poor'.",
+    sourceName: "web.dev — Largest Contentful Paint (LCP)",
+    sourceUrl: WEB_DEV_LCP_URL,
+    severity: "high",
+    notes: "Advisory, not a hard Theme Store submission rule — capped at 'high' severity, never 'blocker'.",
+  },
+  {
+    requirementId: "PERF-BP-005",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Cumulative Layout Shift should meet Core Web Vitals thresholds",
+    description: "CLS should be at or under 0.1 ('good'); 0.1–0.25 is 'needs improvement'; over 0.25 is 'poor'.",
+    sourceName: "web.dev — Cumulative Layout Shift (CLS)",
+    sourceUrl: WEB_DEV_CLS_METRIC_URL,
+    severity: "high",
+    notes: "Advisory, not a hard Theme Store submission rule — capped at 'high' severity, never 'blocker'.",
+  },
+  {
+    requirementId: "PERF-BP-006",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Total Blocking Time should stay within Lighthouse's lab-data thresholds",
+    description: "TBT should be at or under 200ms ('good'); 200–600ms is 'needs improvement'; over 600ms is 'poor'.",
+    sourceName: "web.dev — Total Blocking Time (TBT)",
+    sourceUrl: WEB_DEV_TBT_URL,
+    severity: "high",
+    notes: "Advisory, not a hard Theme Store submission rule — capped at 'high' severity, never 'blocker'.",
+  },
+  {
+    requirementId: "PERF-BP-007",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Page load should stay reasonably fast when only fallback timing metrics are available",
+    description:
+      "When Google's PageSpeed Insights API isn't configured or fails, the app falls back to Playwright-based Navigation Timing metrics: Time to First Byte over 800ms, or total transferred page weight over 3MB, are flagged as a heuristic (not a real Lighthouse measurement).",
+    sourceName: "web.dev — Time to First Byte (TTFB)",
+    sourceUrl: WEB_DEV_TTFB_URL,
+    severity: "medium",
+    notes: "A bounded heuristic, deliberately capped at 'medium' severity (never higher) and using distinct LIVE-PERF-TTFB-001/LIVE-PERF-WEIGHT-001 ruleIds so it's never confused with a real Lighthouse-grounded finding.",
+  },
+  {
+    requirementId: "PERF-BP-008",
+    sourceType: "performance",
+    category: "Performance",
+    title: "Address Lighthouse's specific performance opportunities and diagnostics",
+    description:
+      "Beyond the headline score and Core Web Vitals, a live PageSpeed Insights read surfaces Lighthouse's full 'Opportunities' (e.g. eliminate render-blocking resources, properly size/compress images, serve modern image formats, reduce unused CSS/JS, enable text compression) and 'Diagnostics' (e.g. excessive DOM size, long main-thread tasks, inefficient cache policy) audits — the same actionable, per-issue fix list GTmetrix/PSI/Lighthouse itself present, each with its own estimated time/byte savings where available.",
+    sourceName: "Lighthouse — Performance scoring",
+    sourceUrl: LIGHTHOUSE_PERFORMANCE_SCORING_URL,
+    severity: "medium",
+    notes:
+      "One umbrella requirement covering an inherently open-ended, data-driven set of checks (lib/audit/pageSpeed.ts's extractOpportunityFindings) rather than a hand-curated requirement per Lighthouse audit id — Lighthouse's own audit list evolves across versions, and each finding already carries its own specific severity/title/guidance from that audit. PSI-only: the Playwright-based fallback (no API key configured) doesn't run real Lighthouse, so it can't produce this level of detail — only PERF-BP-007's basic heuristic.",
   },
 ];
 
