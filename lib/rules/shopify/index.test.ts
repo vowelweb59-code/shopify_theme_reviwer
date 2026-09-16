@@ -57,3 +57,96 @@ describe("SHOPIFY-LOCALE-HARDCODED-001", () => {
     expect(hardcodedTextFindings(theme)).toHaveLength(1);
   });
 });
+
+function ruleFindingsFor(ruleId: string, theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = SHOPIFY_RULES.find((r) => r.ruleId === ruleId)!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("SHOPIFY-CSS-NOSASS-001", () => {
+  it("flags a .scss file", () => {
+    const theme = buildTestTheme({ "assets/theme.scss": ".btn { color: red; }" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-CSS-NOSASS-001", theme)).toHaveLength(1);
+  });
+
+  it("flags a .scss.liquid file", () => {
+    const theme = buildTestTheme({ "assets/theme.scss.liquid": ".btn {{ color }}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-CSS-NOSASS-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag a plain .css file", () => {
+    const theme = buildTestTheme({ "assets/theme.css": ".btn { color: red; }" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-CSS-NOSASS-001", theme)).toHaveLength(0);
+  });
+
+  it("does not flag a filename that merely contains 'scss' mid-name, not as the extension", () => {
+    const theme = buildTestTheme({ "assets/scssish-theme.css": ".btn { color: red; }" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-CSS-NOSASS-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("SHOPIFY-LIQUID-CONTENTFORHEADER-001", () => {
+  it("flags content_for_header itself being reassigned", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "{% assign content_for_header = '' %}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LIQUID-CONTENTFORHEADER-001", theme)).toHaveLength(1);
+  });
+
+  it("flags content_for_header being captured into a variable", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "{% capture content_for_header %}{% endcapture %}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LIQUID-CONTENTFORHEADER-001", theme)).toHaveLength(1);
+  });
+
+  it("flags content_for_header being piped through a filter", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "{{ content_for_header | strip_html }}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LIQUID-CONTENTFORHEADER-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag plain, unmodified output of content_for_header", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "{{ content_for_header }}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LIQUID-CONTENTFORHEADER-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("SHOPIFY-LINKS-NOFOLLOW-001", () => {
+  it("flags a link to a shopify.com domain missing rel=nofollow", () => {
+    const theme = buildTestTheme({ "sections/footer.liquid": '<a href="https://www.shopify.com/legal">Legal</a>' });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LINKS-NOFOLLOW-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag a shopify.com link that already has rel=nofollow", () => {
+    const theme = buildTestTheme({
+      "sections/footer.liquid": '<a href="https://www.shopify.com/legal" rel="nofollow">Legal</a>',
+    });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LINKS-NOFOLLOW-001", theme)).toHaveLength(0);
+  });
+
+  it("does not flag a link to an unrelated domain", () => {
+    const theme = buildTestTheme({ "sections/footer.liquid": '<a href="https://example.com/legal">Legal</a>' });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-LINKS-NOFOLLOW-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("SHOPIFY-SEO-NOROBOTS-001", () => {
+  it("flags a robots.txt.liquid template", () => {
+    const theme = buildTestTheme({ "templates/robots.txt.liquid": "{{ 'robots.txt.liquid' }}" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-SEO-NOROBOTS-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag an unrelated template file", () => {
+    const theme = buildTestTheme({ "templates/index.liquid": "<div>Home</div>" });
+    cleanup = theme.cleanup;
+    expect(ruleFindingsFor("SHOPIFY-SEO-NOROBOTS-001", theme)).toHaveLength(0);
+  });
+});

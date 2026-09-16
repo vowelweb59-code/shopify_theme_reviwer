@@ -301,3 +301,36 @@ describe("A11Y-CSS-ORDER-001", () => {
     expect(cssOrderFindings(theme)).toHaveLength(0);
   });
 });
+
+function htmlLangFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "SHOPIFY-A11Y-LANG-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("SHOPIFY-A11Y-LANG-001", () => {
+  it("flags a layout file whose <html> element has no lang attribute", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<html><body></body></html>" });
+    cleanup = theme.cleanup;
+    expect(htmlLangFindings(theme)).toHaveLength(1);
+  });
+
+  it("flags a layout file whose <html> lang attribute is empty", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": '<html lang=""><body></body></html>' });
+    cleanup = theme.cleanup;
+    expect(htmlLangFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag a layout file whose <html> element has a lang attribute", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": '<html lang="{{ request.locale.iso_code }}"><body></body></html>',
+    });
+    cleanup = theme.cleanup;
+    expect(htmlLangFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not check a section/snippet file — only layout/*.liquid renders an <html> element", () => {
+    const theme = buildTestTheme({ "sections/header.liquid": "<html><body></body></html>" });
+    cleanup = theme.cleanup;
+    expect(htmlLangFindings(theme)).toHaveLength(0);
+  });
+});

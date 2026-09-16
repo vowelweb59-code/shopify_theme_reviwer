@@ -209,3 +209,122 @@ describe("AEO-PRODUCT-SCHEMA-COMPOSED-001 / AEO-ARTICLE-SCHEMA-COMPOSED-001", ()
     expect(findings[0].severity).toBe("medium");
   });
 });
+
+describe("REF-TEMPLATE-SECTION-MISSING-001", () => {
+  it("flags a JSON template referencing a section type that doesn't exist", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": JSON.stringify({ sections: { a: { type: "does-not-exist" } }, order: ["a"] }),
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-TEMPLATE-SECTION-MISSING-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag a section type that resolves to a real section file", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": JSON.stringify({ sections: { a: { type: "hero" } }, order: ["a"] }),
+      "sections/hero.liquid": "<div>Hero</div>",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-TEMPLATE-SECTION-MISSING-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("REF-JS-IMPORT-MISSING-001", () => {
+  it("flags a relative import that doesn't resolve to a file in assets/", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "assets/theme.js": "import { foo } from './missing.js';",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-JS-IMPORT-MISSING-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag a relative import that resolves to a real asset", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "assets/theme.js": "import { foo } from './utils.js';",
+      "assets/utils.js": "export function foo() {}",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-JS-IMPORT-MISSING-001", theme)).toHaveLength(0);
+  });
+
+  it("does not flag a bare (npm-style) specifier", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "assets/theme.js": "import Alpine from 'alpinejs';",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-JS-IMPORT-MISSING-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("REF-LOCALE-KEY-DUPLICATE-001", () => {
+  it("flags a key repeated within the same object in a locale file", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "locales/en.default.json": '{"general": {"greeting": "Hi", "greeting": "Hello"}}',
+    });
+    cleanup = theme.cleanup;
+    const findings = findingsFor("REF-LOCALE-KEY-DUPLICATE-001", theme);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].finding).toContain("general.greeting");
+  });
+
+  it("does not flag a locale file with no duplicate keys", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "locales/en.default.json": '{"general": {"greeting": "Hi"}}',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-LOCALE-KEY-DUPLICATE-001", theme)).toHaveLength(0);
+  });
+
+  it("does not flag a duplicate key in a non-locale JSON file", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": '{"sections": {}, "order": [], "sections": {}}',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("REF-LOCALE-KEY-DUPLICATE-001", theme)).toHaveLength(0);
+  });
+});
+
+describe("SEO-HEADING-SKIP-COMPOSED-001", () => {
+  it("flags a heading level skip that crosses from one composed section into another", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": JSON.stringify({ sections: { a: { type: "hero" }, b: { type: "details" } }, order: ["a", "b"] }),
+      "sections/hero.liquid": "<h2>Hero</h2>",
+      "sections/details.liquid": "<h4>Details</h4>",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("SEO-HEADING-SKIP-COMPOSED-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag headings that stay in sequence across composed sections", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": JSON.stringify({ sections: { a: { type: "hero" }, b: { type: "details" } }, order: ["a", "b"] }),
+      "sections/hero.liquid": "<h2>Hero</h2>",
+      "sections/details.liquid": "<h3>Details</h3>",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("SEO-HEADING-SKIP-COMPOSED-001", theme)).toHaveLength(0);
+  });
+
+  // A skip fully contained within one file is findSkippedHeadingLevels's
+  // (SEO-HEADING-SKIP-001's) job, not this composed, cross-file rule's —
+  // only a skip that crosses a file boundary counts here.
+  it("does not flag a skip that happens entirely within a single composed file", () => {
+    const theme = buildTestTheme({
+      ...BASE_LAYOUT,
+      "templates/index.json": JSON.stringify({ sections: { a: { type: "hero" } }, order: ["a"] }),
+      "sections/hero.liquid": "<h2>Hero</h2><h4>Sub</h4>",
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("SEO-HEADING-SKIP-COMPOSED-001", theme)).toHaveLength(0);
+  });
+});

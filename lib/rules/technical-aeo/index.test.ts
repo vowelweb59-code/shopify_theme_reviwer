@@ -57,6 +57,23 @@ describe("AEO-PRODUCT-SCHEMA-001", () => {
   });
 });
 
+describe("AEO-ORG-SCHEMA-001", () => {
+  it("flags a theme with no Organization JSON-LD anywhere", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<html></html>" });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-ORG-SCHEMA-001", theme)).toHaveLength(1);
+  });
+
+  it("does not flag when an Organization JSON-LD block is present", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid":
+        '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"Organization","name":"Acme"}</script>',
+    });
+    cleanup = theme.cleanup;
+    expect(findingsFor("AEO-ORG-SCHEMA-001", theme)).toHaveLength(0);
+  });
+});
+
 describe("AEO-ARTICLE-SCHEMA-001", () => {
   it("does not flag Shopify's | structured_data filter as missing Article schema", () => {
     const theme = buildTestTheme({
