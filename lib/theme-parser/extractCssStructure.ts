@@ -17,6 +17,9 @@ const ANIMATION_PROPERTIES = new Set(["animation", "animation-name", "transition
 // reduced-motion accommodation of its own — only meaningfully-animating
 // declarations count toward "this theme uses motion".
 const TRIVIAL_ANIMATION_VALUE_RE = /^(none|0s?|0ms|initial|inherit|unset)$/i;
+// order: 0 is the flex/grid default (a no-op) — only a genuinely non-zero
+// value moves the element out of its natural document position.
+const TRIVIAL_ORDER_VALUE_RE = /^(0|initial|inherit|unset)$/i;
 
 export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; parseErrors: ParsedParseError[] } {
   const cssInfo: ParsedCssInfo = {
@@ -26,6 +29,7 @@ export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; 
     colorDeclarations: [],
     mediaQueries: [],
     animationDeclarations: [],
+    orderDeclarations: [],
   };
   const parseErrors: ParsedParseError[] = [];
 
@@ -52,6 +56,9 @@ export function extractCssStructure(rawText: string): { cssInfo: ParsedCssInfo; 
         }
         if (ANIMATION_PROPERTIES.has(prop) && !TRIVIAL_ANIMATION_VALUE_RE.test(decl.value.trim())) {
           cssInfo.animationDeclarations.push({ line: declLine, selector, property: decl.prop, value: decl.value });
+        }
+        if (prop === "order" && !TRIVIAL_ORDER_VALUE_RE.test(decl.value.trim())) {
+          cssInfo.orderDeclarations.push({ line: declLine, selector, value: decl.value });
         }
       });
     });

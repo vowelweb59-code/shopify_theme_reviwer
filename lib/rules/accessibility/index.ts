@@ -405,6 +405,137 @@ const ariaHiddenFocusableRule: Rule = {
   },
 };
 
+const SKIP_LINK_TEXT_RE = /skip\s*(to)?\s*(main\s*)?(content|navigation)/i;
+
+const skipLinkRule: Rule = {
+  ruleId: "A11Y-SKIP-LINK-001",
+  requirementId: "A11Y-BP-003",
+  category: "Accessibility",
+  defaultSeverity: "low",
+  title: "Theme should offer a skip-to-content link",
+  description:
+    "A 'skip to content' link as the first focusable element lets keyboard users bypass repeated header/navigation markup and jump straight to the main content, instead of tabbing through the whole header on every page.",
+  sourceReference: "Accessibility best practices for Shopify themes",
+  sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+  check({ files }) {
+    const hasSkipLink = files.some((f) =>
+      f.links.some((link) => link.href?.startsWith("#") && link.text && SKIP_LINK_TEXT_RE.test(link.text))
+    );
+    if (hasSkipLink) return [];
+    const layoutFile = files.find((f) => f.path.startsWith("layout/") && f.fileType === "liquid");
+    if (!layoutFile) return [];
+    return [
+      {
+        filePath: layoutFile.path,
+        category: "Accessibility" as const,
+        severity: "low" as const,
+        finding: "No 'skip to content' link was found anywhere in the theme.",
+        recommendation:
+          'Add a visually-hidden-until-focused <a href="#MainContent">Skip to content</a> as the first focusable element in the layout.',
+      },
+    ];
+  },
+};
+
+// Text-scanned per opening tag rather than tracked in the parser: unlike
+// dedicated fields for links/buttons/inputs, aria-controls is rare enough
+// (mainly on dropdown/disclosure triggers) that adding a generic field for
+// every element type just to catch this one pairing isn't worth it.
+const OPEN_TAG_RE = /<([a-zA-Z][\w-]*)\b([^>]*)>/g;
+const ARIA_CONTROLS_RE = /\baria-controls\s*=/i;
+const ARIA_EXPANDED_RE = /\baria-expanded\s*=/i;
+
+const ariaExpandedRule: Rule = {
+  ruleId: "A11Y-ARIA-EXPANDED-001",
+  requirementId: "A11Y-BP-006",
+  category: "Accessibility",
+  defaultSeverity: "low",
+  title: "Collapsible navigation triggers should expose aria-expanded",
+  description:
+    "An element that controls a collapsible region via aria-controls should also carry aria-expanded, so assistive technology can announce whether that region is currently open or closed.",
+  sourceReference: "Accessibility best practices for Shopify themes",
+  sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const match of f.rawText.matchAll(OPEN_TAG_RE)) {
+        const [, tagName, attrs] = match;
+        if (!ARIA_CONTROLS_RE.test(attrs) || ARIA_EXPANDED_RE.test(attrs)) continue;
+        const line = f.rawText.slice(0, match.index).split("\n").length;
+        findings.push({
+          filePath: f.path,
+          lineNumber: line,
+          category: "Accessibility" as const,
+          severity: "low" as const,
+          finding: `<${tagName}> has aria-controls but no aria-expanded, so assistive technology has no way to know whether the region it controls is open or closed.`,
+          recommendation: 'Add aria-expanded="true"/"false" to this element, toggled to match the controlled region\'s visible open/closed state.',
+        });
+      }
+    }
+    return findings;
+  },
+};
+
+const clickNoKeyboardRule: Rule = {
+  ruleId: "A11Y-CLICK-NO-KEYBOARD-001",
+  requirementId: "SHOPIFY-A11Y-009",
+  category: "Accessibility",
+  defaultSeverity: "high",
+  title: "Elements with a click handler must be keyboard-focusable",
+  description:
+    "A non-interactive element (e.g. <div>/<span>) with a click handler but no tabindex is invisible to keyboard-only users — they can never focus it to activate it. Covers one specific, common instance of 'all parts of a page must be keyboard accessible', not an exhaustive keyboard-accessibility audit.",
+  sourceReference: "Shopify Theme Store requirements — Accessibility",
+  sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      for (const el of f.interactiveElements) {
+        if (el.hasClickHandlerAttr && el.tabIndex === null) {
+          findings.push({
+            filePath: f.path,
+            lineNumber: el.line,
+            category: "Accessibility" as const,
+            severity: "high" as const,
+            finding: `<${el.tag}> has a click handler but no tabindex, so keyboard-only users can never focus it to activate it.`,
+            recommendation: 'Add tabindex="0" and a keydown handler (Enter/Space) matching the click behavior, or use a real <button>/<a> instead.',
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
+const cssOrderRule: Rule = {
+  ruleId: "A11Y-CSS-ORDER-001",
+  requirementId: "SHOPIFY-A11Y-005",
+  category: "Accessibility",
+  defaultSeverity: "high",
+  title: "CSS order should not be used to reorder focusable content",
+  description:
+    "A flex/grid order value moves an element's visual position without moving it in the DOM, so keyboard focus order (which follows the DOM) can end up not matching what's shown on screen. Flagged whenever order is used at all, since confirming it never touches focusable content would need live layout inspection.",
+  sourceReference: "Shopify Theme Store requirements — Accessibility",
+  sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (!f.cssInfo) continue;
+      for (const decl of f.cssInfo.orderDeclarations) {
+        findings.push({
+          filePath: f.path,
+          lineNumber: decl.line,
+          category: "Accessibility" as const,
+          severity: "high" as const,
+          finding: `Selector "${decl.selector}" sets order: ${decl.value} — this changes visual position without changing DOM order, risking a keyboard focus order that doesn't match what's shown on screen.`,
+          recommendation: "Reorder the actual markup instead of using CSS order, or confirm this selector never contains focusable content.",
+        });
+      }
+    }
+    return findings;
+  },
+};
+
 export const ACCESSIBILITY_RULES: Rule[] = [
   htmlLangRule,
   formLabelRule,
@@ -415,4 +546,8 @@ export const ACCESSIBILITY_RULES: Rule[] = [
   outlineRemovalRule,
   reducedMotionRule,
   ariaHiddenFocusableRule,
+  skipLinkRule,
+  ariaExpandedRule,
+  clickNoKeyboardRule,
+  cssOrderRule,
 ];

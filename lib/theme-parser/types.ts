@@ -258,6 +258,10 @@ export type ParsedCssInfo = {
   colorDeclarations: { line: number; selector: string; property: string; value: string }[];
   mediaQueries: { line: number; params: string }[];
   animationDeclarations: { line: number; selector: string; property: string; value: string }[];
+  // Non-zero flexbox/grid `order` values — the most common real-world cause
+  // of a visual order that no longer matches DOM/keyboard tab order, since
+  // `order` moves an element on screen without moving it in the document.
+  orderDeclarations: { line: number; selector: string; value: string }[];
 };
 
 // Plain-JSON-file structured data (templates/*.json, config/*.json,

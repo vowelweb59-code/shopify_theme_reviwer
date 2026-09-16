@@ -31,6 +31,7 @@ const MEDIUM_VIEWPORT = { width: 900, height: 800 };
 
 type ContrastSample = { selector: string; text: string; color: string; background: string };
 type ImageSample = { selector: string; naturalWidth: number; naturalHeight: number; renderedWidth: number; renderedHeight: number };
+type TouchTargetSample = { selector: string; width: number; height: number };
 
 export type PageFacts = {
   url: string;
@@ -39,6 +40,7 @@ export type PageFacts = {
   metaDescription: string | null;
   contrastSamples: ContrastSample[];
   imageSamples: ImageSample[];
+  touchTargetSamples: TouchTargetSample[];
   devicePixelRatio: number;
   /**
    * Every `.shopify-section` wrapper's id (the `shopify-section-` prefix
@@ -179,6 +181,31 @@ export async function extractLoadedPageFacts(
       });
     }
 
+    // Real controls only: an inline text link (e.g. "read more" mid-
+    // paragraph) is explicitly exempt from the 24x24 minimum, so only
+    // non-inline-display links are sampled alongside buttons/role="button"
+    // elements and button-type inputs — the elements the requirement
+    // actually targets.
+    const TOUCH_TARGET_MAX_SAMPLES = 80;
+    const touchTargetSamples: { selector: string; width: number; height: number }[] = [];
+    const touchTargetCandidates = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        'button, [role="button"], input[type="submit"], input[type="button"], input[type="checkbox"], input[type="radio"], a'
+      )
+    );
+    for (const el of touchTargetCandidates) {
+      if (touchTargetSamples.length >= TOUCH_TARGET_MAX_SAMPLES) break;
+      const style = getComputedStyle(el);
+      if (style.visibility === "hidden" || style.display === "none") continue;
+      if (el.tagName === "A" && style.display === "inline") continue; // inline text link — exempt
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+
+      const classes = typeof el.className === "string" ? el.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
+      const selector = el.tagName.toLowerCase() + (classes ? `.${classes}` : "");
+      touchTargetSamples.push({ selector, width: rect.width, height: rect.height });
+    }
+
     const sectionIds = Array.from(document.querySelectorAll(".shopify-section"))
       .map((el) => el.id.replace(/^shopify-section-/, ""))
       .filter(Boolean);
@@ -189,6 +216,7 @@ export async function extractLoadedPageFacts(
       metaDescription,
       contrastSamples,
       imageSamples,
+      touchTargetSamples,
       devicePixelRatio: window.devicePixelRatio,
       sectionIds,
     };
@@ -264,8 +292,29 @@ function imageResolutionFindings(facts: PageFacts): ExecutedFinding[] {
   return findings;
 }
 
+// Shopify's own stated bar (WCAG 2.5.8) — 24x24 CSS pixels, with the same
+// inline-text-link exception already filtered out at sampling time.
+const TOUCH_TARGET_MIN_SIZE = 24;
+
+function touchTargetFindings(facts: PageFacts): ExecutedFinding[] {
+  const findings: ExecutedFinding[] = [];
+  for (const sample of facts.touchTargetSamples) {
+    if (sample.width >= TOUCH_TARGET_MIN_SIZE && sample.height >= TOUCH_TARGET_MIN_SIZE) continue;
+    findings.push({
+      ruleId: "LIVE-A11Y-TOUCH-TARGET-001",
+      requirementId: "SHOPIFY-A11Y-006",
+      filePath: facts.url,
+      category: "Accessibility",
+      severity: "medium",
+      finding: `"${sample.selector}" renders at ${Math.round(sample.width)}×${Math.round(sample.height)}px — below the 24×24 CSS pixel minimum touch target size.`,
+      recommendation: "Increase this control's rendered size (padding, min-width/min-height) to at least 24×24 CSS pixels.",
+    });
+  }
+  return findings;
+}
+
 function homepageFindings(facts: PageFacts): ExecutedFinding[] {
-  const findings: ExecutedFinding[] = [...contrastFindings(facts), ...imageResolutionFindings(facts)];
+  const findings: ExecutedFinding[] = [...contrastFindings(facts), ...imageResolutionFindings(facts), ...touchTargetFindings(facts)];
   if (!facts.jsonLdTypes.includes("Organization")) {
     findings.push({
       ruleId: "LIVE-JSONLD-ORG-001",
@@ -314,7 +363,7 @@ function homepageFindings(facts: PageFacts): ExecutedFinding[] {
 }
 
 function productPageFindings(facts: PageFacts): ExecutedFinding[] {
-  const findings: ExecutedFinding[] = [...contrastFindings(facts), ...imageResolutionFindings(facts)];
+  const findings: ExecutedFinding[] = [...contrastFindings(facts), ...imageResolutionFindings(facts), ...touchTargetFindings(facts)];
   if (!facts.jsonLdTypes.includes("Product")) {
     findings.push({
       ruleId: "LIVE-JSONLD-PRODUCT-001",

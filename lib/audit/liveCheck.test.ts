@@ -101,6 +101,25 @@ describe("extractLoadedPageFacts", () => {
     expect(facts.imageSamples).toHaveLength(0);
   });
 
+  it("flags a real touch-target sample undersized below 24x24 CSS pixels", async () => {
+    await page.setContent('<body><button style="width:16px;height:16px;padding:0;border:0">×</button></body>');
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.touchTargetSamples).toHaveLength(1);
+    expect(facts.touchTargetSamples[0].width).toBeLessThan(24);
+  });
+
+  it("does not sample an inline text link mid-paragraph (exempt from the touch-target minimum)", async () => {
+    await page.setContent('<body><p>Some text with an <a href="/x" style="display:inline">inline link</a> in it.</p></body>');
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.touchTargetSamples).toHaveLength(0);
+  });
+
+  it("does sample a block-level link styled as a button", async () => {
+    await page.setContent('<body><a href="/x" style="display:inline-block;width:16px;height:16px">Go</a></body>');
+    const facts = await extractLoadedPageFacts(page);
+    expect(facts.touchTargetSamples).toHaveLength(1);
+  });
+
   it("reads rendered section ids from .shopify-section wrappers", async () => {
     await page.setContent(
       '<body>' +
@@ -129,6 +148,7 @@ function makeFacts(overrides: Partial<PageFacts> = {}): PageFacts {
     metaDescription: "A test store",
     contrastSamples: [],
     imageSamples: [],
+    touchTargetSamples: [],
     devicePixelRatio: 1,
     sectionIds: ["hero", "featured-collection", "footer"],
     ...overrides,

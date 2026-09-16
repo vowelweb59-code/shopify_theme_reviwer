@@ -183,3 +183,121 @@ describe("A11Y-REDUCED-MOTION-001", () => {
     expect(reducedMotionFindings(theme)).toHaveLength(0);
   });
 });
+
+function skipLinkFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-SKIP-LINK-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-SKIP-LINK-001", () => {
+  it("flags a layout with no skip link anywhere", () => {
+    const theme = buildTestTheme({ "layout/theme.liquid": "<html><body><header></header></body></html>" });
+    cleanup = theme.cleanup;
+    expect(skipLinkFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag when a skip-to-content link exists", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": '<html><body><a href="#MainContent">Skip to content</a></body></html>',
+    });
+    cleanup = theme.cleanup;
+    expect(skipLinkFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag when the skip link lives in a snippet, not the layout", () => {
+    const theme = buildTestTheme({
+      "layout/theme.liquid": "<html><body>{% render 'skip-link' %}</body></html>",
+      "snippets/skip-link.liquid": '<a href="#MainContent">Skip to main content</a>',
+    });
+    cleanup = theme.cleanup;
+    expect(skipLinkFindings(theme)).toHaveLength(0);
+  });
+});
+
+function ariaExpandedFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-ARIA-EXPANDED-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-ARIA-EXPANDED-001", () => {
+  it("flags a dropdown trigger with aria-controls but no aria-expanded", () => {
+    const theme = buildTestTheme({
+      "sections/header.liquid": '<button aria-controls="submenu-1">Shop</button>',
+    });
+    cleanup = theme.cleanup;
+    expect(ariaExpandedFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag when aria-expanded is present alongside aria-controls", () => {
+    const theme = buildTestTheme({
+      "sections/header.liquid": '<button aria-controls="submenu-1" aria-expanded="false">Shop</button>',
+    });
+    cleanup = theme.cleanup;
+    expect(ariaExpandedFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag an element with neither attribute", () => {
+    const theme = buildTestTheme({ "sections/header.liquid": "<button>Shop</button>" });
+    cleanup = theme.cleanup;
+    expect(ariaExpandedFindings(theme)).toHaveLength(0);
+  });
+});
+
+function clickNoKeyboardFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-CLICK-NO-KEYBOARD-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-CLICK-NO-KEYBOARD-001", () => {
+  it("flags a div with a click handler and no tabindex", () => {
+    const theme = buildTestTheme({ "sections/hero.liquid": '<div onclick="doThing()">Click me</div>' });
+    cleanup = theme.cleanup;
+    expect(clickNoKeyboardFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag a div with a click handler that also has a tabindex", () => {
+    const theme = buildTestTheme({ "sections/hero.liquid": '<div onclick="doThing()" tabindex="0">Click me</div>' });
+    cleanup = theme.cleanup;
+    expect(clickNoKeyboardFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag a real <button> with a click handler", () => {
+    const theme = buildTestTheme({ "sections/hero.liquid": '<button onclick="doThing()">Click me</button>' });
+    cleanup = theme.cleanup;
+    expect(clickNoKeyboardFindings(theme)).toHaveLength(0);
+  });
+});
+
+function cssOrderFindings(theme: ReturnType<typeof buildTestTheme>): RuleFinding[] {
+  const rule = ACCESSIBILITY_RULES.find((r) => r.ruleId === "A11Y-CSS-ORDER-001")!;
+  return rule.check({ files: theme.parsed.files, index: theme.index });
+}
+
+describe("A11Y-CSS-ORDER-001", () => {
+  it("flags a non-zero order value", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".nav-item { order: 2; }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(cssOrderFindings(theme)).toHaveLength(1);
+  });
+
+  it("does not flag order: 0 (the default, a no-op)", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".nav-item { order: 0; }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(cssOrderFindings(theme)).toHaveLength(0);
+  });
+
+  it("does not flag a file with no order declarations", () => {
+    const theme = buildTestTheme({
+      "assets/theme.css": ".nav-item { display: flex; }",
+      "layout/theme.liquid": "<html></html>",
+    });
+    cleanup = theme.cleanup;
+    expect(cssOrderFindings(theme)).toHaveLength(0);
+  });
+});
