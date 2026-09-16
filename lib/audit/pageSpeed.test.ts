@@ -5,10 +5,16 @@ import {
   fallbackThresholdFindings,
   fetchPsiLighthouseResult,
   psiThresholdFindings,
+  shopifySubmissionBarFindings,
   type LighthouseAudit,
   type LighthouseAuditRef,
   type LighthouseResult,
+  type PageSpeedMetric,
 } from "./pageSpeed";
+
+function metric(overrides: Partial<PageSpeedMetric> = {}): PageSpeedMetric {
+  return { label: "Demo store", url: "https://example.com", pageType: "home", strategy: "mobile", source: "psi", ...overrides };
+}
 
 describe("psiThresholdFindings", () => {
   it("flags nothing for a fully 'good' set of metrics", () => {
@@ -236,5 +242,108 @@ describe("extractOpportunityFindings", () => {
 
   it("returns an empty array for a result with no auditRefs, rather than throwing", () => {
     expect(extractOpportunityFindings("d", "u", {})).toEqual([]);
+  });
+});
+
+describe("extractCoreMetrics — accessibility", () => {
+  it("extracts accessibilityScore when the accessibility category is present", () => {
+    const lhr: LighthouseResult = { categories: { performance: { score: 0.8 }, accessibility: { score: 0.95 } } };
+    expect(extractCoreMetrics(lhr).accessibilityScore).toBe(95);
+  });
+
+  it("leaves accessibilityScore undefined when the category wasn't requested", () => {
+    const lhr: LighthouseResult = { categories: { performance: { score: 0.8 } } };
+    expect(extractCoreMetrics(lhr).accessibilityScore).toBeUndefined();
+  });
+});
+
+describe("fetchPsiLighthouseResult — strategy and categories", () => {
+  const originalEnv = process.env.PAGESPEED_API_KEY;
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    process.env.PAGESPEED_API_KEY = originalEnv;
+    global.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it("passes strategy and repeats category once per requested category", async () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult: {} }) });
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    await fetchPsiLighthouseResult("https://example.com", "desktop", ["performance", "accessibility"]);
+
+    const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
+    expect(calledUrl.searchParams.get("strategy")).toBe("desktop");
+    expect(calledUrl.searchParams.getAll("category")).toEqual(["performance", "accessibility"]);
+  });
+
+  it("defaults to mobile strategy and performance-only category", async () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult: {} }) });
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    await fetchPsiLighthouseResult("https://example.com");
+
+    const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
+    expect(calledUrl.searchParams.get("strategy")).toBe("mobile");
+    expect(calledUrl.searchParams.getAll("category")).toEqual(["performance"]);
+  });
+});
+
+describe("shopifySubmissionBarFindings", () => {
+  it("flags nothing when every page/strategy is comfortably above both thresholds", () => {
+    const matrix = [
+      metric({ pageType: "home", strategy: "mobile", performanceScore: 80, accessibilityScore: 95 }),
+      metric({ pageType: "collection", strategy: "mobile", performanceScore: 75, accessibilityScore: 92 }),
+      metric({ pageType: "product", strategy: "mobile", performanceScore: 70, accessibilityScore: 91 }),
+      metric({ pageType: "home", strategy: "desktop", performanceScore: 90, accessibilityScore: 98 }),
+    ];
+    expect(shopifySubmissionBarFindings("Demo store", matrix)).toEqual([]);
+  });
+
+  it("flags a low average accessibility score across the checked pages for one strategy", () => {
+    const matrix = [
+      metric({ pageType: "home", strategy: "mobile", performanceScore: 80, accessibilityScore: 85 }),
+      metric({ pageType: "collection", strategy: "mobile", performanceScore: 80, accessibilityScore: 82 }),
+      metric({ pageType: "product", strategy: "mobile", performanceScore: 80, accessibilityScore: 88 }),
+    ];
+    const findings = shopifySubmissionBarFindings("Demo store", matrix);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].ruleId).toBe("LIVE-SHOPIFY-A11Y-SCORE-001");
+    expect(findings[0].requirementId).toBe("SHOPIFY-A11Y-008");
+  });
+
+  it("flags each individual page below the performance minimum, not an average", () => {
+    const matrix = [
+      metric({ pageType: "home", strategy: "mobile", performanceScore: 55, accessibilityScore: 95 }),
+      metric({ pageType: "collection", strategy: "mobile", performanceScore: 95, accessibilityScore: 95 }),
+      metric({ pageType: "product", strategy: "mobile", performanceScore: 40, accessibilityScore: 95 }),
+    ];
+    const findings = shopifySubmissionBarFindings("Demo store", matrix);
+    const perfFindings = findings.filter((f) => f.ruleId === "LIVE-SHOPIFY-PERF-SCORE-001");
+    expect(perfFindings).toHaveLength(2);
+    expect(perfFindings.every((f) => f.requirementId === "SHOPIFY-PERF-001")).toBe(true);
+  });
+
+  it("evaluates mobile and desktop independently", () => {
+    const matrix = [
+      metric({ pageType: "home", strategy: "mobile", performanceScore: 80, accessibilityScore: 80 }),
+      metric({ pageType: "home", strategy: "desktop", performanceScore: 80, accessibilityScore: 96 }),
+    ];
+    const findings = shopifySubmissionBarFindings("Demo store", matrix);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].finding).toContain("mobile");
+  });
+
+  it("never produces a blocker-severity finding — this is advisory, not a hard rule", () => {
+    const matrix = [metric({ performanceScore: 0, accessibilityScore: 0 })];
+    const findings = shopifySubmissionBarFindings("Demo store", matrix);
+    expect(findings.every((f) => f.severity !== "blocker")).toBe(true);
+  });
+
+  it("returns an empty array when the matrix is empty", () => {
+    expect(shopifySubmissionBarFindings("Demo store", [])).toEqual([]);
   });
 });

@@ -281,18 +281,24 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
   const fallbackHeuristics = findings.filter(
     (f) => f.category === "Performance" && (f.ruleId === "LIVE-PERF-TTFB-001" || f.ruleId === "LIVE-PERF-WEIGHT-001")
   );
-  const multiplePresets = metrics.length > 1;
+  const submissionBarFindings = findings
+    .filter((f) => f.ruleId === "LIVE-SHOPIFY-A11Y-SCORE-001" || f.ruleId === "LIVE-SHOPIFY-PERF-SCORE-001")
+    .sort((a, b) => SEVERITY_SORT[a.severity] - SEVERITY_SORT[b.severity]);
+  const multiplePresets = new Set(metrics.map((m) => m.label)).size > 1;
 
   return (
     <div className="rounded-lg border border-black/[.08] p-4 text-sm dark:border-white/[.145]">
       <h3 className="font-medium text-zinc-950 dark:text-zinc-50">Page speed</h3>
       <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-left text-xs">
+        <table className="w-full min-w-[720px] text-left text-xs">
           <thead className="text-zinc-500">
             <tr>
               <th className="py-1 pr-3 font-medium">Preset</th>
+              <th className="py-1 pr-3 font-medium">Page</th>
+              <th className="py-1 pr-3 font-medium">Device</th>
               <th className="py-1 pr-3 font-medium">Source</th>
-              <th className="py-1 pr-3 font-medium">Score</th>
+              <th className="py-1 pr-3 font-medium">Perf.</th>
+              <th className="py-1 pr-3 font-medium">A11y</th>
               <th className="py-1 pr-3 font-medium">LCP</th>
               <th className="py-1 pr-3 font-medium">CLS</th>
               <th className="py-1 pr-3 font-medium">TBT</th>
@@ -300,11 +306,16 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
           </thead>
           <tbody className="text-zinc-700 dark:text-zinc-300">
             {metrics.map((m) => (
-              <tr key={`${m.label}-${m.url}`} className="border-t border-black/[.06] dark:border-white/[.08]">
+              <tr key={`${m.label}-${m.url}-${m.pageType}-${m.strategy}`} className="border-t border-black/[.06] dark:border-white/[.08]">
                 <td className="py-1.5 pr-3 font-medium text-zinc-950 dark:text-zinc-50">{m.label}</td>
+                <td className="py-1.5 pr-3 capitalize">{m.pageType}</td>
+                <td className="py-1.5 pr-3 capitalize">{m.strategy}</td>
                 <td className="py-1.5 pr-3">{m.source === "psi" ? "Lighthouse (PSI)" : "Playwright (fallback)"}</td>
                 <td className={`py-1.5 pr-3 font-medium ${scoreBandClass(m.performanceScore)}`}>
                   {typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}
+                </td>
+                <td className={`py-1.5 pr-3 font-medium ${scoreBandClass(m.accessibilityScore)}`}>
+                  {typeof m.accessibilityScore === "number" ? `${m.accessibilityScore}/100` : "—"}
                 </td>
                 <td className="py-1.5 pr-3">{formatMs(m.lcpMs)}</td>
                 <td className="py-1.5 pr-3">{typeof m.clsScore === "number" ? m.clsScore.toFixed(2) : "—"}</td>
@@ -313,7 +324,31 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
             ))}
           </tbody>
         </table>
+        <p className="mt-1.5 text-xs text-zinc-500">
+          Only the baseline preset (the first one supplied) gets the full home/collection/product ×
+          mobile/desktop matrix; every other preset shows the homepage/mobile scorecard only.
+        </p>
       </div>
+
+      {submissionBarFindings.length > 0 && (
+        <div className="mt-4 border-t border-black/[.08] pt-3 dark:border-white/[.145]">
+          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">
+            Shopify submission bar ({submissionBarFindings.length})
+          </h4>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Shopify&apos;s own literal Theme Store thresholds — accessibility ≥90 average, performance ≥60 per
+            page — checked against the baseline preset&apos;s home, collection, and product pages.
+          </p>
+          <ul className="mt-2 flex flex-col gap-2">
+            {submissionBarFindings.map((f, i) => (
+              <li key={`${f.ruleId}-${f.filePath}-${i}`} className="flex gap-2 text-xs">
+                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[f.severity]}`} aria-hidden />
+                <p className="text-zinc-800 dark:text-zinc-200">{f.finding}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {opportunities.length > 0 && (
         <div className="mt-4 border-t border-black/[.08] pt-3 dark:border-white/[.145]">

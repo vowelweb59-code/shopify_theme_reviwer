@@ -232,7 +232,7 @@ async function extractPageFacts(page: Page, url: string): Promise<PageFacts> {
   return { url, ...facts };
 }
 
-async function findFirstProductLink(page: Page): Promise<string | null> {
+export async function findFirstProductLink(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const link = Array.from(document.querySelectorAll<HTMLAnchorElement>("a[href]")).find((a) => /\/products\//.test(a.href));
     return link?.href ?? null;

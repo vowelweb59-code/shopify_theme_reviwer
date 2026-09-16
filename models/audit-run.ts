@@ -58,8 +58,14 @@ const pageSpeedMetricSchema = new Schema(
   {
     label: { type: String, required: true },
     url: { type: String, required: true },
+    // Defaulted rather than required so pre-existing runs (persisted before
+    // the Shopify-submission-bar matrix was added) still validate on read —
+    // every one of them was, in effect, the home page checked on mobile.
+    pageType: { type: String, enum: ["home", "collection", "product"], default: "home" },
+    strategy: { type: String, enum: ["mobile", "desktop"], default: "mobile" },
     source: { type: String, required: true, enum: ["psi", "playwright"] },
     performanceScore: { type: Number, default: null },
+    accessibilityScore: { type: Number, default: null },
     lcpMs: { type: Number, default: null },
     clsScore: { type: Number, default: null },
     tbtMs: { type: Number, default: null },

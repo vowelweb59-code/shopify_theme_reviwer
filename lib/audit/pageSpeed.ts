@@ -1,12 +1,18 @@
 import { chromium, type Page } from "playwright";
 import type { ExecutedFinding } from "./runRules";
-import type { PresetLink, PresetLiveCheckError } from "./liveCheck";
+import { findFirstProductLink, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
+
+export type PageType = "home" | "collection" | "product";
+export type PsiStrategy = "mobile" | "desktop";
 
 export type PageSpeedMetric = {
   label: string;
   url: string;
+  pageType: PageType;
+  strategy: PsiStrategy;
   source: "psi" | "playwright";
   performanceScore?: number;
+  accessibilityScore?: number;
   lcpMs?: number;
   clsScore?: number;
   tbtMs?: number;
@@ -25,7 +31,7 @@ const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed
 const PSI_TIMEOUT_MS = 25_000;
 const NAV_TIMEOUT_MS = 20_000;
 
-type PsiMetrics = { performanceScore?: number; lcpMs?: number; clsScore?: number; tbtMs?: number };
+type PsiMetrics = { performanceScore?: number; accessibilityScore?: number; lcpMs?: number; clsScore?: number; tbtMs?: number };
 
 // Only the fields this module actually reads from Lighthouse's real result
 // shape (the same JSON PSI returns and `lighthouse` itself produces) — see
@@ -49,30 +55,40 @@ export type LighthouseAudit = {
 export type LighthouseAuditRef = { id: string; weight?: number; group?: string };
 export type LighthouseResult = {
   audits?: Record<string, LighthouseAudit | undefined>;
-  categories?: { performance?: { score?: number | null; auditRefs?: LighthouseAuditRef[] } };
+  categories?: {
+    performance?: { score?: number | null; auditRefs?: LighthouseAuditRef[] };
+    accessibility?: { score?: number | null };
+  };
 };
 
 type PsiResponse = { lighthouseResult?: LighthouseResult };
 
 /**
- * Calls Google's PageSpeed Insights v5 API for a real Lighthouse read
- * (mobile strategy, to match PSI's own default emphasis), returning the
- * full Lighthouse result object — not just a few extracted numbers — so
- * callers can surface its complete "Opportunities"/"Diagnostics" audit list
- * (the same data GTmetrix/PSI/Lighthouse itself present), not just the
- * headline score and Core Web Vitals. Returns null — never throws —
+ * Calls Google's PageSpeed Insights v5 API for a real Lighthouse read,
+ * returning the full Lighthouse result object — not just a few extracted
+ * numbers — so callers can surface its complete "Opportunities"/
+ * "Diagnostics" audit list (the same data GTmetrix/PSI/Lighthouse itself
+ * present), not just the headline score and Core Web Vitals. `categories`
+ * defaults to performance only (the original single-page scorecard's
+ * scope); pass `["performance", "accessibility"]` for the Shopify
+ * submission-bar matrix, which needs both. Returns null — never throws —
  * whenever PAGESPEED_API_KEY isn't configured, the request fails, or it
  * times out, so the caller can fall back to Playwright-based metrics
  * instead of failing the whole audit.
  */
-export async function fetchPsiLighthouseResult(url: string): Promise<LighthouseResult | null> {
+export async function fetchPsiLighthouseResult(
+  url: string,
+  strategy: PsiStrategy = "mobile",
+  categories: string[] = ["performance"]
+): Promise<LighthouseResult | null> {
   const apiKey = process.env.PAGESPEED_API_KEY;
   if (!apiKey) return null;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), PSI_TIMEOUT_MS);
   try {
-    const params = new URLSearchParams({ url, key: apiKey, strategy: "mobile", category: "performance" });
+    const params = new URLSearchParams({ url, key: apiKey, strategy });
+    for (const category of categories) params.append("category", category);
     const res = await fetch(`${PSI_ENDPOINT}?${params.toString()}`, { signal: controller.signal });
     if (!res.ok) return null;
     const data = (await res.json()) as PsiResponse;
@@ -84,12 +100,18 @@ export async function fetchPsiLighthouseResult(url: string): Promise<LighthouseR
   }
 }
 
-/** The same 4 headline numbers this module has always surfaced — now derived from the full Lighthouse result rather than fetched separately. */
+/**
+ * The headline numbers this module surfaces — accessibilityScore is only
+ * populated when the "accessibility" category was requested (see
+ * fetchPsiLighthouseResult), undefined otherwise.
+ */
 export function extractCoreMetrics(lhr: LighthouseResult): PsiMetrics {
   const audits = lhr.audits ?? {};
-  const scoreRaw = lhr.categories?.performance?.score;
+  const perfScoreRaw = lhr.categories?.performance?.score;
+  const a11yScoreRaw = lhr.categories?.accessibility?.score;
   return {
-    performanceScore: typeof scoreRaw === "number" ? Math.round(scoreRaw * 100) : undefined,
+    performanceScore: typeof perfScoreRaw === "number" ? Math.round(perfScoreRaw * 100) : undefined,
+    accessibilityScore: typeof a11yScoreRaw === "number" ? Math.round(a11yScoreRaw * 100) : undefined,
     lcpMs: audits["largest-contentful-paint"]?.numericValue,
     clsScore: audits["cumulative-layout-shift"]?.numericValue,
     tbtMs: audits["total-blocking-time"]?.numericValue,
@@ -206,6 +228,66 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         finding: `Total Blocking Time is ${Math.round(metrics.tbtMs)}ms — in Lighthouse's "needs improvement" range (200–600ms).`,
         recommendation: "Break up long JavaScript tasks and defer non-critical scripts.",
       });
+    }
+  }
+
+  return findings;
+}
+
+const SHOPIFY_ACCESSIBILITY_THRESHOLD = 90;
+const SHOPIFY_PERFORMANCE_THRESHOLD = 60;
+
+function averageDefined(values: (number | undefined)[]): number | undefined {
+  const nums = values.filter((v): v is number => typeof v === "number");
+  if (nums.length === 0) return undefined;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+/**
+ * Shopify's own literal Theme Store submission bar — distinct from the
+ * generic Google Lighthouse guidance psiThresholdFindings uses above:
+ * "Themes must have a minimum average Lighthouse accessibility score of 90
+ * across the theme's product, collection, and home page, for both desktop
+ * and mobile", plus a minimum performance score of 60 on each of those
+ * same pages/strategies (stated as separate per-page minimums, not an
+ * average, in Shopify's own submission feedback). `matrix` should contain
+ * one entry per (page type, strategy) combination checked.
+ */
+export function shopifySubmissionBarFindings(label: string, matrix: PageSpeedMetric[]): ExecutedFinding[] {
+  const findings: ExecutedFinding[] = [];
+
+  for (const strategy of ["mobile", "desktop"] as const) {
+    const strategyMetrics = matrix.filter((m) => m.strategy === strategy);
+    if (strategyMetrics.length === 0) continue;
+
+    const avgAccessibility = averageDefined(strategyMetrics.map((m) => m.accessibilityScore));
+    if (avgAccessibility !== undefined && avgAccessibility < SHOPIFY_ACCESSIBILITY_THRESHOLD) {
+      const pagesChecked = strategyMetrics.map((m) => m.pageType).join(", ");
+      findings.push({
+        ruleId: "LIVE-SHOPIFY-A11Y-SCORE-001",
+        requirementId: "SHOPIFY-A11Y-008",
+        filePath: strategyMetrics[0].url,
+        category: "Accessibility",
+        severity: "high",
+        presetLabel: label,
+        finding: `Average Lighthouse accessibility score across the ${pagesChecked} pages (${strategy}) is ${avgAccessibility.toFixed(1)}/100 — below Shopify's required minimum average of ${SHOPIFY_ACCESSIBILITY_THRESHOLD}.`,
+        recommendation: "Run the accessibility audit for each page individually and fix the lowest-scoring one first.",
+      });
+    }
+
+    for (const m of strategyMetrics) {
+      if (typeof m.performanceScore === "number" && m.performanceScore < SHOPIFY_PERFORMANCE_THRESHOLD) {
+        findings.push({
+          ruleId: "LIVE-SHOPIFY-PERF-SCORE-001",
+          requirementId: "SHOPIFY-PERF-001",
+          filePath: m.url,
+          category: "Performance",
+          severity: "high",
+          presetLabel: label,
+          finding: `Lighthouse performance score for the ${m.pageType} page (${strategy}) is ${m.performanceScore}/100 — below Shopify's required minimum of ${SHOPIFY_PERFORMANCE_THRESHOLD}.`,
+          recommendation: 'See the "Suggested fixes" list for this page\'s specific opportunities and diagnostics.',
+        });
+      }
     }
   }
 
@@ -343,6 +425,34 @@ async function collectPlaywrightMetrics(page: Page, url: string): Promise<Fallba
   });
 }
 
+/**
+ * Discovers the collection and product URLs to check alongside the
+ * homepage — Shopify's submission bar requires all three. The collection
+ * URL needs no navigation at all: `/collections/all` is a Shopify-provided
+ * route every store has by default. The product URL does need a real page
+ * load to find a real link (reusing lib/audit/liveCheck.ts's own product-
+ * discovery function rather than duplicating it) — `product` stays
+ * undefined, not an error, when none can be found, same as liveCheck.ts's
+ * own graceful handling of a store with no visible product link.
+ */
+async function discoverPageUrls(homeUrl: string): Promise<{ home: string; collection: string; product?: string }> {
+  const collection = new URL("/collections/all", homeUrl).toString();
+  let product: string | undefined;
+  let browser: import("playwright").Browser | undefined;
+  try {
+    browser = await chromium.launch();
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
+    product = (await findFirstProductLink(page)) ?? undefined;
+  } catch {
+    // Leave product undefined — home/collection are still checked below.
+  } finally {
+    await browser?.close();
+  }
+  return { home: homeUrl, collection, product };
+}
+
 const TTFB_THRESHOLD_MS = 800;
 const PAGE_WEIGHT_THRESHOLD_BYTES = 3_000_000;
 
@@ -394,9 +504,12 @@ export function fallbackThresholdFindings(label: string, url: string, metrics: F
  * Lighthouse). Never throws — a failure becomes an `errors` entry, same as
  * lib/audit/liveCheck.ts.
  *
- * Scope: homepage only per preset, not the product page — PSI is
- * rate/quota-limited per API key, and doubling calls isn't worth it for a
- * first version of this check.
+ * Every preset gets the homepage/mobile scorecard + opportunities list, as
+ * before. Only the first ("baseline") preset additionally gets the full
+ * Shopify-submission-bar matrix (home + collection + product, mobile +
+ * desktop, performance + accessibility) — see
+ * shopifySubmissionBarFindings' own comment for why it's scoped to one
+ * preset rather than every one.
  */
 export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promise<PageSpeedCheckResult> {
   const findings: ExecutedFinding[] = [];
@@ -404,15 +517,66 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
   const metrics: PageSpeedMetric[] = [];
   const needsFallback: PresetLink[] = [];
 
-  for (const preset of presets) {
-    const lhr = await fetchPsiLighthouseResult(preset.url);
-    if (lhr) {
-      const psi = extractCoreMetrics(lhr);
-      metrics.push({ label: preset.label, url: preset.url, source: "psi", ...psi });
-      findings.push(...psiThresholdFindings(preset.label, preset.url, psi));
-      findings.push(...extractOpportunityFindings(preset.label, preset.url, lhr));
-    } else {
+  for (const [index, preset] of presets.entries()) {
+    const isBaseline = index === 0;
+    const homeCategories = isBaseline ? ["performance", "accessibility"] : ["performance"];
+    const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
+    if (!homeLhr) {
       needsFallback.push(preset);
+      continue;
+    }
+
+    const homeMetrics = extractCoreMetrics(homeLhr);
+    const homeMetric: PageSpeedMetric = {
+      label: preset.label,
+      url: preset.url,
+      pageType: "home",
+      strategy: "mobile",
+      source: "psi",
+      ...homeMetrics,
+    };
+    metrics.push(homeMetric);
+    findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
+    findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
+
+    if (isBaseline) {
+      const matrix: PageSpeedMetric[] = [homeMetric];
+
+      const desktopHomeLhr = await fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"]);
+      if (desktopHomeLhr) {
+        const m: PageSpeedMetric = {
+          label: preset.label,
+          url: preset.url,
+          pageType: "home",
+          strategy: "desktop",
+          source: "psi",
+          ...extractCoreMetrics(desktopHomeLhr),
+        };
+        matrix.push(m);
+        metrics.push(m);
+      } else {
+        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+      }
+
+      const urls = await discoverPageUrls(preset.url);
+      const remainingPages: { pageType: PageType; url: string }[] = [
+        { pageType: "collection", url: urls.collection },
+        ...(urls.product ? [{ pageType: "product" as const, url: urls.product }] : []),
+      ];
+      for (const { pageType, url } of remainingPages) {
+        for (const strategy of ["mobile", "desktop"] as const) {
+          const lhr = await fetchPsiLighthouseResult(url, strategy, ["performance", "accessibility"]);
+          if (!lhr) {
+            errors.push({ label: preset.label, url, error: `PageSpeed Insights request failed for the ${pageType} page (${strategy}).` });
+            continue;
+          }
+          const m: PageSpeedMetric = { label: preset.label, url, pageType, strategy, source: "psi", ...extractCoreMetrics(lhr) };
+          matrix.push(m);
+          metrics.push(m);
+        }
+      }
+
+      findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
     }
   }
 
@@ -430,6 +594,8 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
           metrics.push({
             label: preset.label,
             url: preset.url,
+            pageType: "home",
+            strategy: "mobile",
             source: "playwright",
             ttfbMs: fallback.ttfbMs,
             fcpMs: fallback.fcpMs ?? undefined,
