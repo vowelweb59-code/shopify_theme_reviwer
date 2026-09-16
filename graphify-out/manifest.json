@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "app/layout.tsx": {
-    "mtime": 1789553456.8469522,
-    "ast_hash": "b53ee0e78c7ab3fb5c645a26aa7dc46f",
+    "mtime": 1789559930.348923,
+    "ast_hash": "c580cdfe8c2fd94ee330d2f8cb01c4c9",
     "semantic_hash": ""
   },
   "app/page.tsx": {
@@ -487,11 +487,6 @@
   "Landing Page 2.png": {
     "mtime": 1786688227.5069122,
     "ast_hash": "835f89ebdbdd7f666aef3bece8600e27",
-    "semantic_hash": ""
-  },
-  "app/_components/ProjectStatusWidget.tsx": {
-    "mtime": 1786689566.1137097,
-    "ast_hash": "3140e1d2677cc6fb33fdd74465eed55c",
     "semantic_hash": ""
   },
   "lib/projectStatus.ts": {
