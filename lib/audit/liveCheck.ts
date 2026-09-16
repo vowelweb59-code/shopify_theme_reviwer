@@ -18,6 +18,13 @@ export type MultiPresetLiveCheckResult = {
 const NAV_TIMEOUT_MS = 20_000;
 const MAX_CONTRAST_SAMPLES = 80;
 const MAX_IMAGE_SAMPLES = 60;
+const MAX_FOCUS_SAMPLES = 40;
+
+// Every element type WCAG 2.4.7 (Focus Visible) actually applies to —
+// deliberately broader than the tags this parser tracks statically
+// elsewhere, since this check reads real rendered elements, not source.
+const FOCUSABLE_SELECTOR =
+  'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"]';
 
 // Sits between the two most common Shopify breakpoint conventions (mobile
 // menu appears below ~749px; desktop-only chrome — social icons,
@@ -389,6 +396,108 @@ function productPageFindings(facts: PageFacts): ExecutedFinding[] {
   return findings;
 }
 
+type FocusIndicatorSample = { selector: string; hasIndicator: boolean; mechanism?: string };
+
+/**
+ * For each real focusable element: read its computed style, actually call
+ * .focus() on it (not a CSS :focus-visible simulation — a real DOM focus
+ * event, so this catches JS-driven focus styling too, not just CSS rules),
+ * re-read computed style, and check whether anything a sighted user could
+ * actually see changed. Distinct from the static A11Y-OUTLINE-REMOVAL-001
+ * rule: that one flags the specific "outline:none with no CSS :focus
+ * replacement" source anti-pattern; this instead verifies the real,
+ * rendered end result on real elements, catching indicators that
+ * genuinely don't show (however they were supposed to be produced) as
+ * well as ones that do work despite CSS that looks suspicious in isolation.
+ * Never asserts *which* mechanism every element should use — only whether
+ * *some* visible change happens, matching "consistent" as "reliably
+ * visible", not "identical styling".
+ */
+export async function collectFocusIndicatorSamples(page: Page): Promise<FocusIndicatorSample[]> {
+  return page.evaluate(
+    ({ selector, maxSamples }: { selector: string; maxSamples: number }) => {
+      function relevantStyle(style: CSSStyleDeclaration) {
+        return {
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          outlineColor: style.outlineColor,
+          boxShadow: style.boxShadow,
+          borderWidth: style.borderWidth,
+          borderColor: style.borderColor,
+          backgroundColor: style.backgroundColor,
+          color: style.color,
+        };
+      }
+
+      const candidates = Array.from(document.querySelectorAll<HTMLElement>(selector)).filter((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return false;
+        const style = getComputedStyle(el);
+        return style.visibility !== "hidden" && style.display !== "none";
+      });
+
+      const samples: FocusIndicatorSample[] = [];
+      const previouslyFocused = document.activeElement;
+
+      for (const el of candidates.slice(0, maxSamples)) {
+        const before = relevantStyle(getComputedStyle(el));
+        el.focus({ preventScroll: true });
+        // Some elements refuse focus outright (disabled, covered by
+        // another element at the same point, etc.) — nothing to measure.
+        if (document.activeElement !== el) continue;
+        const after = relevantStyle(getComputedStyle(el));
+        el.blur();
+
+        const classes = typeof el.className === "string" ? el.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
+        const sampleSelector = el.tagName.toLowerCase() + (classes ? `.${classes}` : "");
+
+        let mechanism: string | undefined;
+        if (after.outlineStyle !== "none" && (before.outlineStyle !== after.outlineStyle || before.outlineWidth !== after.outlineWidth || before.outlineColor !== after.outlineColor)) {
+          mechanism = "outline";
+        } else if (after.boxShadow !== "none" && before.boxShadow !== after.boxShadow) {
+          mechanism = "box-shadow";
+        } else if (after.borderWidth !== "0px" && (before.borderWidth !== after.borderWidth || before.borderColor !== after.borderColor)) {
+          mechanism = "border";
+        } else if (before.backgroundColor !== after.backgroundColor) {
+          mechanism = "background-color";
+        } else if (before.color !== after.color) {
+          mechanism = "color";
+        }
+
+        samples.push({ selector: sampleSelector, hasIndicator: !!mechanism, mechanism });
+      }
+
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus({ preventScroll: true });
+      return samples;
+    },
+    { selector: FOCUSABLE_SELECTOR, maxSamples: MAX_FOCUS_SAMPLES }
+  );
+}
+
+/**
+ * One finding summarizing every element that showed no visible change on
+ * real focus, rather than one per element — a theme missing focus styles
+ * theme-wide would otherwise produce dozens of near-identical findings.
+ */
+export async function focusIndicatorFindings(page: Page, url: string): Promise<ExecutedFinding[]> {
+  const samples = await collectFocusIndicatorSamples(page);
+  const failing = samples.filter((s) => !s.hasIndicator);
+  if (failing.length === 0) return [];
+
+  const examples = failing.slice(0, 5).map((s) => s.selector).join(", ");
+  return [
+    {
+      ruleId: "LIVE-A11Y-FOCUS-INDICATOR-001",
+      requirementId: "A11Y-BP-002",
+      filePath: url,
+      category: "Accessibility",
+      severity: "medium",
+      finding: `${failing.length} of ${samples.length} focusable elements sampled show no visible change when actually focused (e.g. ${examples}) — keyboard users have no way to tell where focus currently is.`,
+      recommendation: "Give every focusable element a visible :focus/:focus-visible style — an outline, box-shadow, border, or background/color change from its normal state. Different elements don't need identical styling, just a reliably visible one.",
+    },
+  ];
+}
+
 type ReachabilityFacts = {
   hasSocialLinks: boolean;
   socialReachable: boolean;
@@ -514,6 +623,9 @@ type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; produc
 async function runChecksForLoadedPreset(page: Page, label: string | null, demoStoreUrl: string): Promise<PresetCheckOutcome> {
   const homeFacts = await extractPageFacts(page, demoStoreUrl);
   const findings = homepageFindings(homeFacts);
+  // Must run before checkResponsiveReachability, which resizes the
+  // viewport and would otherwise contaminate the focus-style measurements.
+  findings.push(...(await focusIndicatorFindings(page, demoStoreUrl)));
   findings.push(...(await checkResponsiveReachability(page)));
 
   let productFacts: PageFacts | undefined;
@@ -522,6 +634,7 @@ async function runChecksForLoadedPreset(page: Page, label: string | null, demoSt
     try {
       productFacts = await extractPageFacts(page, productHref);
       findings.push(...productPageFindings(productFacts));
+      findings.push(...(await focusIndicatorFindings(page, productHref)));
     } catch {
       // Product page navigation failing doesn't invalidate the homepage
       // findings already collected — skip it and move on.

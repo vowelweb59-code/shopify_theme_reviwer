@@ -716,7 +716,7 @@ const requirements: SeedRequirement[] = [
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
     notes:
-      "Distinguishing a genuinely hardcoded, translatable string from an intentional literal (a brand name, an icon-only element, a code identifier) requires judgment a static regex/heuristic can't make reliably without heavy false positives. Requires manually switching the demo store's language and reviewing each layout element, not statically checkable from theme code.",
+      "Checked via SHOPIFY-LOCALE-HARDCODED-001 against a small curated list of well-known, exact-match storefront controls (\"Add to cart\", \"Sold out\", etc.) in button/link text and aria-label — bounded to avoid false positives on brand names or marketing copy, so it only catches the common cases, not every hardcoded string. A full audit still benefits from manually switching the demo store's language and reviewing each layout element.",
   },
   {
     requirementId: "SHOPIFY-FEATURES-MULTILEVEL-MENU-001",

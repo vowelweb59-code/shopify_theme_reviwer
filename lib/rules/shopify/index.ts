@@ -149,12 +149,114 @@ const seoMetadataSnippetRule: Rule = {
   },
 };
 
+// A small, curated dictionary of generic storefront UI strings that should
+// always go through the `t` translation filter — deliberately narrow and
+// exact-match only (after whitespace/case normalization), not a general
+// "any English text" heuristic. This is what keeps it HIGH-confidence: a
+// brand name, marketing copy, or any string outside this exact list is
+// never flagged, only phrases universally recognized as generic storefront
+// controls that exist in every language a store might sell in. Contextual
+// in a second way too — only checked in button/link text and aria-label,
+// the handful of places a hardcoded literal would visibly leak into the UI
+// after a language switch, not scanned across arbitrary theme text.
+const KNOWN_TRANSLATABLE_PHRASES = new Set([
+  "add to cart", "sold out", "quick add", "quick view", "buy now", "buy it now",
+  "checkout", "view cart", "your cart", "continue shopping", "search",
+  "subscribe", "sign in", "log in", "log out", "sign out", "create account",
+  "my account", "close", "menu", "next", "previous", "load more", "show more",
+  "filter", "sort by", "apply", "clear all", "submit", "subtotal", "shipping",
+  "quantity", "remove", "update cart", "read more", "learn more", "shop now",
+  "shop all", "view all", "select options", "choose options", "share",
+]);
+
+function normalizeCandidateText(text: string): string {
+  return text.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function isLiquidOutput(value: string): boolean {
+  return value.includes("{{") || value.includes("{%");
+}
+
+// Only an exact match against the curated list counts — a candidate that
+// merely contains one of these phrases inside longer copy (e.g. "Add to
+// Cart for free shipping") is deliberately left unclassified rather than
+// guessed at, the same "unclassified stays unflagged" discipline the
+// merchandising-axis rule uses for the same false-positive reason.
+function hardcodedTextConfidence(raw: string): "high" | null {
+  if (isLiquidOutput(raw)) return null;
+  const normalized = normalizeCandidateText(raw);
+  if (!normalized) return null;
+  return KNOWN_TRANSLATABLE_PHRASES.has(normalized) ? "high" : null;
+}
+
+const hardcodedStorefrontTextRule: Rule = {
+  ruleId: "SHOPIFY-LOCALE-HARDCODED-001",
+  requirementId: "SHOPIFY-LOCALE-HARDCODED-TEXT-001",
+  category: "Theme Store Compliance",
+  defaultSeverity: "medium",
+  title: "Storefront controls must be translated, not hardcoded",
+  description:
+    "A button/link's visible text or aria-label matching a well-known, generic storefront control (e.g. \"Add to cart\", \"Sold out\", \"Search\") should be rendered through Liquid's `t` translation filter with a locale file entry, not hardcoded literal text — otherwise it stays in one language after a customer switches store language. Matches only an exact, curated list of common controls, so a real match here is still worth a quick manual look rather than a certainty.",
+  sourceReference: "Shopify Theme Store requirements — Localization",
+  sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+  check({ files }) {
+    const findings = [];
+    for (const f of files) {
+      if (f.fileType !== "liquid") continue;
+      for (const link of f.links) {
+        if (link.text && hardcodedTextConfidence(link.text) === "high") {
+          findings.push({
+            filePath: f.path,
+            lineNumber: link.line,
+            category: "Theme Store Compliance" as const,
+            severity: "medium" as const,
+            finding: `<a> text "${link.text.trim()}" is a hardcoded literal for a common storefront control, not run through the \`t\` translation filter.`,
+            recommendation: `Replace with {{ 'general.<key>' | t }} and add "${link.text.trim()}" to the default locale file.`,
+          });
+        } else if (link.ariaLabel && hardcodedTextConfidence(link.ariaLabel) === "high") {
+          findings.push({
+            filePath: f.path,
+            lineNumber: link.line,
+            category: "Theme Store Compliance" as const,
+            severity: "medium" as const,
+            finding: `<a> aria-label "${link.ariaLabel}" is a hardcoded literal for a common storefront control, not run through the \`t\` translation filter.`,
+            recommendation: `Replace with aria-label="{{ 'general.<key>' | t }}" and add "${link.ariaLabel}" to the default locale file.`,
+          });
+        }
+      }
+      for (const button of f.buttons) {
+        if (button.text && hardcodedTextConfidence(button.text) === "high") {
+          findings.push({
+            filePath: f.path,
+            lineNumber: button.line,
+            category: "Theme Store Compliance" as const,
+            severity: "medium" as const,
+            finding: `<button> text "${button.text.trim()}" is a hardcoded literal for a common storefront control, not run through the \`t\` translation filter.`,
+            recommendation: `Replace with {{ 'general.<key>' | t }} and add "${button.text.trim()}" to the default locale file.`,
+          });
+        } else if (button.ariaLabel && hardcodedTextConfidence(button.ariaLabel) === "high") {
+          findings.push({
+            filePath: f.path,
+            lineNumber: button.line,
+            category: "Theme Store Compliance" as const,
+            severity: "medium" as const,
+            finding: `<button> aria-label "${button.ariaLabel}" is a hardcoded literal for a common storefront control, not run through the \`t\` translation filter.`,
+            recommendation: `Replace with aria-label="{{ 'general.<key>' | t }}" and add "${button.ariaLabel}" to the default locale file.`,
+          });
+        }
+      }
+    }
+    return findings;
+  },
+};
+
 export const SHOPIFY_RULES: Rule[] = [
   noSassRule,
   noRobotsTemplateRule,
   contentForHeaderRule,
   shopifyLinksNofollowRule,
   seoMetadataSnippetRule,
+  hardcodedStorefrontTextRule,
   ...SHOPIFY_FEATURE_RULES,
   ...SHOPIFY_SETTINGS_RULES,
 ];

@@ -1,6 +1,13 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { checkResponsiveReachability, comparePresets, extractLoadedPageFacts, type PageFacts } from "./liveCheck";
+import {
+  checkResponsiveReachability,
+  collectFocusIndicatorSamples,
+  comparePresets,
+  extractLoadedPageFacts,
+  focusIndicatorFindings,
+  type PageFacts,
+} from "./liveCheck";
 
 // Real browser, no network — page.setContent() has no network dependency,
 // so these run against Chromium's actual layout/style engine (the same one
@@ -136,6 +143,81 @@ describe("extractLoadedPageFacts", () => {
     await page.setContent("<body><div>No sections here</div></body>");
     const facts = await extractLoadedPageFacts(page);
     expect(facts.sectionIds).toEqual([]);
+  });
+});
+
+// Real focus() calls in a real Chromium page — not a CSS :focus-visible
+// simulation — so this exercises the same mechanism a keyboard user's tab
+// key actually triggers.
+describe("collectFocusIndicatorSamples / focusIndicatorFindings", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await chromium.launch();
+    page = await browser.newPage();
+  }, 30_000);
+
+  afterAll(async () => {
+    await browser.close();
+  });
+
+  it("recognizes an outline change as a visible focus indicator", async () => {
+    await page.setContent(
+      '<body><button style="outline:none" onfocus="this.style.outline=\'2px solid blue\'">Go</button></body>'
+    );
+    const samples = await collectFocusIndicatorSamples(page);
+    expect(samples).toHaveLength(1);
+    expect(samples[0]).toMatchObject({ hasIndicator: true, mechanism: "outline" });
+  });
+
+  it("recognizes a box-shadow change as a visible focus indicator", async () => {
+    await page.setContent(
+      '<body><a href="/x" style="outline:none" onfocus="this.style.boxShadow=\'0 0 0 2px blue\'">Link</a></body>'
+    );
+    const samples = await collectFocusIndicatorSamples(page);
+    expect(samples[0]).toMatchObject({ hasIndicator: true, mechanism: "box-shadow" });
+  });
+
+  it("flags a focusable element whose style never changes on focus", async () => {
+    await page.setContent('<body><button style="outline:none">Go</button></body>');
+    const samples = await collectFocusIndicatorSamples(page);
+    expect(samples).toHaveLength(1);
+    expect(samples[0]).toMatchObject({ hasIndicator: false });
+  });
+
+  it("skips a hidden focusable element entirely", async () => {
+    await page.setContent('<body><button style="display:none">Hidden</button></body>');
+    const samples = await collectFocusIndicatorSamples(page);
+    expect(samples).toHaveLength(0);
+  });
+
+  it("restores whatever had focus before sampling", async () => {
+    await page.setContent(
+      '<body><input id="already-focused" style="outline:none"><button style="outline:none">Go</button></body>'
+    );
+    await page.focus("#already-focused");
+    await collectFocusIndicatorSamples(page);
+    const activeId = await page.evaluate(() => document.activeElement?.id);
+    expect(activeId).toBe("already-focused");
+  });
+
+  it("produces one summarizing finding, not one per failing element", async () => {
+    await page.setContent(
+      '<body><button style="outline:none">A</button><button style="outline:none">B</button></body>'
+    );
+    const findings = await focusIndicatorFindings(page, "https://example.myshopify.com/");
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ ruleId: "LIVE-A11Y-FOCUS-INDICATOR-001", requirementId: "A11Y-BP-002" });
+    expect(findings[0].finding).toContain("2 of 2");
+  });
+
+  it("produces no finding when every sampled element shows a visible focus change", async () => {
+    await page.setContent(
+      '<body><button onfocus="this.style.outline=\'2px solid blue\'">A</button></body>'
+    );
+    const findings = await focusIndicatorFindings(page, "https://example.myshopify.com/");
+    expect(findings).toHaveLength(0);
   });
 });
 
