@@ -138,6 +138,39 @@ describe("fetchPsiLighthouseResult", () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("network error")) as unknown as typeof fetch;
     expect(await fetchPsiLighthouseResult("https://example.com")).toBeNull();
   });
+
+  it("retries once after a failure and returns the retry's result", async () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    const lighthouseResult = { categories: { performance: { score: 0.5 } } };
+    const fetchSpy = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network error"))
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ lighthouseResult }) });
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    const result = await fetchPsiLighthouseResult("https://example.com");
+    expect(result).toEqual(lighthouseResult);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry a second time when both attempts fail", async () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    const fetchSpy = vi.fn().mockRejectedValue(new Error("network error"));
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    expect(await fetchPsiLighthouseResult("https://example.com")).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry when the first attempt succeeds", async () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    const lighthouseResult = { categories: { performance: { score: 0.9 } } };
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult }) });
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    await fetchPsiLighthouseResult("https://example.com");
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("extractCoreMetrics", () => {

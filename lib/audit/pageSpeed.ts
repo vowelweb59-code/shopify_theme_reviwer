@@ -79,14 +79,7 @@ type PsiResponse = { lighthouseResult?: LighthouseResult };
  * times out, so the caller can fall back to Playwright-based metrics
  * instead of failing the whole audit.
  */
-export async function fetchPsiLighthouseResult(
-  url: string,
-  strategy: PsiStrategy = "mobile",
-  categories: string[] = ["performance"]
-): Promise<LighthouseResult | null> {
-  const apiKey = process.env.PAGESPEED_API_KEY;
-  if (!apiKey) return null;
-
+async function fetchPsiOnce(url: string, strategy: PsiStrategy, categories: string[], apiKey: string): Promise<LighthouseResult | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), PSI_TIMEOUT_MS);
   try {
@@ -101,6 +94,25 @@ export async function fetchPsiLighthouseResult(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+// A run against several presets makes many of these calls back to back, and
+// a single dropped connection or unusually slow PSI response on this
+// machine shouldn't permanently fall that one preset back to the much
+// coarser Playwright heuristic — one retry before giving up (observed in
+// practice: the exact same request that hung/failed once succeeded in
+// well under a second on an immediate retry).
+export async function fetchPsiLighthouseResult(
+  url: string,
+  strategy: PsiStrategy = "mobile",
+  categories: string[] = ["performance"]
+): Promise<LighthouseResult | null> {
+  const apiKey = process.env.PAGESPEED_API_KEY;
+  if (!apiKey) return null;
+
+  const first = await fetchPsiOnce(url, strategy, categories, apiKey);
+  if (first) return first;
+  return fetchPsiOnce(url, strategy, categories, apiKey);
 }
 
 /**
