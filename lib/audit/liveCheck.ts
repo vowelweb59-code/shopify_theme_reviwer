@@ -15,7 +15,37 @@ export type MultiPresetLiveCheckResult = {
   errors: PresetLiveCheckError[];
 };
 
-const NAV_TIMEOUT_MS = 20_000;
+// A real demo store's first hit can be genuinely slow (cold CDN cache, a
+// heavy theme's third-party apps/trackers delaying `load`), and a busy
+// machine adds more variance on top of that — 20s was tight enough that a
+// transient slow moment could fail every preset in a run. 30s plus the
+// one-retry helper below absorbs that without waiting indefinitely.
+const NAV_TIMEOUT_MS = 30_000;
+
+// Matches Playwright's own navigation-timeout message ("Timeout 20000ms
+// exceeded.") — the one error shape worth retrying once, since it's the
+// one most likely caused by transient load rather than a genuinely
+// unreachable/broken URL (a DNS failure, refused connection, invalid URL,
+// etc. would just fail the same way again).
+export function isNavigationTimeoutError(err: unknown): boolean {
+  return err instanceof Error && /Timeout \d+ms exceeded/.test(err.message);
+}
+
+/**
+ * Runs a Playwright navigation-and-extract attempt, retrying it exactly
+ * once — with a brand new browser context (never reusing a context/page
+ * that may itself be in a bad state) — if the first attempt fails with a
+ * navigation timeout specifically. Any other error propagates immediately
+ * without a wasted second attempt.
+ */
+export async function withNavigationRetry<T>(attempt: () => Promise<T>): Promise<T> {
+  try {
+    return await attempt();
+  } catch (err) {
+    if (!isNavigationTimeoutError(err)) throw err;
+    return attempt();
+  }
+}
 const MAX_CONTRAST_SAMPLES = 80;
 const MAX_IMAGE_SAMPLES = 60;
 const MAX_FOCUS_SAMPLES = 40;
@@ -658,9 +688,16 @@ export async function runLiveChecksForPreset(label: string, demoStoreUrl: string
   let browser: import("playwright").Browser | undefined;
   try {
     browser = await chromium.launch();
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    const page = await context.newPage();
-    const { findings } = await runChecksForLoadedPreset(page, label, demoStoreUrl);
+    const activeBrowser = browser;
+    const { findings } = await withNavigationRetry(async () => {
+      const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
+      try {
+        const page = await context.newPage();
+        return await runChecksForLoadedPreset(page, label, demoStoreUrl);
+      } finally {
+        await context.close();
+      }
+    });
     return { findings };
   } catch (err) {
     return { findings: [], error: { url: demoStoreUrl, error: err instanceof Error ? err.message : String(err) } };
@@ -773,18 +810,22 @@ export async function runLiveChecksForPresets(presets: PresetLink[]): Promise<Mu
   let browser: import("playwright").Browser | undefined;
   try {
     browser = await chromium.launch();
+    const activeBrowser = browser;
     for (const preset of presets) {
-      let context: import("playwright").BrowserContext | undefined;
       try {
-        context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-        const page = await context.newPage();
-        const outcome = await runChecksForLoadedPreset(page, preset.label, preset.url);
+        const outcome = await withNavigationRetry(async () => {
+          const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
+          try {
+            const page = await context.newPage();
+            return await runChecksForLoadedPreset(page, preset.label, preset.url);
+          } finally {
+            await context.close();
+          }
+        });
         findings.push(...outcome.findings);
         presetFacts.push({ label: preset.label, home: outcome.home, product: outcome.product });
       } catch (err) {
         errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
-      } finally {
-        await context?.close();
       }
     }
   } finally {

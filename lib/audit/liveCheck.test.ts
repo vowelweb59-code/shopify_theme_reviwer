@@ -1,13 +1,58 @@
 import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   checkResponsiveReachability,
   collectFocusIndicatorSamples,
   comparePresets,
   extractLoadedPageFacts,
   focusIndicatorFindings,
+  isNavigationTimeoutError,
+  withNavigationRetry,
   type PageFacts,
 } from "./liveCheck";
+
+describe("isNavigationTimeoutError", () => {
+  it("matches Playwright's own navigation timeout message", () => {
+    expect(isNavigationTimeoutError(new Error('page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to "https://example.com/"'))).toBe(true);
+  });
+
+  it("does not match an unrelated error", () => {
+    expect(isNavigationTimeoutError(new Error("getaddrinfo ENOTFOUND example.com"))).toBe(false);
+  });
+
+  it("does not match a non-Error value", () => {
+    expect(isNavigationTimeoutError("Timeout 20000ms exceeded")).toBe(false);
+  });
+});
+
+describe("withNavigationRetry", () => {
+  it("returns the result on a successful first attempt without retrying", async () => {
+    const attempt = vi.fn().mockResolvedValue("ok");
+    await expect(withNavigationRetry(attempt)).resolves.toBe("ok");
+    expect(attempt).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries exactly once after a navigation timeout, then returns the second attempt's result", async () => {
+    const attempt = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("page.goto: Timeout 20000ms exceeded."))
+      .mockResolvedValueOnce("ok on retry");
+    await expect(withNavigationRetry(attempt)).resolves.toBe("ok on retry");
+    expect(attempt).toHaveBeenCalledTimes(2);
+  });
+
+  it("propagates a second consecutive timeout instead of retrying again", async () => {
+    const attempt = vi.fn().mockRejectedValue(new Error("page.goto: Timeout 20000ms exceeded."));
+    await expect(withNavigationRetry(attempt)).rejects.toThrow("Timeout 20000ms exceeded.");
+    expect(attempt).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry a non-timeout error", async () => {
+    const attempt = vi.fn().mockRejectedValue(new Error("getaddrinfo ENOTFOUND example.com"));
+    await expect(withNavigationRetry(attempt)).rejects.toThrow("getaddrinfo ENOTFOUND example.com");
+    expect(attempt).toHaveBeenCalledTimes(1);
+  });
+});
 
 // Real browser, no network — page.setContent() has no network dependency,
 // so these run against Chromium's actual layout/style engine (the same one

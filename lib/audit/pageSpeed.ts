@@ -1,6 +1,6 @@
 import { chromium, type Page } from "playwright";
 import type { ExecutedFinding } from "./runRules";
-import { findFirstProductLink, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
+import { findFirstProductLink, withNavigationRetry, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
 
 export type PageType = "home" | "collection" | "product";
 export type PsiStrategy = "mobile" | "desktop";
@@ -29,7 +29,10 @@ export type PageSpeedCheckResult = {
 
 const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 const PSI_TIMEOUT_MS = 25_000;
-const NAV_TIMEOUT_MS = 20_000;
+// See lib/audit/liveCheck.ts's own NAV_TIMEOUT_MS comment — same reasoning
+// (a real store's first hit can be slow, plus this file's own
+// withNavigationRetry usage below absorbs one transient timeout).
+const NAV_TIMEOUT_MS = 30_000;
 
 type PsiMetrics = { performanceScore?: number; accessibilityScore?: number; lcpMs?: number; clsScore?: number; tbtMs?: number };
 
@@ -441,10 +444,17 @@ async function discoverPageUrls(homeUrl: string): Promise<{ home: string; collec
   let browser: import("playwright").Browser | undefined;
   try {
     browser = await chromium.launch();
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
-    product = (await findFirstProductLink(page)) ?? undefined;
+    const activeBrowser = browser;
+    product = await withNavigationRetry(async () => {
+      const context = await activeBrowser.newContext();
+      try {
+        const page = await context.newPage();
+        await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
+        return (await findFirstProductLink(page)) ?? undefined;
+      } finally {
+        await context.close();
+      }
+    });
   } catch {
     // Leave product undefined — home/collection are still checked below.
   } finally {
@@ -584,13 +594,19 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
     let browser: import("playwright").Browser | undefined;
     try {
       browser = await chromium.launch();
+      const activeBrowser = browser;
       for (const preset of needsFallback) {
-        let context: import("playwright").BrowserContext | undefined;
         try {
-          // Roughly matches PSI's own default mobile viewport.
-          context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-          const page = await context.newPage();
-          const fallback = await collectPlaywrightMetrics(page, preset.url);
+          const fallback = await withNavigationRetry(async () => {
+            // Roughly matches PSI's own default mobile viewport.
+            const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
+            try {
+              const page = await context.newPage();
+              return await collectPlaywrightMetrics(page, preset.url);
+            } finally {
+              await context.close();
+            }
+          });
           metrics.push({
             label: preset.label,
             url: preset.url,
@@ -604,8 +620,6 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
           findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
         } catch (err) {
           errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
-        } finally {
-          await context?.close();
         }
       }
     } finally {
