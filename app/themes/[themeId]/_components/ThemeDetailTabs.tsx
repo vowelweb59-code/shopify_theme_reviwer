@@ -27,7 +27,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
   const [detail, setDetail] = useState<ThemeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [activeTabId, setActiveTabId] = useState("overview");
+  const [activeTabId, setActiveTabId] = useState("");
   const [selectedAuditRunId, setSelectedAuditRunId] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -76,7 +76,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
       <Breadcrumbs items={[{ label: "Themes", href: "/themes" }, { label: detail.theme.name }]} />
       <TabbedPageClient
         title={detail.theme.name}
-        defaultTabId="overview"
+        defaultTabId=""
         orientation="vertical"
         activeTabId={activeTabId}
         onTabChange={setActiveTabId}
@@ -84,6 +84,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
           {
             id: "overview",
             label: "Overview",
+            pinned: true,
             content: (
               <OverviewPanel
                 themeId={detail.theme._id}

@@ -4,7 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
-type Tab = { id: string; label: string; content: ReactNode };
+// A pinned tab (vertical orientation only) always renders open and isn't
+// part of the single-open accordion below it — e.g. Theme Detail's
+// "Overview", which should stay visible while All Checks/Versions/Report/
+// Audit History collapse and expand independently.
+type Tab = { id: string; label: string; content: ReactNode; pinned?: boolean };
 
 // Shared shell for a page split into sections via a tab strip rather than
 // separate routes — the active tab is reflected in ?tab= (read once on
@@ -64,6 +68,14 @@ export function TabbedPageClient({
       {orientation === "vertical" ? (
         <div className="flex flex-col gap-2">
           {tabs.map((t) => {
+            if (t.pinned) {
+              return (
+                <div key={t.id} className="rounded-lg border border-border-subtle">
+                  <div className="px-4 py-3 text-sm font-medium text-zinc-950 dark:text-zinc-50">{t.label}</div>
+                  <div className="border-t border-border-subtle p-4">{t.content}</div>
+                </div>
+              );
+            }
             const isOpen = activeTab === t.id;
             return (
               <div key={t.id} className={`rounded-lg border ${isOpen ? "border-primary/30" : "border-border-subtle"}`}>
