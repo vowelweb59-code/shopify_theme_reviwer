@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { TabbedPageClient } from "@/app/_components/TabbedPage";
+import { ReportContent } from "@/app/reports/ReportContent";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import type { DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { OverviewPanel } from "./OverviewPanel";
@@ -23,6 +24,8 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
   const [detail, setDetail] = useState<ThemeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [activeTabId, setActiveTabId] = useState("overview");
+  const [selectedAuditRunId, setSelectedAuditRunId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     fetch(`/api/themes/${themeId}`)
@@ -34,6 +37,10 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
         }
         const data = await res.json();
         setDetail(data);
+        // Default the embedded report to the latest audit the first time
+        // data loads, without clobbering a report the user already picked
+        // from Previous Audits on a subsequent refresh (e.g. after Run Audit).
+        setSelectedAuditRunId((prev) => prev ?? data.latestAudit?._id ?? null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -43,6 +50,11 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
     load();
   }, [load]);
 
+  function viewReport(auditRunId: string) {
+    setSelectedAuditRunId(auditRunId);
+    setActiveTabId("report");
+  }
+
   if (loading) return <p className="mx-auto w-full max-w-5xl px-6 py-16 text-sm text-zinc-500">Loading…</p>;
   if (notFound || !detail) return <p className="mx-auto w-full max-w-5xl px-6 py-16 text-sm text-zinc-500">Theme not found.</p>;
 
@@ -51,6 +63,8 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
       title={detail.theme.name}
       defaultTabId="overview"
       orientation="vertical"
+      activeTabId={activeTabId}
+      onTabChange={setActiveTabId}
       tabs={[
         {
           id: "overview",
@@ -64,6 +78,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
               latestAudit={detail.latestAudit}
               checkTotals={detail.checks?.totals ?? null}
               onChanged={load}
+              onViewReport={viewReport}
             />
           ),
         },
@@ -77,9 +92,18 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
           ),
         },
         {
+          id: "report",
+          label: "Report",
+          content: selectedAuditRunId ? (
+            <ReportContent key={selectedAuditRunId} auditRunId={selectedAuditRunId} showHeading={false} />
+          ) : (
+            <p className="text-sm text-zinc-500">Run an audit, or pick one from Previous Audits, to see its full report.</p>
+          ),
+        },
+        {
           id: "previous-audits",
           label: "Previous Audits",
-          content: <PreviousAuditsTable audits={detail.previousAudits} />,
+          content: <PreviousAuditsTable audits={detail.previousAudits} onSelect={viewReport} />,
         },
       ]}
     />

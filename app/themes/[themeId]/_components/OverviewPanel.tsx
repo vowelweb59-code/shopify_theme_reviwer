@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
@@ -14,6 +13,7 @@ type Props = {
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
   onChanged: () => void;
+  onViewReport: (auditRunId: string) => void;
 };
 
 function formatDate(iso: string) {
@@ -203,7 +203,7 @@ function RunAuditForm({
   );
 }
 
-export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, onChanged }: Props) {
+export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, onChanged, onViewReport }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
 
@@ -264,9 +264,13 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
         {latestAudit ? (
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {formatDate(latestAudit.startedAt)} —{" "}
-            <Link href={`/reports/${latestAudit._id}`} className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+            <button
+              type="button"
+              onClick={() => onViewReport(latestAudit._id)}
+              className="underline hover:text-zinc-950 dark:hover:text-zinc-50"
+            >
               view full report
-            </Link>
+            </button>
           </p>
         ) : (
           <p className="mt-1 text-sm text-zinc-500">No completed audit yet.</p>

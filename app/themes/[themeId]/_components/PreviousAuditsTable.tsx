@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 type PreviousAuditRow = {
   auditRunId: string;
   version: string | null;
@@ -13,7 +11,13 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function PreviousAuditsTable({ audits }: { audits: PreviousAuditRow[] }) {
+/**
+ * Clicking a row shows that run's full report inline in this page's Report
+ * section (onSelect) rather than navigating to the standalone /reports/[id]
+ * page — that page still exists (e.g. for legacy pre-Themes-module audits),
+ * it's just no longer the primary way to view a report from here.
+ */
+export function PreviousAuditsTable({ audits, onSelect }: { audits: PreviousAuditRow[]; onSelect: (auditRunId: string) => void }) {
   if (audits.length === 0) {
     return <p className="text-sm text-zinc-500">No completed audits yet.</p>;
   }
@@ -33,12 +37,12 @@ export function PreviousAuditsTable({ audits }: { audits: PreviousAuditRow[] }) 
         </thead>
         <tbody>
           {audits.map((a) => (
-            <tr key={a.auditRunId} className="border-b border-black/[.06] last:border-0 dark:border-white/[.08]">
-              <td className="px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
-                <Link href={`/reports/${a.auditRunId}`} className="underline hover:no-underline">
-                  {a.version ?? "—"}
-                </Link>
-              </td>
+            <tr
+              key={a.auditRunId}
+              onClick={() => onSelect(a.auditRunId)}
+              className="cursor-pointer border-b border-black/[.06] last:border-0 hover:bg-black/[.02] dark:border-white/[.08] dark:hover:bg-white/[.03]"
+            >
+              <td className="px-4 py-3 font-medium text-zinc-950 underline hover:no-underline dark:text-zinc-50">{a.version ?? "—"}</td>
               <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(a.startedAt)}</td>
               <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{a.totals.total}</td>
               <td className="px-4 py-3 text-emerald-700 dark:text-emerald-400">{a.totals.passed}</td>

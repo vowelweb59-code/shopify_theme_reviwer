@@ -15,6 +15,8 @@ export function TabbedPageClient({
   tabs,
   defaultTabId,
   orientation = "horizontal",
+  activeTabId: controlledActiveTabId,
+  onTabChange,
 }: {
   title: string;
   description?: ReactNode;
@@ -26,15 +28,23 @@ export function TabbedPageClient({
   // inline and collapses whichever else was open (single-open accordion,
   // same idiom as the PointCard/CheckRow lists elsewhere in this app).
   orientation?: "horizontal" | "vertical";
+  // Optional controlled mode — when given, the parent owns which tab is
+  // active (e.g. Theme Detail switching to "Report" when a previous audit
+  // is picked from another section) instead of this component tracking it
+  // internally. Omit both for the normal uncontrolled behavior.
+  activeTabId?: string;
+  onTabChange?: (id: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const initialTab = tabs.some((t) => t.id === requestedTab) ? requestedTab! : defaultTabId;
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [internalActiveTab, setInternalActiveTab] = useState(initialTab);
+  const activeTab = controlledActiveTabId ?? internalActiveTab;
 
   function selectTab(id: string) {
-    setActiveTab(id);
+    if (onTabChange) onTabChange(id);
+    else setInternalActiveTab(id);
     const params = new URLSearchParams(window.location.search);
     params.set("tab", id);
     router.replace(`?${params.toString()}`, { scroll: false });

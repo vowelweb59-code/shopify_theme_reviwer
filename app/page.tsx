@@ -13,13 +13,8 @@ const SECTIONS = [
   },
   {
     href: "/insights",
-    title: "Insights",
-    description: "Rule coverage, live page-speed results, and the future-updates backlog.",
-  },
-  {
-    href: "/reports",
-    title: "Reports",
-    description: "View past audit runs and their findings.",
+    title: "Audit Rules",
+    description: "Code Review, Store Review, rule coverage, live page-speed results, and the future-updates backlog.",
   },
   {
     href: "/settings",
