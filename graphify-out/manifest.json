@@ -1045,8 +1045,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/route.ts": {
-    "mtime": 1789623807.2620003,
-    "ast_hash": "3bcadfcda995b1fef1886915b5998d52",
+    "mtime": 1789638261.8400056,
+    "ast_hash": "fbea9ddcb059a454ba34043bd1d14a59",
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/versions/[versionId]/audit/route.ts": {
@@ -1065,18 +1065,18 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/AllChecksList.tsx": {
-    "mtime": 1789628956.0244806,
-    "ast_hash": "4cf50dde6e6e8890b906a743e67c077d",
+    "mtime": 1789638362.513309,
+    "ast_hash": "d6f4bcc6997fb761f1d53ad626a76f9d",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789635371.6879275,
-    "ast_hash": "da567bd8e13dd2452fcbe0dc22a3fe96",
+    "mtime": 1789638346.79014,
+    "ast_hash": "5ab1ec0cf11a40907ae63585258a123b",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
-    "mtime": 1789637068.1321878,
-    "ast_hash": "ed4c58bcaf2c27dce663e827d7b6c460",
+    "mtime": 1789638400.5335913,
+    "ast_hash": "69960f16114accffeb7a31196a798a4b",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/page.tsx": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "app/reports/ReportContent.tsx": {
-    "mtime": 1789626055.8859499,
-    "ast_hash": "e8212e87264421072c603ccd8eeb8a02",
+    "mtime": 1789638355.3085997,
+    "ast_hash": "fb0b4e15ed95d2e2acfe2faed741089c",
     "semantic_hash": ""
   },
   "app/_components/shell/AppShell.tsx": {
@@ -1262,6 +1262,21 @@
   "lib/themes/presets.test.ts": {
     "mtime": 1789636801.946208,
     "ast_hash": "4b504bbbd855b2206233a7329a6f0d57",
+    "semantic_hash": ""
+  },
+  "app/themes/[themeId]/_components/ScoreboardGrid.tsx": {
+    "mtime": 1789638298.4391582,
+    "ast_hash": "f3bb2a8d32dda16dff44db7d9b9defa6",
+    "semantic_hash": ""
+  },
+  "lib/themes/computeScoreboard.test.ts": {
+    "mtime": 1789638241.0547209,
+    "ast_hash": "c389c36f503341fa184532a6e176c895",
+    "semantic_hash": ""
+  },
+  "lib/themes/computeScoreboard.ts": {
+    "mtime": 1789638657.8236318,
+    "ast_hash": "3128adc5b73ecc070e2dd7a07ceb6f85",
     "semantic_hash": ""
   }
 }
