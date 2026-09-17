@@ -539,101 +539,106 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
   const metrics: PageSpeedMetric[] = [];
   const needsFallback: PresetLink[] = [];
 
-  for (const [index, preset] of presets.entries()) {
-    const isBaseline = index === 0;
-    const homeCategories = isBaseline ? ["performance", "accessibility"] : ["performance"];
-    const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
-    if (!homeLhr) {
-      needsFallback.push(preset);
-      continue;
-    }
-
-    const homeMetrics = extractCoreMetrics(homeLhr);
-    const homeMetric: PageSpeedMetric = {
-      label: preset.label,
-      url: preset.url,
-      pageType: "home",
-      strategy: "mobile",
-      source: "psi",
-      ...homeMetrics,
-    };
-    metrics.push(homeMetric);
-    findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
-    findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
-
-    if (isBaseline) {
-      const matrix: PageSpeedMetric[] = [homeMetric];
-
-      const desktopHomeLhr = await fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"]);
-      if (desktopHomeLhr) {
-        const m: PageSpeedMetric = {
-          label: preset.label,
-          url: preset.url,
-          pageType: "home",
-          strategy: "desktop",
-          source: "psi",
-          ...extractCoreMetrics(desktopHomeLhr),
-        };
-        matrix.push(m);
-        metrics.push(m);
-      } else {
-        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+  // Every preset's home-page read, and the baseline's extra matrix reads,
+  // run concurrently rather than one at a time. Sequentially, 5 presets
+  // (the baseline alone needing 6 PSI calls for its full matrix) meant a
+  // single slow/degraded PSI response multiplied across ~10 calls could
+  // turn one "Run Audit" click into several minutes — long enough that a
+  // browser/proxy gives up and the user just sees "failed to run the
+  // audit" even though the run was still quietly working server-side.
+  // Concurrency bounds the worst case to the slowest single call (plus its
+  // one retry) instead of the sum of every call.
+  await Promise.all(
+    presets.map(async (preset, index) => {
+      const isBaseline = index === 0;
+      const homeCategories = isBaseline ? ["performance", "accessibility"] : ["performance"];
+      const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
+      if (!homeLhr) {
+        needsFallback.push(preset);
+        return;
       }
 
+      const homeMetrics = extractCoreMetrics(homeLhr);
+      const homeMetric: PageSpeedMetric = {
+        label: preset.label,
+        url: preset.url,
+        pageType: "home",
+        strategy: "mobile",
+        source: "psi",
+        ...homeMetrics,
+      };
+      metrics.push(homeMetric);
+      findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
+      findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
+
+      if (!isBaseline) return;
+
+      const matrix: PageSpeedMetric[] = [homeMetric];
       const urls = await discoverPageUrls(preset.url);
       const remainingPages: { pageType: PageType; url: string }[] = [
         { pageType: "collection", url: urls.collection },
         ...(urls.product ? [{ pageType: "product" as const, url: urls.product }] : []),
       ];
-      for (const { pageType, url } of remainingPages) {
-        for (const strategy of ["mobile", "desktop"] as const) {
-          const lhr = await fetchPsiLighthouseResult(url, strategy, ["performance", "accessibility"]);
-          if (!lhr) {
-            errors.push({ label: preset.label, url, error: `PageSpeed Insights request failed for the ${pageType} page (${strategy}).` });
-            continue;
-          }
-          const m: PageSpeedMetric = { label: preset.label, url, pageType, strategy, source: "psi", ...extractCoreMetrics(lhr) };
-          matrix.push(m);
-          metrics.push(m);
+      const requests: { pageType: PageType; url: string; strategy: PsiStrategy }[] = [
+        { pageType: "home", url: preset.url, strategy: "desktop" },
+        ...remainingPages.flatMap((p) => (["mobile", "desktop"] as const).map((strategy) => ({ ...p, strategy }))),
+      ];
+
+      const results = await Promise.all(
+        requests.map(async (r) => ({ ...r, lhr: await fetchPsiLighthouseResult(r.url, r.strategy, ["performance", "accessibility"]) }))
+      );
+      for (const r of results) {
+        if (!r.lhr) {
+          errors.push({ label: preset.label, url: r.url, error: `PageSpeed Insights request failed for the ${r.pageType} page (${r.strategy}).` });
+          continue;
         }
+        const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, source: "psi", ...extractCoreMetrics(r.lhr) };
+        matrix.push(m);
+        metrics.push(m);
       }
 
       findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
-    }
-  }
+    })
+  );
 
   if (needsFallback.length > 0) {
     let browser: import("playwright").Browser | undefined;
     try {
       browser = await chromium.launch();
       const activeBrowser = browser;
-      for (const preset of needsFallback) {
-        try {
-          const fallback = await withNavigationRetry(async () => {
-            // Roughly matches PSI's own default mobile viewport.
-            const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
-            try {
-              const page = await context.newPage();
-              return await collectPlaywrightMetrics(page, preset.url);
-            } finally {
-              await context.close();
-            }
-          });
-          metrics.push({
-            label: preset.label,
-            url: preset.url,
-            pageType: "home",
-            strategy: "mobile",
-            source: "playwright",
-            ttfbMs: fallback.ttfbMs,
-            fcpMs: fallback.fcpMs ?? undefined,
-            pageWeightBytes: fallback.pageWeightBytes,
-          });
-          findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
-        } catch (err) {
-          errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
-        }
-      }
+      // One browser, many concurrent contexts (a supported Playwright
+      // pattern) — same reasoning as the PSI concurrency above: several
+      // presets falling back sequentially, each with its own retry, was
+      // itself capable of adding minutes to a single Run Audit.
+      await Promise.all(
+        needsFallback.map(async (preset) => {
+          try {
+            const fallback = await withNavigationRetry(async () => {
+              // Roughly matches PSI's own default mobile viewport.
+              const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
+              try {
+                const page = await context.newPage();
+                return await collectPlaywrightMetrics(page, preset.url);
+              } finally {
+                await context.close();
+              }
+            });
+            metrics.push({
+              label: preset.label,
+              url: preset.url,
+              pageType: "home",
+              strategy: "mobile",
+              source: "playwright",
+              ttfbMs: fallback.ttfbMs,
+              fcpMs: fallback.fcpMs ?? undefined,
+              pageWeightBytes: fallback.pageWeightBytes,
+            });
+            findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
+          } catch (err) {
+            errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
+          }
+        })
+      );
     } finally {
       await browser?.close();
     }

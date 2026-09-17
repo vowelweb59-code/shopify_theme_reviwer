@@ -811,21 +811,37 @@ export async function runLiveChecksForPresets(presets: PresetLink[]): Promise<Mu
   try {
     browser = await chromium.launch();
     const activeBrowser = browser;
-    for (const preset of presets) {
-      try {
-        const outcome = await withNavigationRetry(async () => {
-          const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
-          try {
-            const page = await context.newPage();
-            return await runChecksForLoadedPreset(page, preset.label, preset.url);
-          } finally {
-            await context.close();
-          }
-        });
-        findings.push(...outcome.findings);
-        presetFacts.push({ label: preset.label, home: outcome.home, product: outcome.product });
-      } catch (err) {
-        errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
+    // Concurrent per preset (one browser, a fresh context each) rather than
+    // one at a time — several demo stores checked sequentially, each with
+    // its own retry, could turn a single Run Audit into minutes on a slow
+    // network. Promise.all + map preserves each result's original index,
+    // so presetFacts still ends up in the same order presets was given in
+    // (comparePresets treats the first successful entry as the baseline).
+    const results = await Promise.all(
+      presets.map(async (preset) => {
+        try {
+          const outcome = await withNavigationRetry(async () => {
+            const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
+            try {
+              const page = await context.newPage();
+              return await runChecksForLoadedPreset(page, preset.label, preset.url);
+            } finally {
+              await context.close();
+            }
+          });
+          return { ok: true as const, preset, outcome };
+        } catch (err) {
+          return { ok: false as const, preset, error: err instanceof Error ? err.message : String(err) };
+        }
+      })
+    );
+
+    for (const result of results) {
+      if (result.ok) {
+        findings.push(...result.outcome.findings);
+        presetFacts.push({ label: result.preset.label, home: result.outcome.home, product: result.outcome.product });
+      } else {
+        errors.push({ label: result.preset.label, url: result.preset.url, error: result.error });
       }
     }
   } finally {
