@@ -110,8 +110,8 @@
     "semantic_hash": ""
   },
   "models/audit-run.ts": {
-    "mtime": 1789621530.0717664,
-    "ast_hash": "86fb953570a1810c5613b13bdce2358a",
+    "mtime": 1789646171.2124012,
+    "ast_hash": "8676d9c0bcd8b493d845d6abfe35bfe3",
     "semantic_hash": ""
   },
   "models/audit-settings.ts": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "lib/audit/liveCheck.ts": {
-    "mtime": 1789643046.4704516,
-    "ast_hash": "251ea25c86fb02fab3ba9ed5212bd3bc",
+    "mtime": 1789646220.5224142,
+    "ast_hash": "8e8badf4c1e75bc601385d56eeb136cf",
     "semantic_hash": ""
   },
   "Landing Page 2.png": {
@@ -950,8 +950,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789644483.9919662,
-    "ast_hash": "31edb80aa7980136f6f6fa21970452e0",
+    "mtime": 1789646259.8491747,
+    "ast_hash": "cf491f1cd0e1854f3ad7a3d18d22eca2",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1045,8 +1045,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/versions/[versionId]/audit/route.ts": {
-    "mtime": 1789623833.4713356,
-    "ast_hash": "7028e472dc00d80ca342d48c1b11187b",
+    "mtime": 1789646392.3538187,
+    "ast_hash": "7a5b190e3bf7e7657c7e1e0c72eba1eb",
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/versions/route.ts": {
@@ -1065,8 +1065,8 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789645185.5527754,
-    "ast_hash": "6966526b67bb0c3e3ae8013dd069937a",
+    "mtime": 1789646977.3754323,
+    "ast_hash": "5819033fe00a3ef02b68e48e343c0065",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
@@ -1085,8 +1085,8 @@
     "semantic_hash": ""
   },
   "lib/audit/executeAuditRun.ts": {
-    "mtime": 1789644254.05726,
-    "ast_hash": "2b86fe9bc8909bbc5d97e4cd39baabd9",
+    "mtime": 1789646627.428107,
+    "ast_hash": "d9312d3f3db87a8e9d01efe33bf2d51f",
     "semantic_hash": ""
   },
   "lib/themes/checksum.ts": {
@@ -1272,6 +1272,16 @@
   "lib/themes/computeScoreboard.ts": {
     "mtime": 1789638657.8236318,
     "ast_hash": "3128adc5b73ecc070e2dd7a07ceb6f85",
+    "semantic_hash": ""
+  },
+  "lib/audit/progress.test.ts": {
+    "mtime": 1789646190.227502,
+    "ast_hash": "f86918e209a016dbe062d53864d790ff",
+    "semantic_hash": ""
+  },
+  "lib/audit/progress.ts": {
+    "mtime": 1789646182.6365645,
+    "ast_hash": "d80fb3efb0f176ae0ffbd29a8273bad5",
     "semantic_hash": ""
   }
 }
