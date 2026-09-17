@@ -14,8 +14,22 @@ import { runLiveChecksForPresets, type PresetLink } from "@/lib/audit/liveCheck"
 import { runPageSpeedChecksForPresets, type PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
 import type { DiffableFinding } from "@/lib/audit/findingSignature";
+import type { AuditStageKey } from "@/lib/audit/progress";
 
 const SNIPPET_CONTEXT_LINES = 3;
+
+// A lightweight, isolated field update — deliberately not touching the
+// in-memory `auditRun` object other callers accumulate fields onto, so it
+// never races with (or gets clobbered by) the single big auditRun.save()
+// at the very end. Swallows its own errors: a progress-tracking write
+// failing must never fail the actual audit.
+async function setStage(auditRunId: unknown, stage: AuditStageKey, stageProgress?: { completed: number; total: number }): Promise<void> {
+  try {
+    await AuditRun.updateOne({ _id: auditRunId }, { $set: { currentStage: stage, ...(stageProgress ? { stageProgress } : {}) } });
+  } catch {
+    // Best-effort only.
+  }
+}
 
 /**
  * Snapshots every rule's current version onto this audit run (phase-6
@@ -137,6 +151,17 @@ export type ExecuteAuditRunResult =
   | { ok: true; auditRun: AuditRunDoc & { _id: unknown }; findings: (ExecutedFinding & { layer: "static" | "live" })[] }
   | { ok: false; auditRun: AuditRunDoc & { _id: unknown }; error: string };
 
+export type ExecuteAuditRunHooks = {
+  // Fires once the pending AuditRun row exists (right after AuditRun.create,
+  // before any of the actual slow work) — lets a caller respond to its own
+  // client immediately with the run's id and let this function keep running
+  // in the background, rather than blocking the HTTP response on the full
+  // audit (see app/api/themes/.../audit/route.ts). The original
+  // /api/audit/run route doesn't pass this and keeps its existing
+  // fully-synchronous behavior unchanged.
+  onStarted?: (auditRun: AuditRunDoc & { _id: unknown }) => void;
+};
+
 /**
  * The full audit-engine orchestration (extracted from app/api/audit/run/route.ts
  * verbatim, parameterized): parse the zip, run static rules, detect
@@ -148,7 +173,7 @@ export type ExecuteAuditRunResult =
  * throws — a failure marks the AuditRun "failed" and returns { ok: false },
  * matching the original route's catch-all behavior.
  */
-export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<ExecuteAuditRunResult> {
+export async function executeAuditRun(params: ExecuteAuditRunParams, hooks?: ExecuteAuditRunHooks): Promise<ExecuteAuditRunResult> {
   const { theme, buffer, demoStorePresets = [], themeVersionId = null, themeZipId = null } = params;
 
   const auditRun = await AuditRun.create({
@@ -158,19 +183,23 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
     status: "running",
     startedAt: new Date(),
   });
+  hooks?.onStarted?.(auditRun);
 
   const timer = new Stopwatch();
   try {
+    await setStage(auditRun._id, "extracting");
     const result = await parseThemeZip(buffer);
     timer.record("extraction", result.timing.extraction);
     timer.record("validation", result.timing.validation);
     timer.record("parsing", result.timing.parsing);
 
+    await setStage(auditRun._id, "running_rules");
     const { findings: staticFindings, summary: staticSummary, ruleErrors, timing: rulesTiming } =
       await runAuditRules(result.files);
     timer.record("themeIndex", rulesTiming.themeIndex);
     timer.record("ruleExecution", rulesTiming.ruleExecution);
 
+    await setStage(auditRun._id, "detecting_features");
     const enhancementDetectionStart = Date.now();
     const enhancementDetections = await detectEnhancementsForRun(result.files);
     timer.record("enhancementDetection", Date.now() - enhancementDetectionStart);
@@ -179,6 +208,17 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
     let liveCheckErrors: { label: string; url: string; error: string }[] = [];
     let pageSpeedMetrics: PageSpeedMetric[] = [];
     if (demoStorePresets.length > 0) {
+      // One progress unit per preset per phase (live-check, page-speed) —
+      // a rough but honest measure of "how much of the longest stage is
+      // done", surfaced to a polling client via stageProgress.
+      const totalUnits = demoStorePresets.length * 2;
+      let completedUnits = 0;
+      await setStage(auditRun._id, "checking_live", { completed: 0, total: totalUnits });
+      const bumpProgress = () => {
+        completedUnits += 1;
+        void setStage(auditRun._id, "checking_live", { completed: completedUnits, total: totalUnits });
+      };
+
       // Independent of each other (one drives its own Playwright browser
       // for contrast/schema checks, the other drives PSI requests plus its
       // own Playwright fallback) — running them concurrently rather than
@@ -187,11 +227,11 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
       // concurrency (see liveCheck.ts/pageSpeed.ts).
       const phaseStart = Date.now();
       const [liveResult, pageSpeedResult] = await Promise.all([
-        runLiveChecksForPresets(demoStorePresets).then((r) => {
+        runLiveChecksForPresets(demoStorePresets, bumpProgress).then((r) => {
           timer.record("liveChecks", Date.now() - phaseStart);
           return r;
         }),
-        runPageSpeedChecksForPresets(demoStorePresets).then((r) => {
+        runPageSpeedChecksForPresets(demoStorePresets, bumpProgress).then((r) => {
           timer.record("pageSpeedChecks", Date.now() - phaseStart);
           return r;
         }),
@@ -207,6 +247,7 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
     const staticHistory = history.slice(0, staticFindings.length);
     const liveHistory = history.slice(staticFindings.length);
 
+    await setStage(auditRun._id, "persisting");
     const persistStart = Date.now();
     const findingDocs = [
       ...toFindingDocs(staticFindings, auditRun._id, "static", result.files, staticHistory),
@@ -217,6 +258,17 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
 
     auditRun.status = "complete";
     auditRun.completedAt = new Date();
+    // Plain assignment back to null/undefined isn't reliably picked up by
+    // Mongoose's dirty-tracking here (it compares against the in-memory
+    // doc's own last-known value, which was never updated by the setStage()
+    // calls above — those go straight to the DB via updateOne, bypassing
+    // this document entirely) — markModified forces both onto this save
+    // regardless, so a stale mid-run stage/progress doesn't linger after
+    // status flips to "complete".
+    auditRun.currentStage = null;
+    auditRun.markModified("currentStage");
+    auditRun.stageProgress = undefined;
+    auditRun.markModified("stageProgress");
     auditRun.fileStats = result.fileStats;
     auditRun.skippedFileCount = result.skippedFileCount;
     if (result.fileErrors.length > 0) auditRun.fileErrors = result.fileErrors;
@@ -251,6 +303,10 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
 
     auditRun.status = "failed";
     auditRun.completedAt = new Date();
+    auditRun.currentStage = null;
+    auditRun.markModified("currentStage");
+    auditRun.stageProgress = undefined;
+    auditRun.markModified("stageProgress");
     auditRun.error = message;
     auditRun.timingMs = timer.toRecord();
     await auditRun.save();

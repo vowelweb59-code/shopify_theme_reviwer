@@ -533,7 +533,10 @@ export function fallbackThresholdFindings(label: string, url: string, metrics: F
  * shopifySubmissionBarFindings' own comment for why it's scoped to one
  * preset rather than every one.
  */
-export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promise<PageSpeedCheckResult> {
+export async function runPageSpeedChecksForPresets(
+  presets: PresetLink[],
+  onItemComplete?: () => void
+): Promise<PageSpeedCheckResult> {
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const metrics: PageSpeedMetric[] = [];
@@ -582,7 +585,10 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
       findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
       findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
 
-      if (!isBaseline) return;
+      if (!isBaseline) {
+        onItemComplete?.();
+        return;
+      }
 
       const matrix: PageSpeedMetric[] = [homeMetric];
 
@@ -625,6 +631,7 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
       }
 
       findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
+      onItemComplete?.();
     })
   );
 
@@ -663,6 +670,8 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
             findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
           } catch (err) {
             errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
+          } finally {
+            onItemComplete?.();
           }
         })
       );

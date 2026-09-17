@@ -107,6 +107,16 @@ const auditRunSchema = new Schema(
     startedAt: { type: Date, required: true, default: () => new Date(), index: true },
     completedAt: { type: Date, default: null },
     error: { type: String, default: null },
+    // Live progress while status is "running" — updated in place (not via
+    // the final auditRun.save() at the end) so a client polling this run
+    // can show a real progress bar instead of an indeterminate spinner.
+    // stageProgress only applies to the live-check/page-speed stage (the
+    // dominant cost of a run with demo store presets); null otherwise.
+    currentStage: { type: String, default: null },
+    stageProgress: {
+      type: new Schema({ completed: { type: Number, required: true }, total: { type: Number, required: true } }, { _id: false }),
+      default: undefined,
+    },
     summary: { type: auditRunSummarySchema, default: undefined },
     fileStats: { type: Map, of: Number, default: undefined },
     skippedFileCount: { type: Number, default: null },

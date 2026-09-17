@@ -802,7 +802,10 @@ export function comparePresets(presets: PresetFacts[]): ExecutedFinding[] {
  * `errors` and does not prevent the others (or the comparison, if 2+ of
  * the rest still succeeded) from running.
  */
-export async function runLiveChecksForPresets(presets: PresetLink[]): Promise<MultiPresetLiveCheckResult> {
+export async function runLiveChecksForPresets(
+  presets: PresetLink[],
+  onItemComplete?: () => void
+): Promise<MultiPresetLiveCheckResult> {
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const presetFacts: PresetFacts[] = [];
@@ -832,6 +835,8 @@ export async function runLiveChecksForPresets(presets: PresetLink[]): Promise<Mu
           return { ok: true as const, preset, outcome };
         } catch (err) {
           return { ok: false as const, preset, error: err instanceof Error ? err.message : String(err) };
+        } finally {
+          onItemComplete?.();
         }
       })
     );

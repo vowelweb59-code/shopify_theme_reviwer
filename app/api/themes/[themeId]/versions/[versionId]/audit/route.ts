@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
 import { ThemeZip } from "@/models/theme-zip";
+import type { AuditRunDoc } from "@/models/audit-run";
 import { executeAuditRun } from "@/lib/audit/executeAuditRun";
 import { localUploadSource } from "@/lib/themes/themeSource";
 import { sanitizePresets } from "@/lib/themes/presets";
@@ -13,6 +14,13 @@ import { sanitizePresets } from "@/lib/themes/presets";
  * a new ZIP first via POST .../versions to audit different bytes), calling
  * the exact same executeAuditRun the original /api/audit/run route uses.
  * Always creates a new AuditRun — never overwrites a previous one.
+ *
+ * Responds as soon as the AuditRun row exists (near-instant) instead of
+ * waiting for the whole audit to finish — a live-check/page-speed phase
+ * can legitimately run for a minute or more, long enough that something
+ * between the browser and this server gives up on the request before the
+ * audit itself is actually done. The client polls GET /api/audit/[id] for
+ * status/progress instead (see currentStage/stageProgress on the model).
  */
 export async function POST(
   request: Request,
@@ -41,16 +49,20 @@ export async function POST(
   const demoStorePresets = requestedPresets.length > 0 ? requestedPresets : sanitizePresets(theme.demoStorePresets);
 
   const buffer = await localUploadSource(themeZip).getZipBuffer();
-  const result = await executeAuditRun({
-    theme,
-    buffer,
-    demoStorePresets,
-    themeVersionId: themeVersion._id,
-    themeZipId: themeZip._id,
+
+  const auditRun = await new Promise<AuditRunDoc & { _id: unknown }>((resolve) => {
+    executeAuditRun(
+      { theme, buffer, demoStorePresets, themeVersionId: themeVersion._id, themeZipId: themeZip._id },
+      { onStarted: resolve }
+    ).catch((err) => {
+      // executeAuditRun itself never throws — it catches internally and
+      // marks the run "failed" (visible to the polling client via status).
+      // This only guards against a truly unexpected failure escaping that
+      // catch, which would otherwise be an unhandled rejection since
+      // nothing else awaits this promise once the response below is sent.
+      console.error("executeAuditRun failed unexpectedly after the client was already responded to:", err);
+    });
   });
 
-  if (!result.ok) {
-    return NextResponse.json({ auditRun: result.auditRun, error: result.error }, { status: 400 });
-  }
-  return NextResponse.json({ auditRun: result.auditRun, findings: result.findings }, { status: 201 });
+  return NextResponse.json({ auditRun }, { status: 202 });
 }

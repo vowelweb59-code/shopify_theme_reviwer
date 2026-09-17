@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { ScoreboardGrid } from "./ScoreboardGrid";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
+import { AUDIT_STAGES, percentForStage, type AuditStageKey } from "@/lib/audit/progress";
+
+const POLL_INTERVAL_MS = 1500;
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -169,16 +172,64 @@ function RunAuditForm({
   const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stage, setStage] = useState<AuditStageKey | null>(null);
+  const [stageProgress, setStageProgress] = useState<{ completed: number; total: number } | null>(null);
+  const activeRef = useRef(true);
+  useEffect(() => {
+    // Reset to true on every effect run, not just via useRef's initial
+    // value — React's dev-only StrictMode double-invokes effects
+    // (setup -> cleanup -> setup) right after mount without actually
+    // unmounting the component, so a cleanup-only assignment here left
+    // this permanently false before handleRun/pollUntilDone ever ran,
+    // silently killing the poll loop on its very first iteration.
+    activeRef.current = true;
+    return () => {
+      activeRef.current = false;
+    };
+  }, []);
+
+  async function pollUntilDone(auditRunId: string) {
+    while (activeRef.current) {
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      if (!activeRef.current) return;
+      try {
+        const res = await fetch(`/api/audit/${auditRunId}`);
+        const data = await res.json().catch(() => ({}));
+        const run = data.auditRun;
+        if (!res.ok || !run) continue; // a transient poll hiccup — the run may still be completing server-side, keep trying
+
+        setStage(run.currentStage ?? null);
+        setStageProgress(run.stageProgress ?? null);
+
+        if (run.status === "complete") {
+          setSubmitting(false);
+          onRan();
+          return;
+        }
+        if (run.status === "failed") {
+          setSubmitting(false);
+          setError(run.error ?? "The audit failed.");
+          return;
+        }
+      } catch {
+        // Network hiccup while polling — keep polling rather than giving up;
+        // the run itself keeps progressing on the server regardless.
+      }
+    }
+  }
 
   async function handleRun() {
     setSubmitting(true);
     setError(null);
+    setStage(null);
+    setStageProgress(null);
     const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
-    // A dropped connection (dev server restart, a proxy giving up on a long
-    // live-check run) throws here — without this catch, the throw was
-    // unhandled and setSubmitting(false) below never ran, leaving the UI
-    // stuck showing the spinner indefinitely with no way to recover short
-    // of a full page reload.
+    // The audit itself can run for well over a minute (live checks/page
+    // speed) — this request only waits for the AuditRun row to be created
+    // (near-instant), then hands off to polling below. A dropped connection
+    // here (dev server restart) still throws, so it stays in a try/catch:
+    // without one, the throw was unhandled and setSubmitting(false) never
+    // ran, leaving the UI stuck on the spinner indefinitely.
     try {
       const res = await fetch(`/api/themes/${themeId}/versions/${versionId}/audit`, {
         method: "POST",
@@ -186,28 +237,41 @@ function RunAuditForm({
         body: JSON.stringify({ demoStorePresets: validPresets }),
       });
       const data = await res.json().catch(() => ({}));
-      setSubmitting(false);
-      if (!res.ok) {
+      if (!res.ok || !data.auditRun) {
+        setSubmitting(false);
         setError(data.error ?? "Failed to run the audit.");
         return;
       }
-      onRan();
+      pollUntilDone(data.auditRun._id);
     } catch {
       setSubmitting(false);
-      setError("Lost connection to the server while the audit was running. It may still complete in the background — check Audit History in a moment, or try again.");
+      setError("Lost connection to the server while starting the audit. Try again.");
     }
   }
 
   if (submitting) {
+    const percent = percentForStage(stage, stageProgress);
+    const stageLabel = stage ? AUDIT_STAGES[stage].label : "Starting…";
     return (
       <Card>
         <div className="flex items-center gap-3 py-2">
           <Loader2 className="h-5 w-5 shrink-0 animate-spin text-status-info-icon" aria-hidden />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
               Auditing {themeName} {version}…
             </p>
-            <p className="text-xs text-zinc-500">This runs the full rule engine — it may take a moment.</p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              {stageLabel}
+              {stage === "checking_live" && stageProgress && stageProgress.total > 0 && (
+                <> — {stageProgress.completed} of {stageProgress.total} checked</>
+              )}
+            </p>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
           </div>
         </div>
       </Card>
