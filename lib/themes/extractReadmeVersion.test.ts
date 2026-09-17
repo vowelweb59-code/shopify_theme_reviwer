@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { extractVersionFromReadmeText, findReadmeFile } from "./extractReadmeVersion";
+import { extractVersionFromReadmeText, extractVersionFromSettingsSchema, findReadmeFile } from "./extractReadmeVersion";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => {
@@ -77,5 +77,62 @@ describe("findReadmeFile", () => {
   it("does not look inside subdirectories", () => {
     const root = makeThemeDir({ "docs/README.md": "Version: 1.0.0" });
     expect(findReadmeFile(root)).toBeNull();
+  });
+});
+
+describe("extractVersionFromSettingsSchema", () => {
+  function settingsSchema(entries: unknown[]): string {
+    return JSON.stringify(entries);
+  }
+
+  it("extracts theme_version from the theme_info entry", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([{ name: "theme_info", theme_version: "15.4.0" }]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "15.4.0" });
+  });
+
+  it("strips a leading v prefix", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([{ name: "theme_info", theme_version: "v2.4.1" }]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "2.4.1" });
+  });
+
+  it("finds theme_info regardless of its position in the array", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([
+        { name: "colors", settings: [] },
+        { name: "theme_info", theme_version: "1.2.3" },
+      ]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.2.3" });
+  });
+
+  it("returns null when the file doesn't exist", () => {
+    const root = makeThemeDir({});
+    expect(extractVersionFromSettingsSchema(root)).toBeNull();
+  });
+
+  it("returns null when there is no theme_info entry", () => {
+    const root = makeThemeDir({ "config/settings_schema.json": settingsSchema([{ name: "colors" }]) });
+    expect(extractVersionFromSettingsSchema(root)).toBeNull();
+  });
+
+  it("returns null when theme_version is missing or not a version-shaped string", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([{ name: "theme_info" }]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toBeNull();
+  });
+
+  it("returns null for malformed JSON", () => {
+    const root = makeThemeDir({ "config/settings_schema.json": "{ not valid json" });
+    expect(extractVersionFromSettingsSchema(root)).toBeNull();
+  });
+
+  it("returns null when the JSON is not an array", () => {
+    const root = makeThemeDir({ "config/settings_schema.json": JSON.stringify({ name: "theme_info" }) });
+    expect(extractVersionFromSettingsSchema(root)).toBeNull();
   });
 });

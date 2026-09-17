@@ -124,7 +124,8 @@ function UploadVersionForm({ themeId, onUploaded }: { themeId: string; onUploade
           <span className="text-zinc-700 dark:text-zinc-300">Theme .zip</span>
           <input type="file" accept=".zip" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
           <span className="text-xs text-zinc-500">
-            The version is read from the ZIP&apos;s README — it isn&apos;t entered manually. This does not run an audit.
+            The version is read from config/settings_schema.json or the ZIP&apos;s README — it isn&apos;t entered manually.
+            This does not run an audit.
           </span>
         </label>
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}

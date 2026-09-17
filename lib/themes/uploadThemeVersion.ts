@@ -10,12 +10,10 @@ export type UploadVersionResult =
   | { ok: true; themeVersion: InstanceType<typeof ThemeVersion>; themeZip: InstanceType<typeof ThemeZip>; reusedZip: boolean }
   | { ok: false; error: string };
 
-function readmeErrorMessage(result: Extract<Awaited<ReturnType<typeof extractThemeVersionFromZip>>, { ok: false }>): string {
+function versionErrorMessage(result: Extract<Awaited<ReturnType<typeof extractThemeVersionFromZip>>, { ok: false }>): string {
   switch (result.reason) {
-    case "readme_not_found":
-      return "No README file was found in this theme ZIP. The version can't be determined without one — add a README with a \"Version: x.y.z\" line and re-upload.";
-    case "version_not_found":
-      return `Found ${result.readmeFilename}, but no "Version: x.y.z" line could be found in it. Add one and re-upload — the version is never guessed.`;
+    case "not_found":
+      return 'Couldn\'t determine this theme\'s version — no "theme_version" was found in config/settings_schema.json\'s theme_info block, and no "Version: x.y.z" line was found in a README. Add one and re-upload — the version is never guessed.';
     case "invalid_theme_structure":
       return result.message;
     case "invalid_zip":
@@ -25,8 +23,9 @@ function readmeErrorMessage(result: Extract<Awaited<ReturnType<typeof extractThe
 
 /**
  * The shared core of both "create a theme" (first upload) and "upload a
- * new version for an existing theme": extract the version from the
- * README (never invented — see extractReadmeVersion.ts), find-or-create the
+ * new version for an existing theme": extract the version from
+ * config/settings_schema.json or a README (never invented — see
+ * extractReadmeVersion.ts), find-or-create the
  * ThemeVersion, and find-or-create the ThemeZip (deduped by checksum within
  * that version, so a byte-identical re-upload reuses the existing stored
  * copy instead of storing a duplicate). Never runs an audit — that's a
@@ -38,7 +37,7 @@ export async function uploadThemeVersion(themeId: Types.ObjectId | string, file:
 
   const versionResult = await extractThemeVersionFromZip(buffer);
   if (!versionResult.ok) {
-    return { ok: false, error: readmeErrorMessage(versionResult) };
+    return { ok: false, error: versionErrorMessage(versionResult) };
   }
 
   const { version } = versionResult;

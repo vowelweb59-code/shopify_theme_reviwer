@@ -4,20 +4,21 @@ import { extractThemeZip } from "@/lib/theme-parser/zip";
 import { resolveThemeRoot, InvalidThemeError } from "@/lib/theme-parser/validateThemeStructure";
 import { ThemeZipError } from "@/lib/theme-parser/zip";
 
-export type ReadmeVersionResult =
-  | { ok: true; version: string; readmeFilename: string }
-  | { ok: false; reason: "readme_not_found" }
-  | { ok: false; reason: "version_not_found"; readmeFilename: string }
+export type ThemeVersionResult =
+  | { ok: true; version: string; source: "settings_schema"; filename: string }
+  | { ok: true; version: string; source: "readme"; filename: string }
+  | { ok: false; reason: "not_found" }
   | { ok: false; reason: "invalid_theme_structure"; message: string }
   | { ok: false; reason: "invalid_zip"; message: string };
 
 const README_NAME_RE = /^readme(\.(md|txt))?$/i;
 
-// The README is the source of truth for a theme's version (never invented,
-// never asked for manually) — but it isn't a Liquid/JSON/CSS/JS file and
-// doesn't live under assets/, so lib/theme-parser/walkFiles.ts's
-// walkThemeFiles() silently skips it entirely. This reads it directly
-// instead of touching that parser.
+// README-based version detection (a fallback for themes that don't
+// populate config/settings_schema.json's theme_version — see below) is
+// never invented, never asked for manually. A README isn't a Liquid/JSON/
+// CSS/JS file and doesn't live under assets/, so lib/theme-parser/
+// walkFiles.ts's walkThemeFiles() silently skips it entirely. This reads
+// it directly instead of touching that parser.
 export function findReadmeFile(themeRootDir: string): { filename: string; content: string } | null {
   const entries = fs.readdirSync(themeRootDir, { withFileTypes: true }).filter((e) => e.isFile());
   const match = entries.find((e) => README_NAME_RE.test(e.name));
@@ -26,18 +27,52 @@ export function findReadmeFile(themeRootDir: string): { filename: string; conten
   return { filename: match.name, content };
 }
 
+// Shared value shape for both sources below: optional leading "v", dotted
+// numeric segments, optional pre-release/build suffix.
+const VERSION_VALUE_PATTERN = "v?(\\d+(?:\\.\\d+){1,3}(?:[-+][0-9A-Za-z.-]+)?)";
+const VERSION_VALUE_RE = new RegExp(`^${VERSION_VALUE_PATTERN}$`);
+
 // Matches the exact convention the user's own themes use: a line reading
-// "Version: 2.4.1" (case-insensitive label, optional leading "v", dotted
-// numeric segments, optional pre-release/build suffix). The first match
-// wins — a changelog-style README lists the current release first. Only
-// this one, explicit convention is matched on purpose: anything looser
-// risks silently picking up an unrelated number elsewhere in the file.
-const VERSION_LINE_RE = /^[ \t]*version[ \t]*:[ \t]*v?(\d+(?:\.\d+){1,3}(?:[-+][0-9A-Za-z.-]+)?)[ \t]*$/im;
+// "Version: 2.4.1". The first match wins — a changelog-style README lists
+// the current release first. Only this one, explicit convention is matched
+// on purpose: anything looser risks silently picking up an unrelated number
+// elsewhere in the file.
+const VERSION_LINE_RE = new RegExp(`^[ \\t]*version[ \\t]*:[ \\t]*${VERSION_VALUE_PATTERN}[ \\t]*$`, "im");
 
 export function extractVersionFromReadmeText(text: string): { version: string } | null {
   const match = VERSION_LINE_RE.exec(text);
   if (!match) return null;
   return { version: match[1] };
+}
+
+const SETTINGS_SCHEMA_RELATIVE_PATH = path.join("config", "settings_schema.json");
+
+// The actual Shopify platform convention: every theme built with the
+// Shopify CLI (and every theme submitted to the Theme Store) declares its
+// version in config/settings_schema.json's first "theme_info" entry's
+// `theme_version` field — not in a README. Checked before the README
+// convention below, which exists only as a fallback for themes that don't
+// populate this field.
+export function extractVersionFromSettingsSchema(themeRootDir: string): { version: string } | null {
+  const filePath = path.join(themeRootDir, SETTINGS_SCHEMA_RELATIVE_PATH);
+  if (!fs.existsSync(filePath)) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+
+  const themeInfo = parsed.find(
+    (entry): entry is { theme_version?: unknown } =>
+      typeof entry === "object" && entry !== null && (entry as { name?: unknown }).name === "theme_info"
+  );
+  if (!themeInfo || typeof themeInfo.theme_version !== "string") return null;
+
+  const match = VERSION_VALUE_RE.exec(themeInfo.theme_version.trim());
+  return match ? { version: match[1] } : null;
 }
 
 /**
@@ -46,11 +81,12 @@ export function extractVersionFromReadmeText(text: string): { version: string } 
  * (path-traversal-safe, size/count-limited) and theme-root-resolution code
  * directly rather than re-implementing zip/path handling — the same
  * functions lib/theme-parser/index.ts's parseThemeZip() calls internally,
- * just not re-exported through its barrel. Never invents a version: a
- * missing README or missing version line comes back as a specific,
- * non-"ok" result instead of a guess.
+ * just not re-exported through its barrel. Tries config/settings_schema.json
+ * (the real Shopify convention) first, then falls back to a README's
+ * "Version: x.y.z" line. Never invents a version: neither source found
+ * comes back as a specific, non-"ok" result instead of a guess.
  */
-export async function extractThemeVersionFromZip(buffer: Buffer): Promise<ReadmeVersionResult> {
+export async function extractThemeVersionFromZip(buffer: Buffer): Promise<ThemeVersionResult> {
   let extracted: Awaited<ReturnType<typeof extractThemeZip>>;
   try {
     extracted = await extractThemeZip(buffer);
@@ -61,11 +97,19 @@ export async function extractThemeVersionFromZip(buffer: Buffer): Promise<Readme
 
   try {
     const root = resolveThemeRoot(extracted.dir);
+
+    const fromSettingsSchema = extractVersionFromSettingsSchema(root);
+    if (fromSettingsSchema) {
+      return { ok: true, version: fromSettingsSchema.version, source: "settings_schema", filename: "config/settings_schema.json" };
+    }
+
     const readme = findReadmeFile(root);
-    if (!readme) return { ok: false, reason: "readme_not_found" };
-    const versionMatch = extractVersionFromReadmeText(readme.content);
-    if (!versionMatch) return { ok: false, reason: "version_not_found", readmeFilename: readme.filename };
-    return { ok: true, version: versionMatch.version, readmeFilename: readme.filename };
+    if (readme) {
+      const versionMatch = extractVersionFromReadmeText(readme.content);
+      if (versionMatch) return { ok: true, version: versionMatch.version, source: "readme", filename: readme.filename };
+    }
+
+    return { ok: false, reason: "not_found" };
   } catch (err) {
     if (err instanceof InvalidThemeError) return { ok: false, reason: "invalid_theme_structure", message: err.message };
     throw err;

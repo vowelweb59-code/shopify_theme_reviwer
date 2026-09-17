@@ -119,7 +119,8 @@ export function AddThemeModal({ open, onOpenChange, onCreated }: { open: boolean
           <span className="text-zinc-700 dark:text-zinc-300">Theme ZIP</span>
           <Dropzone file={file} onFile={setFile} />
           <p className="text-xs text-zinc-500">
-            Version detected from the ZIP&apos;s README (a &quot;Version: x.y.z&quot; line) — never entered manually.
+            Version detected from config/settings_schema.json&apos;s theme_info block, or a README &quot;Version: x.y.z&quot;
+            line — never entered manually.
           </p>
         </div>
 
