@@ -98,6 +98,11 @@ const enhancementDetectionSchema = new Schema(
 const auditRunSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
+    // Populated only for runs triggered through the Themes module
+    // (app/api/themes/.../audit/route.ts) — null for every run created via
+    // the original /audit -> /api/audit/run flow, which stays unaffected.
+    themeVersionId: { type: Schema.Types.ObjectId, ref: "ThemeVersion", default: null, index: true },
+    themeZipId: { type: Schema.Types.ObjectId, ref: "ThemeZip", default: null, index: true },
     status: { type: String, required: true, enum: AUDIT_RUN_STATUSES, default: "pending", index: true },
     startedAt: { type: Date, required: true, default: () => new Date(), index: true },
     completedAt: { type: Date, default: null },

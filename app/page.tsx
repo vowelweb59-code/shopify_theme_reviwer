@@ -7,6 +7,11 @@ const SECTIONS = [
     description: "Upload a theme zip and run a deterministic Theme Store compliance audit.",
   },
   {
+    href: "/themes",
+    title: "Themes",
+    description: "Version-tracked themes with full audit history per version.",
+  },
+  {
     href: "/insights",
     title: "Insights",
     description: "Rule coverage, live page-speed results, and the future-updates backlog.",

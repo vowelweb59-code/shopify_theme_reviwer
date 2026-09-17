@@ -16,15 +16,31 @@ const themeSchema = new Schema(
 
 // Mongo has no `on delete cascade` — emulate the Theme -> AuditRun -> Finding
 // chain here so deleting a Theme also removes its runs and their findings.
+// Also cleans up the Themes-module side of the tree (ThemeVersion/ThemeZip
+// and their GridFS bytes) — deleteMany() doesn't trigger ThemeVersion's own
+// pre-delete hooks, so that cleanup is repeated here rather than relied on.
 async function cascadeDeleteRuns(themeId: unknown) {
   if (!themeId) return;
   const { AuditRun } = await import("./audit-run");
   const { Finding } = await import("./finding");
+  const { ThemeVersion } = await import("./theme-version");
+  const { ThemeZip } = await import("./theme-zip");
+  const { deleteZip } = await import("../lib/themes/zipStorage");
+
   const runs = await AuditRun.find({ themeId }).select("_id");
   const runIds = runs.map((r) => r._id);
   if (runIds.length > 0) {
     await Finding.deleteMany({ auditRunId: { $in: runIds } });
     await AuditRun.deleteMany({ _id: { $in: runIds } });
+  }
+
+  const versions = await ThemeVersion.find({ themeId }).select("_id");
+  const versionIds = versions.map((v) => v._id);
+  if (versionIds.length > 0) {
+    const zips = await ThemeZip.find({ themeVersionId: { $in: versionIds } }).select("gridFsFileId");
+    await Promise.all(zips.map((z) => deleteZip(z.gridFsFileId).catch(() => {})));
+    await ThemeZip.deleteMany({ themeVersionId: { $in: versionIds } });
+    await ThemeVersion.deleteMany({ themeId });
   }
 }
 

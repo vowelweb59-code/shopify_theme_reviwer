@@ -1,4 +1,6 @@
 export * from "./theme";
+export * from "./theme-version";
+export * from "./theme-zip";
 export * from "./audit-run";
 export * from "./finding";
 export * from "./requirement";
