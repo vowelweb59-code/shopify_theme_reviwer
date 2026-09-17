@@ -1,5 +1,7 @@
 "use client";
 
+import { MAX_PRESETS } from "@/lib/themes/presets";
+
 export type DemoStorePreset = { label: string; url: string };
 
 /**
@@ -24,6 +26,8 @@ export function PresetLinksEditor({
   function remove(index: number) {
     onChange(presets.filter((_, i) => i !== index));
   }
+
+  const atLimit = presets.length >= MAX_PRESETS;
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,13 +55,17 @@ export function PresetLinksEditor({
           </button>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={() => onChange([...presets, { label: "", url: "" }])}
-        className="w-fit rounded-full border border-black/[.12] px-3 py-1 text-xs text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
-      >
-        {addLabel}
-      </button>
+      {atLimit ? (
+        <p className="text-xs text-zinc-500">Maximum of {MAX_PRESETS} presets.</p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onChange([...presets, { label: "", url: "" }])}
+          className="w-fit rounded-full border border-black/[.12] px-3 py-1 text-xs text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
+        >
+          {addLabel}
+        </button>
+      )}
     </div>
   );
 }
