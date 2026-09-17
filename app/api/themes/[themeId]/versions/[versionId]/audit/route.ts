@@ -5,20 +5,7 @@ import { ThemeVersion } from "@/models/theme-version";
 import { ThemeZip } from "@/models/theme-zip";
 import { executeAuditRun } from "@/lib/audit/executeAuditRun";
 import { localUploadSource } from "@/lib/themes/themeSource";
-import type { PresetLink } from "@/lib/audit/liveCheck";
-
-const HTTP_URL_RE = /^https?:\/\//i;
-
-function parseDemoStorePresets(body: unknown): PresetLink[] {
-  const raw = (body as { demoStorePresets?: unknown } | null)?.demoStorePresets;
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((entry, i) => ({
-      label: String((entry as { label?: unknown })?.label ?? "").trim() || `Preset ${i + 1}`,
-      url: String((entry as { url?: unknown })?.url ?? "").trim(),
-    }))
-    .filter((p) => HTTP_URL_RE.test(p.url));
-}
+import { sanitizePresets } from "@/lib/themes/presets";
 
 /**
  * "Run Audit" — the explicit, separate step from upload (spec §7). Runs
@@ -46,7 +33,12 @@ export async function POST(
   }
 
   const body = await request.json().catch(() => null);
-  const demoStorePresets = parseDemoStorePresets(body);
+  const requestedPresets = sanitizePresets((body as { demoStorePresets?: unknown } | null)?.demoStorePresets);
+  // Falls back to the theme's saved default presets when the request
+  // supplies none — so calling "Run Audit" still exercises live checks
+  // against the theme's known style variants without having to resend
+  // them from the client every time.
+  const demoStorePresets = requestedPresets.length > 0 ? requestedPresets : sanitizePresets(theme.demoStorePresets);
 
   const buffer = await localUploadSource(themeZip).getZipBuffer();
   const result = await executeAuditRun({

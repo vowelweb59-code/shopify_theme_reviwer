@@ -1,5 +1,12 @@
 import { Schema, model, models, type InferSchemaType } from "mongoose";
 
+// Same shape as AuditRun's own demoStorePresetSchema (models/audit-run.ts)
+// — kept as a separate literal schema rather than a shared import since
+// this one means something different: the theme's own *default* preset
+// URLs (e.g. its 4 style variants), not what one specific run happened to
+// be checked against.
+const themeDemoStorePresetSchema = new Schema({ label: { type: String, required: true }, url: { type: String, required: true } }, { _id: false });
+
 const themeSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -10,6 +17,11 @@ const themeSchema = new Schema(
     // app/api/reports/[id]/export/google-sheet/route.ts.
     googleSpreadsheetId: { type: String, default: null },
     googleSheetUrl: { type: String, default: null },
+    // Default preset demo-store URLs for this theme (Themes module) — set
+    // once (at creation or from the Theme Detail page) and reused to
+    // pre-fill every "Run Audit" instead of retyping them each time. Purely
+    // a convenience default: a specific run can still edit/override them.
+    demoStorePresets: { type: [themeDemoStorePresetSchema], default: () => [] },
   },
   { timestamps: true }
 );

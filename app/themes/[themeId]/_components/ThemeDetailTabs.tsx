@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { TabbedPageClient } from "@/app/_components/TabbedPage";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
+import type { DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { OverviewPanel } from "./OverviewPanel";
 import { AllChecksList } from "./AllChecksList";
 import { PreviousAuditsTable } from "./PreviousAuditsTable";
@@ -10,7 +11,7 @@ import { PreviousAuditsTable } from "./PreviousAuditsTable";
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type ThemeDetail = {
-  theme: { _id: string; name: string };
+  theme: { _id: string; name: string; demoStorePresets?: DemoStorePreset[] };
   versions: { _id: string; version: string }[];
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
@@ -57,6 +58,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
             <OverviewPanel
               themeId={detail.theme._id}
               themeName={detail.theme.name}
+              demoStorePresets={detail.theme.demoStorePresets ?? []}
               latestVersion={detail.latestVersion}
               latestAudit={detail.latestAudit}
               checkTotals={detail.checks?.totals ?? null}

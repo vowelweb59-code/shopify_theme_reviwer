@@ -5,6 +5,7 @@ import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
 import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
+import { sanitizePresets } from "@/lib/themes/presets";
 
 /**
  * One aggregate payload for the whole Theme Detail page (Overview / All
@@ -66,4 +67,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
     checks,
     previousAudits,
   });
+}
+
+/**
+ * Updates a theme's saved default preset demo-store URLs — a convenience
+ * default (Themes module) that pre-fills "Run Audit" instead of retyping
+ * the theme's style variants every time. Scoped to just this one field for
+ * now; not a general theme-update endpoint.
+ */
+export async function PATCH(request: Request, { params }: { params: Promise<{ themeId: string }> }) {
+  await connectToDatabase();
+  const { themeId } = await params;
+
+  const body = await request.json().catch(() => null);
+  const demoStorePresets = sanitizePresets((body as { demoStorePresets?: unknown } | null)?.demoStorePresets);
+
+  const theme = await Theme.findByIdAndUpdate(themeId, { demoStorePresets }, { new: true });
+  if (!theme) {
+    return NextResponse.json({ error: "Theme not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ theme });
 }

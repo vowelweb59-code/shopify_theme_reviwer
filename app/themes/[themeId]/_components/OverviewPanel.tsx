@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-type DemoStorePreset = { label: string; url: string };
+import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type Props = {
   themeId: string;
   themeName: string;
+  demoStorePresets: DemoStorePreset[];
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
@@ -24,6 +24,69 @@ function formatDate(iso: string) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string; initialPresets: DemoStorePreset[]; onSaved: () => void }) {
+  const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
+    const res = await fetch(`/api/themes/${themeId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ demoStorePresets: validPresets }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setSaving(false);
+    if (!res.ok) {
+      setError(data.error ?? "Failed to save presets.");
+      return;
+    }
+    setPresets(data.theme.demoStorePresets ?? []);
+    setSaved(true);
+    onSaved();
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+      <div>
+        <h3 className="text-sm font-medium text-zinc-950 dark:text-zinc-50">Presets</h3>
+        <p className="mt-1 text-xs text-zinc-500">
+          This theme&apos;s style-variant demo store URLs, saved once and reused to pre-fill every &quot;Run Audit&quot;
+          (still editable per run).
+        </p>
+      </div>
+      <PresetLinksEditor
+        presets={presets}
+        onChange={(next) => {
+          setPresets(next);
+          setSaved(false);
+        }}
+      />
+      {error && (
+        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+          {error}
+        </div>
+      )}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="w-fit rounded-full border border-black/[.12] px-3 py-1.5 text-xs text-zinc-700 hover:text-zinc-950 disabled:opacity-50 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
+        >
+          {saving ? "Saving…" : "Save presets"}
+        </button>
+        {saved && <span className="text-xs text-emerald-700 dark:text-emerald-400">Saved.</span>}
+      </div>
+    </div>
+  );
 }
 
 function UploadVersionForm({ themeId, onUploaded }: { themeId: string; onUploaded: () => void }) {
@@ -83,17 +146,20 @@ function UploadVersionForm({ themeId, onUploaded }: { themeId: string; onUploade
   );
 }
 
-function RunAuditForm({ themeId, versionId, onRan }: { themeId: string; versionId: string; onRan: () => void }) {
-  const [presets, setPresets] = useState<DemoStorePreset[]>([]);
+function RunAuditForm({
+  themeId,
+  versionId,
+  initialPresets,
+  onRan,
+}: {
+  themeId: string;
+  versionId: string;
+  initialPresets: DemoStorePreset[];
+  onRan: () => void;
+}) {
+  const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  function updatePreset(index: number, patch: Partial<DemoStorePreset>) {
-    setPresets((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
-  }
-  function removePreset(index: number) {
-    setPresets((prev) => prev.filter((_, i) => i !== index));
-  }
 
   async function handleRun() {
     setSubmitting(true);
@@ -117,39 +183,8 @@ function RunAuditForm({ themeId, versionId, onRan }: { themeId: string; versionI
     <div className="flex flex-col gap-3 rounded-lg border border-black/[.08] p-4 text-sm dark:border-white/[.145]">
       <div className="flex flex-col gap-2">
         <span className="text-zinc-700 dark:text-zinc-300">Demo store URL(s) (optional — enables live checks)</span>
-        <div className="flex flex-col gap-2">
-          {presets.map((preset, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-2">
-              <input
-                value={preset.label}
-                onChange={(e) => updatePreset(i, { label: e.target.value })}
-                placeholder={`Preset ${i + 1} name`}
-                className="w-36 rounded-md border border-black/[.12] bg-transparent px-3 py-1.5 dark:border-white/[.15]"
-              />
-              <input
-                type="url"
-                value={preset.url}
-                onChange={(e) => updatePreset(i, { url: e.target.value })}
-                placeholder="https://demo-store.myshopify.com"
-                className="min-w-56 flex-1 rounded-md border border-black/[.12] bg-transparent px-3 py-1.5 dark:border-white/[.15]"
-              />
-              <button
-                type="button"
-                onClick={() => removePreset(i)}
-                className="rounded-full border border-black/[.12] px-3 py-1 text-xs text-zinc-600 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-400 dark:hover:text-zinc-50"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => setPresets((prev) => [...prev, { label: "", url: "" }])}
-          className="w-fit rounded-full border border-black/[.12] px-3 py-1 text-xs text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
-        >
-          + Add demo store URL
-        </button>
+        <p className="text-xs text-zinc-500">Pre-filled from this theme&apos;s saved presets — edit freely for just this run.</p>
+        <PresetLinksEditor presets={presets} onChange={setPresets} />
       </div>
       {error && (
         <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -168,7 +203,7 @@ function RunAuditForm({ themeId, versionId, onRan }: { themeId: string; versionI
   );
 }
 
-export function OverviewPanel({ themeId, themeName, latestVersion, latestAudit, checkTotals, onChanged }: Props) {
+export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, onChanged }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
 
@@ -214,12 +249,15 @@ export function OverviewPanel({ themeId, themeName, latestVersion, latestAudit, 
         <RunAuditForm
           themeId={themeId}
           versionId={latestVersion._id}
+          initialPresets={demoStorePresets}
           onRan={() => {
             setShowRunAudit(false);
             onChanged();
           }}
         />
       )}
+
+      <PresetsSection themeId={themeId} initialPresets={demoStorePresets} onSaved={onChanged} />
 
       <div>
         <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Latest Audit</h3>

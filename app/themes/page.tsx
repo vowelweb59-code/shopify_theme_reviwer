@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -20,6 +21,7 @@ function AddThemeForm({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [presets, setPresets] = useState<DemoStorePreset[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +36,8 @@ function AddThemeForm({ onCreated }: { onCreated: () => void }) {
     const formData = new FormData();
     formData.set("themeName", name);
     formData.set("file", file);
+    const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
+    if (validPresets.length > 0) formData.set("demoStorePresets", JSON.stringify(validPresets));
     const res = await fetch("/api/themes", { method: "POST", body: formData });
     const data = await res.json().catch(() => ({}));
     setSubmitting(false);
@@ -43,6 +47,7 @@ function AddThemeForm({ onCreated }: { onCreated: () => void }) {
     }
     setName("");
     setFile(null);
+    setPresets([]);
     setOpen(false);
     onCreated();
   }
@@ -78,6 +83,14 @@ function AddThemeForm({ onCreated }: { onCreated: () => void }) {
           The version is read from the ZIP&apos;s README (a &quot;Version: x.y.z&quot; line) — it isn&apos;t entered manually.
         </span>
       </label>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm text-zinc-700 dark:text-zinc-300">Preset demo store URLs (optional)</span>
+        <p className="text-xs text-zinc-500">
+          If this theme ships multiple presets (style variants), add each one&apos;s live demo store URL — they&apos;re
+          saved on the theme and pre-fill every future &quot;Run Audit&quot;.
+        </p>
+        <PresetLinksEditor presets={presets} onChange={setPresets} />
+      </div>
       {error && (
         <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
           {error}

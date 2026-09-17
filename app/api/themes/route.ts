@@ -6,6 +6,7 @@ import { AuditRun } from "@/models/audit-run";
 import { pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
 import { uploadThemeVersion } from "@/lib/themes/uploadThemeVersion";
+import { sanitizePresets } from "@/lib/themes/presets";
 
 /**
  * Lists every Theme (including ones created before this module existed,
@@ -75,6 +76,19 @@ export async function POST(request: Request) {
   if (theme.sourceFileName !== file.name) {
     theme.sourceFileName = file.name;
     await theme.save();
+  }
+
+  const presetsRaw = formData.get("demoStorePresets")?.toString();
+  if (presetsRaw) {
+    try {
+      const presets = sanitizePresets(JSON.parse(presetsRaw));
+      if (presets.length > 0) {
+        theme.demoStorePresets = presets;
+        await theme.save();
+      }
+    } catch {
+      // malformed JSON — ignore, same best-effort handling as /api/audit/run
+    }
   }
 
   const result = await uploadThemeVersion(theme._id, file);
