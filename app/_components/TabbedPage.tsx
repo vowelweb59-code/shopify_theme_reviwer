@@ -14,11 +14,18 @@ export function TabbedPageClient({
   description,
   tabs,
   defaultTabId,
+  orientation = "horizontal",
 }: {
   title: string;
   description?: ReactNode;
   tabs: Tab[];
   defaultTabId: string;
+  // "horizontal" (default, unchanged — /settings uses this): an underline
+  // tab strip above a single content area. "vertical": a stacked,
+  // collapsible list of section headers — clicking one expands its content
+  // inline and collapses whichever else was open (single-open accordion,
+  // same idiom as the PointCard/CheckRow lists elsewhere in this app).
+  orientation?: "horizontal" | "vertical";
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,8 +40,6 @@ export function TabbedPageClient({
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  const active = tabs.find((t) => t.id === activeTab) ?? tabs[0];
-
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
       <div>
@@ -42,24 +47,49 @@ export function TabbedPageClient({
         {description && <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">{description}</p>}
       </div>
 
-      <div className="flex flex-wrap gap-1 border-b border-black/[.08] dark:border-white/[.145]">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => selectTab(t.id)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === t.id
-                ? "border-zinc-950 text-zinc-950 dark:border-zinc-50 dark:text-zinc-50"
-                : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {active.content}
+      {orientation === "vertical" ? (
+        <div className="flex flex-col gap-2">
+          {tabs.map((t) => {
+            const isOpen = activeTab === t.id;
+            return (
+              <div key={t.id} className="rounded-lg border border-black/[.08] dark:border-white/[.145]">
+                <button
+                  type="button"
+                  onClick={() => selectTab(isOpen ? "" : t.id)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-950 dark:text-zinc-50"
+                >
+                  {t.label}
+                  <span aria-hidden className="text-zinc-400">
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+                {isOpen && <div className="border-t border-black/[.08] p-4 dark:border-white/[.145]">{t.content}</div>}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-1 border-b border-black/[.08] dark:border-white/[.145]">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => selectTab(t.id)}
+                className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === t.id
+                    ? "border-zinc-950 text-zinc-950 dark:border-zinc-50 dark:text-zinc-50"
+                    : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {(tabs.find((t) => t.id === activeTab) ?? tabs[0]).content}
+        </>
+      )}
     </div>
   );
 }

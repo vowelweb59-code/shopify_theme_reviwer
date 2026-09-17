@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type ImplementationType = "static" | "live" | "none";
+
 type Requirement = {
   _id: string;
   requirementId: string;
@@ -14,6 +16,7 @@ type Requirement = {
   severity: string;
   status: string;
   ruleStatus: string;
+  implementationType: ImplementationType;
 };
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
@@ -32,7 +35,24 @@ const RULE_STATUS_LABELS: Record<string, string> = {
   implemented: "Implemented",
 };
 
-export function RulesContent() {
+/**
+ * Shared table behind both the "Code Review" and "Store Review" Insights
+ * tabs — same requirement catalog, split by how it's actually checked:
+ * "code" = analyzed from the theme's own source (a static Rule, or not yet
+ * implemented by anything — still a code-shaped check once it is); "store"
+ * = only checkable by visiting a real, running demo store URL (the LIVE-*
+ * convention). See app/api/requirements/route.ts for how implementationType
+ * is derived.
+ */
+export function RequirementsReview({
+  scope,
+  title,
+  description,
+}: {
+  scope: "code" | "store";
+  title: string;
+  description: string;
+}) {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [sourceTypeFilter, setSourceTypeFilter] = useState("");
@@ -54,12 +74,14 @@ export function RulesContent() {
     };
   }, []);
 
-  const categories = useMemo(
-    () => Array.from(new Set(requirements.map((r) => r.category))).sort(),
-    [requirements]
+  const scoped = useMemo(
+    () => requirements.filter((r) => (scope === "store" ? r.implementationType === "live" : r.implementationType !== "live")),
+    [requirements, scope]
   );
 
-  const filtered = requirements.filter(
+  const categories = useMemo(() => Array.from(new Set(scoped.map((r) => r.category))).sort(), [scoped]);
+
+  const filtered = scoped.filter(
     (r) =>
       (!sourceTypeFilter || r.sourceType === sourceTypeFilter) &&
       (!categoryFilter || r.category === categoryFilter) &&
@@ -67,20 +89,17 @@ export function RulesContent() {
   );
 
   const coverage = useMemo(() => {
-    const total = requirements.length;
-    const implemented = requirements.filter((r) => r.ruleStatus === "implemented").length;
-    const partial = requirements.filter((r) => r.ruleStatus === "partial").length;
+    const total = scoped.length;
+    const implemented = scoped.filter((r) => r.ruleStatus === "implemented").length;
+    const partial = scoped.filter((r) => r.ruleStatus === "partial").length;
     return { total, implemented, partial, notImplemented: total - implemented - partial };
-  }, [requirements]);
+  }, [scoped]);
 
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Rules</h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          The requirement knowledge base every rule must trace back to. Executable rules land in Phase 3 —
-          this view shows what needs to be checked and why, before any check exists.
-        </p>
+        <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
       </div>
 
       {!loading && (

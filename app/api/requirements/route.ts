@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Requirement, REQUIREMENT_SOURCE_TYPES, REQUIREMENT_STATUSES, RULE_STATUSES } from "@/models/requirement";
+import { Rule } from "@/models/rule";
 import { FINDING_CATEGORIES } from "@/models/finding";
+
+// "static" = checked by analyzing the theme's own source (a Rule doc
+// exists for this requirement); "live" = checked only by visiting a real
+// demo store URL (ruleStatus is implemented/partial but no static Rule
+// exists — the LIVE-* convention scripts/seed-rules.ts already scans for);
+// "none" = not implemented by anything yet. Powers the Insights "Code
+// Review" (static + none) / "Store Review" (live) split.
+export type RequirementImplementationType = "static" | "live" | "none";
 
 export async function GET(request: Request) {
   await connectToDatabase();
@@ -39,5 +48,17 @@ export async function GET(request: Request) {
   }
 
   const requirements = await Requirement.find(filter).sort({ requirementId: 1 }).lean();
-  return NextResponse.json({ requirements });
+
+  const rules = await Rule.find().select("requirementId").lean();
+  const requirementIdsWithRule = new Set(rules.filter((r) => r.requirementId).map((r) => r.requirementId as string));
+
+  const withImplementationType = requirements.map((req) => {
+    let implementationType: RequirementImplementationType;
+    if (req.ruleStatus === "not_implemented") implementationType = "none";
+    else if (requirementIdsWithRule.has(req.requirementId)) implementationType = "static";
+    else implementationType = "live";
+    return { ...req, implementationType };
+  });
+
+  return NextResponse.json({ requirements: withImplementationType });
 }
