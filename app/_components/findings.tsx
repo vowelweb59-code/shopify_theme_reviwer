@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AlertTriangle, MinusCircle, XCircle } from "lucide-react";
 import { getPageLabel } from "@/lib/audit/pageLabel";
 import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 
@@ -60,20 +61,34 @@ export type FindingRow = {
   ignoredReason?: string | null;
 };
 
+// Severity maps onto the same canonical status tokens (app/globals.css) as
+// PASS/FAIL/WARNING/NOT_TESTED — blocker/high are visually "fail"-band,
+// medium is "warning"-band, low is neutral — while keeping its own label
+// vocabulary, since Finding.severity and check-status are related but
+// distinct things.
 const SEVERITY_STYLES: Record<string, string> = {
-  blocker: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-  high: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
-  medium: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-  low: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  blocker: "bg-status-fail-bg text-status-fail-text",
+  high: "bg-status-fail-bg text-status-fail-text",
+  medium: "bg-status-warning-bg text-status-warning-text",
+  low: "bg-status-not-tested-bg text-status-not-tested-text",
+};
+
+const SEVERITY_ICON: Record<string, typeof AlertTriangle> = {
+  blocker: XCircle,
+  high: XCircle,
+  medium: AlertTriangle,
+  low: MinusCircle,
 };
 
 export function SeverityBadge({ severity }: { severity: string }) {
+  const Icon = SEVERITY_ICON[severity] ?? MinusCircle;
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
         SEVERITY_STYLES[severity] ?? SEVERITY_STYLES.low
       }`}
     >
+      <Icon className="h-3 w-3" aria-hidden />
       {severity}
     </span>
   );

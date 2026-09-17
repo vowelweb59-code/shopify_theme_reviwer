@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageContainer } from "@/app/_components/shell/PageContainer";
 
 type FeatureRow = {
   id: string;
@@ -95,9 +96,9 @@ export default function AvailableFeaturesPage() {
   }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
+    <PageContainer>
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Available Features</h1>
+        <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Available Features</h1>
         <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
           Shopify&apos;s optional Theme Store feature checklist, checked against each theme&apos;s latest audit.
           &quot;Not yet checked&quot; means no detector exists for that feature yet — it&apos;s never guessed at.
@@ -135,6 +136,6 @@ export default function AvailableFeaturesPage() {
           );
         })}
       </div>
-    </div>
+    </PageContainer>
   );
 }

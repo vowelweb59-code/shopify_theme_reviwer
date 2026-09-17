@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 type Tab = { id: string; label: string; content: ReactNode };
@@ -8,7 +9,10 @@ type Tab = { id: string; label: string; content: ReactNode };
 // Shared shell for a page split into sections via a tab strip rather than
 // separate routes — the active tab is reflected in ?tab= (read once on
 // mount, updated via router.replace) so a link to a specific tab is still
-// shareable/bookmarkable even though the page itself is one route.
+// shareable/bookmarkable even though the page itself is one route. Does
+// NOT own its own outer page container/padding — the caller wraps this in
+// PageContainer (and renders its own Breadcrumbs above it, if any), so
+// every page's spacing traces to one place.
 export function TabbedPageClient({
   title,
   description,
@@ -51,10 +55,10 @@ export function TabbedPageClient({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
+    <div className="flex flex-1 flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>
-        {description && <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">{description}</p>}
+        <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>
+        {description && <p className="mt-1 max-w-3xl text-sm text-zinc-500">{description}</p>}
       </div>
 
       {orientation === "vertical" ? (
@@ -62,7 +66,7 @@ export function TabbedPageClient({
           {tabs.map((t) => {
             const isOpen = activeTab === t.id;
             return (
-              <div key={t.id} className="rounded-lg border border-black/[.08] dark:border-white/[.145]">
+              <div key={t.id} className="rounded-lg border border-border-subtle">
                 <button
                   type="button"
                   onClick={() => selectTab(isOpen ? "" : t.id)}
@@ -70,18 +74,16 @@ export function TabbedPageClient({
                   className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-950 dark:text-zinc-50"
                 >
                   {t.label}
-                  <span aria-hidden className="text-zinc-400">
-                    {isOpen ? "−" : "+"}
-                  </span>
+                  {isOpen ? <ChevronDown className="h-4 w-4 text-zinc-400" aria-hidden /> : <ChevronRight className="h-4 w-4 text-zinc-400" aria-hidden />}
                 </button>
-                {isOpen && <div className="border-t border-black/[.08] p-4 dark:border-white/[.145]">{t.content}</div>}
+                {isOpen && <div className="border-t border-border-subtle p-4">{t.content}</div>}
               </div>
             );
           })}
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-1 border-b border-black/[.08] dark:border-white/[.145]">
+          <div className="flex flex-wrap gap-1 border-b border-border-subtle">
             {tabs.map((t) => (
               <button
                 key={t.id}

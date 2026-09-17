@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { PageContainer } from "@/app/_components/shell/PageContainer";
 
 type AuditRunRow = {
   _id: string;
@@ -42,9 +43,9 @@ export default function ReportsPage() {
   }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
+    <PageContainer>
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Reports</h1>
+        <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Reports</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Audit run history. Open a run to see its findings and severity summary, export to CSV/PDF, or compare it
           against a previous audit of the same theme.
@@ -95,6 +96,6 @@ export default function ReportsPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </PageContainer>
   );
 }
