@@ -74,11 +74,6 @@
     "ast_hash": "b1763350763a7adcb05348481ec6a09a",
     "semantic_hash": "b1763350763a7adcb05348481ec6a09a"
   },
-  "lib/reports/index.ts": {
-    "mtime": 1786520122.1015918,
-    "ast_hash": "e15063088dee415df4c6dba2c76566a9",
-    "semantic_hash": "e15063088dee415df4c6dba2c76566a9"
-  },
   "lib/rules/accessibility/index.ts": {
     "mtime": 1789554177.4698417,
     "ast_hash": "db52db7b0a3131d1d2829ba6eefc7e92",
@@ -155,8 +150,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1789627484.121951,
-    "ast_hash": "8c3e5f70a6328115ba2de7f114658131",
+    "mtime": 1789645294.7586644,
+    "ast_hash": "bb895d1fae3131ddda573f5494d73378",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -805,8 +800,8 @@
     "semantic_hash": ""
   },
   "lib/google/sheetsFormatting.test.ts": {
-    "mtime": 1787031547.8099468,
-    "ast_hash": "f5c8f782e196030a04dbd1e33de17fce",
+    "mtime": 1789645379.8307815,
+    "ast_hash": "a05142b76b5627675e437be16b5533dc",
     "semantic_hash": ""
   },
   "lib/google/sheetsFormatting.ts": {
