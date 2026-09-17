@@ -290,19 +290,6 @@
       "id": "lib_theme_parser_types_parsedjsonfileinfo"
     },
     {
-      "label": "CheckStatus",
-      "file_type": "code",
-      "source_file": "app/api/health/route.ts",
-      "source_location": "L6",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "requirement.ts",
-      "norm_label": "checkstatus",
-      "id": "app_api_health_route_checkstatus"
-    },
-    {
       "label": "RequirementImplementationType",
       "file_type": "code",
       "source_file": "app/api/requirements/route.ts",
@@ -311,9 +298,35 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirementimplementationtype",
       "id": "app_api_requirements_route_requirementimplementationtype"
+    },
+    {
+      "label": "AuditSettingsDoc",
+      "file_type": "code",
+      "source_file": "models/audit-settings.ts",
+      "source_location": "L15",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 19,
+      "norm_label": "auditsettingsdoc",
+      "community_name": "finding.ts",
+      "id": "models_audit_settings_auditsettingsdoc"
+    },
+    {
+      "label": "FindingDoc",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L67",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "findingdoc",
+      "id": "models_finding_findingdoc"
     },
     {
       "label": "RequirementDoc",
@@ -324,9 +337,22 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirementdoc",
       "id": "models_requirement_requirementdoc"
+    },
+    {
+      "label": "RuleDoc",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L36",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "ruledoc",
+      "id": "models_rule_ruledoc"
     },
     {
       "label": "Category",
@@ -337,7 +363,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "category",
       "id": "scripts_seed_requirements_category"
     },
@@ -350,7 +376,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "seedrequirement",
       "id": "scripts_seed_requirements_seedrequirement"
     },
@@ -363,7 +389,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "severity",
       "id": "scripts_seed_requirements_severity"
     },
@@ -376,7 +402,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "sourcetype",
       "id": "scripts_seed_requirements_sourcetype"
     },
@@ -420,17 +446,17 @@
       "id": "lib_theme_parser_zip_themeziperror"
     },
     {
-      "label": "ReadmeVersionResult",
+      "label": "ThemeVersionResult",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
       "source_location": "L7",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_themeversionresult",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "readmeversionresult",
-      "id": "lib_themes_extractreadmeversion_readmeversionresult"
+      "norm_label": "themeversionresult"
     },
     {
       "label": "MongooseCache",
@@ -446,43 +472,17 @@
       "id": "lib_db_connect_mongoosecache"
     },
     {
-      "label": "ComposedHeading",
+      "label": "ThemePageSpeedRow",
       "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L32",
+      "source_file": "app/page-speed/PageSpeedContent.tsx",
+      "source_location": "L7",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "composedheading",
-      "id": "lib_audit_headingchecks_composedheading"
-    },
-    {
-      "label": "ComposedHeadingIssue",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L33",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "composedheadingissue",
-      "id": "lib_audit_headingchecks_composedheadingissue"
-    },
-    {
-      "label": "HeadingIssue",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L6",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "headingissue",
-      "id": "lib_audit_headingchecks_headingissue"
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "themepagespeedrow",
+      "id": "app_page_speed_pagespeedcontent_themepagespeedrow"
     },
     {
       "label": "PresetLiveCheckError",
@@ -576,6 +576,19 @@
       "id": "lib_audit_pagespeed_pagespeedcheckresult"
     },
     {
+      "label": "PageSpeedMetric",
+      "file_type": "code",
+      "source_file": "lib/audit/pageSpeed.ts",
+      "source_location": "L8",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "pagespeedmetric",
+      "id": "lib_audit_pagespeed_pagespeedmetric"
+    },
+    {
       "label": "PageType",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
@@ -654,84 +667,6 @@
       "id": "lib_rules_internal_index_templatesection"
     },
     {
-      "label": "CategoryDiffSummary",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L108",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "categorydiffsummary",
-      "id": "lib_audit_difffindings_categorydiffsummary"
-    },
-    {
-      "label": "DiffStatus",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L15",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "diffstatus",
-      "id": "lib_audit_difffindings_diffstatus"
-    },
-    {
-      "label": "FindingsDiff",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L38",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "findingsdiff",
-      "id": "lib_audit_difffindings_findingsdiff"
-    },
-    {
-      "label": "FindingsDiffSummary",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L29",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "findingsdiffsummary",
-      "id": "lib_audit_difffindings_findingsdiffsummary"
-    },
-    {
-      "label": "NewFindingAttribution",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L20",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "newfindingattribution",
-      "id": "lib_audit_difffindings_newfindingattribution"
-    },
-    {
-      "label": "SeverityDiffSummary",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L131",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "severitydiffsummary",
-      "id": "lib_audit_difffindings_severitydiffsummary"
-    },
-    {
       "label": "CsvFindingRow",
       "file_type": "code",
       "source_file": "lib/export/csv.ts",
@@ -740,7 +675,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "csvfindingrow",
       "id": "lib_export_csv_csvfindingrow"
     },
@@ -753,35 +688,9 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "diffcsvfinding",
       "id": "lib_export_diffcsv_diffcsvfinding"
-    },
-    {
-      "label": "PdfFindingRow",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L4",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "pdffindingrow",
-      "id": "lib_export_pdf_pdffindingrow"
-    },
-    {
-      "label": "PdfSummary",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "pdfsummary",
-      "id": "lib_export_pdf_pdfsummary"
     },
     {
       "label": "XlsxFinding",
@@ -792,7 +701,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "xlsxfinding",
       "id": "lib_export_xlsx_xlsxfinding"
     },
@@ -805,7 +714,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "xlsxsummary",
       "id": "lib_export_xlsx_xlsxsummary"
     },
@@ -882,10 +791,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_themes_uploadthemeversion_uploadversionresult",
       "community": 29,
       "community_name": "audit-run.ts",
-      "norm_label": "uploadversionresult",
-      "id": "lib_themes_uploadthemeversion_uploadversionresult"
+      "norm_label": "uploadversionresult"
     },
     {
       "label": "AuditRunDoc",
@@ -899,19 +808,6 @@
       "community_name": "audit-run.ts",
       "norm_label": "auditrundoc",
       "id": "models_audit_run_auditrundoc"
-    },
-    {
-      "label": "AuditSettingsDoc",
-      "file_type": "code",
-      "source_file": "models/audit-settings.ts",
-      "source_location": "L15",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 29,
-      "norm_label": "auditsettingsdoc",
-      "community_name": "audit-run.ts",
-      "id": "models_audit_settings_auditsettingsdoc"
     },
     {
       "label": "ThemeDoc",
@@ -953,43 +849,95 @@
       "id": "models_theme_zip_themezipdoc"
     },
     {
-      "label": "FindingDoc",
+      "label": "CategoryDiffSummary",
       "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L67",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L108",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "findingdoc",
-      "id": "models_finding_findingdoc"
+      "community_name": "diffFindings.ts",
+      "norm_label": "categorydiffsummary",
+      "id": "lib_audit_difffindings_categorydiffsummary"
     },
     {
-      "label": "ReadinessConfigDoc",
+      "label": "DiffStatus",
       "file_type": "code",
-      "source_file": "models/readiness-config.ts",
-      "source_location": "L18",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L15",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "readinessconfigdoc",
-      "id": "models_readiness_config_readinessconfigdoc"
+      "community_name": "diffFindings.ts",
+      "norm_label": "diffstatus",
+      "id": "lib_audit_difffindings_diffstatus"
     },
     {
-      "label": "RuleDoc",
+      "label": "FindingsDiff",
       "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L36",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L38",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "ruledoc",
-      "id": "models_rule_ruledoc"
+      "community_name": "diffFindings.ts",
+      "norm_label": "findingsdiff",
+      "id": "lib_audit_difffindings_findingsdiff"
+    },
+    {
+      "label": "FindingsDiffSummary",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L29",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "findingsdiffsummary",
+      "id": "lib_audit_difffindings_findingsdiffsummary"
+    },
+    {
+      "label": "NewFindingAttribution",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L20",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "newfindingattribution",
+      "id": "lib_audit_difffindings_newfindingattribution"
+    },
+    {
+      "label": "SeverityDiffSummary",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L131",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "severitydiffsummary",
+      "id": "lib_audit_difffindings_severitydiffsummary"
+    },
+    {
+      "label": "CheckStatus",
+      "file_type": "code",
+      "source_file": "app/api/health/route.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "registry.ts",
+      "norm_label": "checkstatus",
+      "id": "app_api_health_route_checkstatus"
     },
     {
       "label": "FindingCategory",
@@ -1000,7 +948,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "findingcategory",
       "id": "lib_audit_rules_findingcategory"
     },
@@ -1013,7 +961,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "executedfinding",
       "id": "lib_audit_runrules_executedfinding"
     },
@@ -1026,7 +974,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runrulesresult",
       "id": "lib_audit_runrules_runrulesresult"
     },
@@ -1039,22 +987,9 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runrulessummary",
       "id": "lib_audit_runrules_runrulessummary"
-    },
-    {
-      "label": "ParsedFile",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/types.ts",
-      "source_location": "L278",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "runRules.ts",
-      "norm_label": "parsedfile",
-      "id": "lib_theme_parser_types_parsedfile"
     },
     {
       "label": "DeprecatedEntry",
@@ -1213,19 +1148,6 @@
       "id": "lib_theme_parser_types_parsedtranslationreference"
     },
     {
-      "label": "ThemeParseResult",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/index.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "theme-parser/index.ts",
-      "norm_label": "themeparseresult",
-      "id": "lib_theme_parser_index_themeparseresult"
-    },
-    {
       "label": "ThemeParseTiming",
       "file_type": "code",
       "source_file": "lib/theme-parser/index.ts",
@@ -1250,6 +1172,19 @@
       "community_name": "theme-parser/index.ts",
       "norm_label": "filetype",
       "id": "lib_theme_parser_types_filetype"
+    },
+    {
+      "label": "ParsedFile",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/types.ts",
+      "source_location": "L278",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "parsedfile",
+      "id": "lib_theme_parser_types_parsedfile"
     },
     {
       "label": "DiscoveredFile",
@@ -1356,58 +1291,6 @@
       "id": "lib_audit_executeauditrun_executeauditrunresult"
     },
     {
-      "label": "CarriedFinding",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.ts",
-      "source_location": "L5",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "carriedfinding",
-      "id": "lib_audit_findinghistory_carriedfinding"
-    },
-    {
-      "label": "HistoricalState",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.ts",
-      "source_location": "L3",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "historicalstate",
-      "id": "lib_audit_findinghistory_historicalstate"
-    },
-    {
-      "label": "HistoryClassification",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.ts",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "historyclassification",
-      "id": "lib_audit_findinghistory_historyclassification"
-    },
-    {
-      "label": "DiffableFinding",
-      "file_type": "code",
-      "source_file": "lib/audit/findingSignature.ts",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "diffablefinding",
-      "id": "lib_audit_findingsignature_diffablefinding"
-    },
-    {
       "label": "PresetLink",
       "file_type": "code",
       "source_file": "lib/audit/liveCheck.ts",
@@ -1434,17 +1317,43 @@
       "id": "lib_audit_timing_stopwatch"
     },
     {
-      "label": "Rule",
+      "label": "ComposedHeading",
       "file_type": "code",
-      "source_file": "lib/audit/rules.ts",
+      "source_file": "lib/audit/headingChecks.ts",
       "source_location": "L32",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "rule",
-      "id": "lib_audit_rules_rule"
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "composedheading",
+      "id": "lib_audit_headingchecks_composedheading"
+    },
+    {
+      "label": "ComposedHeadingIssue",
+      "file_type": "code",
+      "source_file": "lib/audit/headingChecks.ts",
+      "source_location": "L33",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "composedheadingissue",
+      "id": "lib_audit_headingchecks_composedheadingissue"
+    },
+    {
+      "label": "HeadingIssue",
+      "file_type": "code",
+      "source_file": "lib/audit/headingChecks.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "headingissue",
+      "id": "lib_audit_headingchecks_headingissue"
     },
     {
       "label": "Format",
@@ -1473,6 +1382,58 @@
       "id": "lib_audit_coverage_coverageresult"
     },
     {
+      "label": "EnhancementDetectionRecord",
+      "file_type": "code",
+      "source_file": "lib/audit/enhancementReport.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "enhancementdetectionrecord",
+      "id": "lib_audit_enhancementreport_enhancementdetectionrecord"
+    },
+    {
+      "label": "EnhancementReportPoint",
+      "file_type": "code",
+      "source_file": "lib/audit/enhancementReport.ts",
+      "source_location": "L13",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "enhancementreportpoint",
+      "id": "lib_audit_enhancementreport_enhancementreportpoint"
+    },
+    {
+      "label": "ReadinessConfig",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L20",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readinessconfig",
+      "id": "lib_audit_readiness_readinessconfig"
+    },
+    {
+      "label": "ReadinessFinding",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readinessfinding",
+      "id": "lib_audit_readiness_readinessfinding"
+    },
+    {
       "label": "ReadinessResult",
       "file_type": "code",
       "source_file": "lib/audit/readiness.ts",
@@ -1484,6 +1445,19 @@
       "community_name": "[id]/export/route.ts",
       "norm_label": "readinessresult",
       "id": "lib_audit_readiness_readinessresult"
+    },
+    {
+      "label": "ReadinessStatus",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L8",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readinessstatus",
+      "id": "lib_audit_readiness_readinessstatus"
     },
     {
       "label": "JsonExportFinding",
@@ -1785,32 +1759,6 @@
       "id": "lib_google_enhancementsheetformatting_rgb"
     },
     {
-      "label": "EnhancementPoint",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L9",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "enhancementpoint",
-      "id": "app_enhancements_futureupdatescontent_enhancementpoint"
-    },
-    {
-      "label": "Example",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "example",
-      "id": "app_enhancements_futureupdatescontent_example"
-    },
-    {
       "label": "AdoptionTier",
       "file_type": "code",
       "source_file": "lib/enhancements/tiers.ts",
@@ -1935,10 +1883,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_checktotals",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "checktotals",
-      "id": "app_themes_themeid_components_overviewpanel_checktotals"
+      "norm_label": "checktotals"
     },
     {
       "label": "Props",
@@ -1948,36 +1896,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_props",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "props",
-      "id": "app_themes_themeid_components_overviewpanel_props"
-    },
-    {
-      "label": "SheetFutureUpdatesPoint",
-      "file_type": "code",
-      "source_file": "lib/export/enhancementSheetRows.ts",
-      "source_location": "L146",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "enhancementSheetRows.ts",
-      "norm_label": "sheetfutureupdatespoint",
-      "id": "lib_export_enhancementsheetrows_sheetfutureupdatespoint"
-    },
-    {
-      "label": "SheetTab",
-      "file_type": "code",
-      "source_file": "lib/export/sheetRows.ts",
-      "source_location": "L28",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "enhancementSheetRows.ts",
-      "norm_label": "sheettab",
-      "id": "lib_export_sheetrows_sheettab"
+      "norm_label": "props"
     },
     {
       "label": "DiffFinding",
@@ -2019,45 +1941,6 @@
       "id": "lib_export_sheetrows_sheetchecklistfinding"
     },
     {
-      "label": "SheetFormattingRequest",
-      "file_type": "code",
-      "source_file": "lib/export/sheetRows.ts",
-      "source_location": "L19",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "sheetRows.ts",
-      "norm_label": "sheetformattingrequest",
-      "id": "lib_export_sheetrows_sheetformattingrequest"
-    },
-    {
-      "label": "EnhancementDetectionRecord",
-      "file_type": "code",
-      "source_file": "lib/audit/enhancementReport.ts",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "[id]/export/google-sheet/route.ts",
-      "norm_label": "enhancementdetectionrecord",
-      "id": "lib_audit_enhancementreport_enhancementdetectionrecord"
-    },
-    {
-      "label": "EnhancementReportPoint",
-      "file_type": "code",
-      "source_file": "lib/audit/enhancementReport.ts",
-      "source_location": "L13",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "[id]/export/google-sheet/route.ts",
-      "norm_label": "enhancementreportpoint",
-      "id": "lib_audit_enhancementreport_enhancementreportpoint"
-    },
-    {
       "label": "SheetEnhancementPoint",
       "file_type": "code",
       "source_file": "lib/export/enhancementSheetRows.ts",
@@ -2069,6 +1952,32 @@
       "community_name": "[id]/export/google-sheet/route.ts",
       "norm_label": "sheetenhancementpoint",
       "id": "lib_export_enhancementsheetrows_sheetenhancementpoint"
+    },
+    {
+      "label": "SheetFutureUpdatesPoint",
+      "file_type": "code",
+      "source_file": "lib/export/enhancementSheetRows.ts",
+      "source_location": "L146",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "[id]/export/google-sheet/route.ts",
+      "norm_label": "sheetfutureupdatespoint",
+      "id": "lib_export_enhancementsheetrows_sheetfutureupdatespoint"
+    },
+    {
+      "label": "SheetTab",
+      "file_type": "code",
+      "source_file": "lib/export/sheetRows.ts",
+      "source_location": "L28",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "[id]/export/google-sheet/route.ts",
+      "norm_label": "sheettab",
+      "id": "lib_export_sheetrows_sheettab"
     },
     {
       "label": "GoogleSheetsNotConnectedError",
@@ -2121,6 +2030,19 @@
       "community_name": "[id]/export/google-sheet/route.ts",
       "norm_label": "tabsheetinfo",
       "id": "lib_google_sheetsexport_tabsheetinfo"
+    },
+    {
+      "label": "SheetFormattingRequest",
+      "file_type": "code",
+      "source_file": "lib/export/sheetRows.ts",
+      "source_location": "L19",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "sheetsFormatting.ts",
+      "norm_label": "sheetformattingrequest",
+      "id": "lib_export_sheetrows_sheetformattingrequest"
     },
     {
       "label": "RGB",
@@ -2214,6 +2136,19 @@
       "id": "app_components_diff_tab"
     },
     {
+      "label": "Rule",
+      "file_type": "code",
+      "source_file": "lib/audit/rules.ts",
+      "source_location": "L32",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "rules.ts",
+      "norm_label": "rule",
+      "id": "lib_audit_rules_rule"
+    },
+    {
       "label": "RuleContext",
       "file_type": "code",
       "source_file": "lib/audit/rules.ts",
@@ -2277,6 +2212,19 @@
       "community_name": "buildTestTheme.ts",
       "norm_label": "themeindex",
       "id": "lib_audit_themeindex_themeindex"
+    },
+    {
+      "label": "ThemeParseResult",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/index.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "buildTestTheme.ts",
+      "norm_label": "themeparseresult",
+      "id": "lib_theme_parser_index_themeparseresult"
     },
     {
       "label": "AuditDiagnostics",
@@ -2383,19 +2331,6 @@
       "id": "app_reports_reportcontent_auditrunlistitem"
     },
     {
-      "label": "PageSpeedMetric",
-      "file_type": "code",
-      "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L8",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "ReportContent.tsx",
-      "norm_label": "pagespeedmetric",
-      "id": "lib_audit_pagespeed_pagespeedmetric"
-    },
-    {
       "label": "CheckTotals",
       "file_type": "code",
       "source_file": "app/themes/page.tsx",
@@ -2498,19 +2433,6 @@
       "community_name": "insights/page.tsx",
       "norm_label": "matrixrow",
       "id": "app_maintenance_maintenancecontent_matrixrow"
-    },
-    {
-      "label": "ThemePageSpeedRow",
-      "file_type": "code",
-      "source_file": "app/page-speed/PageSpeedContent.tsx",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "themepagespeedrow",
-      "id": "app_page_speed_pagespeedcontent_themepagespeedrow"
     },
     {
       "label": "GoogleStatus",
@@ -2721,43 +2643,17 @@
       "id": "app_reports_page_auditrunrow"
     },
     {
-      "label": "ReadinessConfig",
+      "label": "ReadinessConfigDoc",
       "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L20",
+      "source_file": "models/readiness-config.ts",
+      "source_location": "L18",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readinessconfig",
-      "id": "lib_audit_readiness_readinessconfig"
-    },
-    {
-      "label": "ReadinessFinding",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L10",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readinessfinding",
-      "id": "lib_audit_readiness_readinessfinding"
-    },
-    {
-      "label": "ReadinessStatus",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L8",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readinessstatus",
-      "id": "lib_audit_readiness_readinessstatus"
+      "community_name": "readiness/route.ts",
+      "norm_label": "readinessconfigdoc",
+      "id": "models_readiness_config_readinessconfigdoc"
     },
     {
       "label": "RuleCriticality",
@@ -2838,6 +2734,84 @@
       "id": "lib_projectstatus_phasestatus"
     },
     {
+      "label": "EnhancementPoint",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L9",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "enhancementpoint",
+      "id": "app_enhancements_futureupdatescontent_enhancementpoint"
+    },
+    {
+      "label": "Example",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L7",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "example",
+      "id": "app_enhancements_futureupdatescontent_example"
+    },
+    {
+      "label": "CarriedFinding",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.ts",
+      "source_location": "L5",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "carriedfinding",
+      "id": "lib_audit_findinghistory_carriedfinding"
+    },
+    {
+      "label": "HistoricalState",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.ts",
+      "source_location": "L3",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "historicalstate",
+      "id": "lib_audit_findinghistory_historicalstate"
+    },
+    {
+      "label": "HistoryClassification",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "historyclassification",
+      "id": "lib_audit_findinghistory_historyclassification"
+    },
+    {
+      "label": "DiffableFinding",
+      "file_type": "code",
+      "source_file": "lib/audit/findingSignature.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "diffablefinding",
+      "id": "lib_audit_findingsignature_diffablefinding"
+    },
+    {
       "label": "DemoStorePreset",
       "file_type": "code",
       "source_file": "app/_components/PresetLinksEditor.tsx",
@@ -2849,6 +2823,32 @@
       "community_name": "AddThemeModal.tsx",
       "norm_label": "demostorepreset",
       "id": "app_components_presetlinkseditor_demostorepreset"
+    },
+    {
+      "label": "PdfFindingRow",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L4",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "pdffindingrow",
+      "id": "lib_export_pdf_pdffindingrow"
+    },
+    {
+      "label": "PdfSummary",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "pdfsummary",
+      "id": "lib_export_pdf_pdfsummary"
     },
     {
       "label": "BreadcrumbItem",
@@ -3202,6 +3202,18 @@
       "id": "lib_theme_parser_duplicatejsonkeys_findduplicatejsonkeys"
     },
     {
+      "label": "extractJsImports()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractJsStructure.ts",
+      "source_location": "L12",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "extractjsimports()",
+      "id": "lib_theme_parser_extractjsstructure_extractjsimports"
+    },
+    {
       "label": "buildLineIndex()",
       "file_type": "code",
       "source_file": "lib/theme-parser/lineIndex.ts",
@@ -3336,24 +3348,12 @@
     {
       "label": "GET()",
       "file_type": "code",
-      "source_file": "app/api/health/route.ts",
-      "source_location": "L13",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "requirement.ts",
-      "norm_label": "get()",
-      "id": "app_api_health_route_get"
-    },
-    {
-      "label": "GET()",
-      "file_type": "code",
       "source_file": "app/api/maintenance/route.ts",
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "get()",
       "id": "app_api_maintenance_route_get"
     },
@@ -3365,9 +3365,21 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "get()",
       "id": "app_api_requirements_route_get"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/rules/route.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "get()",
+      "id": "app_api_rules_route_get"
     },
     {
       "label": "main()",
@@ -3377,21 +3389,9 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "main()",
       "id": "scripts_seed_requirements_main"
-    },
-    {
-      "label": "parseThemeZip()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/index.ts",
-      "source_location": "L57",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "parsethemezip()",
-      "id": "lib_theme_parser_index_parsethemezip"
     },
     {
       "label": "countThemeDirectories()",
@@ -3457,37 +3457,49 @@
       "label": "extractThemeVersionFromZip()",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L53",
+      "source_location": "L89",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractthemeversionfromzip()",
-      "id": "lib_themes_extractreadmeversion_extractthemeversionfromzip"
+      "norm_label": "extractthemeversionfromzip()"
     },
     {
       "label": "extractVersionFromReadmeText()",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L37",
+      "source_location": "L42",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_extractversionfromreadmetext",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractversionfromreadmetext()",
-      "id": "lib_themes_extractreadmeversion_extractversionfromreadmetext"
+      "norm_label": "extractversionfromreadmetext()"
+    },
+    {
+      "label": "extractVersionFromSettingsSchema()",
+      "file_type": "code",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L56",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_extractversionfromsettingsschema",
+      "community": 20,
+      "community_name": "extractReadmeVersion.ts",
+      "norm_label": "extractversionfromsettingsschema()"
     },
     {
       "label": "findReadmeFile()",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_findreadmefile",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "findreadmefile()",
-      "id": "lib_themes_extractreadmeversion_findreadmefile"
+      "norm_label": "findreadmefile()"
     },
     {
       "label": "makeThemeDir()",
@@ -3496,10 +3508,22 @@
       "source_location": "L13",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_test_makethemedir",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "makethemedir()",
-      "id": "lib_themes_extractreadmeversion_test_makethemedir"
+      "norm_label": "makethemedir()"
+    },
+    {
+      "label": "settingsSchema()",
+      "file_type": "code",
+      "source_file": "lib/themes/extractReadmeVersion.test.ts",
+      "source_location": "L84",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_test_settingsschema",
+      "community": 20,
+      "community_name": "extractReadmeVersion.ts",
+      "norm_label": "settingsschema()"
     },
     {
       "label": "collectSchemaSettingIds()",
@@ -3624,14 +3648,14 @@
     {
       "label": "GET()",
       "file_type": "code",
-      "source_file": "app/api/reports/[id]/route.ts",
-      "source_location": "L16",
+      "source_file": "app/api/reports/[id]/diff/export/route.ts",
+      "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
       "community": 22,
       "community_name": "connectToDatabase",
       "norm_label": "get()",
-      "id": "app_api_reports_id_route_get"
+      "id": "app_api_reports_id_diff_export_route_get"
     },
     {
       "label": "GET()",
@@ -3680,42 +3704,6 @@
       "norm_label": "connecttodatabase()",
       "community_name": "connectToDatabase",
       "id": "lib_db_connect_connecttodatabase"
-    },
-    {
-      "label": "findMultipleH1()",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L20",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "findmultipleh1()",
-      "id": "lib_audit_headingchecks_findmultipleh1"
-    },
-    {
-      "label": "findMultipleH1Across()",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L57",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "findmultipleh1across()",
-      "id": "lib_audit_headingchecks_findmultipleh1across"
-    },
-    {
-      "label": "findSkippedHeadingLevelsAcross()",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L35",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "findskippedheadinglevelsacross()",
-      "id": "lib_audit_headingchecks_findskippedheadinglevelsacross"
     },
     {
       "label": "composedHeadingEntries()",
@@ -3776,6 +3764,54 @@
       "community_name": "cross-file/index.ts",
       "norm_label": "jsimportcandidates()",
       "id": "lib_rules_cross_file_index_jsimportcandidates"
+    },
+    {
+      "label": "findingsFor()",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.test.ts",
+      "source_location": "L12",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "findingsfor()",
+      "id": "lib_rules_cross_file_index_test_findingsfor"
+    },
+    {
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "app/page-speed/PageSpeedContent.tsx",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "formatdate()",
+      "id": "app_page_speed_pagespeedcontent_formatdate"
+    },
+    {
+      "label": "formatScore()",
+      "file_type": "code",
+      "source_file": "app/page-speed/PageSpeedContent.tsx",
+      "source_location": "L26",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "formatscore()",
+      "id": "app_page_speed_pagespeedcontent_formatscore"
+    },
+    {
+      "label": "PageSpeedContent()",
+      "file_type": "code",
+      "source_file": "app/page-speed/PageSpeedContent.tsx",
+      "source_location": "L32",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "pagespeedcontent()",
+      "id": "app_page_speed_pagespeedcontent_pagespeedcontent"
     },
     {
       "label": "findFirstProductLink()",
@@ -4030,114 +4066,6 @@
       "id": "lib_rules_internal_index_test_axisduplicatefindings"
     },
     {
-      "label": "GET()",
-      "file_type": "code",
-      "source_file": "app/api/reports/[id]/diff/export/route.ts",
-      "source_location": "L12",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "get()",
-      "id": "app_api_reports_id_diff_export_route_get"
-    },
-    {
-      "label": "GET()",
-      "file_type": "code",
-      "source_file": "app/api/reports/[id]/diff/route.ts",
-      "source_location": "L23",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "get()",
-      "id": "app_api_reports_id_diff_route_get"
-    },
-    {
-      "label": "toPlainRecord()",
-      "file_type": "code",
-      "source_file": "app/api/reports/[id]/diff/route.ts",
-      "source_location": "L18",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "toplainrecord()",
-      "id": "app_api_reports_id_diff_route_toplainrecord"
-    },
-    {
-      "label": "attributeNewFindings()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L171",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "attributenewfindings()",
-      "id": "lib_audit_difffindings_attributenewfindings"
-    },
-    {
-      "label": "computeFindingsDiff()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L48",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "computefindingsdiff()",
-      "id": "lib_audit_difffindings_computefindingsdiff"
-    },
-    {
-      "label": "countNewOrEscalatedHighRiskFindings()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L153",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "countneworescalatedhighriskfindings()",
-      "id": "lib_audit_difffindings_countneworescalatedhighriskfindings"
-    },
-    {
-      "label": "summarizeDiffByCategory()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L117",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "summarizediffbycategory()",
-      "id": "lib_audit_difffindings_summarizediffbycategory"
-    },
-    {
-      "label": "summarizeDiffBySeverity()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L142",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "summarizediffbyseverity()",
-      "id": "lib_audit_difffindings_summarizediffbyseverity"
-    },
-    {
-      "label": "finding()",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.test.ts",
-      "source_location": "L11",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "finding()",
-      "id": "lib_audit_difffindings_test_finding"
-    },
-    {
       "label": "getPageLabel()",
       "file_type": "code",
       "source_file": "lib/audit/pageLabel.ts",
@@ -4145,7 +4073,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "getpagelabel()",
       "id": "lib_audit_pagelabel_getpagelabel"
     },
@@ -4157,7 +4085,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "buildfindingscsv()",
       "id": "lib_export_csv_buildfindingscsv"
     },
@@ -4169,7 +4097,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "row()",
       "id": "lib_export_csv_test_row"
     },
@@ -4181,7 +4109,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "escapecsvfield()",
       "id": "lib_export_csvutil_escapecsvfield"
     },
@@ -4193,7 +4121,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "builddiffcsv()",
       "id": "lib_export_diffcsv_builddiffcsv"
     },
@@ -4205,33 +4133,9 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "finding()",
       "id": "lib_export_diffcsv_test_finding"
-    },
-    {
-      "label": "buildReportHtml()",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L40",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "buildreporthtml()",
-      "id": "lib_export_pdf_buildreporthtml"
-    },
-    {
-      "label": "escapeHtml()",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L24",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "escapehtml()",
-      "id": "lib_export_pdf_escapehtml"
     },
     {
       "label": "addFindingsSheet()",
@@ -4241,7 +4145,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "addfindingssheet()",
       "id": "lib_export_xlsx_addfindingssheet"
     },
@@ -4253,7 +4157,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "buildreportxlsx()",
       "id": "lib_export_xlsx_buildreportxlsx"
     },
@@ -4450,28 +4354,28 @@
       "id": "lib_themes_themesource_localuploadsource"
     },
     {
-      "label": "readmeErrorMessage()",
+      "label": "uploadThemeVersion()",
+      "file_type": "code",
+      "source_file": "lib/themes/uploadThemeVersion.ts",
+      "source_location": "L35",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "lib_themes_uploadthemeversion_uploadthemeversion",
+      "community": 29,
+      "community_name": "audit-run.ts",
+      "norm_label": "uploadthemeversion()"
+    },
+    {
+      "label": "versionErrorMessage()",
       "file_type": "code",
       "source_file": "lib/themes/uploadThemeVersion.ts",
       "source_location": "L13",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_themes_uploadthemeversion_versionerrormessage",
       "community": 29,
       "community_name": "audit-run.ts",
-      "norm_label": "readmeerrormessage()",
-      "id": "lib_themes_uploadthemeversion_readmeerrormessage"
-    },
-    {
-      "label": "uploadThemeVersion()",
-      "file_type": "code",
-      "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L36",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "audit-run.ts",
-      "norm_label": "uploadthemeversion()",
-      "id": "lib_themes_uploadthemeversion_uploadthemeversion"
+      "norm_label": "versionerrormessage()"
     },
     {
       "label": "deleteZip()",
@@ -4560,14 +4464,110 @@
     {
       "label": "GET()",
       "file_type": "code",
-      "source_file": "app/api/rules/route.ts",
-      "source_location": "L6",
+      "source_file": "app/api/reports/[id]/diff/route.ts",
+      "source_location": "L23",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
+      "community_name": "diffFindings.ts",
       "norm_label": "get()",
-      "id": "app_api_rules_route_get"
+      "id": "app_api_reports_id_diff_route_get"
+    },
+    {
+      "label": "toPlainRecord()",
+      "file_type": "code",
+      "source_file": "app/api/reports/[id]/diff/route.ts",
+      "source_location": "L18",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "toplainrecord()",
+      "id": "app_api_reports_id_diff_route_toplainrecord"
+    },
+    {
+      "label": "attributeNewFindings()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L171",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "attributenewfindings()",
+      "id": "lib_audit_difffindings_attributenewfindings"
+    },
+    {
+      "label": "computeFindingsDiff()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L48",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "computefindingsdiff()",
+      "id": "lib_audit_difffindings_computefindingsdiff"
+    },
+    {
+      "label": "countNewOrEscalatedHighRiskFindings()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L153",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "countneworescalatedhighriskfindings()",
+      "id": "lib_audit_difffindings_countneworescalatedhighriskfindings"
+    },
+    {
+      "label": "summarizeDiffByCategory()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L117",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "summarizediffbycategory()",
+      "id": "lib_audit_difffindings_summarizediffbycategory"
+    },
+    {
+      "label": "summarizeDiffBySeverity()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L142",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "summarizediffbyseverity()",
+      "id": "lib_audit_difffindings_summarizediffbyseverity"
+    },
+    {
+      "label": "finding()",
+      "file_type": "code",
+      "source_file": "lib/audit/diffFindings.test.ts",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "diffFindings.ts",
+      "norm_label": "finding()",
+      "id": "lib_audit_difffindings_test_finding"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/health/route.ts",
+      "source_location": "L13",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "registry.ts",
+      "norm_label": "get()",
+      "id": "app_api_health_route_get"
     },
     {
       "label": "loadEnabledRules()",
@@ -4577,7 +4577,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "loadenabledrules()",
       "id": "lib_audit_index_loadenabledrules"
     },
@@ -4589,7 +4589,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runauditrules()",
       "id": "lib_audit_index_runauditrules"
     },
@@ -4601,7 +4601,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "dedupekey()",
       "id": "lib_audit_runrules_dedupekey"
     },
@@ -4613,7 +4613,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "empty_summary()",
       "id": "lib_audit_runrules_empty_summary"
     },
@@ -4625,7 +4625,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runrules()",
       "id": "lib_audit_runrules_runrules"
     },
@@ -4637,7 +4637,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "summarizefindings()",
       "id": "lib_audit_runrules_summarizefindings"
     },
@@ -4649,7 +4649,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runfixture()",
       "id": "lib_test_helpers_fixturethemes_test_runfixture"
     },
@@ -4774,18 +4774,6 @@
       "id": "lib_theme_parser_extractliquidstructure_quotedarg"
     },
     {
-      "label": "extractCssStructure()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/extractCssStructure.ts",
-      "source_location": "L24",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "theme-parser/index.ts",
-      "norm_label": "extractcssstructure()",
-      "id": "lib_theme_parser_extractcssstructure_extractcssstructure"
-    },
-    {
       "label": "extractHtmlStructure()",
       "file_type": "code",
       "source_file": "lib/theme-parser/extractHtmlStructure.ts",
@@ -4810,18 +4798,6 @@
       "id": "lib_theme_parser_extracthtmlstructure_isliquidexpression"
     },
     {
-      "label": "extractJsImports()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/extractJsStructure.ts",
-      "source_location": "L12",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "theme-parser/index.ts",
-      "norm_label": "extractjsimports()",
-      "id": "lib_theme_parser_extractjsstructure_extractjsimports"
-    },
-    {
       "label": "parseOneFile()",
       "file_type": "code",
       "source_file": "lib/theme-parser/index.ts",
@@ -4844,6 +4820,18 @@
       "community_name": "theme-parser/index.ts",
       "norm_label": "parsethemedirectory()",
       "id": "lib_theme_parser_index_parsethemedirectory"
+    },
+    {
+      "label": "parseThemeZip()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/index.ts",
+      "source_location": "L57",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "parsethemezip()",
+      "id": "lib_theme_parser_index_parsethemezip"
     },
     {
       "label": "emptyMetaTags()",
@@ -5134,66 +5122,6 @@
       "id": "lib_audit_executeauditrun_tofindingdocs"
     },
     {
-      "label": "classifyFindingHistory()",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.ts",
-      "source_location": "L33",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "classifyfindinghistory()",
-      "id": "lib_audit_findinghistory_classifyfindinghistory"
-    },
-    {
-      "label": "finding()",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.test.ts",
-      "source_location": "L5",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "finding()",
-      "id": "lib_audit_findinghistory_test_finding"
-    },
-    {
-      "label": "exactSignature()",
-      "file_type": "code",
-      "source_file": "lib/audit/findingSignature.ts",
-      "source_location": "L21",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "exactsignature()",
-      "id": "lib_audit_findingsignature_exactsignature"
-    },
-    {
-      "label": "locationSignature()",
-      "file_type": "code",
-      "source_file": "lib/audit/findingSignature.ts",
-      "source_location": "L26",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "locationsignature()",
-      "id": "lib_audit_findingsignature_locationsignature"
-    },
-    {
-      "label": "normalizeMessage()",
-      "file_type": "code",
-      "source_file": "lib/audit/findingSignature.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "normalizemessage()",
-      "id": "lib_audit_findingsignature_normalizemessage"
-    },
-    {
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "lib/audit/timing.ts",
@@ -5242,6 +5170,30 @@
       "id": "lib_audit_timing_stopwatch_torecord"
     },
     {
+      "label": "findMultipleH1()",
+      "file_type": "code",
+      "source_file": "lib/audit/headingChecks.ts",
+      "source_location": "L20",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "findmultipleh1()",
+      "id": "lib_audit_headingchecks_findmultipleh1"
+    },
+    {
+      "label": "findMultipleH1Across()",
+      "file_type": "code",
+      "source_file": "lib/audit/headingChecks.ts",
+      "source_location": "L57",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "findmultipleh1across()",
+      "id": "lib_audit_headingchecks_findmultipleh1across"
+    },
+    {
       "label": "findSkippedHeadingLevels()",
       "file_type": "code",
       "source_file": "lib/audit/headingChecks.ts",
@@ -5249,21 +5201,33 @@
       "_callable": true,
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "findskippedheadinglevels()",
       "id": "lib_audit_headingchecks_findskippedheadinglevels"
     },
     {
+      "label": "findSkippedHeadingLevelsAcross()",
+      "file_type": "code",
+      "source_file": "lib/audit/headingChecks.ts",
+      "source_location": "L35",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "findskippedheadinglevelsacross()",
+      "id": "lib_audit_headingchecks_findskippedheadinglevelsacross"
+    },
+    {
       "label": "findingsFor()",
       "file_type": "code",
-      "source_file": "lib/rules/performance/index.test.ts",
+      "source_file": "lib/rules/technical-seo/index.test.ts",
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "findingsfor()",
-      "id": "lib_rules_performance_index_test_findingsfor"
+      "id": "lib_rules_technical_seo_index_test_findingsfor"
     },
     {
       "label": "GET()",
@@ -5276,6 +5240,18 @@
       "community_name": "[id]/export/route.ts",
       "norm_label": "get()",
       "id": "app_api_reports_id_export_route_get"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/reports/[id]/route.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "get()",
+      "id": "app_api_reports_id_route_get"
     },
     {
       "label": "computeCoverage()",
@@ -5302,6 +5278,42 @@
       "id": "lib_audit_coverage_computecoveragebycategory"
     },
     {
+      "label": "buildEnhancementReportForRun()",
+      "file_type": "code",
+      "source_file": "lib/audit/enhancementReport.ts",
+      "source_location": "L25",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "buildenhancementreportforrun()",
+      "id": "lib_audit_enhancementreport_buildenhancementreportforrun"
+    },
+    {
+      "label": "computeReadiness()",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L49",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "computereadiness()",
+      "id": "lib_audit_readiness_computereadiness"
+    },
+    {
+      "label": "isUnresolved()",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L39",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "isunresolved()",
+      "id": "lib_audit_readiness_isunresolved"
+    },
+    {
       "label": "buildAuditReportJson()",
       "file_type": "code",
       "source_file": "lib/export/json.ts",
@@ -5312,18 +5324,6 @@
       "community_name": "[id]/export/route.ts",
       "norm_label": "buildauditreportjson()",
       "id": "lib_export_json_buildauditreportjson"
-    },
-    {
-      "label": "renderReportPdf()",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L106",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "[id]/export/route.ts",
-      "norm_label": "renderreportpdf()",
-      "id": "lib_export_pdf_renderreportpdf"
     },
     {
       "label": "extractLiteralJsonLdTypes()",
@@ -5506,18 +5506,6 @@
       "id": "app_api_enhancements_route_patch"
     },
     {
-      "label": "PointCard()",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L57",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "pointcard()",
-      "id": "app_enhancements_futureupdatescontent_pointcard"
-    },
-    {
       "label": "tierForPercentage()",
       "file_type": "code",
       "source_file": "lib/enhancements/tiers.ts",
@@ -5584,10 +5572,10 @@
       "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_formatdate",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatdate()",
-      "id": "app_themes_themeid_components_overviewpanel_formatdate"
+      "norm_label": "formatdate()"
     },
     {
       "label": "healthTone()",
@@ -5596,22 +5584,22 @@
       "source_location": "L32",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_healthtone",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "healthtone()",
-      "id": "app_themes_themeid_components_overviewpanel_healthtone"
+      "norm_label": "healthtone()"
     },
     {
       "label": "OverviewPanel()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L210",
+      "source_location": "L211",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel()",
-      "id": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "norm_label": "overviewpanel()"
     },
     {
       "label": "PresetsSection()",
@@ -5620,22 +5608,22 @@
       "source_location": "L38",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_presetssection",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "presetssection()",
-      "id": "app_themes_themeid_components_overviewpanel_presetssection"
+      "norm_label": "presetssection()"
     },
     {
       "label": "RunAuditForm()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L140",
+      "source_location": "L141",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_runauditform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "runauditform()",
-      "id": "app_themes_themeid_components_overviewpanel_runauditform"
+      "norm_label": "runauditform()"
     },
     {
       "label": "UploadVersionForm()",
@@ -5644,10 +5632,10 @@
       "source_location": "L91",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_uploadversionform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "uploadversionform()",
-      "id": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "norm_label": "uploadversionform()"
     },
     {
       "label": "buildEnhancementSheetTabs()",
@@ -5912,18 +5900,6 @@
       "community_name": "[id]/export/google-sheet/route.ts",
       "norm_label": "post()",
       "id": "app_api_reports_id_export_google_sheet_route_post"
-    },
-    {
-      "label": "buildEnhancementReportForRun()",
-      "file_type": "code",
-      "source_file": "lib/audit/enhancementReport.ts",
-      "source_location": "L25",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "[id]/export/google-sheet/route.ts",
-      "norm_label": "buildenhancementreportforrun()",
-      "id": "lib_audit_enhancementreport_buildenhancementreportforrun"
     },
     {
       "label": "getAuthorizedClient()",
@@ -6216,14 +6192,14 @@
     {
       "label": "findingsFor()",
       "file_type": "code",
-      "source_file": "lib/rules/cross-file/index.test.ts",
+      "source_file": "lib/rules/performance/index.test.ts",
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
       "community": 53,
       "community_name": "rules.ts",
       "norm_label": "findingsfor()",
-      "id": "lib_rules_cross_file_index_test_findingsfor"
+      "id": "lib_rules_performance_index_test_findingsfor"
     },
     {
       "label": "findingsFor()",
@@ -6252,14 +6228,14 @@
     {
       "label": "findingsFor()",
       "file_type": "code",
-      "source_file": "lib/rules/technical-seo/index.test.ts",
+      "source_file": "lib/rules/shopify/settings.test.ts",
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
       "community": 53,
       "community_name": "rules.ts",
       "norm_label": "findingsfor()",
-      "id": "lib_rules_technical_seo_index_test_findingsfor"
+      "id": "lib_rules_shopify_settings_test_findingsfor"
     },
     {
       "label": "basenameNoExt()",
@@ -6332,18 +6308,6 @@
       "community_name": "buildTestTheme.ts",
       "norm_label": "resolveschemastring()",
       "id": "lib_audit_themeindex_resolveschemastring"
-    },
-    {
-      "label": "findingsFor()",
-      "file_type": "code",
-      "source_file": "lib/rules/shopify/settings.test.ts",
-      "source_location": "L12",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "buildTestTheme.ts",
-      "norm_label": "findingsfor()",
-      "id": "lib_rules_shopify_settings_test_findingsfor"
     },
     {
       "label": "buildTestTheme()",
@@ -6622,18 +6586,6 @@
       "id": "app_components_tabbedpage_tabbedpageclient"
     },
     {
-      "label": "FutureUpdatesContent()",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L202",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "futureupdatescontent()",
-      "id": "app_enhancements_futureupdatescontent_futureupdatescontent"
-    },
-    {
       "label": "CodeReviewContent()",
       "file_type": "code",
       "source_file": "app/insights/_components/CodeReviewContent.tsx",
@@ -6728,42 +6680,6 @@
       "community_name": "insights/page.tsx",
       "norm_label": "summarycard()",
       "id": "app_maintenance_maintenancecontent_summarycard"
-    },
-    {
-      "label": "formatDate()",
-      "file_type": "code",
-      "source_file": "app/page-speed/PageSpeedContent.tsx",
-      "source_location": "L16",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "formatdate()",
-      "id": "app_page_speed_pagespeedcontent_formatdate"
-    },
-    {
-      "label": "formatScore()",
-      "file_type": "code",
-      "source_file": "app/page-speed/PageSpeedContent.tsx",
-      "source_location": "L26",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "formatscore()",
-      "id": "app_page_speed_pagespeedcontent_formatscore"
-    },
-    {
-      "label": "PageSpeedContent()",
-      "file_type": "code",
-      "source_file": "app/page-speed/PageSpeedContent.tsx",
-      "source_location": "L32",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "pagespeedcontent()",
-      "id": "app_page_speed_pagespeedcontent_pagespeedcontent"
     },
     {
       "label": "SettingsPage()",
@@ -7265,7 +7181,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
+      "community_name": "readiness/route.ts",
       "norm_label": "get()",
       "id": "app_api_settings_readiness_route_get"
     },
@@ -7277,33 +7193,9 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
+      "community_name": "readiness/route.ts",
       "norm_label": "patch()",
       "id": "app_api_settings_readiness_route_patch"
-    },
-    {
-      "label": "computeReadiness()",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L49",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "computereadiness()",
-      "id": "lib_audit_readiness_computereadiness"
-    },
-    {
-      "label": "isUnresolved()",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L39",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "isunresolved()",
-      "id": "lib_audit_readiness_isunresolved"
     },
     {
       "label": "loadReadinessConfig()",
@@ -7313,7 +7205,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
+      "community_name": "readiness/route.ts",
       "norm_label": "loadreadinessconfig()",
       "id": "lib_audit_readinessconfigstore_loadreadinessconfig"
     },
@@ -7486,6 +7378,18 @@
       "id": "lib_theme_parser_csscolornames_lookslikecolorvalue"
     },
     {
+      "label": "extractCssStructure()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractCssStructure.ts",
+      "source_location": "L24",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 66,
+      "community_name": "extractCssStructure.ts",
+      "norm_label": "extractcssstructure()",
+      "id": "lib_theme_parser_extractcssstructure_extractcssstructure"
+    },
+    {
       "label": "EnhancementsPage()",
       "file_type": "code",
       "source_file": "app/enhancements/page.tsx",
@@ -7508,6 +7412,30 @@
       "community_name": "projectStatus.ts",
       "norm_label": "overallcompletionpercent()",
       "id": "lib_projectstatus_overallcompletionpercent"
+    },
+    {
+      "label": "FutureUpdatesContent()",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L202",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "futureupdatescontent()",
+      "id": "app_enhancements_futureupdatescontent_futureupdatescontent"
+    },
+    {
+      "label": "PointCard()",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L57",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "pointcard()",
+      "id": "app_enhancements_futureupdatescontent_pointcard"
     },
     {
       "label": "AppShell()",
@@ -7594,6 +7522,66 @@
       "id": "app_page_speed_page_pagespeedpage"
     },
     {
+      "label": "classifyFindingHistory()",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.ts",
+      "source_location": "L33",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "classifyfindinghistory()",
+      "id": "lib_audit_findinghistory_classifyfindinghistory"
+    },
+    {
+      "label": "finding()",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.test.ts",
+      "source_location": "L5",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "finding()",
+      "id": "lib_audit_findinghistory_test_finding"
+    },
+    {
+      "label": "exactSignature()",
+      "file_type": "code",
+      "source_file": "lib/audit/findingSignature.ts",
+      "source_location": "L21",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "exactsignature()",
+      "id": "lib_audit_findingsignature_exactsignature"
+    },
+    {
+      "label": "locationSignature()",
+      "file_type": "code",
+      "source_file": "lib/audit/findingSignature.ts",
+      "source_location": "L26",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "locationsignature()",
+      "id": "lib_audit_findingsignature_locationsignature"
+    },
+    {
+      "label": "normalizeMessage()",
+      "file_type": "code",
+      "source_file": "lib/audit/findingSignature.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "normalizemessage()",
+      "id": "lib_audit_findingsignature_normalizemessage"
+    },
+    {
       "label": "PresetLinksEditor()",
       "file_type": "code",
       "source_file": "app/_components/PresetLinksEditor.tsx",
@@ -7624,10 +7612,10 @@
       "source_location": "L58",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_components_addthememodal_addthememodal",
       "community": 72,
       "community_name": "AddThemeModal.tsx",
-      "norm_label": "addthememodal()",
-      "id": "app_themes_components_addthememodal_addthememodal"
+      "norm_label": "addthememodal()"
     },
     {
       "label": "Dropzone()",
@@ -7636,10 +7624,46 @@
       "source_location": "L9",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_components_addthememodal_dropzone",
       "community": 72,
       "community_name": "AddThemeModal.tsx",
-      "norm_label": "dropzone()",
-      "id": "app_themes_components_addthememodal_dropzone"
+      "norm_label": "dropzone()"
+    },
+    {
+      "label": "buildReportHtml()",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L40",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "buildreporthtml()",
+      "id": "lib_export_pdf_buildreporthtml"
+    },
+    {
+      "label": "escapeHtml()",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L24",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "escapehtml()",
+      "id": "lib_export_pdf_escapehtml"
+    },
+    {
+      "label": "renderReportPdf()",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L106",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "renderreportpdf()",
+      "id": "lib_export_pdf_renderreportpdf"
     },
     {
       "label": "RulesPage()",
@@ -8526,24 +8550,13 @@
       "id": "lib_reports_index"
     },
     {
-      "label": "health/route.ts",
-      "file_type": "code",
-      "source_file": "app/api/health/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "requirement.ts",
-      "norm_label": "health/route.ts",
-      "id": "app_api_health_route"
-    },
-    {
       "label": "maintenance/route.ts",
       "file_type": "code",
       "source_file": "app/api/maintenance/route.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "maintenance/route.ts",
       "id": "app_api_maintenance_route"
     },
@@ -8554,20 +8567,130 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirements/route.ts",
       "id": "app_api_requirements_route"
     },
     {
-      "label": "ALL_RULES",
+      "label": "rules/route.ts",
       "file_type": "code",
-      "source_file": "lib/rules/registry.ts",
-      "source_location": "L11",
+      "source_file": "app/api/rules/route.ts",
+      "source_location": "L1",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
-      "norm_label": "all_rules",
-      "id": "lib_rules_registry_all_rules"
+      "community_name": "finding.ts",
+      "norm_label": "rules/route.ts",
+      "id": "app_api_rules_route"
+    },
+    {
+      "label": "audit-settings.ts",
+      "file_type": "code",
+      "source_file": "models/audit-settings.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 19,
+      "norm_label": "audit-settings.ts",
+      "community_name": "finding.ts",
+      "id": "models_audit_settings"
+    },
+    {
+      "label": "AuditSettings",
+      "file_type": "code",
+      "source_file": "models/audit-settings.ts",
+      "source_location": "L17",
+      "_origin": "ast",
+      "community": 19,
+      "norm_label": "auditsettings",
+      "community_name": "finding.ts",
+      "id": "models_audit_settings_auditsettings"
+    },
+    {
+      "label": "auditSettingsSchema",
+      "file_type": "code",
+      "source_file": "models/audit-settings.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "community": 19,
+      "norm_label": "auditsettingsschema",
+      "community_name": "finding.ts",
+      "id": "models_audit_settings_auditsettingsschema"
+    },
+    {
+      "label": "finding.ts",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "finding.ts",
+      "id": "models_finding"
+    },
+    {
+      "label": "FINDING_CATEGORIES",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L3",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "finding_categories",
+      "id": "models_finding_finding_categories"
+    },
+    {
+      "label": "FINDING_HISTORICAL_STATES",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L36",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "finding_historical_states",
+      "id": "models_finding_finding_historical_states"
+    },
+    {
+      "label": "FINDING_LAYERS",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L22",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "finding_layers",
+      "id": "models_finding_finding_layers"
+    },
+    {
+      "label": "FINDING_STATUSES",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L29",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "finding_statuses",
+      "id": "models_finding_finding_statuses"
+    },
+    {
+      "label": "findingSchema",
+      "file_type": "code",
+      "source_file": "models/finding.ts",
+      "source_location": "L38",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "findingschema",
+      "id": "models_finding_findingschema"
+    },
+    {
+      "label": "models/index.ts",
+      "file_type": "code",
+      "source_file": "models/index.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "models/index.ts",
+      "id": "models_index"
     },
     {
       "label": "requirement.ts",
@@ -8576,7 +8699,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirement.ts",
       "id": "models_requirement"
     },
@@ -8587,7 +8710,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirement",
       "id": "models_requirement_requirement"
     },
@@ -8598,7 +8721,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirement_source_types",
       "id": "models_requirement_requirement_source_types"
     },
@@ -8609,7 +8732,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirement_statuses",
       "id": "models_requirement_requirement_statuses"
     },
@@ -8620,7 +8743,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirementschema",
       "id": "models_requirement_requirementschema"
     },
@@ -8631,9 +8754,53 @@
       "source_location": "L16",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "rule_statuses",
       "id": "models_requirement_rule_statuses"
+    },
+    {
+      "label": "rule.ts",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "rule.ts",
+      "id": "models_rule"
+    },
+    {
+      "label": "Rule",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L38",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "rule",
+      "id": "models_rule_rule"
+    },
+    {
+      "label": "RULE_CRITICALITIES",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L9",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "rule_criticalities",
+      "id": "models_rule_rule_criticalities"
+    },
+    {
+      "label": "ruleSchema",
+      "file_type": "code",
+      "source_file": "models/rule.ts",
+      "source_location": "L11",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "finding.ts",
+      "norm_label": "ruleschema",
+      "id": "models_rule_ruleschema"
     },
     {
       "label": "seed-requirements.ts",
@@ -8642,7 +8809,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "seed-requirements.ts",
       "id": "scripts_seed_requirements"
     },
@@ -8653,7 +8820,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "community": 19,
-      "community_name": "requirement.ts",
+      "community_name": "finding.ts",
       "norm_label": "requirements",
       "id": "scripts_seed_requirements_requirements"
     },
@@ -8971,10 +9138,21 @@
       "source_file": "lib/themes/extractReadmeVersion.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractreadmeversion.ts",
-      "id": "lib_themes_extractreadmeversion"
+      "norm_label": "extractreadmeversion.ts"
+    },
+    {
+      "label": "SETTINGS_SCHEMA_RELATIVE_PATH",
+      "file_type": "code",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_settings_schema_relative_path",
+      "community": 20,
+      "community_name": "extractReadmeVersion.ts",
+      "norm_label": "settings_schema_relative_path"
     },
     {
       "label": "extractReadmeVersion.test.ts",
@@ -8982,10 +9160,32 @@
       "source_file": "lib/themes/extractReadmeVersion.test.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_test",
       "community": 20,
       "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractreadmeversion.test.ts",
-      "id": "lib_themes_extractreadmeversion_test"
+      "norm_label": "extractreadmeversion.test.ts"
+    },
+    {
+      "label": "VERSION_LINE_RE",
+      "file_type": "code",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_version_line_re",
+      "community": 20,
+      "community_name": "extractReadmeVersion.ts",
+      "norm_label": "version_line_re"
+    },
+    {
+      "label": "VERSION_VALUE_RE",
+      "file_type": "code",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "lib_themes_extractreadmeversion_version_value_re",
+      "community": 20,
+      "community_name": "extractReadmeVersion.ts",
+      "norm_label": "version_value_re"
     },
     {
       "label": "bugs/index.ts",
@@ -9131,15 +9331,15 @@
       "id": "app_api_page_speed_route"
     },
     {
-      "label": "reports/[id]/route.ts",
+      "label": "diff/export/route.ts",
       "file_type": "code",
-      "source_file": "app/api/reports/[id]/route.ts",
+      "source_file": "app/api/reports/[id]/diff/export/route.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 22,
       "community_name": "connectToDatabase",
-      "norm_label": "reports/[id]/route.ts",
-      "id": "app_api_reports_id_route"
+      "norm_label": "diff/export/route.ts",
+      "id": "app_api_reports_id_diff_export_route"
     },
     {
       "label": "reports/route.ts",
@@ -9219,17 +9419,6 @@
       "id": "models_finding_finding"
     },
     {
-      "label": "headingChecks.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/headingChecks.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "cross-file/index.ts",
-      "norm_label": "headingchecks.ts",
-      "id": "lib_audit_headingchecks"
-    },
-    {
       "label": "cross-file/index.ts",
       "file_type": "code",
       "source_file": "lib/rules/cross-file/index.ts",
@@ -9305,6 +9494,17 @@
       "community_name": "cross-file/index.ts",
       "norm_label": "composedskippedheadingrule",
       "id": "lib_rules_cross_file_index_composedskippedheadingrule"
+    },
+    {
+      "label": "CROSS_FILE_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.ts",
+      "source_location": "L532",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "cross_file_rules",
+      "id": "lib_rules_cross_file_index_cross_file_rules"
     },
     {
       "label": "duplicateLocaleKeyRule",
@@ -9415,6 +9615,39 @@
       "community_name": "cross-file/index.ts",
       "norm_label": "templates_requiring_h1",
       "id": "lib_rules_cross_file_index_templates_requiring_h1"
+    },
+    {
+      "label": "cross-file/index.test.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "cross-file/index.test.ts",
+      "id": "lib_rules_cross_file_index_test"
+    },
+    {
+      "label": "BASE_LAYOUT",
+      "file_type": "code",
+      "source_file": "lib/rules/cross-file/index.test.ts",
+      "source_location": "L18",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "cross-file/index.ts",
+      "norm_label": "base_layout",
+      "id": "lib_rules_cross_file_index_test_base_layout"
+    },
+    {
+      "label": "PageSpeedContent.tsx",
+      "file_type": "code",
+      "source_file": "app/page-speed/PageSpeedContent.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "pageSpeed.ts",
+      "norm_label": "pagespeedcontent.tsx",
+      "id": "app_page_speed_pagespeedcontent"
     },
     {
       "label": "pageSpeed.ts",
@@ -9681,68 +9914,13 @@
       "id": "vitest_config"
     },
     {
-      "label": "diff/export/route.ts",
-      "file_type": "code",
-      "source_file": "app/api/reports/[id]/diff/export/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "diff/export/route.ts",
-      "id": "app_api_reports_id_diff_export_route"
-    },
-    {
-      "label": "diff/route.ts",
-      "file_type": "code",
-      "source_file": "app/api/reports/[id]/diff/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "diff/route.ts",
-      "id": "app_api_reports_id_diff_route"
-    },
-    {
-      "label": "diffFindings.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "difffindings.ts",
-      "id": "lib_audit_difffindings"
-    },
-    {
-      "label": "SEVERITY_ORDER",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.ts",
-      "source_location": "L139",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "severity_order",
-      "id": "lib_audit_difffindings_severity_order"
-    },
-    {
-      "label": "diffFindings.test.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/diffFindings.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "difffindings.test.ts",
-      "id": "lib_audit_difffindings_test"
-    },
-    {
       "label": "pageLabel.ts",
       "file_type": "code",
       "source_file": "lib/audit/pageLabel.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "pagelabel.ts",
       "id": "lib_audit_pagelabel"
     },
@@ -9753,7 +9931,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "base_template_labels",
       "id": "lib_audit_pagelabel_base_template_labels"
     },
@@ -9764,7 +9942,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "exact_template_labels",
       "id": "lib_audit_pagelabel_exact_template_labels"
     },
@@ -9775,7 +9953,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "pagelabel.test.ts",
       "id": "lib_audit_pagelabel_test"
     },
@@ -9786,7 +9964,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "csv.ts",
       "id": "lib_export_csv"
     },
@@ -9797,7 +9975,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "columns",
       "id": "lib_export_csv_columns"
     },
@@ -9808,7 +9986,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "csv.test.ts",
       "id": "lib_export_csv_test"
     },
@@ -9819,7 +9997,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "csvutil.ts",
       "id": "lib_export_csvutil"
     },
@@ -9830,7 +10008,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "diffcsv.ts",
       "id": "lib_export_diffcsv"
     },
@@ -9841,7 +10019,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "columns",
       "id": "lib_export_diffcsv_columns"
     },
@@ -9852,42 +10030,9 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "diffcsv.test.ts",
       "id": "lib_export_diffcsv_test"
-    },
-    {
-      "label": "pdf.ts",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "pdf.ts",
-      "id": "lib_export_pdf"
-    },
-    {
-      "label": "SEVERITY_COLOR",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.ts",
-      "source_location": "L28",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "severity_color",
-      "id": "lib_export_pdf_severity_color"
-    },
-    {
-      "label": "pdf.test.ts",
-      "file_type": "code",
-      "source_file": "lib/export/pdf.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "diffFindings.ts",
-      "norm_label": "pdf.test.ts",
-      "id": "lib_export_pdf_test"
     },
     {
       "label": "xlsx.ts",
@@ -9896,7 +10041,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "xlsx.ts",
       "id": "lib_export_xlsx"
     },
@@ -9907,7 +10052,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "finding_columns",
       "id": "lib_export_xlsx_finding_columns"
     },
@@ -9918,7 +10063,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 28,
-      "community_name": "diffFindings.ts",
+      "community_name": "getPageLabel",
       "norm_label": "xlsx.test.ts",
       "id": "lib_export_xlsx_test"
     },
@@ -10071,10 +10216,10 @@
       "source_file": "lib/themes/uploadThemeVersion.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_themes_uploadthemeversion",
       "community": 29,
       "community_name": "audit-run.ts",
-      "norm_label": "uploadthemeversion.ts",
-      "id": "lib_themes_uploadthemeversion"
+      "norm_label": "uploadthemeversion.ts"
     },
     {
       "label": "zipStorage.ts",
@@ -10218,50 +10363,6 @@
       "community_name": "audit-run.ts",
       "norm_label": "ruleerrorschema",
       "id": "models_audit_run_ruleerrorschema"
-    },
-    {
-      "label": "audit-settings.ts",
-      "file_type": "code",
-      "source_file": "models/audit-settings.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 29,
-      "norm_label": "audit-settings.ts",
-      "community_name": "audit-run.ts",
-      "id": "models_audit_settings"
-    },
-    {
-      "label": "AuditSettings",
-      "file_type": "code",
-      "source_file": "models/audit-settings.ts",
-      "source_location": "L17",
-      "_origin": "ast",
-      "community": 29,
-      "norm_label": "auditsettings",
-      "community_name": "audit-run.ts",
-      "id": "models_audit_settings_auditsettings"
-    },
-    {
-      "label": "auditSettingsSchema",
-      "file_type": "code",
-      "source_file": "models/audit-settings.ts",
-      "source_location": "L6",
-      "_origin": "ast",
-      "community": 29,
-      "norm_label": "auditsettingsschema",
-      "community_name": "audit-run.ts",
-      "id": "models_audit_settings_auditsettingsschema"
-    },
-    {
-      "label": "models/index.ts",
-      "file_type": "code",
-      "source_file": "models/index.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "audit-run.ts",
-      "norm_label": "models/index.ts",
-      "id": "models_index"
     },
     {
       "label": "theme.ts",
@@ -10693,158 +10794,59 @@
       "id": "ref_tsx"
     },
     {
-      "label": "rules/route.ts",
+      "label": "diff/route.ts",
       "file_type": "code",
-      "source_file": "app/api/rules/route.ts",
+      "source_file": "app/api/reports/[id]/diff/route.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "rules/route.ts",
-      "id": "app_api_rules_route"
+      "community_name": "diffFindings.ts",
+      "norm_label": "diff/route.ts",
+      "id": "app_api_reports_id_diff_route"
     },
     {
-      "label": "finding.ts",
+      "label": "diffFindings.ts",
       "file_type": "code",
-      "source_file": "models/finding.ts",
+      "source_file": "lib/audit/diffFindings.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding.ts",
-      "id": "models_finding"
+      "community_name": "diffFindings.ts",
+      "norm_label": "difffindings.ts",
+      "id": "lib_audit_difffindings"
     },
     {
-      "label": "FINDING_CATEGORIES",
+      "label": "SEVERITY_ORDER",
       "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L3",
+      "source_file": "lib/audit/diffFindings.ts",
+      "source_location": "L139",
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding_categories",
-      "id": "models_finding_finding_categories"
+      "community_name": "diffFindings.ts",
+      "norm_label": "severity_order",
+      "id": "lib_audit_difffindings_severity_order"
     },
     {
-      "label": "FINDING_HISTORICAL_STATES",
+      "label": "diffFindings.test.ts",
       "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L36",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding_historical_states",
-      "id": "models_finding_finding_historical_states"
-    },
-    {
-      "label": "FINDING_LAYERS",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L22",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding_layers",
-      "id": "models_finding_finding_layers"
-    },
-    {
-      "label": "FINDING_SEVERITIES",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L13",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding_severities",
-      "id": "models_finding_finding_severities"
-    },
-    {
-      "label": "FINDING_STATUSES",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L29",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "finding_statuses",
-      "id": "models_finding_finding_statuses"
-    },
-    {
-      "label": "findingSchema",
-      "file_type": "code",
-      "source_file": "models/finding.ts",
-      "source_location": "L38",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "findingschema",
-      "id": "models_finding_findingschema"
-    },
-    {
-      "label": "readiness-config.ts",
-      "file_type": "code",
-      "source_file": "models/readiness-config.ts",
+      "source_file": "lib/audit/diffFindings.test.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "readiness-config.ts",
-      "id": "models_readiness_config"
+      "community_name": "diffFindings.ts",
+      "norm_label": "difffindings.test.ts",
+      "id": "lib_audit_difffindings_test"
     },
     {
-      "label": "readinessConfigSchema",
+      "label": "health/route.ts",
       "file_type": "code",
-      "source_file": "models/readiness-config.ts",
-      "source_location": "L10",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "readinessconfigschema",
-      "id": "models_readiness_config_readinessconfigschema"
-    },
-    {
-      "label": "rule.ts",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
+      "source_file": "app/api/health/route.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "rule.ts",
-      "id": "models_rule"
-    },
-    {
-      "label": "Rule",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L38",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "rule",
-      "id": "models_rule_rule"
-    },
-    {
-      "label": "RULE_CRITICALITIES",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L9",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "rule_criticalities",
-      "id": "models_rule_rule_criticalities"
-    },
-    {
-      "label": "ruleSchema",
-      "file_type": "code",
-      "source_file": "models/rule.ts",
-      "source_location": "L11",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "finding.ts",
-      "norm_label": "ruleschema",
-      "id": "models_rule_ruleschema"
+      "community": 31,
+      "community_name": "registry.ts",
+      "norm_label": "health/route.ts",
+      "id": "app_api_health_route"
     },
     {
       "label": "audit/index.ts",
@@ -10853,7 +10855,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "audit/index.ts",
       "id": "lib_audit_index"
     },
@@ -10864,9 +10866,31 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "runrules.ts",
       "id": "lib_audit_runrules"
+    },
+    {
+      "label": "registry.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/registry.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "registry.ts",
+      "norm_label": "registry.ts",
+      "id": "lib_rules_registry"
+    },
+    {
+      "label": "ALL_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/registry.ts",
+      "source_location": "L11",
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "registry.ts",
+      "norm_label": "all_rules",
+      "id": "lib_rules_registry_all_rules"
     },
     {
       "label": "fixtureThemes.ts",
@@ -10875,7 +10899,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "fixturethemes.ts",
       "id": "lib_test_helpers_fixturethemes"
     },
@@ -10886,7 +10910,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "base_layout",
       "id": "lib_test_helpers_fixturethemes_base_layout"
     },
@@ -10897,7 +10921,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "fixture_themes",
       "id": "lib_test_helpers_fixturethemes_fixture_themes"
     },
@@ -10908,7 +10932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 31,
-      "community_name": "runRules.ts",
+      "community_name": "registry.ts",
       "norm_label": "fixturethemes.test.ts",
       "id": "lib_test_helpers_fixturethemes_test"
     },
@@ -11287,39 +11311,6 @@
       "id": "lib_audit_executeauditrun"
     },
     {
-      "label": "findingHistory.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "findinghistory.ts",
-      "id": "lib_audit_findinghistory"
-    },
-    {
-      "label": "findingHistory.test.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/findingHistory.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "findinghistory.test.ts",
-      "id": "lib_audit_findinghistory_test"
-    },
-    {
-      "label": "findingSignature.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/findingSignature.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "executeAuditRun.ts",
-      "norm_label": "findingsignature.ts",
-      "id": "lib_audit_findingsignature"
-    },
-    {
       "label": "timing.ts",
       "file_type": "code",
       "source_file": "lib/audit/timing.ts",
@@ -11397,70 +11388,15 @@
       "id": "lib_audit_version_rule_engine_version"
     },
     {
-      "label": "performance/index.ts",
+      "label": "headingChecks.ts",
       "file_type": "code",
-      "source_file": "lib/rules/performance/index.ts",
+      "source_file": "lib/audit/headingChecks.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "performance/index.ts",
-      "id": "lib_rules_performance_index"
-    },
-    {
-      "label": "imageDimensionsRule",
-      "file_type": "code",
-      "source_file": "lib/rules/performance/index.ts",
-      "source_location": "L6",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "imagedimensionsrule",
-      "id": "lib_rules_performance_index_imagedimensionsrule"
-    },
-    {
-      "label": "PERFORMANCE_RULES",
-      "file_type": "code",
-      "source_file": "lib/rules/performance/index.ts",
-      "source_location": "L68",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "performance_rules",
-      "id": "lib_rules_performance_index_performance_rules"
-    },
-    {
-      "label": "renderBlockingScriptRule",
-      "file_type": "code",
-      "source_file": "lib/rules/performance/index.ts",
-      "source_location": "L37",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "renderblockingscriptrule",
-      "id": "lib_rules_performance_index_renderblockingscriptrule"
-    },
-    {
-      "label": "performance/index.test.ts",
-      "file_type": "code",
-      "source_file": "lib/rules/performance/index.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "performance/index.test.ts",
-      "id": "lib_rules_performance_index_test"
-    },
-    {
-      "label": "registry.ts",
-      "file_type": "code",
-      "source_file": "lib/rules/registry.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "registry.ts",
-      "norm_label": "registry.ts",
-      "id": "lib_rules_registry"
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "headingchecks.ts",
+      "id": "lib_audit_headingchecks"
     },
     {
       "label": "technical-seo/index.ts",
@@ -11469,7 +11405,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "technical-seo/index.ts",
       "id": "lib_rules_technical_seo_index"
     },
@@ -11480,7 +11416,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "imagedimensionsrule",
       "id": "lib_rules_technical_seo_index_imagedimensionsrule"
     },
@@ -11491,7 +11427,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "multipleh1rule",
       "id": "lib_rules_technical_seo_index_multipleh1rule"
     },
@@ -11502,7 +11438,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "renderblockingscriptrule",
       "id": "lib_rules_technical_seo_index_renderblockingscriptrule"
     },
@@ -11513,7 +11449,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "skippedheadingseorule",
       "id": "lib_rules_technical_seo_index_skippedheadingseorule"
     },
@@ -11524,9 +11460,20 @@
       "source_location": "L122",
       "_origin": "ast",
       "community": 37,
-      "community_name": "registry.ts",
+      "community_name": "technical-seo/index.ts",
       "norm_label": "technical_seo_rules",
       "id": "lib_rules_technical_seo_index_technical_seo_rules"
+    },
+    {
+      "label": "technical-seo/index.test.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/technical-seo/index.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "technical-seo/index.ts",
+      "norm_label": "technical-seo/index.test.ts",
+      "id": "lib_rules_technical_seo_index_test"
     },
     {
       "label": "[id]/export/route.ts",
@@ -11562,6 +11509,17 @@
       "id": "app_api_reports_id_export_route_formats"
     },
     {
+      "label": "reports/[id]/route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reports/[id]/route.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "reports/[id]/route.ts",
+      "id": "app_api_reports_id_route"
+    },
+    {
       "label": "coverage.ts",
       "file_type": "code",
       "source_file": "lib/audit/coverage.ts",
@@ -11582,6 +11540,61 @@
       "community_name": "[id]/export/route.ts",
       "norm_label": "coverage.test.ts",
       "id": "lib_audit_coverage_test"
+    },
+    {
+      "label": "enhancementReport.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/enhancementReport.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "enhancementreport.ts",
+      "id": "lib_audit_enhancementreport"
+    },
+    {
+      "label": "readiness.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readiness.ts",
+      "id": "lib_audit_readiness"
+    },
+    {
+      "label": "DEFAULT_READINESS_CONFIG",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.ts",
+      "source_location": "L34",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "default_readiness_config",
+      "id": "lib_audit_readiness_default_readiness_config"
+    },
+    {
+      "label": "readiness.test.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/readiness.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readiness.test.ts",
+      "id": "lib_audit_readiness_test"
+    },
+    {
+      "label": "readinessConfigStore.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/readinessConfigStore.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "[id]/export/route.ts",
+      "norm_label": "readinessconfigstore.ts",
+      "id": "lib_audit_readinessconfigstore"
     },
     {
       "label": "json.ts",
@@ -11936,138 +11949,6 @@
       "id": "app_api_enhancements_route"
     },
     {
-      "label": "FutureUpdatesContent.tsx",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "futureupdatescontent.tsx",
-      "id": "app_enhancements_futureupdatescontent"
-    },
-    {
-      "label": "SOURCE_LABELS",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L52",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "source_labels",
-      "id": "app_enhancements_futureupdatescontent_source_labels"
-    },
-    {
-      "label": "STATUS_LABELS",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L43",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "status_labels",
-      "id": "app_enhancements_futureupdatescontent_status_labels"
-    },
-    {
-      "label": "STATUSES",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L50",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "statuses",
-      "id": "app_enhancements_futureupdatescontent_statuses"
-    },
-    {
-      "label": "TIER_STYLES",
-      "file_type": "code",
-      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
-      "source_location": "L36",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tier_styles",
-      "id": "app_enhancements_futureupdatescontent_tier_styles"
-    },
-    {
-      "label": "tiers.ts",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tiers.ts",
-      "id": "lib_enhancements_tiers"
-    },
-    {
-      "label": "ADOPTION_TIERS",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L8",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "adoption_tiers",
-      "id": "lib_enhancements_tiers_adoption_tiers"
-    },
-    {
-      "label": "tiers.test.ts",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tiers.test.ts",
-      "id": "lib_enhancements_tiers_test"
-    },
-    {
-      "label": "TIER_BLURBS",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L36",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tier_blurbs",
-      "id": "lib_enhancements_tiers_tier_blurbs"
-    },
-    {
-      "label": "TIER_LABELS",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L29",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tier_labels",
-      "id": "lib_enhancements_tiers_tier_labels"
-    },
-    {
-      "label": "TIER_ORDER",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L27",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tier_order",
-      "id": "lib_enhancements_tiers_tier_order"
-    },
-    {
-      "label": "TIER_THRESHOLDS",
-      "file_type": "code",
-      "source_file": "lib/enhancements/tiers.ts",
-      "source_location": "L19",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "enhancement-point.ts",
-      "norm_label": "tier_thresholds",
-      "id": "lib_enhancements_tiers_tier_thresholds"
-    },
-    {
       "label": "enhancement-point.ts",
       "file_type": "code",
       "source_file": "models/enhancement-point.ts",
@@ -12110,6 +11991,17 @@
       "community_name": "enhancement-point.ts",
       "norm_label": "enhancement_statuses",
       "id": "models_enhancement_point_enhancement_statuses"
+    },
+    {
+      "label": "EnhancementPoint",
+      "file_type": "code",
+      "source_file": "models/enhancement-point.ts",
+      "source_location": "L134",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "enhancement-point.ts",
+      "norm_label": "enhancementpoint",
+      "id": "models_enhancement_point_enhancementpoint"
     },
     {
       "label": "enhancementPointSchema",
@@ -12238,10 +12130,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel.tsx",
-      "id": "app_themes_themeid_components_overviewpanel"
+      "norm_label": "overviewpanel.tsx"
     },
     {
       "label": "package.json",
@@ -12673,17 +12565,6 @@
       "id": "app_api_reports_id_export_google_sheet_route"
     },
     {
-      "label": "enhancementReport.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/enhancementReport.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "[id]/export/google-sheet/route.ts",
-      "norm_label": "enhancementreport.ts",
-      "id": "lib_audit_enhancementreport"
-    },
-    {
       "label": "sheetsExport.ts",
       "file_type": "code",
       "source_file": "lib/google/sheetsExport.ts",
@@ -12704,17 +12585,6 @@
       "community_name": "[id]/export/google-sheet/route.ts",
       "norm_label": "resolved_column_index",
       "id": "lib_google_sheetsexport_resolved_column_index"
-    },
-    {
-      "label": "EnhancementPoint",
-      "file_type": "code",
-      "source_file": "models/enhancement-point.ts",
-      "source_location": "L134",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "[id]/export/google-sheet/route.ts",
-      "norm_label": "enhancementpoint",
-      "id": "models_enhancement_point_enhancementpoint"
     },
     {
       "label": "sheetsFormatting.ts",
@@ -12948,37 +12818,59 @@
       "id": "lib_audit_rules"
     },
     {
-      "label": "CROSS_FILE_RULES",
+      "label": "performance/index.ts",
       "file_type": "code",
-      "source_file": "lib/rules/cross-file/index.ts",
-      "source_location": "L532",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "rules.ts",
-      "norm_label": "cross_file_rules",
-      "id": "lib_rules_cross_file_index_cross_file_rules"
-    },
-    {
-      "label": "cross-file/index.test.ts",
-      "file_type": "code",
-      "source_file": "lib/rules/cross-file/index.test.ts",
+      "source_file": "lib/rules/performance/index.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 53,
       "community_name": "rules.ts",
-      "norm_label": "cross-file/index.test.ts",
-      "id": "lib_rules_cross_file_index_test"
+      "norm_label": "performance/index.ts",
+      "id": "lib_rules_performance_index"
     },
     {
-      "label": "BASE_LAYOUT",
+      "label": "imageDimensionsRule",
       "file_type": "code",
-      "source_file": "lib/rules/cross-file/index.test.ts",
-      "source_location": "L18",
+      "source_file": "lib/rules/performance/index.ts",
+      "source_location": "L6",
       "_origin": "ast",
       "community": 53,
       "community_name": "rules.ts",
-      "norm_label": "base_layout",
-      "id": "lib_rules_cross_file_index_test_base_layout"
+      "norm_label": "imagedimensionsrule",
+      "id": "lib_rules_performance_index_imagedimensionsrule"
+    },
+    {
+      "label": "PERFORMANCE_RULES",
+      "file_type": "code",
+      "source_file": "lib/rules/performance/index.ts",
+      "source_location": "L68",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "rules.ts",
+      "norm_label": "performance_rules",
+      "id": "lib_rules_performance_index_performance_rules"
+    },
+    {
+      "label": "renderBlockingScriptRule",
+      "file_type": "code",
+      "source_file": "lib/rules/performance/index.ts",
+      "source_location": "L37",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "rules.ts",
+      "norm_label": "renderblockingscriptrule",
+      "id": "lib_rules_performance_index_renderblockingscriptrule"
+    },
+    {
+      "label": "performance/index.test.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/performance/index.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "rules.ts",
+      "norm_label": "performance/index.test.ts",
+      "id": "lib_rules_performance_index_test"
     },
     {
       "label": "features.ts",
@@ -13025,15 +12917,26 @@
       "id": "lib_rules_shopify_features_test"
     },
     {
-      "label": "technical-seo/index.test.ts",
+      "label": "SHOPIFY_SETTINGS_RULES",
       "file_type": "code",
-      "source_file": "lib/rules/technical-seo/index.test.ts",
+      "source_file": "lib/rules/shopify/settings.ts",
+      "source_location": "L461",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "rules.ts",
+      "norm_label": "shopify_settings_rules",
+      "id": "lib_rules_shopify_settings_shopify_settings_rules"
+    },
+    {
+      "label": "settings.test.ts",
+      "file_type": "code",
+      "source_file": "lib/rules/shopify/settings.test.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 53,
       "community_name": "rules.ts",
-      "norm_label": "technical-seo/index.test.ts",
-      "id": "lib_rules_technical_seo_index_test"
+      "norm_label": "settings.test.ts",
+      "id": "lib_rules_shopify_settings_test"
     },
     {
       "label": "themeIndex.ts",
@@ -13056,28 +12959,6 @@
       "community_name": "buildTestTheme.ts",
       "norm_label": "themeindex.test.ts",
       "id": "lib_audit_themeindex_test"
-    },
-    {
-      "label": "SHOPIFY_SETTINGS_RULES",
-      "file_type": "code",
-      "source_file": "lib/rules/shopify/settings.ts",
-      "source_location": "L461",
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "buildTestTheme.ts",
-      "norm_label": "shopify_settings_rules",
-      "id": "lib_rules_shopify_settings_shopify_settings_rules"
-    },
-    {
-      "label": "settings.test.ts",
-      "file_type": "code",
-      "source_file": "lib/rules/shopify/settings.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "buildTestTheme.ts",
-      "norm_label": "settings.test.ts",
-      "id": "lib_rules_shopify_settings_test"
     },
     {
       "label": "buildTestTheme.ts",
@@ -13276,17 +13157,6 @@
       "community_name": "insights/page.tsx",
       "norm_label": "rule_status_label",
       "id": "app_maintenance_maintenancecontent_rule_status_label"
-    },
-    {
-      "label": "PageSpeedContent.tsx",
-      "file_type": "code",
-      "source_file": "app/page-speed/PageSpeedContent.tsx",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "insights/page.tsx",
-      "norm_label": "pagespeedcontent.tsx",
-      "id": "app_page_speed_pagespeedcontent"
     },
     {
       "label": "settings/page.tsx",
@@ -13647,53 +13517,31 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
+      "community_name": "readiness/route.ts",
       "norm_label": "readiness/route.ts",
       "id": "app_api_settings_readiness_route"
     },
     {
-      "label": "readiness.ts",
+      "label": "FINDING_SEVERITIES",
       "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
+      "source_file": "models/finding.ts",
+      "source_location": "L13",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "readiness/route.ts",
+      "norm_label": "finding_severities",
+      "id": "models_finding_finding_severities"
+    },
+    {
+      "label": "readiness-config.ts",
+      "file_type": "code",
+      "source_file": "models/readiness-config.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readiness.ts",
-      "id": "lib_audit_readiness"
-    },
-    {
-      "label": "DEFAULT_READINESS_CONFIG",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.ts",
-      "source_location": "L34",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "default_readiness_config",
-      "id": "lib_audit_readiness_default_readiness_config"
-    },
-    {
-      "label": "readiness.test.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/readiness.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readiness.test.ts",
-      "id": "lib_audit_readiness_test"
-    },
-    {
-      "label": "readinessConfigStore.ts",
-      "file_type": "code",
-      "source_file": "lib/audit/readinessConfigStore.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "readiness.ts",
-      "norm_label": "readinessconfigstore.ts",
-      "id": "lib_audit_readinessconfigstore"
+      "community_name": "readiness/route.ts",
+      "norm_label": "readiness-config.ts",
+      "id": "models_readiness_config"
     },
     {
       "label": "ReadinessConfigModel",
@@ -13702,9 +13550,20 @@
       "source_location": "L20",
       "_origin": "ast",
       "community": 62,
-      "community_name": "readiness.ts",
+      "community_name": "readiness/route.ts",
       "norm_label": "readinessconfigmodel",
       "id": "models_readiness_config_readinessconfigmodel"
+    },
+    {
+      "label": "readinessConfigSchema",
+      "file_type": "code",
+      "source_file": "models/readiness-config.ts",
+      "source_location": "L10",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "readiness/route.ts",
+      "norm_label": "readinessconfigschema",
+      "id": "models_readiness_config_readinessconfigschema"
     },
     {
       "label": "ruleCriticality.ts",
@@ -14004,6 +13863,138 @@
       "id": "lib_projectstatus_status_weight"
     },
     {
+      "label": "FutureUpdatesContent.tsx",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "futureupdatescontent.tsx",
+      "id": "app_enhancements_futureupdatescontent"
+    },
+    {
+      "label": "SOURCE_LABELS",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L52",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "source_labels",
+      "id": "app_enhancements_futureupdatescontent_source_labels"
+    },
+    {
+      "label": "STATUS_LABELS",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L43",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "status_labels",
+      "id": "app_enhancements_futureupdatescontent_status_labels"
+    },
+    {
+      "label": "STATUSES",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L50",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "statuses",
+      "id": "app_enhancements_futureupdatescontent_statuses"
+    },
+    {
+      "label": "TIER_STYLES",
+      "file_type": "code",
+      "source_file": "app/enhancements/FutureUpdatesContent.tsx",
+      "source_location": "L36",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tier_styles",
+      "id": "app_enhancements_futureupdatescontent_tier_styles"
+    },
+    {
+      "label": "tiers.ts",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tiers.ts",
+      "id": "lib_enhancements_tiers"
+    },
+    {
+      "label": "ADOPTION_TIERS",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L8",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "adoption_tiers",
+      "id": "lib_enhancements_tiers_adoption_tiers"
+    },
+    {
+      "label": "tiers.test.ts",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tiers.test.ts",
+      "id": "lib_enhancements_tiers_test"
+    },
+    {
+      "label": "TIER_BLURBS",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L36",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tier_blurbs",
+      "id": "lib_enhancements_tiers_tier_blurbs"
+    },
+    {
+      "label": "TIER_LABELS",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L29",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tier_labels",
+      "id": "lib_enhancements_tiers_tier_labels"
+    },
+    {
+      "label": "TIER_ORDER",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L27",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tier_order",
+      "id": "lib_enhancements_tiers_tier_order"
+    },
+    {
+      "label": "TIER_THRESHOLDS",
+      "file_type": "code",
+      "source_file": "lib/enhancements/tiers.ts",
+      "source_location": "L19",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "FutureUpdatesContent.tsx",
+      "norm_label": "tier_thresholds",
+      "id": "lib_enhancements_tiers_tier_thresholds"
+    },
+    {
       "label": "AppShell.tsx",
       "file_type": "code",
       "source_file": "app/_components/shell/AppShell.tsx",
@@ -14031,10 +14022,10 @@
       "source_file": "app/_components/shell/navItems.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_components_shell_navitems",
       "community": 7,
       "community_name": "AppShell.tsx",
-      "norm_label": "navitems.ts"
+      "norm_label": "navitems.ts",
+      "id": "app_components_shell_navitems"
     },
     {
       "label": "NAV_ITEMS",
@@ -14042,10 +14033,10 @@
       "source_file": "app/_components/shell/navItems.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "id": "app_components_shell_navitems_nav_items",
       "community": 7,
       "community_name": "AppShell.tsx",
-      "norm_label": "nav_items"
+      "norm_label": "nav_items",
+      "id": "app_components_shell_navitems_nav_items"
     },
     {
       "label": "Sidebar.tsx",
@@ -14114,6 +14105,39 @@
       "id": "app_page_speed_page"
     },
     {
+      "label": "findingHistory.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "findinghistory.ts",
+      "id": "lib_audit_findinghistory"
+    },
+    {
+      "label": "findingHistory.test.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/findingHistory.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "findinghistory.test.ts",
+      "id": "lib_audit_findinghistory_test"
+    },
+    {
+      "label": "findingSignature.ts",
+      "file_type": "code",
+      "source_file": "lib/audit/findingSignature.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "findingHistory.ts",
+      "norm_label": "findingsignature.ts",
+      "id": "lib_audit_findingsignature"
+    },
+    {
       "label": "PresetLinksEditor.tsx",
       "file_type": "code",
       "source_file": "app/_components/PresetLinksEditor.tsx",
@@ -14141,10 +14165,43 @@
       "source_file": "app/themes/_components/AddThemeModal.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_components_addthememodal",
       "community": 72,
       "community_name": "AddThemeModal.tsx",
-      "norm_label": "addthememodal.tsx",
-      "id": "app_themes_components_addthememodal"
+      "norm_label": "addthememodal.tsx"
+    },
+    {
+      "label": "pdf.ts",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "pdf.ts",
+      "id": "lib_export_pdf"
+    },
+    {
+      "label": "SEVERITY_COLOR",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.ts",
+      "source_location": "L28",
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "severity_color",
+      "id": "lib_export_pdf_severity_color"
+    },
+    {
+      "label": "pdf.test.ts",
+      "file_type": "code",
+      "source_file": "lib/export/pdf.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "pdf.ts",
+      "norm_label": "pdf.test.ts",
+      "id": "lib_export_pdf_test"
     },
     {
       "label": "next",
@@ -15833,24 +15890,24 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -17716,9 +17773,45 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L101",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
+      "target": "lib_themes_extractreadmeversion_extractversionfromsettingsschema",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
+      "target": "lib_themes_extractreadmeversion_findreadmefile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
+      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L56",
+      "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
@@ -17730,35 +17823,11 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L63",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
       "target": "lib_theme_parser_validatethemestructure_resolvethemeroot"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L64",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
-      "target": "lib_themes_extractreadmeversion_findreadmefile"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L66",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
-      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext"
     },
     {
       "relation": "calls",
@@ -17778,7 +17847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L39",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_uploadthemeversion_uploadthemeversion",
@@ -17789,12 +17858,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L41",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion_uploadthemeversion",
-      "target": "lib_themes_uploadthemeversion_readmeerrormessage"
+      "target": "lib_themes_uploadthemeversion_versionerrormessage",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -17802,7 +17871,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L45",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_uploadthemeversion_uploadthemeversion",
@@ -17814,7 +17883,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L46",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_uploadthemeversion_uploadthemeversion",
@@ -17826,7 +17895,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L62",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_themes_uploadthemeversion_uploadthemeversion",
@@ -21425,9 +21494,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_ui_modal_modal"
+      "target": "app_components_ui_modal_modal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21437,9 +21506,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_ui_button_button"
+      "target": "app_components_ui_button_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21449,9 +21518,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_presetlinkseditor_demostorepreset"
+      "target": "app_components_presetlinkseditor_demostorepreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21461,9 +21530,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_presetlinkseditor_presetlinkseditor"
+      "target": "app_components_presetlinkseditor_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21629,9 +21698,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_demostorepreset"
+      "target": "app_components_presetlinkseditor_demostorepreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21641,9 +21710,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_presetlinkseditor"
+      "target": "app_components_presetlinkseditor_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21653,9 +21722,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button_button"
+      "target": "app_components_ui_button_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21665,9 +21734,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_card"
+      "target": "app_components_ui_card_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -21677,9 +21746,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_cardheader"
+      "target": "app_components_ui_card_cardheader",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25385,9 +25454,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_zip_extractthemezip"
+      "target": "lib_theme_parser_zip_extractthemezip",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25397,9 +25466,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_validatethemestructure_invalidthemeerror"
+      "target": "lib_theme_parser_validatethemestructure_invalidthemeerror",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25409,9 +25478,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_validatethemestructure_resolvethemeroot"
+      "target": "lib_theme_parser_validatethemestructure_resolvethemeroot",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25421,9 +25490,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_zip_themeziperror"
+      "target": "lib_theme_parser_zip_themeziperror",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25433,9 +25502,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion_test",
-      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext"
+      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25445,9 +25514,21 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion_test",
-      "target": "lib_themes_extractreadmeversion_findreadmefile"
+      "target": "lib_themes_extractreadmeversion_extractversionfromsettingsschema",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion_test",
+      "target": "lib_themes_extractreadmeversion_findreadmefile",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25481,9 +25562,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "models_theme_version_themeversion"
+      "target": "models_theme_version_themeversion",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25493,9 +25574,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "models_theme_zip_themezip"
+      "target": "models_theme_zip_themezip",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25505,9 +25586,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_extractreadmeversion_extractthemeversionfromzip"
+      "target": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25517,9 +25598,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_compareversions_parseversionforsort"
+      "target": "lib_themes_compareversions_parseversionforsort",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25529,9 +25610,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_zipstorage_storezipbuffer"
+      "target": "lib_themes_zipstorage_storezipbuffer",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -25541,9 +25622,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_checksum_sha256"
+      "target": "lib_themes_checksum_sha256",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -28313,9 +28394,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_ui_modal"
+      "target": "app_components_ui_modal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -28325,9 +28406,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_ui_button"
+      "target": "app_components_ui_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -28337,9 +28418,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_components_presetlinkseditor"
+      "target": "app_components_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -28457,9 +28538,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor"
+      "target": "app_components_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -28469,9 +28550,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button"
+      "target": "app_components_ui_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -28481,9 +28562,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card"
+      "target": "app_components_ui_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30917,9 +30998,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_validatethemestructure"
+      "target": "lib_theme_parser_validatethemestructure",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30929,9 +31010,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_theme_parser_zip"
+      "target": "lib_theme_parser_zip",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30941,9 +31022,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion_test",
-      "target": "lib_themes_extractreadmeversion"
+      "target": "lib_themes_extractreadmeversion",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30977,9 +31058,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "models_theme_version"
+      "target": "models_theme_version",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30989,9 +31070,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "models_theme_zip"
+      "target": "models_theme_zip",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -31001,9 +31082,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_extractreadmeversion"
+      "target": "lib_themes_extractreadmeversion",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -31013,9 +31094,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_compareversions"
+      "target": "lib_themes_compareversions",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -31025,9 +31106,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_zipstorage"
+      "target": "lib_themes_zipstorage",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -31037,9 +31118,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_checksum"
+      "target": "lib_themes_checksum",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -32612,9 +32693,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_shell_navitems",
-      "target": "app_components_shell_navitems_nav_items",
-      "confidence_score": 1.0
+      "target": "app_components_shell_navitems_nav_items"
     },
     {
       "relation": "contains",
@@ -33448,9 +33529,9 @@
       "source_location": "L58",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_themes_components_addthememodal_addthememodal"
+      "target": "app_themes_components_addthememodal_addthememodal",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33459,9 +33540,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_components_addthememodal",
-      "target": "app_themes_components_addthememodal_dropzone"
+      "target": "app_themes_components_addthememodal_dropzone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33624,31 +33705,31 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_props"
+      "target": "app_themes_themeid_components_overviewpanel_props",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L140",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_runauditform"
+      "target": "app_themes_themeid_components_overviewpanel_runauditform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L210",
+      "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33657,9 +33738,9 @@
       "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33668,9 +33749,9 @@
       "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33679,9 +33760,9 @@
       "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_presetssection"
+      "target": "app_themes_themeid_components_overviewpanel_presetssection",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33690,9 +33771,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_checktotals"
+      "target": "app_themes_themeid_components_overviewpanel_checktotals",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33701,9 +33782,9 @@
       "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "target": "app_themes_themeid_components_overviewpanel_uploadversionform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39759,34 +39840,67 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_themes_extractreadmeversion_findreadmefile"
+      "target": "lib_themes_extractreadmeversion_findreadmefile",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L37",
+      "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext"
+      "target": "lib_themes_extractreadmeversion_version_value_re",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/themes/extractReadmeVersion.ts",
-      "source_location": "L53",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_themes_extractreadmeversion_extractthemeversionfromzip"
+      "target": "lib_themes_extractreadmeversion_version_line_re",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion",
+      "target": "lib_themes_extractreadmeversion_extractversionfromreadmetext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion",
+      "target": "lib_themes_extractreadmeversion_settings_schema_relative_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion",
+      "target": "lib_themes_extractreadmeversion_extractversionfromsettingsschema",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39795,9 +39909,20 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion",
-      "target": "lib_themes_extractreadmeversion_readmeversionresult"
+      "target": "lib_themes_extractreadmeversion_themeversionresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.ts",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion",
+      "target": "lib_themes_extractreadmeversion_extractthemeversionfromzip",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39806,9 +39931,20 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_extractreadmeversion_test",
-      "target": "lib_themes_extractreadmeversion_test_makethemedir"
+      "target": "lib_themes_extractreadmeversion_test_makethemedir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/themes/extractReadmeVersion.test.ts",
+      "source_location": "L84",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_themes_extractreadmeversion_test",
+      "target": "lib_themes_extractreadmeversion_test_settingsschema",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39861,20 +39997,20 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_uploadthemeversion_readmeerrormessage"
+      "target": "lib_themes_uploadthemeversion_versionerrormessage",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/themes/uploadThemeVersion.ts",
-      "source_location": "L36",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_uploadthemeversion_uploadthemeversion"
+      "target": "lib_themes_uploadthemeversion_uploadthemeversion",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39883,9 +40019,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_themes_uploadthemeversion",
-      "target": "lib_themes_uploadthemeversion_uploadversionresult"
+      "target": "lib_themes_uploadthemeversion_uploadversionresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -42185,5 +42321,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "67ef8cfd449cc9fd7cec691095d03e29880ddebf"
+  "built_at_commit": "99f001db3f0e8324de3f461881b40e901c495f6d"
 }
