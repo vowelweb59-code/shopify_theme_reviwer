@@ -179,18 +179,26 @@ export async function executeAuditRun(params: ExecuteAuditRunParams): Promise<Ex
     let liveCheckErrors: { label: string; url: string; error: string }[] = [];
     let pageSpeedMetrics: PageSpeedMetric[] = [];
     if (demoStorePresets.length > 0) {
-      const liveCheckStart = Date.now();
-      const liveResult = await runLiveChecksForPresets(demoStorePresets);
-      liveFindings = liveResult.findings;
-      liveCheckErrors = liveResult.errors;
-      timer.record("liveChecks", Date.now() - liveCheckStart);
-
-      const pageSpeedStart = Date.now();
-      const pageSpeedResult = await runPageSpeedChecksForPresets(demoStorePresets);
-      liveFindings = [...liveFindings, ...pageSpeedResult.findings];
-      liveCheckErrors = [...liveCheckErrors, ...pageSpeedResult.errors];
+      // Independent of each other (one drives its own Playwright browser
+      // for contrast/schema checks, the other drives PSI requests plus its
+      // own Playwright fallback) — running them concurrently rather than
+      // one after the other roughly halves the live-check portion of a
+      // Run Audit on top of each phase's own internal per-preset
+      // concurrency (see liveCheck.ts/pageSpeed.ts).
+      const phaseStart = Date.now();
+      const [liveResult, pageSpeedResult] = await Promise.all([
+        runLiveChecksForPresets(demoStorePresets).then((r) => {
+          timer.record("liveChecks", Date.now() - phaseStart);
+          return r;
+        }),
+        runPageSpeedChecksForPresets(demoStorePresets).then((r) => {
+          timer.record("pageSpeedChecks", Date.now() - phaseStart);
+          return r;
+        }),
+      ]);
+      liveFindings = [...liveResult.findings, ...pageSpeedResult.findings];
+      liveCheckErrors = [...liveResult.errors, ...pageSpeedResult.errors];
       pageSpeedMetrics = pageSpeedResult.metrics;
-      timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);
     }
 
     const { mostRecentPriorFindings, allPriorFindings } = await loadThemeFindingHistory(theme._id, auditRun._id);

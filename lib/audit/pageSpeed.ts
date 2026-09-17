@@ -552,6 +552,17 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
     presets.map(async (preset, index) => {
       const isBaseline = index === 0;
       const homeCategories = isBaseline ? ["performance", "accessibility"] : ["performance"];
+
+      // Kicked off immediately rather than after the mobile home-page read
+      // below — URL discovery is a Playwright navigation with no PSI
+      // dependency, and the desktop home-page read doesn't depend on the
+      // mobile one either. Overlapping them shortens the baseline preset's
+      // own critical path instead of chaining three independent requests.
+      const urlsPromise = isBaseline ? discoverPageUrls(preset.url) : null;
+      const desktopHomePromise = isBaseline
+        ? fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"])
+        : null;
+
       const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
       if (!homeLhr) {
         needsFallback.push(preset);
@@ -574,15 +585,31 @@ export async function runPageSpeedChecksForPresets(presets: PresetLink[]): Promi
       if (!isBaseline) return;
 
       const matrix: PageSpeedMetric[] = [homeMetric];
-      const urls = await discoverPageUrls(preset.url);
+
+      const desktopHomeLhr = await desktopHomePromise;
+      if (desktopHomeLhr) {
+        const m: PageSpeedMetric = {
+          label: preset.label,
+          url: preset.url,
+          pageType: "home",
+          strategy: "desktop",
+          source: "psi",
+          ...extractCoreMetrics(desktopHomeLhr),
+        };
+        matrix.push(m);
+        metrics.push(m);
+      } else {
+        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+      }
+
+      const urls = await urlsPromise!;
       const remainingPages: { pageType: PageType; url: string }[] = [
         { pageType: "collection", url: urls.collection },
         ...(urls.product ? [{ pageType: "product" as const, url: urls.product }] : []),
       ];
-      const requests: { pageType: PageType; url: string; strategy: PsiStrategy }[] = [
-        { pageType: "home", url: preset.url, strategy: "desktop" },
-        ...remainingPages.flatMap((p) => (["mobile", "desktop"] as const).map((strategy) => ({ ...p, strategy }))),
-      ];
+      const requests: { pageType: PageType; url: string; strategy: PsiStrategy }[] = remainingPages.flatMap((p) =>
+        (["mobile", "desktop"] as const).map((strategy) => ({ ...p, strategy }))
+      );
 
       const results = await Promise.all(
         requests.map(async (r) => ({ ...r, lhr: await fetchPsiLighthouseResult(r.url, r.strategy, ["performance", "accessibility"]) }))
