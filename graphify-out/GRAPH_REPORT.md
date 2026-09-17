@@ -1,21 +1,21 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-17)
 
 ## Corpus Check
-- 238 files · ~1,558,774 words
+- 239 files · ~1,559,033 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1227 nodes · 2416 edges · 77 communities (69 shown, 8 thin omitted)
+- 1229 nodes · 2422 edges · 77 communities (68 shown, 9 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.54)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `65e65809`
+- Built from commit: `972ab908`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- deriveChecksForAuditRun.ts
+- AllChecksList.tsx
 - devDependencies
 - dependencies
 - compilerOptions
@@ -32,7 +32,7 @@
 - next.config.ts
 - postcss.config.mjs
 - parseJsonFile.ts
-- requirement.ts
+- finding.ts
 - extractReadmeVersion.ts
 - bugs/index.ts
 - connectToDatabase
@@ -41,16 +41,16 @@
 - internal/index.ts
 - Shopify Theme Auditor
 - themes/route.ts
-- finding.ts
-- diffFindings.ts
-- registry.ts
+- theme.ts
+- [id]/export/route.ts
+- runRules.ts
 - technical-aeo/index.ts
 - extractLiquidStructure.ts
 - theme-parser/index.ts
 - oauth.ts
 - executeAuditRun.ts
 - technical-seo/index.ts
-- [id]/export/route.ts
+- diffFindings.ts
 - liquidJson.ts
 - enhancementSheetFormatting.ts
 - scripts
@@ -68,19 +68,19 @@
 - buildTestTheme.ts
 - proxy.ts
 - ReportContent.tsx
-- uploadThemeVersion.ts
+- seed-rules.ts
 - categoryDashboard.tsx
-- settings/page.tsx
+- insights/page.tsx
 - templateComposition.ts
 - PageContainer.tsx
 - audit-run.ts
-- run/route.ts
+- detectEnhancements.ts
 - enhancementReport.tsx
 - shopify/index.ts
 - extractCssStructure.ts
 - projectStatus.ts
-- buildLineIndex
-- audit-settings.ts
+- Stopwatch
+- PageSpeedContent.tsx
 - AddThemeModal.tsx
 - next
 - react
@@ -107,18 +107,18 @@
 - `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
   scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/enhancements/route.ts → lib/db/connect.ts
-- `PATCH()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/enhancements/route.ts → lib/db/connect.ts
+  app/api/page-speed/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/reports/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (77 total, 8 thin omitted)
+## Communities (77 total, 9 thin omitted)
 
-### Community 0 - "deriveChecksForAuditRun.ts"
-Cohesion: 0.18
-Nodes (11): CheckStatusValue, STATUS_CONFIG, StatusBadge(), AllChecksList(), matchesSearch(), STATUS_FILTERS, CategoryChecks, CheckEvidence (+3 more)
+### Community 0 - "AllChecksList.tsx"
+Cohesion: 0.27
+Nodes (7): CheckStatusValue, STATUS_CONFIG, StatusBadge(), AllChecksList(), matchesSearch(), STATUS_FILTERS, CategoryChecks
 
 ### Community 1 - "devDependencies"
 Cohesion: 0.09
@@ -133,48 +133,48 @@ Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
 ### Community 4 - "types.ts"
-Cohesion: 0.13
-Nodes (23): ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, HtmlStructure, StackFrame, TEXT_CAPTURE_TAGS, ParsedAriaReference, ParsedButton, ParsedElementId (+15 more)
+Cohesion: 0.12
+Nodes (24): ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, HtmlStructure, StackFrame, TEXT_CAPTURE_TAGS, ParsedAriaReference, ParsedButton, ParsedElementId (+16 more)
 
 ### Community 5 - "[id]/export/google-sheet/route.ts"
-Cohesion: 0.30
-Nodes (16): POST(), POST(), getAuthorizedClient(), columnLetter(), createGoogleSheet(), getSpreadsheetSheetsList(), GoogleSheetsNotConnectedError, GoogleSheetSpreadsheetNotFoundError (+8 more)
+Cohesion: 0.28
+Nodes (17): POST(), POST(), getAuthorizedClient(), columnLetter(), createGoogleSheet(), getSpreadsheetSheetsList(), GoogleSheetsNotConnectedError, GoogleSheetSpreadsheetNotFoundError (+9 more)
 
 ### Community 6 - "liveCheck.ts"
 Cohesion: 0.06
-Nodes (47): contrastRatio(), parseColorToRgb(), relativeLuminance(), srgbChannelToLinear(), checkResponsiveReachability(), collectFocusIndicatorSamples(), comparePresets(), contrastFindings() (+39 more)
+Nodes (48): contrastRatio(), parseColorToRgb(), relativeLuminance(), srgbChannelToLinear(), checkResponsiveReachability(), collectFocusIndicatorSamples(), comparePresets(), contrastFindings() (+40 more)
 
 ### Community 7 - "AppShell.tsx"
 Cohesion: 0.21
 Nodes (9): AppShell(), isActive(), MobileNav(), NAV_ITEMS, isActive(), Sidebar(), geistMono, geistSans (+1 more)
 
 ### Community 9 - "ThemeDetailTabs.tsx"
-Cohesion: 0.28
-Nodes (5): BreadcrumbItem, Breadcrumbs(), CheckTotals, ThemeDetail, ThemeDetailTabs()
+Cohesion: 0.19
+Nodes (9): BreadcrumbItem, Breadcrumbs(), AuditHistoryRow, AuditHistoryTable(), formatDate(), Row, CheckTotals, ThemeDetail (+1 more)
 
 ### Community 10 - "settings.ts"
-Cohesion: 0.11
-Nodes (16): articleFieldsRule, blogFieldsRule, collectionFieldsRule, colorSystemRule, contactPageRule, countColorSettings(), missingLabelRule, NON_LABELABLE_SETTING_TYPES (+8 more)
+Cohesion: 0.09
+Nodes (17): articleFieldsRule, blogFieldsRule, collectionFieldsRule, colorSystemRule, contactPageRule, countColorSettings(), missingLabelRule, NON_LABELABLE_SETTING_TYPES (+9 more)
 
 ### Community 11 - "findings.tsx"
 Cohesion: 0.09
 Nodes (21): CATEGORIES, EngineVersions, FindingsTable(), formatMs(), PageSpeedPanel(), READINESS_LABEL, READINESS_STYLES, ReadinessStatus (+13 more)
 
 ### Community 12 - "themes/page.tsx"
-Cohesion: 0.15
-Nodes (17): EmptyState(), ResponsiveTable(), TableColumn, Dashboard(), DashboardData, formatDate(), healthTone(), CheckTotals (+9 more)
+Cohesion: 0.19
+Nodes (13): EmptyState(), ResponsiveTable(), TableColumn, Dashboard(), DashboardData, formatDate(), healthTone(), CheckTotals (+5 more)
 
 ### Community 13 - "Button.tsx"
 Cohesion: 0.20
 Nodes (10): Button, ButtonSize, ButtonVariant, SIZE_CLASSES, VARIANT_CLASSES, AuditTotals, formatDate(), VersionRow (+2 more)
 
 ### Community 17 - "parseJsonFile.ts"
-Cohesion: 0.28
-Nodes (11): extractSettingKeys(), extractTemplateSectionReferences(), findLine(), flattenLocaleKeys(), isLocaleFilePath(), isSectionGroupPath(), isSettingsSchemaPath(), isTemplateJsonPath() (+3 more)
+Cohesion: 0.17
+Nodes (17): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports(), buildLineIndex(), extractSettingKeys(), extractTemplateSectionReferences(), findLine() (+9 more)
 
-### Community 19 - "requirement.ts"
-Cohesion: 0.09
-Nodes (27): GET(), GET(), RequirementImplementationType, computeRuleCriticality(), RuleCriticality, ruleHasTestCoverage(), FINDING_CATEGORIES, Requirement (+19 more)
+### Community 19 - "finding.ts"
+Cohesion: 0.08
+Nodes (31): GET(), GET(), RequirementImplementationType, GET(), GET(), PATCH(), cascadeDeleteFindings(), FINDING_CATEGORIES (+23 more)
 
 ### Community 20 - "extractReadmeVersion.ts"
 Cohesion: 0.11
@@ -185,16 +185,16 @@ Cohesion: 0.14
 Nodes (7): BUG_RULES, duplicateAssetLoadingRule, duplicateSchemaIdRule, largeInlinePayloadRule, missingScopedSettingRule, validJsonLdRule, validSchemaBlockRule
 
 ### Community 22 - "connectToDatabase"
-Cohesion: 0.19
-Nodes (17): GET(), GET(), PATCH(), GET(), GET(), GET(), GET(), invalidIdResponse() (+9 more)
+Cohesion: 0.27
+Nodes (11): GET(), GET(), PATCH(), CheckStatus, GET(), invalidIdResponse(), isValidObjectId(), connectToDatabase() (+3 more)
 
 ### Community 23 - "cross-file/index.ts"
 Cohesion: 0.08
 Nodes (18): brokenAriaReferenceRule, composedArticleSchemaRule, composedH1MissingRule, composedMultipleH1Rule, composedProductSchemaRule, composedSkippedHeadingRule, CROSS_FILE_RULES, duplicateLocaleKeyRule (+10 more)
 
 ### Community 24 - "pageSpeed.ts"
-Cohesion: 0.06
-Nodes (41): FutureUpdatesContent(), CodeReviewContent(), ImplementationType, Requirement, RequirementsReview(), RULE_STATUS_LABELS, RULE_STATUS_STYLES, SOURCE_TYPE_LABELS (+33 more)
+Cohesion: 0.12
+Nodes (25): PresetLiveCheckError, averageDefined(), collectPlaywrightMetrics(), discoverPageUrls(), extractCoreMetrics(), extractOpportunityFindings(), FallbackMetrics, fallbackThresholdFindings() (+17 more)
 
 ### Community 25 - "internal/index.ts"
 Cohesion: 0.16
@@ -205,20 +205,20 @@ Cohesion: 0.15
 Nodes (12): Code graph, Database, Folder structure, Future updates (enhancement points), Google Sheets export, Live checks against real demo stores, Native capabilities (no app required), Per-theme detection (+4 more)
 
 ### Community 28 - "themes/route.ts"
-Cohesion: 0.25
-Nodes (13): GET(), GET(), POST(), GET(), PATCH(), compareVersions(), ParsedVersion, parseVersionForSort() (+5 more)
+Cohesion: 0.17
+Nodes (17): GET(), GET(), POST(), GET(), PATCH(), compareVersions(), ParsedVersion, parseVersionForSort() (+9 more)
 
-### Community 29 - "finding.ts"
+### Community 29 - "theme.ts"
+Cohesion: 0.10
+Nodes (26): POST(), POST(), sha256(), localUploadSource(), ThemeSource, uploadThemeVersion(), UploadVersionResult, versionErrorMessage() (+18 more)
+
+### Community 30 - "[id]/export/route.ts"
 Cohesion: 0.13
-Nodes (19): POST(), localUploadSource(), ThemeSource, cascadeDeleteFindings(), FINDING_HISTORICAL_STATES, FINDING_LAYERS, FINDING_STATUSES, FindingDoc (+11 more)
+Nodes (23): CONTENT_TYPES, Format, FORMATS, GET(), GET(), computeCoverage(), computeCoverageByCategory(), buildEnhancementReportForRun() (+15 more)
 
-### Community 30 - "diffFindings.ts"
-Cohesion: 0.15
-Nodes (18): GET(), GET(), toPlainRecord(), attributeNewFindings(), CategoryDiffSummary, computeFindingsDiff(), countNewOrEscalatedHighRiskFindings(), DiffStatus (+10 more)
-
-### Community 31 - "registry.ts"
-Cohesion: 0.15
-Nodes (17): CheckStatus, GET(), loadEnabledRules(), runAuditRules(), FindingCategory, dedupeKey(), EMPTY_SUMMARY(), ExecutedFinding (+9 more)
+### Community 31 - "runRules.ts"
+Cohesion: 0.18
+Nodes (15): loadEnabledRules(), runAuditRules(), FindingCategory, dedupeKey(), EMPTY_SUMMARY(), ExecutedFinding, runRules(), RunRulesResult (+7 more)
 
 ### Community 32 - "technical-aeo/index.ts"
 Cohesion: 0.17
@@ -229,24 +229,24 @@ Cohesion: 0.12
 Nodes (22): DEPRECATED_FILTER_NAMES, DEPRECATED_LIQUID_REFERENCES, DEPRECATED_OBJECT_NAMES, DEPRECATED_TAG_NAMES, DeprecatedEntry, blank(), classifyStringConfidence(), extractLiquidStructure() (+14 more)
 
 ### Community 34 - "theme-parser/index.ts"
-Cohesion: 0.21
-Nodes (14): extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory(), parseThemeZip(), ThemeParseResult, ThemeParseTiming (+6 more)
+Cohesion: 0.23
+Nodes (13): extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory(), parseThemeZip(), ThemeParseTiming, emptyMetaTags() (+5 more)
 
 ### Community 35 - "oauth.ts"
 Cohesion: 0.17
 Nodes (14): GET(), POST(), GET(), GET(), createOAuthClient(), disconnectGoogle(), exchangeCodeForTokens(), getGoogleAuthUrl() (+6 more)
 
 ### Community 36 - "executeAuditRun.ts"
-Cohesion: 0.08
-Nodes (29): detectEnhancementPoints(), EnhancementDetectionResult, EnhancementMatch, firstMatchLine(), AuditDiagnostics, computeAuditDiagnostics(), ENHANCEMENT_DETECTORS, EnhancementDetector (+21 more)
+Cohesion: 0.17
+Nodes (17): parseDemoStorePresets(), POST(), AuditDiagnostics, computeAuditDiagnostics(), captureRuleVersionSnapshot(), detectEnhancementsForRun(), executeAuditRun(), ExecuteAuditRunParams (+9 more)
 
 ### Community 37 - "technical-seo/index.ts"
 Cohesion: 0.15
 Nodes (12): ComposedHeading, ComposedHeadingIssue, findMultipleH1(), findMultipleH1Across(), findSkippedHeadingLevels(), findSkippedHeadingLevelsAcross(), HeadingIssue, imageDimensionsRule (+4 more)
 
-### Community 38 - "[id]/export/route.ts"
+### Community 38 - "diffFindings.ts"
 Cohesion: 0.06
-Nodes (41): CONTENT_TYPES, Format, FORMATS, GET(), GET(), PATCH(), computeCoverage(), computeCoverageByCategory() (+33 more)
+Nodes (44): GET(), GET(), toPlainRecord(), CoverageResult, attributeNewFindings(), CategoryDiffSummary, computeFindingsDiff(), countNewOrEscalatedHighRiskFindings() (+36 more)
 
 ### Community 39 - "liquidJson.ts"
 Cohesion: 0.60
@@ -262,7 +262,7 @@ Nodes (12): scripts, build, dev, harvest:trends, lint, seed:enhancements, seed:n
 
 ### Community 43 - "enhancement-point.ts"
 Cohesion: 0.07
-Nodes (36): GET(), PATCH(), EnhancementPoint, Example, SOURCE_LABELS, STATUS_LABELS, STATUSES, TIER_STYLES (+28 more)
+Nodes (35): GET(), PATCH(), EnhancementPoint, Example, SOURCE_LABELS, STATUS_LABELS, STATUSES, TIER_STYLES (+27 more)
 
 ### Community 44 - "OverviewPanel.tsx"
 Cohesion: 0.23
@@ -297,12 +297,12 @@ Cohesion: 0.12
 Nodes (16): ATTRIBUTION_LABEL, CategoryDiffSummary, CategoryDiffTable(), DiffFindingDetail, DiffFindingRow, DiffFindingsView(), DiffSummaryBar(), FindingsDiffResult (+8 more)
 
 ### Community 53 - "rules.ts"
-Cohesion: 0.14
-Nodes (11): Rule, RuleContext, RuleFinding, Severity, imageDimensionsRule, PERFORMANCE_RULES, renderBlockingScriptRule, CHECKS (+3 more)
+Cohesion: 0.18
+Nodes (10): Rule, RuleContext, RuleFinding, Severity, imageDimensionsRule, PERFORMANCE_RULES, renderBlockingScriptRule, CHECKS (+2 more)
 
 ### Community 54 - "buildTestTheme.ts"
-Cohesion: 0.38
-Nodes (8): basenameNoExt(), buildThemeIndex(), getPath(), isExternalReference(), localeKeyExists(), resolveSchemaString(), ThemeIndex, buildTestTheme()
+Cohesion: 0.33
+Nodes (9): basenameNoExt(), buildThemeIndex(), getPath(), isExternalReference(), localeKeyExists(), resolveSchemaString(), ThemeIndex, buildTestTheme() (+1 more)
 
 ### Community 55 - "proxy.ts"
 Cohesion: 0.60
@@ -312,17 +312,17 @@ Nodes (4): config, proxy(), timingSafeStringEqual(), UNAUTHORIZED()
 Cohesion: 0.12
 Nodes (16): AuditDiagnostics, CoverageSummary, CoverageSummaryBar(), DiagnosticsNote(), EngineVersionsNote(), FindingStatus, FindingSummary, ReadinessPanel() (+8 more)
 
-### Community 57 - "uploadThemeVersion.ts"
-Cohesion: 0.28
-Nodes (9): POST(), sha256(), uploadThemeVersion(), UploadVersionResult, versionErrorMessage(), deleteZip(), getBucket(), readZipBuffer() (+1 more)
+### Community 57 - "seed-rules.ts"
+Cohesion: 0.29
+Nodes (7): computeRuleCriticality(), RuleCriticality, ruleHasTestCoverage(), collectTestFileContents(), extractLiveCheckRequirementIds(), LIVE_CHECK_FILES, main()
 
 ### Community 58 - "categoryDashboard.tsx"
 Cohesion: 0.43
 Nodes (6): CATEGORY_ORDER, CategoryDashboard(), categoryFindings(), countBySeverity(), countByStatus(), FindingRow
 
-### Community 59 - "settings/page.tsx"
-Cohesion: 0.14
-Nodes (12): Tab, TabbedPageClient(), MaintenanceContent(), MaintenanceSummary, MatrixRow, RULE_STATUS_LABEL, GoogleSheetsPanel(), GoogleStatus (+4 more)
+### Community 59 - "insights/page.tsx"
+Cohesion: 0.08
+Nodes (21): Tab, TabbedPageClient(), FutureUpdatesContent(), CodeReviewContent(), ImplementationType, Requirement, RequirementsReview(), RULE_STATUS_LABELS (+13 more)
 
 ### Community 60 - "templateComposition.ts"
 Cohesion: 0.44
@@ -333,12 +333,12 @@ Cohesion: 0.17
 Nodes (10): AvailableFeaturesPage(), FeatureRow, formatDate(), STATUS_CLASS, STATUS_LABEL, ThemeFeatures, PageContainer(), AuditRunRow (+2 more)
 
 ### Community 62 - "audit-run.ts"
-Cohesion: 0.15
-Nodes (12): AUDIT_RUN_STATUSES, AuditRunDoc, auditRunSchema, auditRunSummarySchema, demoStorePresetSchema, diagnosticsSchema, enhancementDetectionSchema, fileErrorSchema (+4 more)
+Cohesion: 0.10
+Nodes (20): GET(), GET(), GET(), AVAILABLE_FEATURES, AvailableFeature, featureStatus, AUDIT_RUN_STATUSES, AuditRun (+12 more)
 
-### Community 63 - "run/route.ts"
-Cohesion: 0.29
-Nodes (7): parseDemoStorePresets(), POST(), GET(), AVAILABLE_FEATURES, AvailableFeature, featureStatus, Theme
+### Community 63 - "detectEnhancements.ts"
+Cohesion: 0.36
+Nodes (6): detectEnhancementPoints(), EnhancementDetectionResult, EnhancementMatch, firstMatchLine(), ENHANCEMENT_DETECTORS, EnhancementDetector
 
 ### Community 64 - "enhancementReport.tsx"
 Cohesion: 0.33
@@ -349,42 +349,38 @@ Cohesion: 0.16
 Nodes (11): contentForHeaderRule, hardcodedStorefrontTextRule, hardcodedTextConfidence(), isLiquidOutput(), KNOWN_TRANSLATABLE_PHRASES, normalizeCandidateText(), noRobotsTemplateRule, noSassRule (+3 more)
 
 ### Community 66 - "extractCssStructure.ts"
-Cohesion: 0.29
-Nodes (6): CSS_NAMED_COLORS, looksLikeColorValue(), ANIMATION_PROPERTIES, COLOR_PROPERTIES, ParsedCssInfo, ParsedParseError
+Cohesion: 0.33
+Nodes (5): CSS_NAMED_COLORS, looksLikeColorValue(), ANIMATION_PROPERTIES, COLOR_PROPERTIES, ParsedCssInfo
 
 ### Community 68 - "projectStatus.ts"
 Cohesion: 0.33
 Nodes (4): PhaseEntry, PhaseStatus, PROJECT_PHASES, STATUS_WEIGHT
 
-### Community 69 - "buildLineIndex"
-Cohesion: 0.31
-Nodes (6): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports(), buildLineIndex(), ParsedJsImport
-
-### Community 71 - "audit-settings.ts"
-Cohesion: 0.50
-Nodes (3): AuditSettings, AuditSettingsDoc, auditSettingsSchema
+### Community 71 - "PageSpeedContent.tsx"
+Cohesion: 0.47
+Nodes (5): formatDate(), formatScore(), PageSpeedContent(), ThemePageSpeedRow, PageSpeedMetric
 
 ### Community 72 - "AddThemeModal.tsx"
 Cohesion: 0.36
 Nodes (4): DemoStorePreset, PresetLinksEditor(), Modal(), AddThemeModal()
 
 ## Knowledge Gaps
-- **427 isolated node(s):** `ThemeVersionResult`, `VERSION_VALUE_RE`, `VERSION_LINE_RE`, `SETTINGS_SCHEMA_RELATIVE_PATH`, `CheckEvidence` (+422 more)
+- **427 isolated node(s):** `DemoStorePreset`, `CheckEvidence`, `CheckStatus`, `SchemaNameContext`, `SchemaSettingsContext` (+422 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `connectToDatabase()` connect `connectToDatabase` to `oauth.ts`, `[id]/export/google-sheet/route.ts`, `[id]/export/route.ts`, `enhancement-point.ts`, `registry.ts`, `requirement.ts`, `uploadThemeVersion.ts`, `themes/route.ts`, `finding.ts`, `diffFindings.ts`, `run/route.ts`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+- **Why does `connectToDatabase()` connect `connectToDatabase` to `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `diffFindings.ts`, `enhancement-point.ts`, `finding.ts`, `[id]/export/route.ts`, `seed-rules.ts`, `themes/route.ts`, `theme.ts`, `audit-run.ts`?**
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `dependencies` to `next`, `react`, `@radix-ui/react-dialog`, `@radix-ui/react-dropdown-menu`, `package.json`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
-- **Why does `FINDING_CATEGORIES` connect `requirement.ts` to `deriveChecksForAuditRun.ts`, `sheetRows.ts`, `rules.ts`, `connectToDatabase`, `finding.ts`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **Why does `devDependencies` connect `devDependencies` to `package.json`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `ThemeVersionResult`, `VERSION_VALUE_RE`, `VERSION_LINE_RE` to the rest of the system?**
+- **What connects `DemoStorePreset`, `CheckEvidence`, `CheckStatus` to the rest of the system?**
   _427 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
