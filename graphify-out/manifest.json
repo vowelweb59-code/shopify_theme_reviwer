@@ -950,13 +950,13 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.test.ts": {
-    "mtime": 1789555003.1312861,
-    "ast_hash": "02a2f1ac745af6997811cf8c336820c8",
+    "mtime": 1789640036.0244234,
+    "ast_hash": "2bc4ae6327d3f69f77dfcad1686dc6d2",
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789637665.1215591,
-    "ast_hash": "b32bd44987a9fd11edba2bf93a7affd7",
+    "mtime": 1789640022.5623944,
+    "ast_hash": "6f7ecfe16c698ad3d9347fc320a85e60",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
