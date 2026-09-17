@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-17)
 
 ## Corpus Check
-- 242 files · ~1,561,789 words
+- 242 files · ~1,561,958 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `51ef407c`
+- Built from commit: `dce46bbf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -93,8 +93,8 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `connectToDatabase()` - 69 edges
-2. `isValidObjectId()` - 18 edges
-3. `executeAuditRun()` - 18 edges
+2. `executeAuditRun()` - 18 edges
+3. `isValidObjectId()` - 18 edges
 4. `buildTestTheme()` - 18 edges
 5. `invalidIdResponse()` - 17 edges
 6. `compilerOptions` - 16 edges
@@ -393,22 +393,22 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **428 isolated node(s):** `LiveCheckResult`, `MultiPresetLiveCheckResult`, `MEDIUM_VIEWPORT`, `ContrastSample`, `ImageSample` (+423 more)
+- **428 isolated node(s):** `ExecuteAuditRunParams`, `ExecuteAuditRunResult`, `PageType`, `PsiStrategy`, `PageSpeedCheckResult` (+423 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `connectToDatabase()` connect `connectToDatabase` to `deriveChecksForAuditRun.ts`, `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `registry.ts`, `finding.ts`, `[id]/export/route.ts`, `connect.ts`, `readiness/route.ts`, `audit-run.ts`, `theme.ts`, `computeScoreboard.ts`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `dependencies` to `htmlparser2`, `next`, `@radix-ui/react-dropdown-menu`, `package.json`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **Why does `connectToDatabase()` connect `connectToDatabase` to `deriveChecksForAuditRun.ts`, `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `registry.ts`, `finding.ts`, `[id]/export/route.ts`, `connect.ts`, `readiness/route.ts`, `audit-run.ts`, `theme.ts`, `computeScoreboard.ts`?**
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `ReportContent.tsx` to `executeAuditRun.ts`, `findings.tsx`, `pageSpeed.ts`, `insights/page.tsx`, `computeScoreboard.ts`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `LiveCheckResult`, `MultiPresetLiveCheckResult`, `MEDIUM_VIEWPORT` to the rest of the system?**
+- **What connects `ExecuteAuditRunParams`, `ExecuteAuditRunResult`, `PageType` to the rest of the system?**
   _428 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._

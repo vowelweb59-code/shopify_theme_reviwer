@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789643016.2299416,
-    "ast_hash": "bae55b9d9f6b6d056533783cb33b499d",
+    "mtime": 1789644483.9919662,
+    "ast_hash": "31edb80aa7980136f6f6fa21970452e0",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1090,8 +1090,8 @@
     "semantic_hash": ""
   },
   "lib/audit/executeAuditRun.ts": {
-    "mtime": 1789621617.7338486,
-    "ast_hash": "67db8f0fa050f4f324ad5e410a44549b",
+    "mtime": 1789644254.05726,
+    "ast_hash": "2b86fe9bc8909bbc5d97e4cd39baabd9",
     "semantic_hash": ""
   },
   "lib/themes/checksum.ts": {
