@@ -47,6 +47,39 @@ export function extractVersionFromReadmeText(text: string): { version: string } 
 
 const SETTINGS_SCHEMA_RELATIVE_PATH = path.join("config", "settings_schema.json");
 
+// Real-world theme editors (and hand-edited settings_schema.json files) commonly
+// leave a trailing comma before a closing `}`/`]` — invalid strict JSON, but
+// tolerated by Shopify's own admin. Strips only commas that precede a closing
+// bracket, and tracks string-literal state (respecting \" escapes) so a comma
+// that happens to appear inside a string value is never touched.
+function stripTrailingCommas(text: string): string {
+  let result = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      result += ch;
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      result += ch;
+      continue;
+    }
+    if (ch === ",") {
+      let j = i + 1;
+      while (j < text.length && /\s/.test(text[j])) j++;
+      if (text[j] === "}" || text[j] === "]") continue; // drop this trailing comma
+    }
+    result += ch;
+  }
+  return result;
+}
+
 // The actual Shopify platform convention: every theme built with the
 // Shopify CLI (and every theme submitted to the Theme Store) declares its
 // version in config/settings_schema.json's first "theme_info" entry's
@@ -59,7 +92,7 @@ export function extractVersionFromSettingsSchema(themeRootDir: string): { versio
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    parsed = JSON.parse(stripTrailingCommas(fs.readFileSync(filePath, "utf-8")));
   } catch {
     return null;
   }

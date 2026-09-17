@@ -135,4 +135,25 @@ describe("extractVersionFromSettingsSchema", () => {
     const root = makeThemeDir({ "config/settings_schema.json": JSON.stringify({ name: "theme_info" }) });
     expect(extractVersionFromSettingsSchema(root)).toBeNull();
   });
+
+  it("tolerates a trailing comma before a closing bracket (real-world Adorn theme shape)", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": [
+        "[",
+        '  { "name": "theme_info", "theme_version": "2.3.6" },',
+        '  { "name": "colors", "settings": [',
+        '    { "type": "color", "id": "body_bg" },',
+        "  ] },",
+        "]",
+      ].join("\n"),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "2.3.6" });
+  });
+
+  it("does not strip a comma that appears inside a string value", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([{ name: "theme_info", theme_version: "1.0.0", theme_author: "A, B" }]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.0.0" });
+  });
 });
