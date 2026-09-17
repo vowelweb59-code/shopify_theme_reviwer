@@ -49,20 +49,25 @@ function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string;
     setError(null);
     setSaved(false);
     const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
-    const res = await fetch(`/api/themes/${themeId}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ demoStorePresets: validPresets }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (!res.ok) {
-      setError(data.error ?? "Failed to save presets.");
-      return;
+    try {
+      const res = await fetch(`/api/themes/${themeId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ demoStorePresets: validPresets }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setSaving(false);
+      if (!res.ok) {
+        setError(data.error ?? "Failed to save presets.");
+        return;
+      }
+      setPresets(data.theme.demoStorePresets ?? []);
+      setSaved(true);
+      onSaved();
+    } catch {
+      setSaving(false);
+      setError("Lost connection to the server. Try again.");
     }
-    setPresets(data.theme.demoStorePresets ?? []);
-    setSaved(true);
-    onSaved();
   }
 
   return (
@@ -108,16 +113,21 @@ function UploadVersionForm({ themeId, onUploaded }: { themeId: string; onUploade
     setMessage(null);
     const formData = new FormData();
     formData.set("file", file);
-    const res = await fetch(`/api/themes/${themeId}/versions`, { method: "POST", body: formData });
-    const data = await res.json().catch(() => ({}));
-    setSubmitting(false);
-    if (!res.ok) {
-      setError(data.error ?? "Failed to upload this version.");
-      return;
+    try {
+      const res = await fetch(`/api/themes/${themeId}/versions`, { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      setSubmitting(false);
+      if (!res.ok) {
+        setError(data.error ?? "Failed to upload this version.");
+        return;
+      }
+      setFile(null);
+      setMessage(`${data.reusedZip ? "Matched an existing upload for" : "Stored"} version ${data.themeVersion.version}.`);
+      onUploaded();
+    } catch {
+      setSubmitting(false);
+      setError("Lost connection to the server. Try again.");
     }
-    setFile(null);
-    setMessage(`${data.reusedZip ? "Matched an existing upload for" : "Stored"} version ${data.themeVersion.version}.`);
-    onUploaded();
   }
 
   return (
@@ -164,18 +174,28 @@ function RunAuditForm({
     setSubmitting(true);
     setError(null);
     const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
-    const res = await fetch(`/api/themes/${themeId}/versions/${versionId}/audit`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ demoStorePresets: validPresets }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSubmitting(false);
-    if (!res.ok) {
-      setError(data.error ?? "Failed to run the audit.");
-      return;
+    // A dropped connection (dev server restart, a proxy giving up on a long
+    // live-check run) throws here — without this catch, the throw was
+    // unhandled and setSubmitting(false) below never ran, leaving the UI
+    // stuck showing the spinner indefinitely with no way to recover short
+    // of a full page reload.
+    try {
+      const res = await fetch(`/api/themes/${themeId}/versions/${versionId}/audit`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ demoStorePresets: validPresets }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setSubmitting(false);
+      if (!res.ok) {
+        setError(data.error ?? "Failed to run the audit.");
+        return;
+      }
+      onRan();
+    } catch {
+      setSubmitting(false);
+      setError("Lost connection to the server while the audit was running. It may still complete in the background — check Audit History in a moment, or try again.");
     }
-    onRan();
   }
 
   if (submitting) {

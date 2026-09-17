@@ -82,16 +82,21 @@ export function AddThemeModal({ open, onOpenChange, onCreated }: { open: boolean
     formData.set("file", file);
     const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
     if (validPresets.length > 0) formData.set("demoStorePresets", JSON.stringify(validPresets));
-    const res = await fetch("/api/themes", { method: "POST", body: formData });
-    const data = await res.json().catch(() => ({}));
-    setSubmitting(false);
-    if (!res.ok) {
-      setError(data.error ?? "Failed to create the theme.");
-      return;
+    try {
+      const res = await fetch("/api/themes", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      setSubmitting(false);
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create the theme.");
+        return;
+      }
+      reset();
+      onOpenChange(false);
+      onCreated();
+    } catch {
+      setSubmitting(false);
+      setError("Lost connection to the server. Try again.");
     }
-    reset();
-    onOpenChange(false);
-    onCreated();
   }
 
   return (
