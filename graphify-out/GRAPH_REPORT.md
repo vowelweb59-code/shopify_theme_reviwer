@@ -1,16 +1,16 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-17)
 
 ## Corpus Check
-- 242 files · ~1,561,544 words
+- 242 files · ~1,561,789 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1248 nodes · 2485 edges · 81 communities (74 shown, 7 thin omitted)
+- 1248 nodes · 2486 edges · 81 communities (74 shown, 7 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.54)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `de8e066d`
+- Built from commit: `51ef407c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -105,14 +105,14 @@
 
 ## Surprising Connections (you probably didn't know these)
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/page-speed/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/reports/route.ts → lib/db/connect.ts
+  app/api/health/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/rules/route.ts → lib/db/connect.ts
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/enhancements/route.ts → lib/db/connect.ts
-- `PATCH()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/page-speed/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/enhancements/route.ts → lib/db/connect.ts
 
 ## Import Cycles
@@ -393,7 +393,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **428 isolated node(s):** `PageType`, `PsiStrategy`, `PageSpeedCheckResult`, `PsiMetrics`, `LighthouseAuditDetails` (+423 more)
+- **428 isolated node(s):** `LiveCheckResult`, `MultiPresetLiveCheckResult`, `MEDIUM_VIEWPORT`, `ContrastSample`, `ImageSample` (+423 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -401,14 +401,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `deriveChecksForAuditRun.ts`, `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `registry.ts`, `finding.ts`, `[id]/export/route.ts`, `connect.ts`, `readiness/route.ts`, `audit-run.ts`, `theme.ts`, `computeScoreboard.ts`?**
-  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+- **Why does `dependencies` connect `dependencies` to `htmlparser2`, `next`, `@radix-ui/react-dropdown-menu`, `package.json`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `ReportContent.tsx` to `executeAuditRun.ts`, `findings.tsx`, `pageSpeed.ts`, `insights/page.tsx`, `computeScoreboard.ts`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `FINDING_CATEGORIES` connect `finding.ts` to `sheetRows.ts`, `deriveChecksForAuditRun.ts`, `rules.ts`?**
-  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `PageType`, `PsiStrategy`, `PageSpeedCheckResult` to the rest of the system?**
+- **What connects `LiveCheckResult`, `MultiPresetLiveCheckResult`, `MEDIUM_VIEWPORT` to the rest of the system?**
   _428 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._

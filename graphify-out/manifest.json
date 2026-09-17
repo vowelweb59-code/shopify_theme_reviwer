@@ -475,8 +475,8 @@
     "semantic_hash": ""
   },
   "lib/audit/liveCheck.ts": {
-    "mtime": 1789637630.2765372,
-    "ast_hash": "b855a12769945a3c131461b37733abe0",
+    "mtime": 1789643046.4704516,
+    "ast_hash": "251ea25c86fb02fab3ba9ed5212bd3bc",
     "semantic_hash": ""
   },
   "Landing Page 2.png": {
@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789640022.5623944,
-    "ast_hash": "6f7ecfe16c698ad3d9347fc320a85e60",
+    "mtime": 1789643016.2299416,
+    "ast_hash": "bae55b9d9f6b6d056533783cb33b499d",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {

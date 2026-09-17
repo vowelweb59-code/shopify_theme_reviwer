@@ -141,10 +141,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_contrastsample",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "contrastsample",
-      "id": "lib_audit_livecheck_contrastsample"
+      "norm_label": "contrastsample"
     },
     {
       "label": "FocusIndicatorSample",
@@ -154,10 +154,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_focusindicatorsample",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "focusindicatorsample",
-      "id": "lib_audit_livecheck_focusindicatorsample"
+      "norm_label": "focusindicatorsample"
     },
     {
       "label": "ImageSample",
@@ -167,10 +167,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_imagesample",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "imagesample",
-      "id": "lib_audit_livecheck_imagesample"
+      "norm_label": "imagesample"
     },
     {
       "label": "LiveCheckResult",
@@ -180,10 +180,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_livecheckresult",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "livecheckresult",
-      "id": "lib_audit_livecheck_livecheckresult"
+      "norm_label": "livecheckresult"
     },
     {
       "label": "MultiPresetLiveCheckResult",
@@ -193,10 +193,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_multipresetlivecheckresult",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "multipresetlivecheckresult",
-      "id": "lib_audit_livecheck_multipresetlivecheckresult"
+      "norm_label": "multipresetlivecheckresult"
     },
     {
       "label": "PageFacts",
@@ -206,10 +206,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_pagefacts",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "pagefacts",
-      "id": "lib_audit_livecheck_pagefacts"
+      "norm_label": "pagefacts"
     },
     {
       "label": "PresetCheckOutcome",
@@ -219,10 +219,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_presetcheckoutcome",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "presetcheckoutcome",
-      "id": "lib_audit_livecheck_presetcheckoutcome"
+      "norm_label": "presetcheckoutcome"
     },
     {
       "label": "PresetFacts",
@@ -232,10 +232,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_presetfacts",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "presetfacts",
-      "id": "lib_audit_livecheck_presetfacts"
+      "norm_label": "presetfacts"
     },
     {
       "label": "ReachabilityFacts",
@@ -245,10 +245,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_reachabilityfacts",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "reachabilityfacts",
-      "id": "lib_audit_livecheck_reachabilityfacts"
+      "norm_label": "reachabilityfacts"
     },
     {
       "label": "TouchTargetSample",
@@ -258,10 +258,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_touchtargetsample",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "touchtargetsample",
-      "id": "lib_audit_livecheck_touchtargetsample"
+      "norm_label": "touchtargetsample"
     },
     {
       "label": "CheckStatus",
@@ -544,10 +544,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_presetlivecheckerror",
       "community": 24,
       "community_name": "pageSpeed.ts",
-      "norm_label": "presetlivecheckerror",
-      "id": "lib_audit_livecheck_presetlivecheckerror"
+      "norm_label": "presetlivecheckerror"
     },
     {
       "label": "FallbackMetrics",
@@ -1272,10 +1272,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_presetlink",
       "community": 36,
       "community_name": "executeAuditRun.ts",
-      "norm_label": "presetlink",
-      "id": "lib_audit_livecheck_presetlink"
+      "norm_label": "presetlink"
     },
     {
       "label": "Stopwatch",
@@ -3113,10 +3113,10 @@
       "source_location": "L596",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_checkresponsivereachability",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "checkresponsivereachability()",
-      "id": "lib_audit_livecheck_checkresponsivereachability"
+      "norm_label": "checkresponsivereachability()"
     },
     {
       "label": "collectFocusIndicatorSamples()",
@@ -3125,10 +3125,10 @@
       "source_location": "L446",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_collectfocusindicatorsamples",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "collectfocusindicatorsamples()",
-      "id": "lib_audit_livecheck_collectfocusindicatorsamples"
+      "norm_label": "collectfocusindicatorsamples()"
     },
     {
       "label": "comparePresets()",
@@ -3137,10 +3137,10 @@
       "source_location": "L730",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_comparepresets",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "comparepresets()",
-      "id": "lib_audit_livecheck_comparepresets"
+      "norm_label": "comparepresets()"
     },
     {
       "label": "evaluateReachabilityInPage()",
@@ -3149,10 +3149,10 @@
       "source_location": "L541",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_evaluatereachabilityinpage",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "evaluatereachabilityinpage()",
-      "id": "lib_audit_livecheck_evaluatereachabilityinpage"
+      "norm_label": "evaluatereachabilityinpage()"
     },
     {
       "label": "extractLoadedPageFacts()",
@@ -3161,10 +3161,10 @@
       "source_location": "L105",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_extractloadedpagefacts",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "extractloadedpagefacts()",
-      "id": "lib_audit_livecheck_extractloadedpagefacts"
+      "norm_label": "extractloadedpagefacts()"
     },
     {
       "label": "extractPageFacts()",
@@ -3173,10 +3173,10 @@
       "source_location": "L263",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_extractpagefacts",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "extractpagefacts()",
-      "id": "lib_audit_livecheck_extractpagefacts"
+      "norm_label": "extractpagefacts()"
     },
     {
       "label": "findAndClickMenuTriggerInPage()",
@@ -3185,10 +3185,10 @@
       "source_location": "L568",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_findandclickmenutriggerinpage",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "findandclickmenutriggerinpage()",
-      "id": "lib_audit_livecheck_findandclickmenutriggerinpage"
+      "norm_label": "findandclickmenutriggerinpage()"
     },
     {
       "label": "focusIndicatorFindings()",
@@ -3197,10 +3197,10 @@
       "source_location": "L512",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_focusindicatorfindings",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "focusindicatorfindings()",
-      "id": "lib_audit_livecheck_focusindicatorfindings"
+      "norm_label": "focusindicatorfindings()"
     },
     {
       "label": "isNavigationTimeoutError()",
@@ -3209,10 +3209,10 @@
       "source_location": "L30",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_isnavigationtimeouterror",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "isnavigationtimeouterror()",
-      "id": "lib_audit_livecheck_isnavigationtimeouterror"
+      "norm_label": "isnavigationtimeouterror()"
     },
     {
       "label": "runChecksForLoadedPreset()",
@@ -3221,10 +3221,10 @@
       "source_location": "L653",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_runchecksforloadedpreset",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "runchecksforloadedpreset()",
-      "id": "lib_audit_livecheck_runchecksforloadedpreset"
+      "norm_label": "runchecksforloadedpreset()"
     },
     {
       "label": "runLiveChecksForPreset()",
@@ -3233,10 +3233,10 @@
       "source_location": "L687",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_runlivechecksforpreset",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "runlivechecksforpreset()",
-      "id": "lib_audit_livecheck_runlivechecksforpreset"
+      "norm_label": "runlivechecksforpreset()"
     },
     {
       "label": "runLiveChecksForPresets()",
@@ -3245,10 +3245,10 @@
       "source_location": "L805",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_runlivechecksforpresets",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "runlivechecksforpresets()",
-      "id": "lib_audit_livecheck_runlivechecksforpresets"
+      "norm_label": "runlivechecksforpresets()"
     },
     {
       "label": "makeFacts()",
@@ -3269,10 +3269,10 @@
       "source_location": "L41",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_withnavigationretry",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "withnavigationretry()",
-      "id": "lib_audit_livecheck_withnavigationretry"
+      "norm_label": "withnavigationretry()"
     },
     {
       "label": "GET()",
@@ -3893,10 +3893,10 @@
       "source_location": "L272",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_findfirstproductlink",
       "community": 24,
       "community_name": "pageSpeed.ts",
-      "norm_label": "findfirstproductlink()",
-      "id": "lib_audit_livecheck_findfirstproductlink"
+      "norm_label": "findfirstproductlink()"
     },
     {
       "label": "averageDefined()",
@@ -4073,10 +4073,10 @@
       "source_location": "L200",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_test_lhrwith",
       "community": 24,
       "community_name": "pageSpeed.ts",
-      "norm_label": "lhrwith()"
+      "norm_label": "lhrwith()",
+      "id": "lib_audit_pagespeed_test_lhrwith"
     },
     {
       "label": "metric()",
@@ -4085,10 +4085,10 @@
       "source_location": "L15",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_test_metric",
       "community": 24,
       "community_name": "pageSpeed.ts",
-      "norm_label": "metric()"
+      "norm_label": "metric()",
+      "id": "lib_audit_pagespeed_test_metric"
     },
     {
       "label": "classifyMerchandisingAxis()",
@@ -7733,10 +7733,10 @@
       "source_location": "L279",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_contrastfindings",
       "community": 79,
       "community_name": "colorContrast.ts",
-      "norm_label": "contrastfindings()",
-      "id": "lib_audit_livecheck_contrastfindings"
+      "norm_label": "contrastfindings()"
     },
     {
       "label": "homepageFindings()",
@@ -7745,10 +7745,10 @@
       "source_location": "L353",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_homepagefindings",
       "community": 79,
       "community_name": "colorContrast.ts",
-      "norm_label": "homepagefindings()",
-      "id": "lib_audit_livecheck_homepagefindings"
+      "norm_label": "homepagefindings()"
     },
     {
       "label": "imageResolutionFindings()",
@@ -7757,10 +7757,10 @@
       "source_location": "L313",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_imageresolutionfindings",
       "community": 79,
       "community_name": "colorContrast.ts",
-      "norm_label": "imageresolutionfindings()",
-      "id": "lib_audit_livecheck_imageresolutionfindings"
+      "norm_label": "imageresolutionfindings()"
     },
     {
       "label": "productPageFindings()",
@@ -7769,10 +7769,10 @@
       "source_location": "L402",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_productpagefindings",
       "community": 79,
       "community_name": "colorContrast.ts",
-      "norm_label": "productpagefindings()",
-      "id": "lib_audit_livecheck_productpagefindings"
+      "norm_label": "productpagefindings()"
     },
     {
       "label": "touchTargetFindings()",
@@ -7781,10 +7781,10 @@
       "source_location": "L336",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_livecheck_touchtargetfindings",
       "community": 79,
       "community_name": "colorContrast.ts",
-      "norm_label": "touchtargetfindings()",
-      "id": "lib_audit_livecheck_touchtargetfindings"
+      "norm_label": "touchtargetfindings()"
     },
     {
       "label": "RulesPage()",
@@ -8506,10 +8506,10 @@
       "source_file": "lib/audit/liveCheck.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_audit_livecheck",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "livecheck.ts",
-      "id": "lib_audit_livecheck"
+      "norm_label": "livecheck.ts"
     },
     {
       "label": "MEDIUM_VIEWPORT",
@@ -8517,10 +8517,10 @@
       "source_file": "lib/audit/liveCheck.ts",
       "source_location": "L67",
       "_origin": "ast",
+      "id": "lib_audit_livecheck_medium_viewport",
       "community": 12,
       "community_name": "liveCheck.ts",
-      "norm_label": "medium_viewport",
-      "id": "lib_audit_livecheck_medium_viewport"
+      "norm_label": "medium_viewport"
     },
     {
       "label": "liveCheck.test.ts",
@@ -9826,10 +9826,10 @@
       "source_file": "lib/audit/pageSpeed.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_test",
       "community": 24,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeed.test.ts"
+      "norm_label": "pagespeed.test.ts",
+      "id": "lib_audit_pagespeed_test"
     },
     {
       "label": "internal/index.ts",
@@ -16512,9 +16512,9 @@
       "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_extractpagefacts",
-      "target": "lib_audit_livecheck_extractloadedpagefacts"
+      "target": "lib_audit_livecheck_extractloadedpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16524,9 +16524,9 @@
       "source_location": "L513",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_focusindicatorfindings",
-      "target": "lib_audit_livecheck_collectfocusindicatorsamples"
+      "target": "lib_audit_livecheck_collectfocusindicatorsamples",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16536,9 +16536,9 @@
       "source_location": "L354",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_homepagefindings",
-      "target": "lib_audit_livecheck_contrastfindings"
+      "target": "lib_audit_livecheck_contrastfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16548,9 +16548,9 @@
       "source_location": "L354",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_homepagefindings",
-      "target": "lib_audit_livecheck_imageresolutionfindings"
+      "target": "lib_audit_livecheck_imageresolutionfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16560,9 +16560,9 @@
       "source_location": "L354",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_homepagefindings",
-      "target": "lib_audit_livecheck_touchtargetfindings"
+      "target": "lib_audit_livecheck_touchtargetfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16572,9 +16572,9 @@
       "source_location": "L403",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_productpagefindings",
-      "target": "lib_audit_livecheck_contrastfindings"
+      "target": "lib_audit_livecheck_contrastfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16584,9 +16584,9 @@
       "source_location": "L403",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_productpagefindings",
-      "target": "lib_audit_livecheck_imageresolutionfindings"
+      "target": "lib_audit_livecheck_imageresolutionfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16596,9 +16596,9 @@
       "source_location": "L403",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_productpagefindings",
-      "target": "lib_audit_livecheck_touchtargetfindings"
+      "target": "lib_audit_livecheck_touchtargetfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16608,9 +16608,9 @@
       "source_location": "L654",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_extractpagefacts"
+      "target": "lib_audit_livecheck_extractpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16620,9 +16620,9 @@
       "source_location": "L655",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_homepagefindings"
+      "target": "lib_audit_livecheck_homepagefindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16632,9 +16632,9 @@
       "source_location": "L658",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_focusindicatorfindings"
+      "target": "lib_audit_livecheck_focusindicatorfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16644,9 +16644,9 @@
       "source_location": "L659",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_checkresponsivereachability"
+      "target": "lib_audit_livecheck_checkresponsivereachability",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16656,9 +16656,9 @@
       "source_location": "L662",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_findfirstproductlink"
+      "target": "lib_audit_livecheck_findfirstproductlink",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16668,9 +16668,9 @@
       "source_location": "L666",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runchecksforloadedpreset",
-      "target": "lib_audit_livecheck_productpagefindings"
+      "target": "lib_audit_livecheck_productpagefindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16680,9 +16680,9 @@
       "source_location": "L692",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runlivechecksforpreset",
-      "target": "lib_audit_livecheck_withnavigationretry"
+      "target": "lib_audit_livecheck_withnavigationretry",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16692,45 +16692,45 @@
       "source_location": "L696",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runlivechecksforpreset",
-      "target": "lib_audit_livecheck_runchecksforloadedpreset"
+      "target": "lib_audit_livecheck_runchecksforloadedpreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/liveCheck.ts",
-      "source_location": "L816",
+      "source_location": "L823",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runlivechecksforpresets",
-      "target": "lib_audit_livecheck_withnavigationretry"
+      "target": "lib_audit_livecheck_withnavigationretry",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/liveCheck.ts",
-      "source_location": "L820",
+      "source_location": "L827",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runlivechecksforpresets",
-      "target": "lib_audit_livecheck_runchecksforloadedpreset"
+      "target": "lib_audit_livecheck_runchecksforloadedpreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/liveCheck.ts",
-      "source_location": "L835",
+      "source_location": "L851",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_runlivechecksforpresets",
-      "target": "lib_audit_livecheck_comparepresets"
+      "target": "lib_audit_livecheck_comparepresets",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16740,33 +16740,33 @@
       "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck_withnavigationretry",
-      "target": "lib_audit_livecheck_isnavigationtimeouterror"
+      "target": "lib_audit_livecheck_isnavigationtimeouterror",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
       "source_location": "L460",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_discoverpageurls",
-      "target": "lib_audit_livecheck_withnavigationretry"
+      "target": "lib_audit_livecheck_withnavigationretry",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
       "source_location": "L465",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_discoverpageurls",
-      "target": "lib_audit_livecheck_findfirstproductlink"
+      "target": "lib_audit_livecheck_findfirstproductlink",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16821,7 +16821,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L545",
+      "source_location": "L555",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16833,7 +16833,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L551",
+      "source_location": "L561",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16845,7 +16845,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L561",
+      "source_location": "L571",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16857,7 +16857,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L562",
+      "source_location": "L572",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16869,7 +16869,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L583",
+      "source_location": "L577",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16881,7 +16881,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L601",
+      "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16894,7 +16894,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L612",
+      "source_location": "L616",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16905,7 +16905,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L617",
+      "source_location": "L621",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16917,7 +16917,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L632",
+      "source_location": "L636",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -23049,9 +23049,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_colorcontrast_contrastratio"
+      "target": "lib_audit_colorcontrast_contrastratio",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23061,9 +23061,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_colorcontrast_parsecolortorgb"
+      "target": "lib_audit_colorcontrast_parsecolortorgb",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23073,9 +23073,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_runrules_executedfinding"
+      "target": "lib_audit_runrules_executedfinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23253,9 +23253,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_extractcoremetrics",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractcoremetrics"
     },
     {
       "relation": "imports",
@@ -23265,9 +23265,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_extractopportunityfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractopportunityfindings"
     },
     {
       "relation": "imports",
@@ -23277,9 +23277,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_fallbackthresholdfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_fallbackthresholdfindings"
     },
     {
       "relation": "imports",
@@ -23289,9 +23289,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_fetchpsilighthouseresult",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_fetchpsilighthouseresult"
     },
     {
       "relation": "imports",
@@ -23301,9 +23301,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_lighthouseaudit",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_lighthouseaudit"
     },
     {
       "relation": "imports",
@@ -23313,9 +23313,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_lighthouseauditref",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_lighthouseauditref"
     },
     {
       "relation": "imports",
@@ -23325,9 +23325,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_lighthouseresult",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_lighthouseresult"
     },
     {
       "relation": "imports",
@@ -23337,9 +23337,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_pagespeedmetric",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_pagespeedmetric"
     },
     {
       "relation": "imports",
@@ -23349,9 +23349,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_psithresholdfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_psithresholdfindings"
     },
     {
       "relation": "imports",
@@ -23361,9 +23361,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
     },
     {
       "relation": "imports",
@@ -29913,9 +29913,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_colorcontrast"
+      "target": "lib_audit_colorcontrast",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29925,9 +29925,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_runrules"
+      "target": "lib_audit_runrules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29985,9 +29985,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed"
     },
     {
       "relation": "imports_from",
@@ -35512,9 +35512,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_presetlink"
+      "target": "lib_audit_livecheck_presetlink",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35523,9 +35523,9 @@
       "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_extractloadedpagefacts"
+      "target": "lib_audit_livecheck_extractloadedpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35534,9 +35534,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_presetlivecheckerror"
+      "target": "lib_audit_livecheck_presetlivecheckerror",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35545,9 +35545,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_multipresetlivecheckresult"
+      "target": "lib_audit_livecheck_multipresetlivecheckresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35556,9 +35556,9 @@
       "source_location": "L263",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_extractpagefacts"
+      "target": "lib_audit_livecheck_extractpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35567,9 +35567,9 @@
       "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_findfirstproductlink"
+      "target": "lib_audit_livecheck_findfirstproductlink",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35578,9 +35578,9 @@
       "source_location": "L279",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_contrastfindings"
+      "target": "lib_audit_livecheck_contrastfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35589,9 +35589,9 @@
       "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_isnavigationtimeouterror"
+      "target": "lib_audit_livecheck_isnavigationtimeouterror",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35600,9 +35600,9 @@
       "source_location": "L313",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_imageresolutionfindings"
+      "target": "lib_audit_livecheck_imageresolutionfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35611,9 +35611,9 @@
       "source_location": "L336",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_touchtargetfindings"
+      "target": "lib_audit_livecheck_touchtargetfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35622,9 +35622,9 @@
       "source_location": "L353",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_homepagefindings"
+      "target": "lib_audit_livecheck_homepagefindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35633,9 +35633,9 @@
       "source_location": "L402",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_productpagefindings"
+      "target": "lib_audit_livecheck_productpagefindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35644,9 +35644,9 @@
       "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_withnavigationretry"
+      "target": "lib_audit_livecheck_withnavigationretry",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35655,9 +35655,9 @@
       "source_location": "L429",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_focusindicatorsample"
+      "target": "lib_audit_livecheck_focusindicatorsample",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35666,9 +35666,9 @@
       "source_location": "L446",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_collectfocusindicatorsamples"
+      "target": "lib_audit_livecheck_collectfocusindicatorsamples",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35677,9 +35677,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_livecheckresult"
+      "target": "lib_audit_livecheck_livecheckresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35688,9 +35688,9 @@
       "source_location": "L512",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_focusindicatorfindings"
+      "target": "lib_audit_livecheck_focusindicatorfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35699,9 +35699,9 @@
       "source_location": "L531",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_reachabilityfacts"
+      "target": "lib_audit_livecheck_reachabilityfacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35710,9 +35710,9 @@
       "source_location": "L541",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_evaluatereachabilityinpage"
+      "target": "lib_audit_livecheck_evaluatereachabilityinpage",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35721,9 +35721,9 @@
       "source_location": "L568",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_findandclickmenutriggerinpage"
+      "target": "lib_audit_livecheck_findandclickmenutriggerinpage",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35732,9 +35732,9 @@
       "source_location": "L596",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_checkresponsivereachability"
+      "target": "lib_audit_livecheck_checkresponsivereachability",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35743,9 +35743,9 @@
       "source_location": "L650",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_presetcheckoutcome"
+      "target": "lib_audit_livecheck_presetcheckoutcome",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35754,9 +35754,9 @@
       "source_location": "L653",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_runchecksforloadedpreset"
+      "target": "lib_audit_livecheck_runchecksforloadedpreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35765,9 +35765,9 @@
       "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_medium_viewport"
+      "target": "lib_audit_livecheck_medium_viewport",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35776,9 +35776,9 @@
       "source_location": "L687",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_runlivechecksforpreset"
+      "target": "lib_audit_livecheck_runlivechecksforpreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35787,9 +35787,9 @@
       "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_contrastsample"
+      "target": "lib_audit_livecheck_contrastsample",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35798,9 +35798,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_imagesample"
+      "target": "lib_audit_livecheck_imagesample",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35809,9 +35809,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_touchtargetsample"
+      "target": "lib_audit_livecheck_touchtargetsample",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35820,9 +35820,9 @@
       "source_location": "L716",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_presetfacts"
+      "target": "lib_audit_livecheck_presetfacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35831,9 +35831,9 @@
       "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_pagefacts"
+      "target": "lib_audit_livecheck_pagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35842,9 +35842,9 @@
       "source_location": "L730",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_comparepresets"
+      "target": "lib_audit_livecheck_comparepresets",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35853,9 +35853,9 @@
       "source_location": "L805",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_livecheck",
-      "target": "lib_audit_livecheck_runlivechecksforpresets"
+      "target": "lib_audit_livecheck_runlivechecksforpresets",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36194,9 +36194,9 @@
       "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_test_metric",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_test_metric"
     },
     {
       "relation": "contains",
@@ -36205,9 +36205,9 @@
       "source_location": "L200",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_test_lhrwith",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_test_lhrwith"
     },
     {
       "relation": "contains",
@@ -43098,6 +43098,15 @@
     {
       "relation": "dynamic_import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/audit/liveCheck.ts",
+      "_origin": "ast",
+      "source": "lib_audit_livecheck",
+      "target": "playwright",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "dynamic_import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
       "_origin": "ast",
       "source": "lib_audit_pagespeed",
@@ -43261,9 +43270,9 @@
       "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 0.5,
       "source": "lib_audit_livecheck_checkresponsivereachability",
-      "target": "lib_audit_livecheck_evaluatereachabilityinpage"
+      "target": "lib_audit_livecheck_evaluatereachabilityinpage",
+      "confidence_score": 0.5
     },
     {
       "relation": "indirect_call",
@@ -43273,9 +43282,9 @@
       "source_location": "L605",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 0.5,
       "source": "lib_audit_livecheck_checkresponsivereachability",
-      "target": "lib_audit_livecheck_findandclickmenutriggerinpage"
+      "target": "lib_audit_livecheck_findandclickmenutriggerinpage",
+      "confidence_score": 0.5
     },
     {
       "relation": "indirect_call",
@@ -43411,5 +43420,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "de8e066de45b05bcf2f95278ec7984ed3170cc53"
+  "built_at_commit": "51ef407c2683e0d3d742236f0b35d5b51eb70473"
 }
