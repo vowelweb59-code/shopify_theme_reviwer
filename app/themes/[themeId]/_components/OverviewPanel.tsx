@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
+import { ScoreboardGrid } from "./ScoreboardGrid";
+import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -15,8 +17,9 @@ type Props = {
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
+  scoreboard: ScoreCard[] | null;
   onChanged: () => void;
-  onViewReport: (auditRunId: string) => void;
+  onNavigateScoreCard: (card: ScoreCard) => void;
 };
 
 function formatDate(iso: string) {
@@ -208,7 +211,7 @@ function RunAuditForm({
   );
 }
 
-export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, onChanged, onViewReport }: Props) {
+export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, scoreboard, onChanged, onNavigateScoreCard }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
   const healthPercent = checkTotals && checkTotals.total > 0 ? Math.round((checkTotals.passed / checkTotals.total) * 100) : null;
@@ -269,41 +272,15 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
       <div>
         <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Latest Audit</h3>
         {latestAudit ? (
-          <p className="mt-1 text-sm text-zinc-500">
-            {formatDate(latestAudit.startedAt)} —{" "}
-            <button type="button" onClick={() => onViewReport(latestAudit._id)} className="text-primary underline hover:text-primary-hover">
-              view full report
-            </button>
-          </p>
+          <p className="mt-1 text-sm text-zinc-500">{formatDate(latestAudit.startedAt)}</p>
         ) : (
           <p className="mt-1 text-sm text-zinc-500">No completed audit yet.</p>
         )}
 
-        {checkTotals && (
-          <Card className="mt-4">
-            <div className="flex flex-wrap gap-6 text-sm">
-              <div>
-                <div className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">{checkTotals.total}</div>
-                <div className="text-zinc-500">Checks</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-status-pass-text">{checkTotals.passed}</div>
-                <div className="text-zinc-500">Passed</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-status-fail-text">{checkTotals.failed}</div>
-                <div className="text-zinc-500">Failed</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-status-warning-text">{checkTotals.warnings}</div>
-                <div className="text-zinc-500">Warnings</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-zinc-500">{checkTotals.notTested}</div>
-                <div className="text-zinc-500">Not tested</div>
-              </div>
-            </div>
-          </Card>
+        {scoreboard && (
+          <div className="mt-4">
+            <ScoreboardGrid cards={scoreboard} onNavigate={onNavigateScoreCard} />
+          </div>
         )}
       </div>
     </div>

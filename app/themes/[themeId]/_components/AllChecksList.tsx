@@ -109,10 +109,10 @@ function matchesSearch(item: CheckItem, query: string): boolean {
   return haystack.includes(query.toLowerCase());
 }
 
-export function AllChecksList({ categories }: { categories: CategoryChecks[] }) {
+export function AllChecksList({ categories, initialCategoryFilter = "" }: { categories: CategoryChecks[]; initialCategoryFilter?: string }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(initialCategoryFilter);
   const [statusFilter, setStatusFilter] = useState<CheckStatusValue | "">("");
 
   const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);

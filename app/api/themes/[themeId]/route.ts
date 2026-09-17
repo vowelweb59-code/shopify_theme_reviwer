@@ -3,9 +3,12 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
+import { EnhancementPoint } from "@/models/enhancement-point";
 import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
 import { sanitizePresets } from "@/lib/themes/presets";
+import { computeScoreboard } from "@/lib/themes/computeScoreboard";
+import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
 
 /**
  * One aggregate payload for the whole Theme Detail page (Overview / All
@@ -35,10 +38,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
 
   let latestAudit = null;
   let checks = null;
+  let scoreboard = null;
   if (latestVersion) {
     latestAudit = allAudits.find((a) => String(a.themeVersionId) === String(latestVersion._id) && a.status === "complete") ?? null;
     if (latestAudit) {
       checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
+      const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
+      scoreboard = computeScoreboard({
+        categories: checks.categories,
+        pageSpeed: latestAudit.pageSpeed,
+        enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
+        enhancementPoints,
+      });
     }
   }
 
@@ -65,6 +76,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
     latestVersion,
     latestAudit,
     checks,
+    scoreboard,
     previousAudits,
   });
 }

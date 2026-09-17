@@ -87,7 +87,15 @@ function formatDate(iso: string) {
  * instead of this component resetting its own loading/diff/etc. state
  * mid-effect for a prop that changed out from under it.
  */
-export function ReportContent({ auditRunId, showHeading = true }: { auditRunId: string; showHeading?: boolean }) {
+export function ReportContent({
+  auditRunId,
+  showHeading = true,
+  initialTab = "findings",
+}: {
+  auditRunId: string;
+  showHeading?: boolean;
+  initialTab?: "findings" | "future-updates";
+}) {
   const [auditRun, setAuditRun] = useState<AuditRunDetail | null>(null);
   const [findings, setFindings] = useState<FindingRow[]>([]);
   const [coverage, setCoverage] = useState<CoverageSummary | null>(null);
@@ -99,7 +107,7 @@ export function ReportContent({ auditRunId, showHeading = true }: { auditRunId: 
   const [notFound, setNotFound] = useState(false);
   const [enhancementPoints, setEnhancementPoints] = useState<EnhancementReportPoint[]>([]);
   const [enhancementDetectionAvailable, setEnhancementDetectionAvailable] = useState(false);
-  const [activeTab, setActiveTab] = useState<"findings" | "future-updates">("findings");
+  const [activeTab, setActiveTab] = useState<"findings" | "future-updates">(initialTab);
 
   const [creatingSheet, setCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
