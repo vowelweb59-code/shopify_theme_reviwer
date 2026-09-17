@@ -50,6 +50,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
     <TabbedPageClient
       title={detail.theme.name}
       defaultTabId="overview"
+      orientation="vertical"
       tabs={[
         {
           id: "overview",
