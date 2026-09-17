@@ -51,7 +51,7 @@ export default function Dashboard() {
       key: "theme",
       header: "Theme",
       render: (r) => (
-        <Link href={`/reports/${r.auditRunId}`} className="font-medium text-zinc-950 hover:underline dark:text-zinc-50">
+        <Link href={`/reports/${r.auditRunId}`} className="font-medium text-zinc-950 hover:text-primary hover:underline dark:text-zinc-50">
           {r.themeName}
         </Link>
       ),

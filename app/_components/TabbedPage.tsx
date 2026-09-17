@@ -66,7 +66,7 @@ export function TabbedPageClient({
           {tabs.map((t) => {
             const isOpen = activeTab === t.id;
             return (
-              <div key={t.id} className="rounded-lg border border-border-subtle">
+              <div key={t.id} className={`rounded-lg border ${isOpen ? "border-primary/30" : "border-border-subtle"}`}>
                 <button
                   type="button"
                   onClick={() => selectTab(isOpen ? "" : t.id)}
@@ -74,7 +74,7 @@ export function TabbedPageClient({
                   className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-950 dark:text-zinc-50"
                 >
                   {t.label}
-                  {isOpen ? <ChevronDown className="h-4 w-4 text-zinc-400" aria-hidden /> : <ChevronRight className="h-4 w-4 text-zinc-400" aria-hidden />}
+                  {isOpen ? <ChevronDown className="h-4 w-4 text-primary" aria-hidden /> : <ChevronRight className="h-4 w-4 text-zinc-400" aria-hidden />}
                 </button>
                 {isOpen && <div className="border-t border-border-subtle p-4">{t.content}</div>}
               </div>
@@ -91,7 +91,7 @@ export function TabbedPageClient({
                 onClick={() => selectTab(t.id)}
                 className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                   activeTab === t.id
-                    ? "border-zinc-950 text-zinc-950 dark:border-zinc-50 dark:text-zinc-50"
+                    ? "border-primary text-primary"
                     : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
                 }`}
               >

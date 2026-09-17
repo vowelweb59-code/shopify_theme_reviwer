@@ -157,7 +157,7 @@ export function AllChecksList({ categories }: { categories: CategoryChecks[] }) 
                 onClick={() => setStatusFilter(f.value)}
                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                   statusFilter === f.value
-                    ? "border-transparent bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    ? "border-transparent bg-primary text-primary-foreground"
                     : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
                 }`}
               >

@@ -270,7 +270,7 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
         {latestAudit ? (
           <p className="mt-1 text-sm text-zinc-500">
             {formatDate(latestAudit.startedAt)} —{" "}
-            <button type="button" onClick={() => onViewReport(latestAudit._id)} className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
+            <button type="button" onClick={() => onViewReport(latestAudit._id)} className="text-primary underline hover:text-primary-hover">
               view full report
             </button>
           </p>

@@ -56,7 +56,7 @@ export default function ThemesPage() {
       key: "theme",
       header: "Theme",
       render: (r) => (
-        <Link href={`/themes/${r.theme._id}`} className="font-medium text-zinc-950 hover:underline dark:text-zinc-50">
+        <Link href={`/themes/${r.theme._id}`} className="font-medium text-zinc-950 hover:text-primary hover:underline dark:text-zinc-50">
           {r.theme.name}
         </Link>
       ),

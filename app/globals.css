@@ -13,6 +13,20 @@
   --border-subtle: rgb(0 0 0 / 0.08);
   --border-strong: rgb(0 0 0 / 0.145);
 
+  /* The app's one accent color — indigo, deliberately distinct from both
+     Shopify's own green (so this never reads as an official Shopify
+     product) and from the semantic "info" blue below (so "this is the
+     brand accent" and "this is an informational status" stay visually
+     distinct). Used for primary actions, active nav state, links, and the
+     focus ring — the single recurring color that gives the UI an actual
+     identity instead of being pure black/white/gray with color confined to
+     status pills. */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+  --primary-tint: #eef2ff;
+  --primary-tint-text: #3730a3;
+
   /* Status tokens — one canonical set for PASS/FAIL/WARNING/NOT_TESTED/INFO,
      light-tinted background + dark readable text, not saturated badges. */
   --status-pass-bg: #ecfdf5;
@@ -40,6 +54,11 @@
   --color-surface-sidebar: var(--surface-sidebar);
   --color-border-subtle: var(--border-subtle);
   --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-tint-text: var(--primary-tint-text);
   --color-status-pass-bg: var(--status-pass-bg);
   --color-status-pass-text: var(--status-pass-text);
   --color-status-pass-icon: var(--status-pass-icon);
@@ -69,6 +88,12 @@
     --border-subtle: rgb(255 255 255 / 0.08);
     --border-strong: rgb(255 255 255 / 0.145);
 
+    --primary: #818cf8;
+    --primary-hover: #6366f1;
+    --primary-foreground: #1e1b4b;
+    --primary-tint: rgb(99 102 241 / 0.15);
+    --primary-tint-text: #a5b4fc;
+
     --status-pass-bg: rgb(6 95 70 / 0.25);
     --status-pass-text: #6ee7b7;
     --status-pass-icon: #34d399;
@@ -97,7 +122,7 @@ body {
    fighting) each browser's own default — required for real keyboard-nav
    accessibility, not just mouse users. */
 :focus-visible {
-  outline: 2px solid var(--status-info-icon);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
   border-radius: 2px;
 }

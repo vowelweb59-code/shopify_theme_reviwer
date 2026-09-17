@@ -49,7 +49,7 @@ export function MobileNav() {
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
                       active
-                        ? "bg-black/[.06] font-medium text-zinc-950 dark:bg-white/[.08] dark:text-zinc-50"
+                        ? "bg-primary-tint font-medium text-primary-tint-text"
                         : "text-zinc-600 hover:bg-black/[.04] hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[.04] dark:hover:text-zinc-100"
                     }`}
                   >

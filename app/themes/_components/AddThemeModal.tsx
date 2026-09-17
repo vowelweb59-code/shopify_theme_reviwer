@@ -25,7 +25,7 @@ function Dropzone({ file, onFile }: { file: File | null; onFile: (file: File | n
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       className={`flex flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-        dragOver ? "border-status-info-icon bg-status-info-bg" : "border-border-subtle"
+        dragOver ? "border-primary bg-primary-tint" : "border-border-subtle"
       }`}
     >
       {file ? (
@@ -40,7 +40,7 @@ function Dropzone({ file, onFile }: { file: File | null; onFile: (file: File | n
         <>
           <UploadCloud className="h-6 w-6 text-zinc-400" aria-hidden />
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Drag &amp; drop a theme .zip here</p>
-          <label className="cursor-pointer text-sm font-medium text-status-info-text underline">
+          <label className="cursor-pointer text-sm font-medium text-primary underline">
             Browse files
             <input
               type="file"

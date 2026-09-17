@@ -6,8 +6,7 @@ type ButtonVariant = "primary" | "secondary" | "destructive";
 type ButtonSize = "sm" | "md";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary:
-    "bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] border border-transparent",
+  primary: "bg-primary text-primary-foreground hover:bg-primary-hover border border-transparent",
   secondary:
     "bg-transparent text-zinc-700 dark:text-zinc-300 border border-border-subtle hover:text-zinc-950 hover:border-border-strong dark:hover:text-zinc-50",
   destructive:
