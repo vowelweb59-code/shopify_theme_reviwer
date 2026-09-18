@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
+import { SeverityBadge } from "@/app/_components/findings";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { ScoreboardGrid } from "./ScoreboardGrid";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
+import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import { AUDIT_STAGES, percentForStage, type AuditStageKey } from "@/lib/audit/progress";
 
 const POLL_INTERVAL_MS = 1500;
@@ -21,9 +23,39 @@ type Props = {
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
+  categories: CategoryChecks[];
   onChanged: () => void;
-  onNavigateScoreCard: (card: ScoreCard) => void;
 };
+
+// The subset of a Finding document this panel actually reads, fetched
+// on demand (only once a Performance card is expanded) from the same
+// endpoint the Report tab uses.
+type ReportFinding = {
+  _id: string;
+  ruleId: string;
+  category: string;
+  severity: string;
+  finding: string;
+  filePath: string;
+  presetLabel?: string | null;
+};
+
+type ReportEnhancementPoint = {
+  pointId: string;
+  title: string;
+  description?: string;
+  detected: boolean | null;
+};
+
+// "(desktop)" is the one substring PSI-derived Performance findings use to
+// mark themselves desktop-specific (see lib/audit/pageSpeed.ts's
+// shopifySubmissionBarFindings) — every other Performance finding only
+// ever comes from a mobile PSI read (psiThresholdFindings/
+// extractOpportunityFindings/psiAccessibilityFindings are never called
+// with desktop data), so "not explicitly desktop" reliably means mobile.
+function isDesktopPerformanceFinding(f: ReportFinding): boolean {
+  return /\(desktop\)/i.test(f.finding);
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -43,15 +75,21 @@ function healthTone(percent: number) {
 
 function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string; initialPresets: DemoStorePreset[]; onSaved: () => void }) {
   const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<DemoStorePreset[]>(initialPresets);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function startEditing() {
+    setDraft(presets);
+    setError(null);
+    setEditing(true);
+  }
 
   async function handleSave() {
     setSaving(true);
     setError(null);
-    setSaved(false);
-    const validPresets = presets.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
+    const validPresets = draft.map((p, i) => ({ label: p.label.trim() || `Preset ${i + 1}`, url: p.url.trim() })).filter((p) => p.url);
     try {
       const res = await fetch(`/api/themes/${themeId}`, {
         method: "PATCH",
@@ -65,7 +103,7 @@ function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string;
         return;
       }
       setPresets(data.theme.demoStorePresets ?? []);
-      setSaved(true);
+      setEditing(false);
       onSaved();
     } catch {
       setSaving(false);
@@ -73,26 +111,50 @@ function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string;
     }
   }
 
+  if (!editing) {
+    return (
+      <Card>
+        <CardHeader
+          title="Presets"
+          description="This theme’s style-variant demo store URLs, reused to pre-fill every “Run Audit”."
+          action={
+            <Button variant="secondary" size="sm" onClick={startEditing}>
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              Edit
+            </Button>
+          }
+        />
+        {presets.length === 0 ? (
+          <p className="text-sm text-zinc-500">No presets saved yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border-subtle">
+            {presets.map((preset, i) => (
+              <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{preset.label}</span>
+                <a href={preset.url} target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-primary hover:underline">
+                  {preset.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    );
+  }
+
   return (
     <Card>
-      <CardHeader
-        title="Presets"
-        description={'This theme’s style-variant demo store URLs, saved once and reused to pre-fill every “Run Audit” (still editable per run).'}
-      />
+      <CardHeader title="Presets" description="Edit this theme’s style-variant demo store URLs." />
       <div className="flex flex-col gap-3">
-        <PresetLinksEditor
-          presets={presets}
-          onChange={(next) => {
-            setPresets(next);
-            setSaved(false);
-          }}
-        />
+        <PresetLinksEditor presets={draft} onChange={setDraft} />
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="sm" onClick={handleSave} loading={saving}>
+          <Button size="sm" onClick={handleSave} loading={saving}>
             {saving ? "Saving…" : "Save presets"}
           </Button>
-          {saved && <span className="text-xs text-status-pass-text">Saved.</span>}
+          <Button variant="secondary" size="sm" onClick={() => setEditing(false)} disabled={saving}>
+            Cancel
+          </Button>
         </div>
       </div>
     </Card>
@@ -159,22 +221,31 @@ function RunAuditForm({
   versionId,
   version,
   themeName,
-  initialPresets,
+  presets,
   onRan,
 }: {
   themeId: string;
   versionId: string;
   version: string;
   themeName: string;
-  initialPresets: DemoStorePreset[];
+  presets: DemoStorePreset[];
   onRan: () => void;
 }) {
-  const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
-  const [submitting, setSubmitting] = useState(false);
+  // Starts immediately once mounted (see the mount effect below) — this
+  // component only ever renders because the user just clicked "Run Audit",
+  // so there's no reason to make them confirm with a second click. Uses
+  // the theme's already-saved presets (edit those via the Presets section
+  // below if a different set is needed) rather than offering an ad hoc,
+  // easy-to-miss "edit for just this run" form.
+  const [submitting, setSubmitting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stage, setStage] = useState<AuditStageKey | null>(null);
   const [stageProgress, setStageProgress] = useState<{ completed: number; total: number } | null>(null);
   const activeRef = useRef(true);
+  // Without this, React StrictMode's dev-only double-invoke of the mount
+  // effect below would fire handleRun() twice per click, starting two
+  // separate audit runs from a single "Run Audit" press.
+  const startedRef = useRef(false);
   useEffect(() => {
     // Reset to true on every effect run, not just via useRef's initial
     // value — React's dev-only StrictMode double-invokes effects
@@ -249,6 +320,27 @@ function RunAuditForm({
     }
   }
 
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    handleRun();
+    // fire exactly once on mount; handleRun/presets intentionally not deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!submitting && error) {
+    return (
+      <Card>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>
+          <Button size="sm" onClick={handleRun} className="w-fit">
+            Try again
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   if (submitting) {
     const percent = percentForStage(stage, stageProgress);
     const stageLabel = stage ? AUDIT_STAGES[stage].label : "Starting…";
@@ -278,27 +370,125 @@ function RunAuditForm({
     );
   }
 
+  // Unreachable in practice (submitting starts true and only flips false
+  // once complete or failed, both handled above) — a safe fallback rather
+  // than an assumption the caller can't break.
+  return null;
+}
+
+// Score cards whose issues live in the audit run's Finding docs /
+// enhancement-point coverage rather than in the already-fetched
+// `categories` prop — expanding one of these lazily fetches
+// /api/reports/{auditRunId} (the same endpoint the Report tab uses) the
+// first time it's opened, then reuses that result for the rest.
+const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities"]);
+
+function IssueRow({ title, body, severity, filePath }: { title?: string; body: string; severity?: string; filePath?: string }) {
   return (
-    <Card>
-      <div className="flex flex-col gap-3 text-sm">
-        <div className="flex flex-col gap-2">
-          <span className="text-zinc-700 dark:text-zinc-300">Demo store URL(s) (optional — enables live checks)</span>
-          <p className="text-xs text-zinc-500">Pre-filled from this theme&apos;s saved presets — edit freely for just this run.</p>
-          <PresetLinksEditor presets={presets} onChange={setPresets} />
-        </div>
-        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
-        <Button size="sm" onClick={handleRun} className="w-fit">
-          Run audit
-        </Button>
+    <li className="rounded-md bg-surface-muted p-3 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        {severity && <SeverityBadge severity={severity} />}
+        {title && <span className="font-medium text-zinc-900 dark:text-zinc-100">{title}</span>}
+        {filePath && <span className="font-mono text-zinc-500">{filePath}</span>}
       </div>
-    </Card>
+      <p className="mt-1 text-zinc-700 dark:text-zinc-300">{body}</p>
+    </li>
   );
 }
 
-export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, scoreboard, onChanged, onNavigateScoreCard }: Props) {
+export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, scoreboard, categories, onChanged }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<{ auditRunId: string; findings: ReportFinding[]; enhancementPoints: ReportEnhancementPoint[] } | null>(
+    null
+  );
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const healthPercent = checkTotals && checkTotals.total > 0 ? Math.round((checkTotals.passed / checkTotals.total) * 100) : null;
+
+  async function handleToggleCard(card: ScoreCard) {
+    if (expandedCardId === card.id) {
+      setExpandedCardId(null);
+      return;
+    }
+    setExpandedCardId(card.id);
+    if (!REPORT_BACKED_CARD_IDS.has(card.id) || !latestAudit) return;
+    if (reportData?.auditRunId === latestAudit._id) return; // already loaded for this run
+
+    setReportLoading(true);
+    setReportError(null);
+    try {
+      const res = await fetch(`/api/reports/${latestAudit._id}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setReportError(data.error ?? "Failed to load issues for this run.");
+        return;
+      }
+      setReportData({ auditRunId: latestAudit._id, findings: data.findings ?? [], enhancementPoints: data.enhancementPoints ?? [] });
+    } catch {
+      setReportError("Lost connection to the server while loading issues.");
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  function renderExpanded(card: ScoreCard) {
+    if (REPORT_BACKED_CARD_IDS.has(card.id)) {
+      if (reportLoading) return <p className="text-sm text-zinc-500">Loading issues…</p>;
+      if (reportError) return <p className="text-sm text-status-fail-text">{reportError}</p>;
+      if (!reportData) return null;
+
+      if (card.id === "opportunities") {
+        const remaining = reportData.enhancementPoints.filter((p) => p.detected === false);
+        if (remaining.length === 0) return <p className="text-sm text-zinc-500">No remaining opportunities — every checked point is covered.</p>;
+        return (
+          <ul className="flex flex-col gap-2">
+            {remaining.map((p) => (
+              <IssueRow key={p.pointId} title={p.title} body={p.description ?? "Not yet covered by this theme."} />
+            ))}
+          </ul>
+        );
+      }
+
+      const isDesktop = card.id === "desktop-performance";
+      const relevant = reportData.findings.filter((f) => f.category === "Performance" && isDesktopPerformanceFinding(f) === isDesktop);
+      if (relevant.length === 0) return <p className="text-sm text-zinc-500">No {isDesktop ? "desktop" : "mobile"} performance issues found.</p>;
+      return (
+        <ul className="flex flex-col gap-2">
+          {relevant.map((f) => (
+            <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.presetLabel ?? f.filePath} />
+          ))}
+        </ul>
+      );
+    }
+
+    // accessibility / seo / store-requirement / internal-standards: already
+    // have everything needed in `categories`, no fetch required.
+    const categoryNames: Record<string, string[]> = {
+      accessibility: ["Accessibility"],
+      seo: ["Technical SEO", "Technical AEO"],
+      "store-requirement": ["Theme Store Compliance"],
+      "internal-standards": ["Internal Standard"],
+    };
+    const names = categoryNames[card.id] ?? [];
+    const items = categories.filter((c) => names.includes(c.category)).flatMap((c) => c.items);
+    const failing = items.filter((i) => i.status === "FAIL" || i.status === "WARNING");
+    if (failing.length === 0) return <p className="text-sm text-zinc-500">No open issues in this category.</p>;
+    return (
+      <ul className="flex flex-col gap-2">
+        {failing.map((item) => (
+          <IssueRow
+            key={item.key}
+            title={item.title}
+            body={item.evidence[0]?.finding ?? item.description}
+            severity={item.evidence[0]?.severity}
+            filePath={item.evidence[0]?.filePath}
+          />
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -343,7 +533,7 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
           versionId={latestVersion._id}
           version={latestVersion.version}
           themeName={themeName}
-          initialPresets={demoStorePresets}
+          presets={demoStorePresets}
           onRan={() => {
             setShowRunAudit(false);
             onChanged();
@@ -363,7 +553,7 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
 
         {scoreboard && (
           <div className="mt-4">
-            <ScoreboardGrid cards={scoreboard} onNavigate={onNavigateScoreCard} />
+            <ScoreboardGrid cards={scoreboard} expandedCardId={expandedCardId} onToggle={handleToggleCard} renderExpanded={renderExpanded} />
           </div>
         )}
       </div>
