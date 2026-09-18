@@ -935,13 +935,13 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.test.ts": {
-    "mtime": 1789729360.4277234,
-    "ast_hash": "74bc89c2a2e97ac5b493622ff99a6b71",
+    "mtime": 1789730630.8507292,
+    "ast_hash": "7e1ffa6417578208ba3fc569da0c82ff",
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789729273.6226716,
-    "ast_hash": "3f3bacdb87bef5fd5cae1895cec80187",
+    "mtime": 1789730575.8506389,
+    "ast_hash": "0720767f13249027dda13dfc1a0b4da1",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1030,8 +1030,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/route.ts": {
-    "mtime": 1789638261.8400056,
-    "ast_hash": "fbea9ddcb059a454ba34043bd1d14a59",
+    "mtime": 1789730457.750839,
+    "ast_hash": "b46b846446671e16679a3c05e0b6893d",
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/versions/[versionId]/audit/route.ts": {
@@ -1055,13 +1055,13 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789728710.506712,
-    "ast_hash": "18031df05db9b2b6ea3326475406e24d",
+    "mtime": 1789730524.5677352,
+    "ast_hash": "d6c488d008131465a5de6a13f503ddf9",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
-    "mtime": 1789727656.2135465,
-    "ast_hash": "0e5cca3bff1e7b3d9c56bb482cc56341",
+    "mtime": 1789730476.320778,
+    "ast_hash": "c80b97e63e9617577aa878a819abb115",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/page.tsx": {
@@ -1330,13 +1330,13 @@
     "semantic_hash": ""
   },
   "lib/audit/psi.test.ts": {
-    "mtime": 1789719383.8134983,
-    "ast_hash": "3c37cb2e75922ca4b3270c2d2fa5ad45",
+    "mtime": 1789730614.8279276,
+    "ast_hash": "8ea3c0fb87836a4767f0b5242ed681ea",
     "semantic_hash": ""
   },
   "lib/audit/psi.ts": {
-    "mtime": 1789723432.8387606,
-    "ast_hash": "be3fdef15a51d3390a6f0daf97e6d2a6",
+    "mtime": 1789730549.5587966,
+    "ast_hash": "a01f199d0ec9f26bc0bd544e9b12061d",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/DownloadReportDropdown.tsx": {
