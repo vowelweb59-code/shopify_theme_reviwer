@@ -935,13 +935,13 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.test.ts": {
-    "mtime": 1789719419.4407697,
-    "ast_hash": "425d21e781b051f5b4a4b71a22dead76",
+    "mtime": 1789729360.4277234,
+    "ast_hash": "74bc89c2a2e97ac5b493622ff99a6b71",
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789726767.456925,
-    "ast_hash": "b5f6467071c991362ca9eb5708fd0d8c",
+    "mtime": 1789729273.6226716,
+    "ast_hash": "3f3bacdb87bef5fd5cae1895cec80187",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {

@@ -401,10 +401,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_pagespeedcheckresult",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeedcheckresult",
-      "id": "lib_audit_pagespeed_pagespeedcheckresult"
+      "norm_label": "pagespeedcheckresult"
     },
     {
       "label": "PageSpeedMetric",
@@ -414,10 +414,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_pagespeedmetric",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeedmetric",
-      "id": "lib_audit_pagespeed_pagespeedmetric"
+      "norm_label": "pagespeedmetric"
     },
     {
       "label": "PageType",
@@ -427,10 +427,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_pagetype",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagetype",
-      "id": "lib_audit_pagespeed_pagetype"
+      "norm_label": "pagetype"
     },
     {
       "label": "PsiMetrics",
@@ -440,10 +440,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_psimetrics",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "psimetrics",
-      "id": "lib_audit_pagespeed_psimetrics"
+      "norm_label": "psimetrics"
     },
     {
       "label": "LighthouseAudit",
@@ -1857,10 +1857,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_checktotals",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "checktotals"
+      "norm_label": "checktotals",
+      "id": "app_themes_themeid_components_overviewpanel_checktotals"
     },
     {
       "label": "Props",
@@ -1870,10 +1870,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_props",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "props"
+      "norm_label": "props",
+      "id": "app_themes_themeid_components_overviewpanel_props"
     },
     {
       "label": "ReportEnhancementPoint",
@@ -1883,10 +1883,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportenhancementpoint"
+      "norm_label": "reportenhancementpoint",
+      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
     },
     {
       "label": "ReportFinding",
@@ -1896,10 +1896,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_reportfinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportfinding"
+      "norm_label": "reportfinding",
+      "id": "app_themes_themeid_components_overviewpanel_reportfinding"
     },
     {
       "label": "AuditStageKey",
@@ -3765,22 +3765,22 @@
       "source_location": "L178",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_averagedefined",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "averagedefined()",
-      "id": "lib_audit_pagespeed_averagedefined"
+      "norm_label": "averagedefined()"
     },
     {
       "label": "discoverPageUrls()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L351",
+      "source_location": "L363",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_discoverpageurls",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "discoverpageurls()",
-      "id": "lib_audit_pagespeed_discoverpageurls"
+      "norm_label": "discoverpageurls()"
     },
     {
       "label": "extractCoreMetrics()",
@@ -3789,22 +3789,22 @@
       "source_location": "L46",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_extractcoremetrics",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "extractcoremetrics()",
-      "id": "lib_audit_pagespeed_extractcoremetrics"
+      "norm_label": "extractcoremetrics()"
     },
     {
       "label": "extractOpportunityFindings()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L309",
+      "source_location": "L314",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_extractopportunityfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "extractopportunityfindings()",
-      "id": "lib_audit_pagespeed_extractopportunityfindings"
+      "norm_label": "extractopportunityfindings()"
     },
     {
       "label": "psiThresholdFindings()",
@@ -3813,34 +3813,34 @@
       "source_location": "L65",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_psithresholdfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "psithresholdfindings()",
-      "id": "lib_audit_pagespeed_psithresholdfindings"
+      "norm_label": "psithresholdfindings()"
     },
     {
       "label": "ruleIdForLighthouseAudit()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L293",
+      "source_location": "L298",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_ruleidforlighthouseaudit",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "ruleidforlighthouseaudit()",
-      "id": "lib_audit_pagespeed_ruleidforlighthouseaudit"
+      "norm_label": "ruleidforlighthouseaudit()"
     },
     {
       "label": "runPageSpeedChecksForPresets()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L383",
+      "source_location": "L395",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_runpagespeedchecksforpresets",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "runpagespeedchecksforpresets()",
-      "id": "lib_audit_pagespeed_runpagespeedchecksforpresets"
+      "norm_label": "runpagespeedchecksforpresets()"
     },
     {
       "label": "shopifySubmissionBarFindings()",
@@ -3849,34 +3849,34 @@
       "source_location": "L194",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_shopifysubmissionbarfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "shopifysubmissionbarfindings()",
-      "id": "lib_audit_pagespeed_shopifysubmissionbarfindings"
+      "norm_label": "shopifysubmissionbarfindings()"
     },
     {
       "label": "stripMarkdownLinks()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L255",
+      "source_location": "L260",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_stripmarkdownlinks",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "stripmarkdownlinks()",
-      "id": "lib_audit_pagespeed_stripmarkdownlinks"
+      "norm_label": "stripmarkdownlinks()"
     },
     {
       "label": "summarizeAuditItems()",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L271",
+      "source_location": "L276",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_summarizeaudititems",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "summarizeaudititems()",
-      "id": "lib_audit_pagespeed_summarizeaudititems"
+      "norm_label": "summarizeaudititems()"
     },
     {
       "label": "lhrWith()",
@@ -3885,10 +3885,10 @@
       "source_location": "L86",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_test_lhrwith",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "lhrwith()",
-      "id": "lib_audit_pagespeed_test_lhrwith"
+      "norm_label": "lhrwith()"
     },
     {
       "label": "metric()",
@@ -3897,10 +3897,10 @@
       "source_location": "L11",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_test_metric",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "metric()",
-      "id": "lib_audit_pagespeed_test_metric"
+      "norm_label": "metric()"
     },
     {
       "label": "fetchPsiLighthouseResult()",
@@ -6093,10 +6093,10 @@
       "source_location": "L61",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_formatdate",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatdate()"
+      "norm_label": "formatdate()",
+      "id": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "label": "healthTone()",
@@ -6105,10 +6105,10 @@
       "source_location": "L71",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_healthtone",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "healthtone()"
+      "norm_label": "healthtone()",
+      "id": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "label": "isDesktopPerformanceFinding()",
@@ -6117,10 +6117,10 @@
       "source_location": "L57",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "isdesktopperformancefinding()"
+      "norm_label": "isdesktopperformancefinding()",
+      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "label": "IssueRow()",
@@ -6129,10 +6129,10 @@
       "source_location": "L458",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_issuerow",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "issuerow()"
+      "norm_label": "issuerow()",
+      "id": "app_themes_themeid_components_overviewpanel_issuerow"
     },
     {
       "label": "OverviewPanel()",
@@ -6141,10 +6141,10 @@
       "source_location": "L471",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel()"
+      "norm_label": "overviewpanel()",
+      "id": "app_themes_themeid_components_overviewpanel_overviewpanel"
     },
     {
       "label": "PresetsSection()",
@@ -6153,10 +6153,10 @@
       "source_location": "L77",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_presetssection",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "presetssection()"
+      "norm_label": "presetssection()",
+      "id": "app_themes_themeid_components_overviewpanel_presetssection"
     },
     {
       "label": "RunAuditForm()",
@@ -6165,10 +6165,10 @@
       "source_location": "L291",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_runauditform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "runauditform()"
+      "norm_label": "runauditform()",
+      "id": "app_themes_themeid_components_overviewpanel_runauditform"
     },
     {
       "label": "UploadVersionForm()",
@@ -6177,10 +6177,10 @@
       "source_location": "L236",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_uploadversionform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "uploadversionform()"
+      "norm_label": "uploadversionform()",
+      "id": "app_themes_themeid_components_overviewpanel_uploadversionform"
     },
     {
       "label": "percentForStage()",
@@ -7521,10 +7521,10 @@
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_scoreboardgrid_cardheading",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "cardheading()"
+      "norm_label": "cardheading()",
+      "id": "app_themes_themeid_components_scoreboardgrid_cardheading"
     },
     {
       "label": "ScoreboardGrid()",
@@ -7533,10 +7533,10 @@
       "source_location": "L42",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoreboardgrid()"
+      "norm_label": "scoreboardgrid()",
+      "id": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
     },
     {
       "label": "scoreTone()",
@@ -7545,10 +7545,10 @@
       "source_location": "L5",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_scoreboardgrid_scoretone",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoretone()"
+      "norm_label": "scoretone()",
+      "id": "app_themes_themeid_components_scoreboardgrid_scoretone"
     },
     {
       "label": "AppShell()",
@@ -9130,21 +9130,21 @@
       "source_file": "lib/audit/pageSpeed.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_audit_pagespeed",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeed.ts",
-      "id": "lib_audit_pagespeed"
+      "norm_label": "pagespeed.ts"
     },
     {
       "label": "OPPORTUNITY_AUDIT_GROUPS",
       "file_type": "code",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L242",
+      "source_location": "L247",
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_opportunity_audit_groups",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "opportunity_audit_groups",
-      "id": "lib_audit_pagespeed_opportunity_audit_groups"
+      "norm_label": "opportunity_audit_groups"
     },
     {
       "label": "pageSpeed.test.ts",
@@ -9152,10 +9152,10 @@
       "source_file": "lib/audit/pageSpeed.test.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_audit_pagespeed_test",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeed.test.ts",
-      "id": "lib_audit_pagespeed_test"
+      "norm_label": "pagespeed.test.ts"
     },
     {
       "label": "psi.ts",
@@ -12749,10 +12749,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel.tsx"
+      "norm_label": "overviewpanel.tsx",
+      "id": "app_themes_themeid_components_overviewpanel"
     },
     {
       "label": "REPORT_BACKED_CARD_IDS",
@@ -12760,10 +12760,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L456",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "report_backed_card_ids"
+      "norm_label": "report_backed_card_ids",
+      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
     },
     {
       "label": "progress.ts",
@@ -14531,10 +14531,10 @@
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_scoreboardgrid",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoreboardgrid.tsx"
+      "norm_label": "scoreboardgrid.tsx",
+      "id": "app_themes_themeid_components_scoreboardgrid"
     },
     {
       "label": "CARD_ACCENTS",
@@ -14542,10 +14542,10 @@
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
       "source_location": "L24",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_scoreboardgrid_card_accents",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "card_accents"
+      "norm_label": "card_accents",
+      "id": "app_themes_themeid_components_scoreboardgrid_card_accents"
     },
     {
       "label": "AppShell.tsx",
@@ -16381,9 +16381,9 @@
       "source_location": "L545",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "relation": "calls",
@@ -16393,9 +16393,9 @@
       "source_location": "L595",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "relation": "calls",
@@ -16405,9 +16405,9 @@
       "source_location": "L639",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "relation": "calls",
@@ -16429,9 +16429,9 @@
       "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoretone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_scoretone"
     },
     {
       "relation": "calls",
@@ -16907,7 +16907,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L355",
+      "source_location": "L367",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_discoverpageurls",
@@ -16918,36 +16918,36 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L321",
+      "source_location": "L333",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_stripmarkdownlinks"
+      "target": "lib_audit_pagespeed_stripmarkdownlinks",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L322",
+      "source_location": "L334",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_summarizeaudititems"
+      "target": "lib_audit_pagespeed_summarizeaudititems",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L326",
+      "source_location": "L338",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit"
+      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16955,7 +16955,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L397",
+      "source_location": "L409",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16966,12 +16966,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L405",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_discoverpageurls"
+      "target": "lib_audit_pagespeed_discoverpageurls",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16979,7 +16979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L407",
+      "source_location": "L419",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -16990,36 +16990,36 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L417",
+      "source_location": "L429",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_extractcoremetrics"
+      "target": "lib_audit_pagespeed_extractcoremetrics",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L426",
+      "source_location": "L438",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_psithresholdfindings"
+      "target": "lib_audit_pagespeed_psithresholdfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L427",
+      "source_location": "L439",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_extractopportunityfindings"
+      "target": "lib_audit_pagespeed_extractopportunityfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -17027,7 +17027,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L428",
+      "source_location": "L440",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -17039,7 +17039,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L429",
+      "source_location": "L441",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
@@ -17050,12 +17050,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L480",
+      "source_location": "L492",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -17065,9 +17065,9 @@
       "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_shopifysubmissionbarfindings",
-      "target": "lib_audit_pagespeed_averagedefined"
+      "target": "lib_audit_pagespeed_averagedefined",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -18769,9 +18769,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi"
+      "target": "lib_audit_psi",
+      "confidence_score": 1.0
     },
     {
       "relation": "re_exports",
@@ -22354,9 +22354,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard_scorecard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard_scorecard"
     },
     {
       "relation": "imports",
@@ -22366,9 +22366,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun_categorychecks",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun_categorychecks"
     },
     {
       "relation": "imports",
@@ -22378,9 +22378,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_audit_stages",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_audit_stages"
     },
     {
       "relation": "imports",
@@ -22390,9 +22390,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_auditstagekey",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_auditstagekey"
     },
     {
       "relation": "imports",
@@ -22402,9 +22402,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_percentforstage",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_percentforstage"
     },
     {
       "relation": "imports",
@@ -22414,9 +22414,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures_available_features",
-      "confidence_score": 1.0
+      "target": "lib_audit_availablefeatures_available_features"
     },
     {
       "relation": "imports",
@@ -22426,9 +22426,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures_featurestatus",
-      "confidence_score": 1.0
+      "target": "lib_audit_availablefeatures_featurestatus"
     },
     {
       "relation": "imports",
@@ -22438,9 +22438,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_demostorepreset",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor_demostorepreset"
     },
     {
       "relation": "imports",
@@ -22450,9 +22450,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_presetlinkseditor",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor_presetlinkseditor"
     },
     {
       "relation": "imports",
@@ -22462,9 +22462,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings_severitybadge",
-      "confidence_score": 1.0
+      "target": "app_components_findings_severitybadge"
     },
     {
       "relation": "imports",
@@ -22474,9 +22474,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button_button"
     },
     {
       "relation": "imports",
@@ -22486,9 +22486,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_card",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card_card"
     },
     {
       "relation": "imports",
@@ -22498,9 +22498,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_cardheader",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card_cardheader"
     },
     {
       "relation": "imports",
@@ -22510,9 +22510,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
     },
     {
       "relation": "imports",
@@ -22522,9 +22522,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "lib_themes_computescoreboard_scorecard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard_scorecard"
     },
     {
       "relation": "imports",
@@ -23674,9 +23674,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_runrules_executedfinding"
+      "target": "lib_audit_runrules_executedfinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23686,9 +23686,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_fetchpsilighthouseresult"
+      "target": "lib_audit_psi_fetchpsilighthouseresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23698,9 +23698,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_lighthouseauditdetails"
+      "target": "lib_audit_psi_lighthouseauditdetails",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23710,9 +23710,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_lighthouseresult"
+      "target": "lib_audit_psi_lighthouseresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23722,9 +23722,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_psistrategy"
+      "target": "lib_audit_psi_psistrategy",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23734,9 +23734,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings_contrastfindingsfrompsi"
+      "target": "lib_audit_livechecks_psiaccessibilityfindings_contrastfindingsfrompsi",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23746,9 +23746,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings_touchtargetfindingsfrompsi"
+      "target": "lib_audit_livechecks_psiaccessibilityfindings_touchtargetfindingsfrompsi",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23758,9 +23758,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_fetchpagefacts_fetchpagefacts"
+      "target": "lib_audit_livechecks_fetchpagefacts_fetchpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23770,9 +23770,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_mapwithconcurrency"
+      "target": "lib_audit_livechecks_shared_mapwithconcurrency",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23782,9 +23782,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_presetlink"
+      "target": "lib_audit_livechecks_shared_presetlink",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23794,9 +23794,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_presetlivecheckerror"
+      "target": "lib_audit_livechecks_shared_presetlivecheckerror",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23806,9 +23806,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_extractcoremetrics"
+      "target": "lib_audit_pagespeed_extractcoremetrics",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23818,9 +23818,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_extractopportunityfindings"
+      "target": "lib_audit_pagespeed_extractopportunityfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23830,9 +23830,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_pagespeedmetric"
+      "target": "lib_audit_pagespeed_pagespeedmetric",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23842,9 +23842,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_psithresholdfindings"
+      "target": "lib_audit_pagespeed_psithresholdfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23854,9 +23854,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23866,9 +23866,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_psi_lighthouseaudit"
+      "target": "lib_audit_psi_lighthouseaudit",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23878,9 +23878,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_psi_lighthouseauditref"
+      "target": "lib_audit_psi_lighthouseauditref",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -23890,9 +23890,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_psi_lighthouseresult"
+      "target": "lib_audit_psi_lighthouseresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -29854,9 +29854,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard"
     },
     {
       "relation": "imports_from",
@@ -29866,9 +29866,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun"
     },
     {
       "relation": "imports_from",
@@ -29878,9 +29878,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress"
     },
     {
       "relation": "imports_from",
@@ -29890,9 +29890,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures",
-      "confidence_score": 1.0
+      "target": "lib_audit_availablefeatures"
     },
     {
       "relation": "imports_from",
@@ -29902,9 +29902,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor"
     },
     {
       "relation": "imports_from",
@@ -29914,9 +29914,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings",
-      "confidence_score": 1.0
+      "target": "app_components_findings"
     },
     {
       "relation": "imports_from",
@@ -29926,9 +29926,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button"
     },
     {
       "relation": "imports_from",
@@ -29938,9 +29938,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card"
     },
     {
       "relation": "imports_from",
@@ -29950,9 +29950,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid"
     },
     {
       "relation": "imports_from",
@@ -29962,9 +29962,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "lib_themes_computescoreboard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard"
     },
     {
       "relation": "imports_from",
@@ -30790,9 +30790,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_runrules"
+      "target": "lib_audit_runrules",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30802,9 +30802,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings"
+      "target": "lib_audit_livechecks_psiaccessibilityfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30814,9 +30814,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_fetchpagefacts"
+      "target": "lib_audit_livechecks_fetchpagefacts",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30826,9 +30826,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared"
+      "target": "lib_audit_livechecks_shared",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30838,9 +30838,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed"
+      "target": "lib_audit_pagespeed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30850,9 +30850,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_psi"
+      "target": "lib_audit_psi",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -35477,9 +35477,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_checktotals",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_checktotals"
     },
     {
       "relation": "contains",
@@ -35488,9 +35488,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_props",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_props"
     },
     {
       "relation": "contains",
@@ -35499,9 +35499,9 @@
       "source_location": "L236",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_uploadversionform",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_uploadversionform"
     },
     {
       "relation": "contains",
@@ -35510,9 +35510,9 @@
       "source_location": "L291",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_runauditform",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_runauditform"
     },
     {
       "relation": "contains",
@@ -35521,9 +35521,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportfinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_reportfinding"
     },
     {
       "relation": "contains",
@@ -35532,9 +35532,9 @@
       "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
     },
     {
       "relation": "contains",
@@ -35543,9 +35543,9 @@
       "source_location": "L456",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
     },
     {
       "relation": "contains",
@@ -35554,9 +35554,9 @@
       "source_location": "L458",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_issuerow",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_issuerow"
     },
     {
       "relation": "contains",
@@ -35565,9 +35565,9 @@
       "source_location": "L471",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
     },
     {
       "relation": "contains",
@@ -35576,9 +35576,9 @@
       "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "relation": "contains",
@@ -35587,9 +35587,9 @@
       "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "relation": "contains",
@@ -35598,9 +35598,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "relation": "contains",
@@ -35609,9 +35609,9 @@
       "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_presetssection",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_presetssection"
     },
     {
       "relation": "contains",
@@ -35620,9 +35620,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_cardheading",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_cardheading"
     },
     {
       "relation": "contains",
@@ -35631,9 +35631,9 @@
       "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_card_accents",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_card_accents"
     },
     {
       "relation": "contains",
@@ -35642,9 +35642,9 @@
       "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
     },
     {
       "relation": "contains",
@@ -35653,9 +35653,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoretone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_scoretone"
     },
     {
       "relation": "contains",
@@ -36819,9 +36819,9 @@
       "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_averagedefined"
+      "target": "lib_audit_pagespeed_averagedefined",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36830,9 +36830,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagetype"
+      "target": "lib_audit_pagespeed_pagetype",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36841,9 +36841,9 @@
       "source_location": "L194",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36852,64 +36852,64 @@
       "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagespeedmetric"
+      "target": "lib_audit_pagespeed_pagespeedmetric",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L242",
+      "source_location": "L247",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_opportunity_audit_groups"
+      "target": "lib_audit_pagespeed_opportunity_audit_groups",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L255",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_stripmarkdownlinks"
+      "target": "lib_audit_pagespeed_stripmarkdownlinks",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L271",
+      "source_location": "L276",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_summarizeaudititems"
+      "target": "lib_audit_pagespeed_summarizeaudititems",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L293",
+      "source_location": "L298",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit"
+      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L309",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_extractopportunityfindings"
+      "target": "lib_audit_pagespeed_extractopportunityfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36918,31 +36918,20 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagespeedcheckresult"
+      "target": "lib_audit_pagespeed_pagespeedcheckresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L351",
+      "source_location": "L363",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_discoverpageurls"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "lib/audit/pageSpeed.ts",
-      "source_location": "L383",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_runpagespeedchecksforpresets"
+      "target": "lib_audit_pagespeed_discoverpageurls",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36951,9 +36940,20 @@
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_psimetrics"
+      "target": "lib_audit_pagespeed_psimetrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/audit/pageSpeed.ts",
+      "source_location": "L395",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_audit_pagespeed",
+      "target": "lib_audit_pagespeed_runpagespeedchecksforpresets",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36962,9 +36962,9 @@
       "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_extractcoremetrics"
+      "target": "lib_audit_pagespeed_extractcoremetrics",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36973,9 +36973,9 @@
       "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_psithresholdfindings"
+      "target": "lib_audit_pagespeed_psithresholdfindings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36984,9 +36984,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_test_metric"
+      "target": "lib_audit_pagespeed_test_metric",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36995,9 +36995,9 @@
       "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_test",
-      "target": "lib_audit_pagespeed_test_lhrwith"
+      "target": "lib_audit_pagespeed_test_lhrwith",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -44379,5 +44379,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4f6444135c57862b5e408f630d237c42259022bd"
+  "built_at_commit": "689195a40288c90b09573405dfe323e2faa0fde1"
 }
