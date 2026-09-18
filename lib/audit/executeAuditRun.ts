@@ -219,23 +219,23 @@ export async function executeAuditRun(params: ExecuteAuditRunParams, hooks?: Exe
         void setStage(auditRun._id, "checking_live", { completed: completedUnits, total: totalUnits });
       };
 
-      // Independent of each other (one drives its own Playwright browser
-      // for contrast/schema checks, the other drives PSI requests plus its
-      // own Playwright fallback) — running them concurrently rather than
-      // one after the other roughly halves the live-check portion of a
-      // Run Audit on top of each phase's own internal per-preset
-      // concurrency (see liveCheck.ts/pageSpeed.ts).
-      const phaseStart = Date.now();
-      const [liveResult, pageSpeedResult] = await Promise.all([
-        runLiveChecksForPresets(demoStorePresets, bumpProgress).then((r) => {
-          timer.record("liveChecks", Date.now() - phaseStart);
-          return r;
-        }),
-        runPageSpeedChecksForPresets(demoStorePresets, bumpProgress).then((r) => {
-          timer.record("pageSpeedChecks", Date.now() - phaseStart);
-          return r;
-        }),
-      ]);
+      // Sequential, not concurrent: each phase drives its own Chromium
+      // instance, and running both at once was measured causing real OOM
+      // kills on a 512MB deployment (Render's own event log: "Ran out of
+      // memory (used over 512MB) while running your code") — the process
+      // gets hard-killed mid-run with no chance to record a failure, which
+      // looks identical to a permanently stuck audit from the outside.
+      // Sequential means only one Chromium instance is ever alive at a
+      // time; slower than the brief concurrent-phases experiment, but an
+      // audit that reliably finishes beats one that's fast until it isn't.
+      const liveCheckStart = Date.now();
+      const liveResult = await runLiveChecksForPresets(demoStorePresets, bumpProgress);
+      timer.record("liveChecks", Date.now() - liveCheckStart);
+
+      const pageSpeedStart = Date.now();
+      const pageSpeedResult = await runPageSpeedChecksForPresets(demoStorePresets, bumpProgress);
+      timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);
+
       liveFindings = [...liveResult.findings, ...pageSpeedResult.findings];
       liveCheckErrors = [...liveResult.errors, ...pageSpeedResult.errors];
       pageSpeedMetrics = pageSpeedResult.metrics;

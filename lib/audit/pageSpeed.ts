@@ -1,6 +1,14 @@
 import type { Page } from "playwright";
 import type { ExecutedFinding } from "./runRules";
-import { findFirstProductLink, launchBrowserWithTimeout, withNavigationRetry, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
+import {
+  findFirstProductLink,
+  launchBrowserWithTimeout,
+  mapWithConcurrency,
+  withNavigationRetry,
+  PRESET_CONCURRENCY_LIMIT,
+  type PresetLink,
+  type PresetLiveCheckError,
+} from "./liveCheck";
 
 export type PageType = "home" | "collection" | "product";
 export type PsiStrategy = "mobile" | "desktop";
@@ -640,41 +648,40 @@ export async function runPageSpeedChecksForPresets(
     try {
       browser = await launchBrowserWithTimeout();
       const activeBrowser = browser;
-      // One browser, many concurrent contexts (a supported Playwright
-      // pattern) — same reasoning as the PSI concurrency above: several
-      // presets falling back sequentially, each with its own retry, was
-      // itself capable of adding minutes to a single Run Audit.
-      await Promise.all(
-        needsFallback.map(async (preset) => {
-          try {
-            const fallback = await withNavigationRetry(async () => {
-              // Roughly matches PSI's own default mobile viewport.
-              const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
-              try {
-                const page = await context.newPage();
-                return await collectPlaywrightMetrics(page, preset.url);
-              } finally {
-                await context.close();
-              }
-            });
-            metrics.push({
-              label: preset.label,
-              url: preset.url,
-              pageType: "home",
-              strategy: "mobile",
-              source: "playwright",
-              ttfbMs: fallback.ttfbMs,
-              fcpMs: fallback.fcpMs ?? undefined,
-              pageWeightBytes: fallback.pageWeightBytes,
-            });
-            findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
-          } catch (err) {
-            errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
-          } finally {
-            onItemComplete?.();
-          }
-        })
-      );
+      // Queued (PRESET_CONCURRENCY_LIMIT, currently 1) rather than every
+      // fallback preset's browser context open at once — same real-world
+      // OOM evidence as liveCheck.ts's own preset loop applies here too,
+      // since this is the exact same "launch a browser, render a real
+      // store page" shape of work.
+      await mapWithConcurrency(needsFallback, PRESET_CONCURRENCY_LIMIT, async (preset) => {
+        try {
+          const fallback = await withNavigationRetry(async () => {
+            // Roughly matches PSI's own default mobile viewport.
+            const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
+            try {
+              const page = await context.newPage();
+              return await collectPlaywrightMetrics(page, preset.url);
+            } finally {
+              await context.close();
+            }
+          });
+          metrics.push({
+            label: preset.label,
+            url: preset.url,
+            pageType: "home",
+            strategy: "mobile",
+            source: "playwright",
+            ttfbMs: fallback.ttfbMs,
+            fcpMs: fallback.fcpMs ?? undefined,
+            pageWeightBytes: fallback.pageWeightBytes,
+          });
+          findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
+        } catch (err) {
+          errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
+        } finally {
+          onItemComplete?.();
+        }
+      });
     } finally {
       await browser?.close();
     }

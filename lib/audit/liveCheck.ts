@@ -82,6 +82,36 @@ export async function launchBrowserWithTimeout(): Promise<import("playwright").B
   ]);
 }
 
+// A real Shopify store's page render (images, fonts, third-party scripts)
+// held open in a browser context isn't free even when several share one
+// browser process — 5 presets' worth open at once was part of what drove
+// real OOM kills on a 512MB deployment (confirmed via Render's own event
+// log). Set to 1 — a strict queue, one preset's browser page at a time —
+// rather than a smaller-but-still-concurrent window: on a host this
+// memory-constrained, reliably finishing matters more than shaving time
+// off an already-recoverable-with-retries operation.
+export const PRESET_CONCURRENCY_LIMIT = 1;
+
+/**
+ * Like Promise.all(items.map(fn)), but runs at most `limit` invocations of
+ * fn concurrently instead of all of them at once. Preserves each result at
+ * its original index, same guarantee Promise.all gives — comparePresets
+ * (and anything else relying on ordering) is unaffected by this being
+ * throttled rather than fully parallel.
+ */
+export async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const current = nextIndex++;
+      results[current] = await fn(items[current], current);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
 const MAX_CONTRAST_SAMPLES = 80;
 const MAX_IMAGE_SAMPLES = 60;
 const MAX_FOCUS_SAMPLES = 40;
@@ -850,32 +880,34 @@ export async function runLiveChecksForPresets(
   try {
     browser = await launchBrowserWithTimeout();
     const activeBrowser = browser;
-    // Concurrent per preset (one browser, a fresh context each) rather than
-    // one at a time — several demo stores checked sequentially, each with
-    // its own retry, could turn a single Run Audit into minutes on a slow
-    // network. Promise.all + map preserves each result's original index,
-    // so presetFacts still ends up in the same order presets was given in
-    // (comparePresets treats the first successful entry as the baseline).
-    const results = await Promise.all(
-      presets.map(async (preset) => {
-        try {
-          const outcome = await withNavigationRetry(async () => {
-            const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
-            try {
-              const page = await context.newPage();
-              return await runChecksForLoadedPreset(page, preset.label, preset.url);
-            } finally {
-              await context.close();
-            }
-          });
-          return { ok: true as const, preset, outcome };
-        } catch (err) {
-          return { ok: false as const, preset, error: err instanceof Error ? err.message : String(err) };
-        } finally {
-          onItemComplete?.();
-        }
-      })
-    );
+    // At most PRESET_CONCURRENCY_LIMIT presets in flight at once (one
+    // browser, a fresh context each) rather than one at a time or fully
+    // unbounded — several demo stores checked sequentially, each with its
+    // own retry, could turn a single Run Audit into minutes on a slow
+    // network, but every context open at once holds a full rendered page
+    // in memory too (measured causing real OOM kills on a 512MB
+    // deployment when unbounded). mapWithConcurrency preserves each
+    // result's original index, so presetFacts still ends up in the same
+    // order presets was given in (comparePresets treats the first
+    // successful entry as the baseline).
+    const results = await mapWithConcurrency(presets, PRESET_CONCURRENCY_LIMIT, async (preset) => {
+      try {
+        const outcome = await withNavigationRetry(async () => {
+          const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
+          try {
+            const page = await context.newPage();
+            return await runChecksForLoadedPreset(page, preset.label, preset.url);
+          } finally {
+            await context.close();
+          }
+        });
+        return { ok: true as const, preset, outcome };
+      } catch (err) {
+        return { ok: false as const, preset, error: err instanceof Error ? err.message : String(err) };
+      } finally {
+        onItemComplete?.();
+      }
+    });
 
     for (const result of results) {
       if (result.ok) {

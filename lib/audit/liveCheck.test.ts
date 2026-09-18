@@ -8,9 +8,56 @@ import {
   focusIndicatorFindings,
   isNavigationTimeoutError,
   launchBrowserWithTimeout,
+  mapWithConcurrency,
   withNavigationRetry,
   type PageFacts,
 } from "./liveCheck";
+
+describe("mapWithConcurrency", () => {
+  it("returns results in the original item order regardless of completion timing", async () => {
+    const delays = [30, 10, 20];
+    const result = await mapWithConcurrency(delays, 3, async (delay, i) => {
+      await new Promise((r) => setTimeout(r, delay));
+      return i;
+    });
+    expect(result).toEqual([0, 1, 2]);
+  });
+
+  it("never runs more than `limit` invocations concurrently", async () => {
+    let active = 0;
+    let maxActive = 0;
+    const items = Array.from({ length: 6 }, (_, i) => i);
+    await mapWithConcurrency(items, 2, async (item) => {
+      active++;
+      maxActive = Math.max(maxActive, active);
+      await new Promise((r) => setTimeout(r, 5));
+      active--;
+      return item;
+    });
+    expect(maxActive).toBeLessThanOrEqual(2);
+  });
+
+  it("with limit 1, behaves as a strict queue (one at a time, start to finish)", async () => {
+    const order: string[] = [];
+    const items = [1, 2, 3];
+    await mapWithConcurrency(items, 1, async (item) => {
+      order.push(`start-${item}`);
+      await new Promise((r) => setTimeout(r, 5));
+      order.push(`end-${item}`);
+      return item;
+    });
+    expect(order).toEqual(["start-1", "end-1", "start-2", "end-2", "start-3", "end-3"]);
+  });
+
+  it("processes every item exactly once even when limit exceeds the item count", async () => {
+    const seen: number[] = [];
+    await mapWithConcurrency([1, 2], 10, async (item) => {
+      seen.push(item);
+      return item;
+    });
+    expect(seen.sort()).toEqual([1, 2]);
+  });
+});
 
 describe("launchBrowserWithTimeout", () => {
   afterEach(() => {
