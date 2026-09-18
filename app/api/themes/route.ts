@@ -3,10 +3,13 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
+import { EnhancementPoint } from "@/models/enhancement-point";
 import { pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
+import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import { uploadThemeVersion } from "@/lib/themes/uploadThemeVersion";
 import { sanitizePresets } from "@/lib/themes/presets";
+import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
 
 /**
  * Lists every Theme (including ones created before this module existed,
@@ -30,23 +33,54 @@ export async function GET() {
     versionsByTheme.set(key, list);
   }
 
+  // Fetched once, not per theme — the same global catalog every theme's
+  // "Opportunities"/"Features" scores are computed against (see
+  // computeScoreboard.ts), same as the Theme Detail route does.
+  const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
+
   const rows = await Promise.all(
     themes.map(async (theme) => {
       const themeVersions = versionsByTheme.get(String(theme._id)) ?? [];
       const latestVersion = pickLatestVersion(themeVersions);
       if (!latestVersion) {
-        return { theme, latestVersion: null, latestAudit: null, checkTotals: null };
+        return { theme, latestVersion: null, latestAudit: null, checkTotals: null, scoreboard: null };
       }
 
       const latestAudit = await AuditRun.findOne({ themeVersionId: latestVersion._id, status: "complete" })
         .sort({ startedAt: -1 })
         .lean();
       if (!latestAudit) {
-        return { theme, latestVersion, latestAudit: null, checkTotals: null };
+        return { theme, latestVersion, latestAudit: null, checkTotals: null, scoreboard: null };
       }
 
-      const { totals } = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
-      return { theme, latestVersion, latestAudit, checkTotals: totals };
+      const checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
+
+      // Same reasoning as the Theme Detail route: if this run's own PSI
+      // calls all failed, fall back to the most recent other complete run
+      // (any version) that does have page-speed data, so a transient PSI
+      // outage doesn't make this comparison show "—" when a real score is
+      // known — keeps this table consistent with what Theme Detail shows.
+      let pageSpeed = latestAudit.pageSpeed ?? [];
+      if (pageSpeed.length === 0) {
+        const themeVersionIds = themeVersions.map((v) => v._id);
+        const fallbackAudit = await AuditRun.findOne({
+          themeVersionId: { $in: themeVersionIds },
+          status: "complete",
+          _id: { $ne: latestAudit._id },
+          "pageSpeed.0": { $exists: true },
+        })
+          .sort({ startedAt: -1 })
+          .lean();
+        if (fallbackAudit) pageSpeed = fallbackAudit.pageSpeed ?? [];
+      }
+
+      const scoreboard = computeScoreboard({
+        categories: checks.categories,
+        pageSpeed,
+        enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
+        enhancementPoints,
+      });
+      return { theme, latestVersion, latestAudit, checkTotals: checks.totals, scoreboard };
     })
   );
 

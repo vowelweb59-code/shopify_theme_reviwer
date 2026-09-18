@@ -8,6 +8,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { AddThemeModal } from "./_components/AddThemeModal";
+import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -16,6 +17,7 @@ type ThemeRow = {
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
+  scoreboard: ScoreCard[] | null;
 };
 
 function formatDate(iso: string) {
@@ -31,6 +33,15 @@ function healthTone(percent: number) {
   if (percent >= 90) return "text-status-pass-text";
   if (percent >= 70) return "text-status-warning-text";
   return "text-status-fail-text";
+}
+
+function scoreCard(scoreboard: ScoreCard[] | null, id: string): ScoreCard | undefined {
+  return scoreboard?.find((c) => c.id === id);
+}
+
+function scoreCell(card: ScoreCard | undefined) {
+  if (!card || card.score === null) return <span className="text-zinc-400">—</span>;
+  return <span className={`font-semibold ${healthTone(card.score)}`}>{card.score}%</span>;
 }
 
 export default function ThemesPage() {
@@ -113,6 +124,49 @@ export default function ThemesPage() {
     },
   ];
 
+  // Deliberately narrower than the 8-card scoreboard: only Features,
+  // Future Updates (Opportunities), and both Performance scores — no
+  // Accessibility/SEO/Internal Standards, and explicitly no Store
+  // Requirement, per what this comparison is meant to answer ("which
+  // themes cover what features/future-update opportunities, and how do
+  // they perform"), not a full compliance comparison.
+  const comparisonColumns: TableColumn<ThemeRow>[] = [
+    {
+      key: "theme",
+      header: "Theme",
+      render: (r) => (
+        <Link href={`/themes/${r.theme._id}`} className="font-medium text-zinc-950 hover:text-primary hover:underline dark:text-zinc-50">
+          {r.theme.name}
+        </Link>
+      ),
+      sortValue: (r) => r.theme.name,
+    },
+    {
+      key: "features",
+      header: "Features Covered",
+      render: (r) => scoreCell(scoreCard(r.scoreboard, "features")),
+      sortValue: (r) => scoreCard(r.scoreboard, "features")?.score ?? -1,
+    },
+    {
+      key: "opportunities",
+      header: "Future Updates Covered",
+      render: (r) => scoreCell(scoreCard(r.scoreboard, "opportunities")),
+      sortValue: (r) => scoreCard(r.scoreboard, "opportunities")?.score ?? -1,
+    },
+    {
+      key: "desktop-performance",
+      header: "Desktop Performance",
+      render: (r) => scoreCell(scoreCard(r.scoreboard, "desktop-performance")),
+      sortValue: (r) => scoreCard(r.scoreboard, "desktop-performance")?.score ?? -1,
+    },
+    {
+      key: "mobile-performance",
+      header: "Mobile Performance",
+      render: (r) => scoreCell(scoreCard(r.scoreboard, "mobile-performance")),
+      sortValue: (r) => scoreCard(r.scoreboard, "mobile-performance")?.score ?? -1,
+    },
+  ];
+
   return (
     <PageContainer>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -140,6 +194,18 @@ export default function ThemesPage() {
       )}
 
       {!loading && rows.length > 0 && <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r.theme._id} />}
+
+      {!loading && rows.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Compare Themes</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Features, future-update opportunities, and performance across every theme&apos;s latest audit.
+            </p>
+          </div>
+          <ResponsiveTable columns={comparisonColumns} rows={rows} rowKey={(r) => r.theme._id} />
+        </div>
+      )}
     </PageContainer>
   );
 }
