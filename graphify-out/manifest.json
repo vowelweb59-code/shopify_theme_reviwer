@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "app/page.tsx": {
-    "mtime": 1789628976.0417807,
-    "ast_hash": "2c240b94ba65a0070dba8b6815a679f5",
+    "mtime": 1789734499.1180081,
+    "ast_hash": "9f490cb01d8da41d2b8199ad701be046",
     "semantic_hash": ""
   },
   "app/reports/page.tsx": {
@@ -1185,13 +1185,13 @@
     "semantic_hash": ""
   },
   "app/_components/shell/Sidebar.tsx": {
-    "mtime": 1789628909.4252734,
-    "ast_hash": "02f7ca8fb6103ae0b678bf62b4051e03",
+    "mtime": 1789734519.95164,
+    "ast_hash": "9c1d40cb1288caaf0155f90860bf22f1",
     "semantic_hash": ""
   },
   "app/_components/shell/navItems.ts": {
-    "mtime": 1789630722.1345432,
-    "ast_hash": "9db6e7fcafaad118e9d55e4daeadcaa8",
+    "mtime": 1789734506.7020886,
+    "ast_hash": "8a04040876e8ee60fec3a60d2b3a10c8",
     "semantic_hash": ""
   },
   "app/_components/ui/Button.tsx": {
@@ -1222,11 +1222,6 @@
   "app/_components/ui/Table.tsx": {
     "mtime": 1789627580.8556662,
     "ast_hash": "1fc50096d9939a52e0ef39ab0f91ad3c",
-    "semantic_hash": ""
-  },
-  "app/api/dashboard/route.ts": {
-    "mtime": 1789627672.8722048,
-    "ast_hash": "8eb53502370d1bb8bd55b78b31d0f61e",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/VersionsSection.tsx": {
