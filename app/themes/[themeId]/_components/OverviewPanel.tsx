@@ -8,6 +8,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { ScoreboardGrid } from "./ScoreboardGrid";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
+import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import { AUDIT_STAGES, percentForStage, type AuditStageKey } from "@/lib/audit/progress";
 import { AVAILABLE_FEATURES, featureStatus } from "@/lib/audit/availableFeatures";
@@ -24,6 +25,11 @@ type Props = {
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
+  // The exact page-speed metrics the scoreboard's Desktop/Mobile
+  // Performance scores were computed from (this run's own, or a
+  // fallback's — see pageSpeedFallback) — shown as a Core Web Vitals
+  // breakdown when either card is expanded.
+  pageSpeed: PageSpeedMetric[];
   // Set when this run's own page-speed data was entirely missing (every
   // PSI call failed) and the Desktop/Mobile Performance cards are instead
   // showing an older complete run's last real measurement.
@@ -475,6 +481,49 @@ function RunAuditForm({
 // first time it's opened, then reuses that result for the rest.
 const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities", "features"]);
 
+function formatMs(ms: number | undefined) {
+  if (typeof ms !== "number") return "—";
+  return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
+}
+
+// The Core Web Vitals numbers a Performance card's score is averaged
+// from, broken out per page — the old Report tab's PageSpeedPanel showed
+// this same breakdown; recreated here since that tab is gone and a score
+// alone ("67%") doesn't say which page or which metric (LCP/CLS/TBT) is
+// actually driving it.
+function CoreWebVitalsTable({ metrics }: { metrics: PageSpeedMetric[] }) {
+  return (
+    <div className="overflow-x-auto rounded-md border border-border-subtle">
+      <table className="w-full min-w-[480px] text-left text-xs">
+        <thead className="bg-surface-muted text-zinc-500">
+          <tr>
+            <th className="px-3 py-1.5 font-medium">Preset</th>
+            <th className="px-3 py-1.5 font-medium">Page</th>
+            <th className="px-3 py-1.5 font-medium">Perf.</th>
+            <th className="px-3 py-1.5 font-medium">LCP</th>
+            <th className="px-3 py-1.5 font-medium">CLS</th>
+            <th className="px-3 py-1.5 font-medium">TBT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {metrics.map((m) => (
+            <tr key={`${m.label}-${m.url}`} className="border-t border-border-subtle">
+              <td className="px-3 py-1.5 font-medium text-zinc-900 dark:text-zinc-100">{m.label}</td>
+              <td className="px-3 py-1.5 capitalize text-zinc-700 dark:text-zinc-300">{m.pageType}</td>
+              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">
+                {typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}
+              </td>
+              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{formatMs(m.lcpMs)}</td>
+              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{typeof m.clsScore === "number" ? m.clsScore.toFixed(2) : "—"}</td>
+              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{formatMs(m.tbtMs)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function IssueRow({
   title,
   body,
@@ -520,6 +569,7 @@ export function OverviewPanel({
   latestAudit,
   checkTotals,
   scoreboard,
+  pageSpeed,
   pageSpeedFallback,
   categories,
   onChanged,
@@ -630,20 +680,27 @@ export function OverviewPanel({
       }
 
       const isDesktop = card.id === "desktop-performance";
+      const strategyMetrics = pageSpeed.filter((m) => m.strategy === (isDesktop ? "desktop" : "mobile"));
       const relevant = reportData.findings.filter((f) => f.category === "Performance" && isDesktopPerformanceFinding(f) === isDesktop);
-      if (relevant.length === 0) return <p className="text-sm text-zinc-500">No {isDesktop ? "desktop" : "mobile"} performance issues found.</p>;
       return (
-        <ul className="flex flex-col gap-2">
-          {relevant.map((f) => (
-            <IssueRow
-              key={f._id}
-              body={f.finding}
-              severity={f.severity}
-              filePath={f.presetLabel ?? f.filePath}
-              recommendation={f.recommendation}
-            />
-          ))}
-        </ul>
+        <div className="flex flex-col gap-3">
+          {strategyMetrics.length > 0 && <CoreWebVitalsTable metrics={strategyMetrics} />}
+          {relevant.length === 0 ? (
+            <p className="text-sm text-zinc-500">No {isDesktop ? "desktop" : "mobile"} performance issues found.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {relevant.map((f) => (
+                <IssueRow
+                  key={f._id}
+                  body={f.finding}
+                  severity={f.severity}
+                  filePath={f.presetLabel ?? f.filePath}
+                  recommendation={f.recommendation}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
       );
     }
 

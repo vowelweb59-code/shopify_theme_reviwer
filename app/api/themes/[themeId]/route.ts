@@ -9,6 +9,7 @@ import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
 import { sanitizePresets } from "@/lib/themes/presets";
 import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
+import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 
 /**
  * One aggregate payload for the whole Theme Detail page (Overview / All
@@ -39,6 +40,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   let latestAudit = null;
   let checks = null;
   let scoreboard = null;
+  // The page-speed data actually used for the scoreboard/Core Web Vitals
+  // display — this run's own, or a fallback's (see pageSpeedFallback
+  // below) — returned separately so the client shows the exact same
+  // numbers the scoreboard's Desktop/Mobile Performance scores came from.
+  let pageSpeed: PageSpeedMetric[] = [];
   // Set only when this run's own page-speed data is entirely missing (e.g.
   // every PageSpeed Insights call failed — see liveCheckErrors) and an
   // older complete run's page-speed data was used instead, so the
@@ -51,8 +57,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
       checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
       const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
 
-      let pageSpeed = latestAudit.pageSpeed;
-      if (!pageSpeed || pageSpeed.length === 0) {
+      pageSpeed = latestAudit.pageSpeed ?? [];
+      if (pageSpeed.length === 0) {
         const fallbackAudit = allAudits.find(
           (a) => a.status === "complete" && String(a._id) !== String(latestAudit!._id) && a.pageSpeed && a.pageSpeed.length > 0
         );
@@ -95,6 +101,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
     latestAudit,
     checks,
     scoreboard,
+    pageSpeed,
     pageSpeedFallback,
     previousAudits,
   });

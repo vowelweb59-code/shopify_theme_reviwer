@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
+import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import type { DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { OverviewPanel } from "./OverviewPanel";
 import { VersionsSection } from "./VersionsSection";
@@ -20,6 +21,7 @@ type ThemeDetail = {
   latestAudit: { _id: string; startedAt: string } | null;
   checks: { categories: CategoryChecks[]; totals: CheckTotals } | null;
   scoreboard: ScoreCard[] | null;
+  pageSpeed: PageSpeedMetric[];
   pageSpeedFallback: { auditRunId: string; startedAt: string } | null;
   previousAudits: { auditRunId: string; version: string | null; startedAt: string; totals: CheckTotals }[];
 };
@@ -93,6 +95,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 latestAudit={detail.latestAudit}
                 checkTotals={detail.checks?.totals ?? null}
                 scoreboard={detail.scoreboard}
+                pageSpeed={detail.pageSpeed}
                 pageSpeedFallback={detail.pageSpeedFallback}
                 categories={detail.checks?.categories ?? []}
                 onChanged={load}
