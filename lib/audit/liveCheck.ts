@@ -46,6 +46,42 @@ export async function withNavigationRetry<T>(attempt: () => Promise<T>): Promise
     return attempt();
   }
 }
+
+const BROWSER_LAUNCH_TIMEOUT_MS = 20_000;
+
+/**
+ * chromium.launch() has no built-in timeout — on a memory/CPU-constrained
+ * host (e.g. a 512MB free-tier deployment) it can hang indefinitely rather
+ * than fail fast when there isn't room to spawn the browser process. Left
+ * unguarded, that freezes an entire audit at 0% progress forever with no
+ * error ever surfaced, since nothing downstream (onItemComplete, the
+ * per-preset try/catch) ever gets a chance to run. If the eventual launch
+ * *does* succeed after we've already given up on it, it's closed
+ * immediately rather than leaked.
+ */
+export async function launchBrowserWithTimeout(): Promise<import("playwright").Browser> {
+  let timedOut = false;
+  const launchPromise = chromium.launch();
+  launchPromise.then(
+    (browser) => {
+      if (timedOut) void browser.close().catch(() => {});
+    },
+    () => {
+      // Launch itself failed — nothing to clean up.
+    }
+  );
+
+  return Promise.race([
+    launchPromise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => {
+        timedOut = true;
+        reject(new Error(`Browser launch timed out after ${BROWSER_LAUNCH_TIMEOUT_MS}ms`));
+      }, BROWSER_LAUNCH_TIMEOUT_MS)
+    ),
+  ]);
+}
+
 const MAX_CONTRAST_SAMPLES = 80;
 const MAX_IMAGE_SAMPLES = 60;
 const MAX_FOCUS_SAMPLES = 40;
@@ -687,7 +723,7 @@ async function runChecksForLoadedPreset(page: Page, label: string | null, demoSt
 export async function runLiveChecksForPreset(label: string, demoStoreUrl: string): Promise<LiveCheckResult> {
   let browser: import("playwright").Browser | undefined;
   try {
-    browser = await chromium.launch();
+    browser = await launchBrowserWithTimeout();
     const activeBrowser = browser;
     const { findings } = await withNavigationRetry(async () => {
       const context = await activeBrowser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -812,7 +848,7 @@ export async function runLiveChecksForPresets(
 
   let browser: import("playwright").Browser | undefined;
   try {
-    browser = await chromium.launch();
+    browser = await launchBrowserWithTimeout();
     const activeBrowser = browser;
     // Concurrent per preset (one browser, a fresh context each) rather than
     // one at a time — several demo stores checked sequentially, each with

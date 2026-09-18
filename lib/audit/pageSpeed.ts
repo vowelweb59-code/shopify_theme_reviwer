@@ -1,6 +1,6 @@
-import { chromium, type Page } from "playwright";
+import type { Page } from "playwright";
 import type { ExecutedFinding } from "./runRules";
-import { findFirstProductLink, withNavigationRetry, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
+import { findFirstProductLink, launchBrowserWithTimeout, withNavigationRetry, type PresetLink, type PresetLiveCheckError } from "./liveCheck";
 
 export type PageType = "home" | "collection" | "product";
 export type PsiStrategy = "mobile" | "desktop";
@@ -455,7 +455,7 @@ async function discoverPageUrls(homeUrl: string): Promise<{ home: string; collec
   let product: string | undefined;
   let browser: import("playwright").Browser | undefined;
   try {
-    browser = await chromium.launch();
+    browser = await launchBrowserWithTimeout();
     const activeBrowser = browser;
     product = await withNavigationRetry(async () => {
       const context = await activeBrowser.newContext();
@@ -638,7 +638,7 @@ export async function runPageSpeedChecksForPresets(
   if (needsFallback.length > 0) {
     let browser: import("playwright").Browser | undefined;
     try {
-      browser = await chromium.launch();
+      browser = await launchBrowserWithTimeout();
       const activeBrowser = browser;
       // One browser, many concurrent contexts (a supported Playwright
       // pattern) — same reasoning as the PSI concurrency above: several

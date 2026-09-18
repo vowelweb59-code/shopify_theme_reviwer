@@ -1,5 +1,5 @@
 import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   checkResponsiveReachability,
   collectFocusIndicatorSamples,
@@ -7,9 +7,47 @@ import {
   extractLoadedPageFacts,
   focusIndicatorFindings,
   isNavigationTimeoutError,
+  launchBrowserWithTimeout,
   withNavigationRetry,
   type PageFacts,
 } from "./liveCheck";
+
+describe("launchBrowserWithTimeout", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("resolves normally when chromium.launch() succeeds quickly", async () => {
+    const fakeBrowser = { close: vi.fn().mockResolvedValue(undefined) } as unknown as Browser;
+    vi.spyOn(chromium, "launch").mockResolvedValue(fakeBrowser);
+    await expect(launchBrowserWithTimeout()).resolves.toBe(fakeBrowser);
+  });
+
+  it("rejects instead of hanging forever when chromium.launch() never resolves", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(chromium, "launch").mockReturnValue(new Promise<Browser>(() => {}));
+
+    const rejection = expect(launchBrowserWithTimeout()).rejects.toThrow(/timed out/i);
+    await vi.advanceTimersByTimeAsync(20_000);
+    await rejection;
+  });
+
+  it("closes a browser that eventually launches after the timeout already fired, instead of leaking it", async () => {
+    vi.useFakeTimers();
+    let resolveLaunch!: (browser: Browser) => void;
+    vi.spyOn(chromium, "launch").mockReturnValue(new Promise<Browser>((resolve) => (resolveLaunch = resolve)));
+
+    const rejection = expect(launchBrowserWithTimeout()).rejects.toThrow(/timed out/i);
+    await vi.advanceTimersByTimeAsync(20_000);
+    await rejection;
+
+    const closeSpy = vi.fn().mockResolvedValue(undefined);
+    resolveLaunch({ close: closeSpy } as unknown as Browser);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("isNavigationTimeoutError", () => {
   it("matches Playwright's own navigation timeout message", () => {
