@@ -940,8 +940,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789723422.7529793,
-    "ast_hash": "89a9a0823531cdfc93c4bd0959e6a9bd",
+    "mtime": 1789726767.456925,
+    "ast_hash": "b5f6467071c991362ca9eb5708fd0d8c",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1000,8 +1000,8 @@
     "semantic_hash": ""
   },
   "app/_components/TabbedPage.tsx": {
-    "mtime": 1789637048.5298889,
-    "ast_hash": "b9b4c0f7b682d2b45afcd7d77894dcee",
+    "mtime": 1789726458.9675589,
+    "ast_hash": "3939efc0147b4ffc2b40644b72e0b3ff",
     "semantic_hash": ""
   },
   "app/enhancements/FutureUpdatesContent.tsx": {
@@ -1055,13 +1055,13 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789725513.5526333,
-    "ast_hash": "3d43c73bcaf7cd19b4eb91b576c2783c",
+    "mtime": 1789726792.3109405,
+    "ast_hash": "c750f3dbfccf5984fe448f17e3084e0c",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
-    "mtime": 1789725464.854891,
-    "ast_hash": "3b84fd386c2eed3d2eb232b93445f1f0",
+    "mtime": 1789726528.8629177,
+    "ast_hash": "b1340f2f78d0666b29b6b8e6fed94e83",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/page.tsx": {
@@ -1229,14 +1229,9 @@
     "ast_hash": "8eb53502370d1bb8bd55b78b31d0f61e",
     "semantic_hash": ""
   },
-  "app/themes/[themeId]/_components/AuditHistoryTable.tsx": {
-    "mtime": 1789627839.0480974,
-    "ast_hash": "9d1e12dc06dc26e09ddc9ad08fbe20d6",
-    "semantic_hash": ""
-  },
   "app/themes/[themeId]/_components/VersionsSection.tsx": {
-    "mtime": 1789628196.8777592,
-    "ast_hash": "1e4ee918f1aa93197c2292eb0500dffa",
+    "mtime": 1789726555.957683,
+    "ast_hash": "9a0324cab5d068ad11974c82a8220791",
     "semantic_hash": ""
   },
   "app/themes/_components/AddThemeModal.tsx": {
@@ -1342,6 +1337,11 @@
   "lib/audit/psi.ts": {
     "mtime": 1789723432.8387606,
     "ast_hash": "be3fdef15a51d3390a6f0daf97e6d2a6",
+    "semantic_hash": ""
+  },
+  "app/themes/[themeId]/_components/DownloadReportDropdown.tsx": {
+    "mtime": 1789726634.2298727,
+    "ast_hash": "88c7800ea5cb939d0007256f2dd584d8",
     "semantic_hash": ""
   }
 }
