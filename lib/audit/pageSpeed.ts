@@ -233,13 +233,18 @@ export function shopifySubmissionBarFindings(label: string, matrix: PageSpeedMet
 }
 
 // Lighthouse groups every performance audit into "metrics" (Core Web
-// Vitals — already covered by psiThresholdFindings above), "load-
-// opportunities" (specific fixes with an estimated time/byte saving, e.g.
-// "Eliminate render-blocking resources"), and "diagnostics" (other issues
-// without a direct savings estimate, e.g. "Avoid an excessive DOM size").
-// GTmetrix/PSI/Lighthouse all surface both of the latter two groups as
-// their "what to fix" list — that's what this extracts.
-const OPPORTUNITY_AUDIT_GROUPS = new Set(["load-opportunities", "diagnostics"]);
+// Vitals — already covered by psiThresholdFindings above), "diagnostics"
+// (issues without a direct savings estimate, e.g. "Avoid an excessive DOM
+// size"), and — in current Lighthouse versions — "insights" (specific,
+// per-resource fixes with an estimated time/byte saving, e.g. "Render-
+// blocking requests", "Improve image delivery"; this replaced the older
+// "load-opportunities" group name, confirmed against a real PSI response
+// where "load-opportunities" no longer appears at all and every actionable
+// scored failure sat under "insights" instead — kept both names since a
+// stale/cached Lighthouse version could still use the old one). GTmetrix/
+// PSI/Lighthouse all surface these as their "what to fix" list — that's
+// what this extracts.
+const OPPORTUNITY_AUDIT_GROUPS = new Set(["load-opportunities", "insights", "diagnostics"]);
 // Lighthouse's own pass/needs-improvement/fail bands (0.9+ green, 0.5-0.89
 // orange, <0.5 red) — same cutoff already used for the overall score above.
 const PASSING_SCORE_THRESHOLD = 0.9;
@@ -315,7 +320,14 @@ export function extractOpportunityFindings(label: string, url: string, lhr: Ligh
     if (!ref.group || !OPPORTUNITY_AUDIT_GROUPS.has(ref.group)) continue;
     const audit = audits[ref.id];
     if (!audit) continue;
-    if (audit.scoreDisplayMode !== "numeric" && audit.scoreDisplayMode !== "binary") continue;
+    // "metricSavings" is the scoreDisplayMode current Lighthouse uses for
+    // most of the "insights" group's scored, per-resource audits (render-
+    // blocking requests, image delivery, cache lifetimes, etc.) — without
+    // it, every one of those was silently skipped despite being real,
+    // scored failures (confirmed against a real PSI response: a 58/100
+    // performance score with several 0-scoring insights produced zero
+    // opportunity findings before this was added).
+    if (audit.scoreDisplayMode !== "numeric" && audit.scoreDisplayMode !== "binary" && audit.scoreDisplayMode !== "metricSavings") continue;
     if (typeof audit.score !== "number" || audit.score >= PASSING_SCORE_THRESHOLD) continue;
 
     const { text: description, url: learnMoreUrl } = stripMarkdownLinks(audit.description ?? "");

@@ -162,6 +162,41 @@ describe("extractOpportunityFindings", () => {
   it("returns an empty array for a result with no auditRefs, rather than throwing", () => {
     expect(extractOpportunityFindings("d", "u", {})).toEqual([]);
   });
+
+  // Current Lighthouse versions group most of these audits under
+  // "insights" (not "load-opportunities") and score most of them with
+  // "metricSavings" rather than "numeric"/"binary" — confirmed against a
+  // real PageSpeed Insights response where every actionable, 0-scoring
+  // audit used exactly this shape and none used the older one. Missing
+  // either check here previously meant a real performance score in the
+  // 50s-60s produced zero opportunity findings.
+  it("flags a failing 'insights'-group, 'metricSavings'-display audit (current real Lighthouse shape)", () => {
+    const lhr = lhrWith(
+      {
+        "render-blocking-insight": {
+          score: 0,
+          scoreDisplayMode: "metricSavings",
+          title: "Render-blocking requests",
+          description: "Requests are blocking the page's initial render.",
+          displayValue: "Est savings of 590 ms",
+          details: { type: "table", items: [{ url: "https://example.com/swiper.js", wastedMs: 967, totalBytes: 40610 }] },
+        },
+      },
+      [{ id: "render-blocking-insight", group: "insights" }]
+    );
+    const findings = extractOpportunityFindings("Demo store", "https://example.com", lhr);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].ruleId).toBe("LIVE-PERF-LH-RENDER-BLOCKING-INSIGHT");
+    expect(findings[0].finding).toContain("swiper.js");
+  });
+
+  it("skips an 'insights'-group audit with an unrecognized scoreDisplayMode (e.g. informative)", () => {
+    const lhr = lhrWith(
+      { "dom-size-insight": { score: 1, scoreDisplayMode: "informative", title: "Optimize DOM size", description: "d" } },
+      [{ id: "dom-size-insight", group: "insights" }]
+    );
+    expect(extractOpportunityFindings("d", "u", lhr)).toHaveLength(0);
+  });
 });
 
 describe("extractCoreMetrics — accessibility", () => {
