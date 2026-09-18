@@ -23,7 +23,7 @@
   "21": "bugs/index.ts",
   "22": "connectToDatabase",
   "23": "cross-file/index.ts",
-  "24": "buildLineIndex",
+  "24": "zip.ts",
   "25": "buildTestTheme.ts",
   "26": "Shopify Theme Auditor",
   "27": "vitest.config.mts",

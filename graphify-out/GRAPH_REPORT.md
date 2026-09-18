@@ -1,16 +1,16 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-18)
 
 ## Corpus Check
-- 255 files · ~1,561,430 words
+- 255 files · ~1,561,710 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1267 nodes · 2544 edges · 75 communities (69 shown, 6 thin omitted)
+- 1267 nodes · 2548 edges · 75 communities (69 shown, 6 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.58)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `313cad1f`
+- Built from commit: `4f644413`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -38,7 +38,7 @@
 - bugs/index.ts
 - connectToDatabase
 - cross-file/index.ts
-- buildLineIndex
+- zip.ts
 - buildTestTheme.ts
 - Shopify Theme Auditor
 - accessibility/index.ts
@@ -132,8 +132,8 @@ Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
 ### Community 4 - "types.ts"
-Cohesion: 0.13
-Nodes (23): ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, HtmlStructure, StackFrame, TEXT_CAPTURE_TAGS, ParsedAriaReference, ParsedButton, ParsedElementId (+15 more)
+Cohesion: 0.12
+Nodes (24): ARIA_REFERENCE_ATTRS, DEDICATED_INTERACTIVE_TAGS, HtmlStructure, StackFrame, TEXT_CAPTURE_TAGS, ParsedAriaReference, ParsedButton, ParsedElementId (+16 more)
 
 ### Community 5 - "[id]/export/google-sheet/route.ts"
 Cohesion: 0.28
@@ -168,8 +168,8 @@ Cohesion: 0.22
 Nodes (6): Tab, TabbedPageClient(), MaintenanceContent(), MaintenanceSummary, MatrixRow, RULE_STATUS_LABEL
 
 ### Community 17 - "parseJsonFile.ts"
-Cohesion: 0.28
-Nodes (11): extractSettingKeys(), extractTemplateSectionReferences(), findLine(), flattenLocaleKeys(), isLocaleFilePath(), isSectionGroupPath(), isSettingsSchemaPath(), isTemplateJsonPath() (+3 more)
+Cohesion: 0.17
+Nodes (17): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports(), buildLineIndex(), extractSettingKeys(), extractTemplateSectionReferences(), findLine() (+9 more)
 
 ### Community 18 - "finding.ts"
 Cohesion: 0.18
@@ -180,8 +180,8 @@ Cohesion: 0.09
 Nodes (26): CheckStatus, GET(), GET(), GET(), RequirementImplementationType, GET(), CheckEvidence, CheckStatus (+18 more)
 
 ### Community 20 - "extractReadmeVersion.ts"
-Cohesion: 0.11
-Nodes (22): countThemeDirectories(), InvalidThemeError, resolveThemeRoot(), THEME_DIRECTORIES, ExtractedTheme, extractEntries(), extractThemeZip(), MAX_FILE_COUNT (+14 more)
+Cohesion: 0.18
+Nodes (13): countThemeDirectories(), InvalidThemeError, resolveThemeRoot(), THEME_DIRECTORIES, extractThemeVersionFromZip(), extractVersionFromReadmeText(), extractVersionFromSettingsSchema(), findReadmeFile() (+5 more)
 
 ### Community 21 - "bugs/index.ts"
 Cohesion: 0.14
@@ -195,9 +195,9 @@ Nodes (16): GET(), GET(), PATCH(), GET(), GET(), GET(), connectToDatabase(), glo
 Cohesion: 0.08
 Nodes (18): brokenAriaReferenceRule, composedArticleSchemaRule, composedH1MissingRule, composedMultipleH1Rule, composedProductSchemaRule, composedSkippedHeadingRule, CROSS_FILE_RULES, duplicateLocaleKeyRule (+10 more)
 
-### Community 24 - "buildLineIndex"
-Cohesion: 0.31
-Nodes (6): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports(), buildLineIndex(), ParsedJsImport
+### Community 24 - "zip.ts"
+Cohesion: 0.25
+Nodes (8): ExtractedTheme, extractEntries(), MAX_FILE_COUNT, MAX_SINGLE_FILE_BYTES, MAX_UNCOMPRESSED_BYTES, MAX_ZIP_BYTES, safeEntryPath(), ThemeZipError
 
 ### Community 25 - "buildTestTheme.ts"
 Cohesion: 0.13
@@ -232,8 +232,8 @@ Cohesion: 0.12
 Nodes (22): DEPRECATED_FILTER_NAMES, DEPRECATED_LIQUID_REFERENCES, DEPRECATED_OBJECT_NAMES, DEPRECATED_TAG_NAMES, DeprecatedEntry, blank(), classifyStringConfidence(), extractLiquidStructure() (+14 more)
 
 ### Community 34 - "theme-parser/index.ts"
-Cohesion: 0.23
-Nodes (13): extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory(), parseThemeZip(), ThemeParseTiming, emptyMetaTags() (+5 more)
+Cohesion: 0.22
+Nodes (14): extractCssStructure(), extractHtmlStructure(), isLiquidExpression(), parseOneFile(), parseThemeDirectory(), parseThemeZip(), ThemeParseTiming, emptyMetaTags() (+6 more)
 
 ### Community 35 - "oauth.ts"
 Cohesion: 0.17
@@ -352,8 +352,8 @@ Cohesion: 0.10
 Nodes (18): RuleContext, RuleFinding, Severity, CHECKS, PresenceCheck, SHOPIFY_FEATURE_RULES, contentForHeaderRule, hardcodedStorefrontTextRule (+10 more)
 
 ### Community 66 - "extractCssStructure.ts"
-Cohesion: 0.29
-Nodes (6): CSS_NAMED_COLORS, looksLikeColorValue(), ANIMATION_PROPERTIES, COLOR_PROPERTIES, ParsedCssInfo, ParsedParseError
+Cohesion: 0.33
+Nodes (5): CSS_NAMED_COLORS, looksLikeColorValue(), ANIMATION_PROPERTIES, COLOR_PROPERTIES, ParsedCssInfo
 
 ### Community 68 - "projectStatus.ts"
 Cohesion: 0.33
@@ -372,7 +372,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **430 isolated node(s):** `CheckTotals`, `ThemeDetail`, `Format`, `CategoryDiffSummary`, `FindingsDiff` (+425 more)
+- **430 isolated node(s):** `CheckTotals`, `Props`, `ReportFinding`, `ReportEnhancementPoint`, `REPORT_BACKED_CARD_IDS` (+425 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -380,14 +380,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `[id]/export/route.ts`, `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `finding.ts`, `deriveChecksForAuditRun.ts`, `uploadThemeVersion.ts`, `audit-run.ts`, `[themeId]/route.ts`, `computeScoreboard.ts`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `package.json`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `CheckTotals`, `ThemeDetail`, `Format` to the rest of the system?**
+- **What connects `CheckTotals`, `Props`, `ReportFinding` to the rest of the system?**
   _430 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `[id]/export/route.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05119214586255259 - nodes in this community are weakly interconnected._

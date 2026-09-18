@@ -576,6 +576,45 @@
       "id": "app_maintenance_maintenancecontent_matrixrow"
     },
     {
+      "label": "DuplicateJsonKey",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
+      "source_location": "L5",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "duplicatejsonkey",
+      "id": "lib_theme_parser_duplicatejsonkeys_duplicatejsonkey"
+    },
+    {
+      "label": "Frame",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
+      "source_location": "L3",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "frame",
+      "id": "lib_theme_parser_duplicatejsonkeys_frame"
+    },
+    {
+      "label": "ParsedJsImport",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/types.ts",
+      "source_location": "L223",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "parsedjsimport",
+      "id": "lib_theme_parser_types_parsedjsimport"
+    },
+    {
       "label": "ParsedJsonFileInfo",
       "file_type": "code",
       "source_file": "lib/theme-parser/types.ts",
@@ -758,32 +797,6 @@
       "id": "lib_theme_parser_validatethemestructure_invalidthemeerror"
     },
     {
-      "label": "ExtractedTheme",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractedtheme",
-      "id": "lib_theme_parser_zip_extractedtheme"
-    },
-    {
-      "label": "ThemeZipError",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L14",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "themeziperror",
-      "id": "lib_theme_parser_zip_themeziperror"
-    },
-    {
       "label": "ThemeVersionResult",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
@@ -823,43 +836,30 @@
       "id": "models_theme_themedoc"
     },
     {
-      "label": "DuplicateJsonKey",
+      "label": "ExtractedTheme",
       "file_type": "code",
-      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
-      "source_location": "L5",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L16",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "duplicatejsonkey",
-      "id": "lib_theme_parser_duplicatejsonkeys_duplicatejsonkey"
+      "community_name": "zip.ts",
+      "norm_label": "extractedtheme",
+      "id": "lib_theme_parser_zip_extractedtheme"
     },
     {
-      "label": "Frame",
+      "label": "ThemeZipError",
       "file_type": "code",
-      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
-      "source_location": "L3",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L14",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "frame",
-      "id": "lib_theme_parser_duplicatejsonkeys_frame"
-    },
-    {
-      "label": "ParsedJsImport",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/types.ts",
-      "source_location": "L223",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "parsedjsimport",
-      "id": "lib_theme_parser_types_parsedjsimport"
+      "community_name": "zip.ts",
+      "norm_label": "themeziperror",
+      "id": "lib_theme_parser_zip_themeziperror"
     },
     {
       "label": "ThemeIndex",
@@ -1642,6 +1642,19 @@
       "id": "lib_theme_parser_types_parsedmetatags"
     },
     {
+      "label": "ParsedParseError",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/types.ts",
+      "source_location": "L247",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "types.ts",
+      "norm_label": "parsedparseerror",
+      "id": "lib_theme_parser_types_parsedparseerror"
+    },
+    {
       "label": "ParsedScript",
       "file_type": "code",
       "source_file": "lib/theme-parser/types.ts",
@@ -1840,53 +1853,53 @@
       "label": "CheckTotals",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_checktotals",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "checktotals",
-      "id": "app_themes_themeid_components_overviewpanel_checktotals"
+      "norm_label": "checktotals"
     },
     {
       "label": "Props",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_props",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "props",
-      "id": "app_themes_themeid_components_overviewpanel_props"
+      "norm_label": "props"
     },
     {
       "label": "ReportEnhancementPoint",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportenhancementpoint",
-      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
+      "norm_label": "reportenhancementpoint"
     },
     {
       "label": "ReportFinding",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_reportfinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportfinding",
-      "id": "app_themes_themeid_components_overviewpanel_reportfinding"
+      "norm_label": "reportfinding"
     },
     {
       "label": "AuditStageKey",
@@ -2812,19 +2825,6 @@
       "id": "lib_theme_parser_types_parsedcssinfo"
     },
     {
-      "label": "ParsedParseError",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/types.ts",
-      "source_location": "L247",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 66,
-      "community_name": "extractCssStructure.ts",
-      "norm_label": "parsedparseerror",
-      "id": "lib_theme_parser_types_parsedparseerror"
-    },
-    {
       "label": "PhaseEntry",
       "file_type": "code",
       "source_file": "lib/projectStatus.ts",
@@ -2910,10 +2910,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_themedetailtabs_checktotals",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "checktotals"
+      "norm_label": "checktotals",
+      "id": "app_themes_themeid_components_themedetailtabs_checktotals"
     },
     {
       "label": "ThemeDetail",
@@ -2923,10 +2923,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_themedetailtabs_themedetail",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "themedetail"
+      "norm_label": "themedetail",
+      "id": "app_themes_themeid_components_themedetailtabs_themedetail"
     },
     {
       "label": "AuditTotals",
@@ -4035,6 +4035,42 @@
       "id": "app_settings_page_settingspage"
     },
     {
+      "label": "findDuplicateJsonKeys()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
+      "source_location": "L15",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "findduplicatejsonkeys()",
+      "id": "lib_theme_parser_duplicatejsonkeys_findduplicatejsonkeys"
+    },
+    {
+      "label": "extractJsImports()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractJsStructure.ts",
+      "source_location": "L12",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "extractjsimports()",
+      "id": "lib_theme_parser_extractjsstructure_extractjsimports"
+    },
+    {
+      "label": "buildLineIndex()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/lineIndex.ts",
+      "source_location": "L4",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "buildlineindex()",
+      "id": "lib_theme_parser_lineindex_buildlineindex"
+    },
+    {
       "label": "extractSettingKeys()",
       "file_type": "code",
       "source_file": "lib/theme-parser/parseJsonFile.ts",
@@ -4285,42 +4321,6 @@
       "community_name": "extractReadmeVersion.ts",
       "norm_label": "resolvethemeroot()",
       "id": "lib_theme_parser_validatethemestructure_resolvethemeroot"
-    },
-    {
-      "label": "extractEntries()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L29",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractentries()",
-      "id": "lib_theme_parser_zip_extractentries"
-    },
-    {
-      "label": "extractThemeZip()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L107",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "extractthemezip()",
-      "id": "lib_theme_parser_zip_extractthemezip"
-    },
-    {
-      "label": "safeEntryPath()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L22",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "safeentrypath()",
-      "id": "lib_theme_parser_zip_safeentrypath"
     },
     {
       "label": "extractThemeVersionFromZip()",
@@ -4647,40 +4647,28 @@
       "id": "lib_rules_cross_file_index_test_findingsfor"
     },
     {
-      "label": "findDuplicateJsonKeys()",
+      "label": "extractEntries()",
       "file_type": "code",
-      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
-      "source_location": "L15",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L29",
       "_callable": true,
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "findduplicatejsonkeys()",
-      "id": "lib_theme_parser_duplicatejsonkeys_findduplicatejsonkeys"
+      "community_name": "zip.ts",
+      "norm_label": "extractentries()",
+      "id": "lib_theme_parser_zip_extractentries"
     },
     {
-      "label": "extractJsImports()",
+      "label": "safeEntryPath()",
       "file_type": "code",
-      "source_file": "lib/theme-parser/extractJsStructure.ts",
-      "source_location": "L12",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "extractjsimports()",
-      "id": "lib_theme_parser_extractjsstructure_extractjsimports"
-    },
-    {
-      "label": "buildLineIndex()",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/lineIndex.ts",
-      "source_location": "L4",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "buildlineindex()",
-      "id": "lib_theme_parser_lineindex_buildlineindex"
+      "community_name": "zip.ts",
+      "norm_label": "safeentrypath()",
+      "id": "lib_theme_parser_zip_safeentrypath"
     },
     {
       "label": "getPath()",
@@ -5415,6 +5403,18 @@
       "id": "lib_theme_parser_walkfiles_walkthemefiles"
     },
     {
+      "label": "extractThemeZip()",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L107",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "theme-parser/index.ts",
+      "norm_label": "extractthemezip()",
+      "id": "lib_theme_parser_zip_extractthemezip"
+    },
+    {
       "label": "GET()",
       "file_type": "code",
       "source_file": "app/api/auth/google/callback/route.ts",
@@ -6090,97 +6090,97 @@
       "label": "formatDate()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L60",
+      "source_location": "L61",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_formatdate",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatdate()",
-      "id": "app_themes_themeid_components_overviewpanel_formatdate"
+      "norm_label": "formatdate()"
     },
     {
       "label": "healthTone()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L70",
+      "source_location": "L71",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_healthtone",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "healthtone()",
-      "id": "app_themes_themeid_components_overviewpanel_healthtone"
+      "norm_label": "healthtone()"
     },
     {
       "label": "isDesktopPerformanceFinding()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L56",
+      "source_location": "L57",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "isdesktopperformancefinding()",
-      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "norm_label": "isdesktopperformancefinding()"
     },
     {
       "label": "IssueRow()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L386",
+      "source_location": "L458",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_issuerow",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "issuerow()",
-      "id": "app_themes_themeid_components_overviewpanel_issuerow"
+      "norm_label": "issuerow()"
     },
     {
       "label": "OverviewPanel()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L399",
+      "source_location": "L471",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel()",
-      "id": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "norm_label": "overviewpanel()"
     },
     {
       "label": "PresetsSection()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_presetssection",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "presetssection()",
-      "id": "app_themes_themeid_components_overviewpanel_presetssection"
+      "norm_label": "presetssection()"
     },
     {
       "label": "RunAuditForm()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L219",
+      "source_location": "L291",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_runauditform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "runauditform()",
-      "id": "app_themes_themeid_components_overviewpanel_runauditform"
+      "norm_label": "runauditform()"
     },
     {
       "label": "UploadVersionForm()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L164",
+      "source_location": "L236",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_uploadversionform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "uploadversionform()",
-      "id": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "norm_label": "uploadversionform()"
     },
     {
       "label": "percentForStage()",
@@ -7518,37 +7518,37 @@
       "label": "CardHeading()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L16",
+      "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_scoreboardgrid_cardheading",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "cardheading()",
-      "id": "app_themes_themeid_components_scoreboardgrid_cardheading"
+      "norm_label": "cardheading()"
     },
     {
       "label": "ScoreboardGrid()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L54",
+      "source_location": "L42",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoreboardgrid()",
-      "id": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
+      "norm_label": "scoreboardgrid()"
     },
     {
       "label": "scoreTone()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_scoreboardgrid_scoretone",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoretone()",
-      "id": "app_themes_themeid_components_scoreboardgrid_scoretone"
+      "norm_label": "scoretone()"
     },
     {
       "label": "AppShell()",
@@ -7905,10 +7905,10 @@
       "source_location": "L26",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_themedetailtabs_themedetailtabs",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "themedetailtabs()"
+      "norm_label": "themedetailtabs()",
+      "id": "app_themes_themeid_components_themedetailtabs_themedetailtabs"
     },
     {
       "label": "formatDate()",
@@ -9312,6 +9312,50 @@
       "id": "postcss_config_config"
     },
     {
+      "label": "duplicateJsonKeys.ts",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "duplicatejsonkeys.ts",
+      "id": "lib_theme_parser_duplicatejsonkeys"
+    },
+    {
+      "label": "duplicateJsonKeys.test.ts",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/duplicateJsonKeys.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "duplicatejsonkeys.test.ts",
+      "id": "lib_theme_parser_duplicatejsonkeys_test"
+    },
+    {
+      "label": "extractJsStructure.ts",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/extractJsStructure.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "extractjsstructure.ts",
+      "id": "lib_theme_parser_extractjsstructure"
+    },
+    {
+      "label": "lineIndex.ts",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/lineIndex.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "parseJsonFile.ts",
+      "norm_label": "lineindex.ts",
+      "id": "lib_theme_parser_lineindex"
+    },
+    {
       "label": "parseJsonFile.ts",
       "file_type": "code",
       "source_file": "lib/theme-parser/parseJsonFile.ts",
@@ -9895,61 +9939,6 @@
       "id": "lib_theme_parser_validatethemestructure_theme_directories"
     },
     {
-      "label": "zip.ts",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "zip.ts",
-      "id": "lib_theme_parser_zip"
-    },
-    {
-      "label": "MAX_FILE_COUNT",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L11",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "max_file_count",
-      "id": "lib_theme_parser_zip_max_file_count"
-    },
-    {
-      "label": "MAX_SINGLE_FILE_BYTES",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L12",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "max_single_file_bytes",
-      "id": "lib_theme_parser_zip_max_single_file_bytes"
-    },
-    {
-      "label": "MAX_UNCOMPRESSED_BYTES",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L10",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "max_uncompressed_bytes",
-      "id": "lib_theme_parser_zip_max_uncompressed_bytes"
-    },
-    {
-      "label": "MAX_ZIP_BYTES",
-      "file_type": "code",
-      "source_file": "lib/theme-parser/zip.ts",
-      "source_location": "L9",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "extractReadmeVersion.ts",
-      "norm_label": "max_zip_bytes",
-      "id": "lib_theme_parser_zip_max_zip_bytes"
-    },
-    {
       "label": "extractReadmeVersion.ts",
       "file_type": "code",
       "source_file": "lib/themes/extractReadmeVersion.ts",
@@ -10478,48 +10467,59 @@
       "id": "lib_rules_cross_file_index_test_base_layout"
     },
     {
-      "label": "duplicateJsonKeys.ts",
+      "label": "zip.ts",
       "file_type": "code",
-      "source_file": "lib/theme-parser/duplicateJsonKeys.ts",
+      "source_file": "lib/theme-parser/zip.ts",
       "source_location": "L1",
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "duplicatejsonkeys.ts",
-      "id": "lib_theme_parser_duplicatejsonkeys"
+      "community_name": "zip.ts",
+      "norm_label": "zip.ts",
+      "id": "lib_theme_parser_zip"
     },
     {
-      "label": "duplicateJsonKeys.test.ts",
+      "label": "MAX_FILE_COUNT",
       "file_type": "code",
-      "source_file": "lib/theme-parser/duplicateJsonKeys.test.ts",
-      "source_location": "L1",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L11",
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "duplicatejsonkeys.test.ts",
-      "id": "lib_theme_parser_duplicatejsonkeys_test"
+      "community_name": "zip.ts",
+      "norm_label": "max_file_count",
+      "id": "lib_theme_parser_zip_max_file_count"
     },
     {
-      "label": "extractJsStructure.ts",
+      "label": "MAX_SINGLE_FILE_BYTES",
       "file_type": "code",
-      "source_file": "lib/theme-parser/extractJsStructure.ts",
-      "source_location": "L1",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L12",
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "extractjsstructure.ts",
-      "id": "lib_theme_parser_extractjsstructure"
+      "community_name": "zip.ts",
+      "norm_label": "max_single_file_bytes",
+      "id": "lib_theme_parser_zip_max_single_file_bytes"
     },
     {
-      "label": "lineIndex.ts",
+      "label": "MAX_UNCOMPRESSED_BYTES",
       "file_type": "code",
-      "source_file": "lib/theme-parser/lineIndex.ts",
-      "source_location": "L1",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L10",
       "_origin": "ast",
       "community": 24,
-      "community_name": "buildLineIndex",
-      "norm_label": "lineindex.ts",
-      "id": "lib_theme_parser_lineindex"
+      "community_name": "zip.ts",
+      "norm_label": "max_uncompressed_bytes",
+      "id": "lib_theme_parser_zip_max_uncompressed_bytes"
+    },
+    {
+      "label": "MAX_ZIP_BYTES",
+      "file_type": "code",
+      "source_file": "lib/theme-parser/zip.ts",
+      "source_location": "L9",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "zip.ts",
+      "norm_label": "max_zip_bytes",
+      "id": "lib_theme_parser_zip_max_zip_bytes"
     },
     {
       "label": "themeIndex.ts",
@@ -12749,21 +12749,21 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel.tsx",
-      "id": "app_themes_themeid_components_overviewpanel"
+      "norm_label": "overviewpanel.tsx"
     },
     {
       "label": "REPORT_BACKED_CARD_IDS",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L384",
+      "source_location": "L456",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "report_backed_card_ids",
-      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
+      "norm_label": "report_backed_card_ids"
     },
     {
       "label": "progress.ts",
@@ -14531,21 +14531,21 @@
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_scoreboardgrid",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "scoreboardgrid.tsx",
-      "id": "app_themes_themeid_components_scoreboardgrid"
+      "norm_label": "scoreboardgrid.tsx"
     },
     {
       "label": "CARD_ACCENTS",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L35",
+      "source_location": "L24",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_scoreboardgrid_card_accents",
       "community": 69,
       "community_name": "ScoreboardGrid.tsx",
-      "norm_label": "card_accents",
-      "id": "app_themes_themeid_components_scoreboardgrid_card_accents"
+      "norm_label": "card_accents"
     },
     {
       "label": "AppShell.tsx",
@@ -14784,10 +14784,10 @@
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_themedetailtabs",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "themedetailtabs.tsx"
+      "norm_label": "themedetailtabs.tsx",
+      "id": "app_themes_themeid_components_themedetailtabs"
     },
     {
       "label": "VersionsSection.tsx",
@@ -16365,37 +16365,49 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L455",
+      "source_location": "L533",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "target": "lib_audit_availablefeatures_featurestatus"
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L505",
+      "source_location": "L545",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L549",
+      "source_location": "L595",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
+      "source_location": "L639",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16403,7 +16415,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L345",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_overviewpanel_runauditform",
@@ -16414,12 +16426,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L77",
+      "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoretone"
+      "target": "app_themes_themeid_components_scoreboardgrid_scoretone",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -22342,9 +22354,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard_scorecard"
+      "target": "lib_themes_computescoreboard_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22354,9 +22366,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun_categorychecks"
+      "target": "lib_themes_derivechecksforauditrun_categorychecks",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22366,9 +22378,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_audit_stages"
+      "target": "lib_audit_progress_audit_stages",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22378,9 +22390,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_auditstagekey"
+      "target": "lib_audit_progress_auditstagekey",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22390,9 +22402,33 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_percentforstage"
+      "target": "lib_audit_progress_percentforstage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "app_themes_themeid_components_overviewpanel",
+      "target": "lib_audit_availablefeatures_available_features",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "app_themes_themeid_components_overviewpanel",
+      "target": "lib_audit_availablefeatures_featurestatus",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22402,9 +22438,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_demostorepreset"
+      "target": "app_components_presetlinkseditor_demostorepreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22414,9 +22450,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_presetlinkseditor"
+      "target": "app_components_presetlinkseditor_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22426,9 +22462,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings_severitybadge"
+      "target": "app_components_findings_severitybadge",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22438,9 +22474,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button_button"
+      "target": "app_components_ui_button_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22450,9 +22486,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_card"
+      "target": "app_components_ui_card_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22462,9 +22498,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_cardheader"
+      "target": "app_components_ui_card_cardheader",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22474,21 +22510,21 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "lib_themes_computescoreboard_scorecard"
+      "target": "lib_themes_computescoreboard_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22498,9 +22534,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
     },
     {
       "relation": "imports",
@@ -22510,9 +22546,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_versionssection_versionssection",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_versionssection"
     },
     {
       "relation": "imports",
@@ -22522,9 +22558,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown"
     },
     {
       "relation": "imports",
@@ -22534,9 +22570,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_tabbedpage_tabbedpageclient",
-      "confidence_score": 1.0
+      "target": "app_components_tabbedpage_tabbedpageclient"
     },
     {
       "relation": "imports",
@@ -22546,9 +22582,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_shell_breadcrumbs_breadcrumbs",
-      "confidence_score": 1.0
+      "target": "app_components_shell_breadcrumbs_breadcrumbs"
     },
     {
       "relation": "imports",
@@ -22558,9 +22594,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_shell_pagecontainer_pagecontainer",
-      "confidence_score": 1.0
+      "target": "app_components_shell_pagecontainer_pagecontainer"
     },
     {
       "relation": "imports",
@@ -22570,9 +22606,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "lib_themes_derivechecksforauditrun_categorychecks",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun_categorychecks"
     },
     {
       "relation": "imports",
@@ -22582,9 +22618,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "lib_themes_computescoreboard_scorecard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard_scorecard"
     },
     {
       "relation": "imports",
@@ -22594,9 +22630,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_presetlinkseditor_demostorepreset",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor_demostorepreset"
     },
     {
       "relation": "imports",
@@ -29818,9 +29854,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard"
+      "target": "lib_themes_computescoreboard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29830,9 +29866,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun"
+      "target": "lib_themes_derivechecksforauditrun",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29842,9 +29878,21 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress"
+      "target": "lib_audit_progress",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "app_themes_themeid_components_overviewpanel",
+      "target": "lib_audit_availablefeatures",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29854,9 +29902,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor"
+      "target": "app_components_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29866,9 +29914,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings"
+      "target": "app_components_findings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29878,9 +29926,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button"
+      "target": "app_components_ui_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29890,9 +29938,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card"
+      "target": "app_components_ui_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29902,21 +29950,21 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid"
+      "target": "app_themes_themeid_components_scoreboardgrid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "lib_themes_computescoreboard"
+      "target": "lib_themes_computescoreboard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -29926,9 +29974,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_overviewpanel",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel"
     },
     {
       "relation": "imports_from",
@@ -29938,9 +29986,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_versionssection",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection"
     },
     {
       "relation": "imports_from",
@@ -29950,9 +29998,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_downloadreportdropdown",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown"
     },
     {
       "relation": "imports_from",
@@ -29962,9 +30010,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_tabbedpage",
-      "confidence_score": 1.0
+      "target": "app_components_tabbedpage"
     },
     {
       "relation": "imports_from",
@@ -29974,9 +30022,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_shell_breadcrumbs",
-      "confidence_score": 1.0
+      "target": "app_components_shell_breadcrumbs"
     },
     {
       "relation": "imports_from",
@@ -29986,9 +30034,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_shell_pagecontainer",
-      "confidence_score": 1.0
+      "target": "app_components_shell_pagecontainer"
     },
     {
       "relation": "imports_from",
@@ -29998,9 +30046,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "lib_themes_derivechecksforauditrun",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun"
     },
     {
       "relation": "imports_from",
@@ -30010,9 +30058,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "lib_themes_computescoreboard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard"
     },
     {
       "relation": "imports_from",
@@ -30022,9 +30070,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_components_presetlinkseditor",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor"
     },
     {
       "relation": "imports_from",
@@ -35426,188 +35474,188 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_checktotals"
+      "target": "app_themes_themeid_components_overviewpanel_checktotals",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L164",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "target": "app_themes_themeid_components_overviewpanel_props",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L18",
+      "source_location": "L236",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_props"
+      "target": "app_themes_themeid_components_overviewpanel_uploadversionform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L219",
+      "source_location": "L291",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_runauditform"
+      "target": "app_themes_themeid_components_overviewpanel_runauditform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportfinding"
+      "target": "app_themes_themeid_components_overviewpanel_reportfinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L384",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
+      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L386",
+      "source_location": "L456",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_issuerow"
+      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L399",
+      "source_location": "L458",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "target": "app_themes_themeid_components_overviewpanel_issuerow",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L43",
+      "source_location": "L471",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_presetssection"
+      "target": "app_themes_themeid_components_overviewpanel_presetssection",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L16",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_cardheading"
+      "target": "app_themes_themeid_components_scoreboardgrid_cardheading",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L35",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_card_accents"
+      "target": "app_themes_themeid_components_scoreboardgrid_card_accents",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L54",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ScoreboardGrid.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_scoreboardgrid",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoretone"
+      "target": "app_themes_themeid_components_scoreboardgrid_scoretone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35616,9 +35664,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_themedetailtabs_checktotals",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_themedetailtabs_checktotals"
     },
     {
       "relation": "contains",
@@ -35627,9 +35675,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_themedetailtabs_themedetail",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_themedetailtabs_themedetail"
     },
     {
       "relation": "contains",
@@ -35638,9 +35686,9 @@
       "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_themedetailtabs_themedetailtabs",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_themedetailtabs_themedetailtabs"
     },
     {
       "relation": "contains",
@@ -44331,5 +44379,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "313cad1f28ab80286d3a0fc2662f995a7cfdc9aa"
+  "built_at_commit": "4f6444135c57862b5e408f630d237c42259022bd"
 }

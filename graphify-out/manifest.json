@@ -1055,8 +1055,8 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789726792.3109405,
-    "ast_hash": "c750f3dbfccf5984fe448f17e3084e0c",
+    "mtime": 1789728710.506712,
+    "ast_hash": "18031df05db9b2b6ea3326475406e24d",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ScoreboardGrid.tsx": {
-    "mtime": 1789725404.1371646,
-    "ast_hash": "5d4e4195ead06d6b13cc6d133251b0b3",
+    "mtime": 1789728493.9085734,
+    "ast_hash": "be98035ad36e930335279d0f4fbbd79a",
     "semantic_hash": ""
   },
   "lib/themes/computeScoreboard.test.ts": {
