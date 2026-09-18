@@ -465,13 +465,13 @@
     "semantic_hash": ""
   },
   "lib/audit/liveCheck.test.ts": {
-    "mtime": 1789706747.5497756,
-    "ast_hash": "78a38594f9175d37de279511e09be3c1",
+    "mtime": 1789709377.2987783,
+    "ast_hash": "d7c723230904cb8ac44ee1d5f11eb1ed",
     "semantic_hash": ""
   },
   "lib/audit/liveCheck.ts": {
-    "mtime": 1789706552.6440609,
-    "ast_hash": "da07c146b98e473f7cbb32b30f2ac607",
+    "mtime": 1789709267.210347,
+    "ast_hash": "0a0210caf7e2c96b188e8e4fb93f1a9a",
     "semantic_hash": ""
   },
   "Landing Page 2.png": {
@@ -950,8 +950,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789706638.6701536,
-    "ast_hash": "6a95ad4ceb1daeaddc0fe6909ad65e39",
+    "mtime": 1789709309.5734882,
+    "ast_hash": "ee2144eb9f799cf05da886797ced1ba3",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1085,8 +1085,8 @@
     "semantic_hash": ""
   },
   "lib/audit/executeAuditRun.ts": {
-    "mtime": 1789646627.428107,
-    "ast_hash": "d9312d3f3db87a8e9d01efe33bf2d51f",
+    "mtime": 1789709168.4113708,
+    "ast_hash": "bf44b7a732dc8310227137790133620f",
     "semantic_hash": ""
   },
   "lib/themes/checksum.ts": {
