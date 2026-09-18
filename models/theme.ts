@@ -22,6 +22,20 @@ const themeSchema = new Schema(
     // pre-fill every "Run Audit" instead of retyping them each time. Purely
     // a convenience default: a specific run can still edit/override them.
     demoStorePresets: { type: [themeDemoStorePresetSchema], default: () => [] },
+    // Cached result of checking this theme's public Shopify Theme Store
+    // listing (see lib/themes/themeStoreFeatures.ts) — a confirmatory-only
+    // signal for AVAILABLE_FEATURES entries our own static/live detectors
+    // can't check (empty pointIds): if the Theme Store's own "Features"
+    // section names a feature, the theme has it, even though we can't (or
+    // haven't yet) verified it from the theme's source. Never used to mark
+    // a feature *absent* — the Theme Store page not mentioning something
+    // doesn't prove it's missing. Refreshed on request (a live fetch of an
+    // external page on every load would be slow and impolite), not on
+    // every audit run.
+    themeStoreSlug: { type: String, default: null },
+    themeStoreFeatures: { type: [String], default: undefined },
+    themeStoreCheckedAt: { type: Date, default: null },
+    themeStoreError: { type: String, default: null },
   },
   { timestamps: true }
 );

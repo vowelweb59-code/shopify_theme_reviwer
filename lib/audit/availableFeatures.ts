@@ -147,10 +147,22 @@ export const AVAILABLE_FEATURES: AvailableFeature[] = [
 
 export type FeatureStatus = "detected" | "not_detected" | "not_checked";
 
-/** `detections` is a run's AuditRun.enhancementDetections (pointId -> detected). */
-export function featureStatus(feature: AvailableFeature, detections: Map<string, boolean>): FeatureStatus {
-  if (feature.pointIds.length === 0) return "not_checked";
-  const relevant = feature.pointIds.map((id) => detections.get(id)).filter((v): v is boolean => v !== undefined);
-  if (relevant.length === 0) return "not_checked";
-  return relevant.some(Boolean) ? "detected" : "not_detected";
+/**
+ * `detections` is a run's AuditRun.enhancementDetections (pointId ->
+ * detected). `themeStoreLabels` is a theme's cached Shopify Theme Store
+ * listing feature names (see lib/themes/themeStoreFeatures.ts), lowercased
+ * — checked only as a fallback when our own detectors have nothing to say
+ * (no pointIds mapped, or the mapped point(s) never ran), and only ever
+ * used to confirm a feature is present, never to conclude it's absent: the
+ * Theme Store listing not mentioning something doesn't prove the theme
+ * lacks it, it just means the merchant-facing marketing copy didn't call
+ * it out.
+ */
+export function featureStatus(feature: AvailableFeature, detections: Map<string, boolean>, themeStoreLabels?: Set<string>): FeatureStatus {
+  if (feature.pointIds.length > 0) {
+    const relevant = feature.pointIds.map((id) => detections.get(id)).filter((v): v is boolean => v !== undefined);
+    if (relevant.length > 0) return relevant.some(Boolean) ? "detected" : "not_detected";
+  }
+  if (themeStoreLabels?.has(feature.label.toLowerCase())) return "detected";
+  return "not_checked";
 }

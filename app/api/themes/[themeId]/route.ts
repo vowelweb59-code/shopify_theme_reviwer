@@ -73,6 +73,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
         pageSpeed,
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
+        themeStoreFeatures: theme.themeStoreFeatures,
       });
     }
   }

@@ -15,7 +15,16 @@ import { DownloadReportDropdown } from "./DownloadReportDropdown";
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type ThemeDetail = {
-  theme: { _id: string; name: string; demoStorePresets?: DemoStorePreset[]; googleSheetUrl?: string | null };
+  theme: {
+    _id: string;
+    name: string;
+    demoStorePresets?: DemoStorePreset[];
+    googleSheetUrl?: string | null;
+    themeStoreSlug?: string | null;
+    themeStoreFeatures?: string[];
+    themeStoreCheckedAt?: string | null;
+    themeStoreError?: string | null;
+  };
   versions: { _id: string; version: string; createdAt: string }[];
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
@@ -98,6 +107,10 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 pageSpeed={detail.pageSpeed}
                 pageSpeedFallback={detail.pageSpeedFallback}
                 categories={detail.checks?.categories ?? []}
+                themeStoreSlug={detail.theme.themeStoreSlug ?? null}
+                themeStoreFeatures={detail.theme.themeStoreFeatures}
+                themeStoreCheckedAt={detail.theme.themeStoreCheckedAt ?? null}
+                themeStoreError={detail.theme.themeStoreError ?? null}
                 onChanged={load}
               />
             ),

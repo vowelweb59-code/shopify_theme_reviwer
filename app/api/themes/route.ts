@@ -79,6 +79,7 @@ export async function GET() {
         pageSpeed,
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
+        themeStoreFeatures: theme.themeStoreFeatures,
       });
       return { theme, latestVersion, latestAudit, checkTotals: checks.totals, scoreboard };
     })

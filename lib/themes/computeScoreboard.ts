@@ -47,9 +47,9 @@ function performanceScoreCard(id: string, label: string, pageSpeed: PageSpeedMet
   return { id, label, score, detail: `Averaged across ${relevant.length} page${relevant.length === 1 ? "" : "s"} measured` };
 }
 
-function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined): ScoreCard {
+function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined, themeStoreLabels?: Set<string>): ScoreCard {
   const detections = new Map((enhancementDetections ?? []).map((d) => [d.pointId, d.detected]));
-  const statuses = AVAILABLE_FEATURES.map((f) => featureStatus(f, detections));
+  const statuses = AVAILABLE_FEATURES.map((f) => featureStatus(f, detections, themeStoreLabels));
   const checked = statuses.filter((s) => s !== "not_checked").length;
   const detected = statuses.filter((s) => s === "detected").length;
   if (checked === 0) {
@@ -96,12 +96,18 @@ export function computeScoreboard({
   pageSpeed,
   enhancementDetections,
   enhancementPoints,
+  themeStoreFeatures,
 }: {
   categories: CategoryChecks[];
   pageSpeed: PageSpeedMetric[] | undefined;
   enhancementDetections: EnhancementDetectionRecord[] | undefined;
   enhancementPoints: { pointId: string; themeCount?: number | null }[];
+  // A theme's cached Shopify Theme Store listing feature names (see
+  // lib/themes/themeStoreFeatures.ts) — confirms AVAILABLE_FEATURES entries
+  // our own detectors can't check, never used to mark one absent.
+  themeStoreFeatures?: string[];
 }): ScoreCard[] {
+  const themeStoreLabels = themeStoreFeatures ? new Set(themeStoreFeatures.map((f) => f.toLowerCase())) : undefined;
   return [
     performanceScoreCard("desktop-performance", "Desktop Performance", pageSpeed, "desktop"),
     performanceScoreCard("mobile-performance", "Mobile Performance", pageSpeed, "mobile"),
@@ -109,7 +115,7 @@ export function computeScoreboard({
     categoryScore(categories, ["Technical SEO", "Technical AEO"], "seo", "SEO"),
     categoryScore(categories, ["Theme Store Compliance"], "store-requirement", "Store Requirement"),
     categoryScore(categories, ["Internal Standard"], "internal-standards", "Internal Standards"),
-    featuresScoreCard(enhancementDetections),
+    featuresScoreCard(enhancementDetections, themeStoreLabels),
     opportunitiesScoreCard(enhancementDetections, enhancementPoints),
   ];
 }

@@ -35,6 +35,13 @@ type Props = {
   // showing an older complete run's last real measurement.
   pageSpeedFallback: { auditRunId: string; startedAt: string } | null;
   categories: CategoryChecks[];
+  // Cached result of checking this theme's public Shopify Theme Store
+  // listing (see lib/themes/themeStoreFeatures.ts) — confirms
+  // AVAILABLE_FEATURES entries our own detectors can't check on their own.
+  themeStoreSlug: string | null;
+  themeStoreFeatures?: string[];
+  themeStoreCheckedAt: string | null;
+  themeStoreError: string | null;
   onChanged: () => void;
 };
 
@@ -572,11 +579,16 @@ export function OverviewPanel({
   pageSpeed,
   pageSpeedFallback,
   categories,
+  themeStoreSlug,
+  themeStoreFeatures,
+  themeStoreCheckedAt,
+  themeStoreError,
   onChanged,
 }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [checkingThemeStore, setCheckingThemeStore] = useState(false);
   const [reportData, setReportData] = useState<{ auditRunId: string; findings: ReportFinding[]; enhancementPoints: ReportEnhancementPoint[] } | null>(
     null
   );
@@ -619,6 +631,19 @@ export function OverviewPanel({
     setExpandedCardId(card.id);
     if (!REPORT_BACKED_CARD_IDS.has(card.id) || !latestAudit) return;
     await loadReportData(latestAudit._id);
+  }
+
+  async function handleCheckThemeStore() {
+    setCheckingThemeStore(true);
+    try {
+      await fetch(`/api/themes/${themeId}/theme-store-features`, { method: "POST" });
+      onChanged();
+    } catch {
+      // onChanged's own fetch failing is already handled by the parent;
+      // nothing further to show here beyond letting the button re-enable.
+    } finally {
+      setCheckingThemeStore(false);
+    }
   }
 
   // Top issues to prioritize for the next theme update: one per distinct
@@ -668,14 +693,48 @@ export function OverviewPanel({
         // own logic, just built from the report response instead of
         // AuditRun.enhancementDetections directly.
         const detections = new Map(reportData.enhancementPoints.map((p) => [p.pointId, p.detected === true]));
-        const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections) === "not_detected");
-        if (missing.length === 0) return <p className="text-sm text-zinc-500">No missing features among those checked.</p>;
+        const themeStoreLabels = themeStoreFeatures ? new Set(themeStoreFeatures.map((f) => f.toLowerCase())) : undefined;
+        const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_detected");
+        const uncheckedCount = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_checked").length;
+
         return (
-          <ul className="flex flex-col gap-2">
-            {missing.map((f) => (
-              <IssueRow key={f.id} title={f.label} body={f.note ?? `Not detected in this theme (category: ${f.category}).`} />
-            ))}
-          </ul>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3 rounded-md bg-surface-muted p-3 text-xs">
+              <Button size="sm" variant="secondary" onClick={handleCheckThemeStore} loading={checkingThemeStore}>
+                {themeStoreFeatures ? "Re-check Theme Store" : "Check Theme Store"}
+              </Button>
+              <div className="text-zinc-500">
+                {themeStoreError ? (
+                  <span className="text-status-fail-text">{themeStoreError}</span>
+                ) : themeStoreCheckedAt ? (
+                  <>
+                    Checked against{" "}
+                    <a
+                      href={`https://themes.shopify.com/themes/${themeStoreSlug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline hover:text-primary"
+                    >
+                      themes.shopify.com/themes/{themeStoreSlug}
+                    </a>{" "}
+                    on {formatDate(themeStoreCheckedAt)} — {uncheckedCount} of {AVAILABLE_FEATURES.length} features still can&apos;t be
+                    confirmed either way.
+                  </>
+                ) : (
+                  <>Not yet checked — {uncheckedCount} of {AVAILABLE_FEATURES.length} features have no automated detector.</>
+                )}
+              </div>
+            </div>
+            {missing.length === 0 ? (
+              <p className="text-sm text-zinc-500">No missing features among those checked.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {missing.map((f) => (
+                  <IssueRow key={f.id} title={f.label} body={f.note ?? `Not detected in this theme (category: ${f.category}).`} />
+                ))}
+              </ul>
+            )}
+          </div>
         );
       }
 
