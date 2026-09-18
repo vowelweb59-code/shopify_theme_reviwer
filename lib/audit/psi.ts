@@ -63,6 +63,17 @@ async function fetchPsiOnce(url: string, strategy: PsiStrategy, categories: stri
   }
 }
 
+/**
+ * Cheap enough to call once per run rather than caching — lets a caller
+ * distinguish "every PSI call failed because the key is missing" (one
+ * clear, immediate cause) from "every PSI call failed despite a real key"
+ * (a genuine network/API problem), which fetchPsiLighthouseResult's own
+ * `null` return can't distinguish on its own.
+ */
+export function isPsiConfigured(): boolean {
+  return Boolean(process.env.PAGESPEED_API_KEY);
+}
+
 // A run against several presets makes many of these calls back to back, and
 // a single dropped connection or unusually slow PSI response shouldn't
 // permanently fail that one preset — one retry before giving up (observed

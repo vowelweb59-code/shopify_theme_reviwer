@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   extractCoreMetrics,
   extractOpportunityFindings,
   psiThresholdFindings,
+  runPageSpeedChecksForPresets,
   shopifySubmissionBarFindings,
   type PageSpeedMetric,
 } from "./pageSpeed";
@@ -11,6 +12,28 @@ import type { LighthouseAudit, LighthouseAuditRef, LighthouseResult } from "./ps
 function metric(overrides: Partial<PageSpeedMetric> = {}): PageSpeedMetric {
   return { label: "Demo store", url: "https://example.com", pageType: "home", strategy: "mobile", ...overrides };
 }
+
+describe("runPageSpeedChecksForPresets — missing API key", () => {
+  const originalEnv = process.env.PAGESPEED_API_KEY;
+  afterEach(() => {
+    process.env.PAGESPEED_API_KEY = originalEnv;
+  });
+
+  it("reports one clear per-preset error instead of attempting any PSI calls", async () => {
+    delete process.env.PAGESPEED_API_KEY;
+    const presets = [
+      { label: "A", url: "https://a.example.com" },
+      { label: "B", url: "https://b.example.com" },
+    ];
+    const result = await runPageSpeedChecksForPresets(presets);
+    expect(result.metrics).toEqual([]);
+    expect(result.findings).toEqual([]);
+    expect(result.errors).toEqual([
+      { label: "A", url: "https://a.example.com", error: "PAGESPEED_API_KEY is not configured on the server." },
+      { label: "B", url: "https://b.example.com", error: "PAGESPEED_API_KEY is not configured on the server." },
+    ]);
+  });
+});
 
 describe("psiThresholdFindings", () => {
   it("flags nothing for a fully 'good' set of metrics", () => {

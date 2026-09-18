@@ -1,5 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchPsiLighthouseResult } from "./psi";
+import { fetchPsiLighthouseResult, isPsiConfigured } from "./psi";
+
+describe("isPsiConfigured", () => {
+  const originalEnv = process.env.PAGESPEED_API_KEY;
+  afterEach(() => {
+    process.env.PAGESPEED_API_KEY = originalEnv;
+  });
+
+  it("is false when PAGESPEED_API_KEY is unset", () => {
+    delete process.env.PAGESPEED_API_KEY;
+    expect(isPsiConfigured()).toBe(false);
+  });
+
+  it("is true when PAGESPEED_API_KEY is set", () => {
+    process.env.PAGESPEED_API_KEY = "test-key";
+    expect(isPsiConfigured()).toBe(true);
+  });
+});
 
 describe("fetchPsiLighthouseResult", () => {
   const originalEnv = process.env.PAGESPEED_API_KEY;

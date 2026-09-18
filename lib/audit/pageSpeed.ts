@@ -1,5 +1,5 @@
 import type { ExecutedFinding } from "./runRules";
-import { fetchPsiLighthouseResult, type LighthouseAuditDetails, type LighthouseResult, type PsiStrategy } from "./psi";
+import { fetchPsiLighthouseResult, isPsiConfigured, type LighthouseAuditDetails, type LighthouseResult, type PsiStrategy } from "./psi";
 import { contrastFindingsFromPsi, touchTargetFindingsFromPsi } from "./liveChecks/psiAccessibilityFindings";
 import { fetchPageFacts } from "./liveChecks/fetchPageFacts";
 import { mapWithConcurrency, type PresetLink, type PresetLiveCheckError } from "./liveChecks/shared";
@@ -399,6 +399,19 @@ export async function runPageSpeedChecksForPresets(
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const metrics: PageSpeedMetric[] = [];
+
+  // Checked once up front rather than letting every preset's call fail
+  // individually — a missing key means every one of them will fail the
+  // exact same way, and without this, that surfaced as N identical generic
+  // "PageSpeed Insights request failed" errors with no indication of the
+  // one real, immediately-fixable cause.
+  if (!isPsiConfigured()) {
+    for (const preset of presets) {
+      errors.push({ label: preset.label, url: preset.url, error: "PAGESPEED_API_KEY is not configured on the server." });
+      onItemComplete?.();
+    }
+    return { findings, errors, metrics };
+  }
 
   // Every preset's home-page read, and the baseline's extra matrix reads,
   // run concurrently rather than one at a time — these are plain fetch()

@@ -20,6 +20,7 @@ type ThemeDetail = {
   latestAudit: { _id: string; startedAt: string } | null;
   checks: { categories: CategoryChecks[]; totals: CheckTotals } | null;
   scoreboard: ScoreCard[] | null;
+  pageSpeedFallback: { auditRunId: string; startedAt: string } | null;
   previousAudits: { auditRunId: string; version: string | null; startedAt: string; totals: CheckTotals }[];
 };
 
@@ -92,6 +93,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 latestAudit={detail.latestAudit}
                 checkTotals={detail.checks?.totals ?? null}
                 scoreboard={detail.scoreboard}
+                pageSpeedFallback={detail.pageSpeedFallback}
                 categories={detail.checks?.categories ?? []}
                 onChanged={load}
               />

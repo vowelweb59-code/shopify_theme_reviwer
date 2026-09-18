@@ -39,14 +39,32 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   let latestAudit = null;
   let checks = null;
   let scoreboard = null;
+  // Set only when this run's own page-speed data is entirely missing (e.g.
+  // every PageSpeed Insights call failed — see liveCheckErrors) and an
+  // older complete run's page-speed data was used instead, so the
+  // Desktop/Mobile Performance cards show the last real measurement rather
+  // than blanking to "N/A" the moment one run's live checks have a bad day.
+  let pageSpeedFallback: { auditRunId: unknown; startedAt: Date } | null = null;
   if (latestVersion) {
     latestAudit = allAudits.find((a) => String(a.themeVersionId) === String(latestVersion._id) && a.status === "complete") ?? null;
     if (latestAudit) {
       checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
       const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
+
+      let pageSpeed = latestAudit.pageSpeed;
+      if (!pageSpeed || pageSpeed.length === 0) {
+        const fallbackAudit = allAudits.find(
+          (a) => a.status === "complete" && String(a._id) !== String(latestAudit!._id) && a.pageSpeed && a.pageSpeed.length > 0
+        );
+        if (fallbackAudit) {
+          pageSpeed = fallbackAudit.pageSpeed;
+          pageSpeedFallback = { auditRunId: fallbackAudit._id, startedAt: fallbackAudit.startedAt };
+        }
+      }
+
       scoreboard = computeScoreboard({
         categories: checks.categories,
-        pageSpeed: latestAudit.pageSpeed,
+        pageSpeed,
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
       });
@@ -77,6 +95,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
     latestAudit,
     checks,
     scoreboard,
+    pageSpeedFallback,
     previousAudits,
   });
 }

@@ -24,6 +24,10 @@ type Props = {
   latestAudit: { _id: string; startedAt: string } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
+  // Set when this run's own page-speed data was entirely missing (every
+  // PSI call failed) and the Desktop/Mobile Performance cards are instead
+  // showing an older complete run's last real measurement.
+  pageSpeedFallback: { auditRunId: string; startedAt: string } | null;
   categories: CategoryChecks[];
   onChanged: () => void;
 };
@@ -468,7 +472,18 @@ function IssueRow({ title, body, severity, filePath }: { title?: string; body: s
   );
 }
 
-export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVersion, latestAudit, checkTotals, scoreboard, categories, onChanged }: Props) {
+export function OverviewPanel({
+  themeId,
+  themeName,
+  demoStorePresets,
+  latestVersion,
+  latestAudit,
+  checkTotals,
+  scoreboard,
+  pageSpeedFallback,
+  categories,
+  onChanged,
+}: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [showRunAudit, setShowRunAudit] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
@@ -639,6 +654,13 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
           <p className="mt-1 text-sm text-zinc-500">{formatDate(latestAudit.startedAt)}</p>
         ) : (
           <p className="mt-1 text-sm text-zinc-500">No completed audit yet.</p>
+        )}
+
+        {pageSpeedFallback && (
+          <p className="mt-2 rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">
+            Page speed data couldn&apos;t be measured for this run (every PageSpeed Insights request failed) — Desktop/Mobile Performance
+            below are the last real measurements, from the run on {formatDate(pageSpeedFallback.startedAt)}.
+          </p>
         )}
 
         {scoreboard && (
