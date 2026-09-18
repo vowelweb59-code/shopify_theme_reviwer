@@ -219,7 +219,7 @@ function PresetsSection({
                       ) : (
                         <ul className="flex flex-col gap-2">
                           {presetFindings.map((f) => (
-                            <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.filePath} />
+                            <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.filePath} recommendation={f.recommendation} />
                           ))}
                         </ul>
                       )}
@@ -475,15 +475,39 @@ function RunAuditForm({
 // first time it's opened, then reuses that result for the rest.
 const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities", "features"]);
 
-function IssueRow({ title, body, severity, filePath }: { title?: string; body: string; severity?: string; filePath?: string }) {
+function IssueRow({
+  title,
+  body,
+  severity,
+  filePath,
+  recommendation,
+}: {
+  title?: string;
+  body: string;
+  severity?: string;
+  filePath?: string;
+  recommendation?: string | null;
+}) {
   return (
     <li className="rounded-md bg-surface-muted p-3 text-xs">
       <div className="flex flex-wrap items-center gap-2">
         {severity && <SeverityBadge severity={severity} />}
         {title && <span className="font-medium text-zinc-900 dark:text-zinc-100">{title}</span>}
-        {filePath && <span className="font-mono text-zinc-500">{filePath}</span>}
       </div>
+      {/* The specific "what/where" — the exact source location or affected
+          asset — comes before the generic "how to fix" text below, since
+          without it the recommendation alone isn't actionable (a real
+          finding like "theme.css — 13KB — 958ms" is what's needed to find
+          the actual thing to fix, not just "reduce render-blocking
+          requests" on its own). */}
+      {filePath && <p className="mt-1 font-mono text-zinc-500">{filePath}</p>}
       <p className="mt-1 text-zinc-700 dark:text-zinc-300">{body}</p>
+      {recommendation && (
+        <p className="mt-1 text-zinc-700 dark:text-zinc-300">
+          <span className="font-medium text-zinc-900 dark:text-zinc-100">Fix: </span>
+          {recommendation}
+        </p>
+      )}
     </li>
   );
 }
@@ -611,7 +635,13 @@ export function OverviewPanel({
       return (
         <ul className="flex flex-col gap-2">
           {relevant.map((f) => (
-            <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.presetLabel ?? f.filePath} />
+            <IssueRow
+              key={f._id}
+              body={f.finding}
+              severity={f.severity}
+              filePath={f.presetLabel ?? f.filePath}
+              recommendation={f.recommendation}
+            />
           ))}
         </ul>
       );
@@ -638,6 +668,7 @@ export function OverviewPanel({
             body={item.evidence[0]?.finding ?? item.description}
             severity={item.evidence[0]?.severity}
             filePath={item.evidence[0]?.filePath}
+            recommendation={item.recommendation}
           />
         ))}
       </ul>
@@ -727,7 +758,19 @@ export function OverviewPanel({
                       <span className="font-medium text-zinc-900 dark:text-zinc-100">{r.category}</span>
                       {r.count > 1 && <span className="text-xs text-zinc-500">({r.count} occurrences)</span>}
                     </div>
-                    <p className="mt-1 text-zinc-700 dark:text-zinc-300">{r.recommendation || r.finding}</p>
+                    {/* The source/what — exact file or affected asset — before
+                        the generic fix, same reasoning as IssueRow: a
+                        recommendation alone ("reduce render-blocking
+                        requests") isn't actionable without knowing which
+                        file it's actually about. */}
+                    {(r.presetLabel ?? r.filePath) && <p className="mt-1 font-mono text-xs text-zinc-500">{r.presetLabel ?? r.filePath}</p>}
+                    <p className="mt-1 text-zinc-700 dark:text-zinc-300">{r.finding}</p>
+                    {r.recommendation && (
+                      <p className="mt-1 text-zinc-700 dark:text-zinc-300">
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Fix: </span>
+                        {r.recommendation}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
