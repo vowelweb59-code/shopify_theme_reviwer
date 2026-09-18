@@ -20,6 +20,7 @@ type Tab = { id: string; label: string; content: ReactNode; pinned?: boolean };
 export function TabbedPageClient({
   title,
   description,
+  titleAction,
   tabs,
   defaultTabId,
   orientation = "horizontal",
@@ -28,6 +29,10 @@ export function TabbedPageClient({
 }: {
   title: string;
   description?: ReactNode;
+  // Rendered to the right of the title — e.g. Theme Detail's "Download
+  // Report" format picker, visible no matter which tab is active since it
+  // sits in this shared header rather than inside any one tab's content.
+  titleAction?: ReactNode;
   tabs: Tab[];
   defaultTabId: string;
   // "horizontal" (default, unchanged — /settings uses this): an underline
@@ -60,9 +65,12 @@ export function TabbedPageClient({
 
   return (
     <div className="flex flex-1 flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>
-        {description && <p className="mt-1 max-w-3xl text-sm text-zinc-500">{description}</p>}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>
+          {description && <p className="mt-1 max-w-3xl text-sm text-zinc-500">{description}</p>}
+        </div>
+        {titleAction}
       </div>
 
       {orientation === "vertical" ? (

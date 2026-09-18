@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/app/_components/ui/Button";
-
 type VersionRow = { _id: string; version: string; createdAt: string };
 type AuditTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -9,7 +7,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-function VersionRowView({ version, totals, onViewHistory }: { version: VersionRow; totals: AuditTotals | undefined; onViewHistory: () => void }) {
+function VersionRowView({ version, totals }: { version: VersionRow; totals: AuditTotals | undefined }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle p-4">
       <div>
@@ -26,9 +24,6 @@ function VersionRowView({ version, totals, onViewHistory }: { version: VersionRo
         ) : (
           <span className="text-zinc-400">No audit yet</span>
         )}
-        <Button variant="secondary" size="sm" onClick={onViewHistory}>
-          View
-        </Button>
       </div>
     </div>
   );
@@ -44,12 +39,10 @@ export function VersionsSection({
   versions,
   latestVersionId,
   totalsByVersion,
-  onViewHistory,
 }: {
   versions: VersionRow[];
   latestVersionId: string | null;
   totalsByVersion: Map<string, AuditTotals>;
-  onViewHistory: () => void;
 }) {
   if (versions.length === 0) {
     return <p className="text-sm text-zinc-500">No versions uploaded yet.</p>;
@@ -63,7 +56,7 @@ export function VersionsSection({
       {current && (
         <div className="flex flex-col gap-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Current</h3>
-          <VersionRowView version={current} totals={totalsByVersion.get(current._id)} onViewHistory={onViewHistory} />
+          <VersionRowView version={current} totals={totalsByVersion.get(current._id)} />
         </div>
       )}
       {previous.length > 0 && (
@@ -71,7 +64,7 @@ export function VersionsSection({
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Previous</h3>
           <div className="flex flex-col gap-2">
             {previous.map((v) => (
-              <VersionRowView key={v._id} version={v} totals={totalsByVersion.get(v._id)} onViewHistory={onViewHistory} />
+              <VersionRowView key={v._id} version={v} totals={totalsByVersion.get(v._id)} />
             ))}
           </div>
         </div>

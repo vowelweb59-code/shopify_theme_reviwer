@@ -4,19 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { TabbedPageClient } from "@/app/_components/TabbedPage";
 import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
-import { ReportContent } from "@/app/reports/ReportContent";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import type { DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { OverviewPanel } from "./OverviewPanel";
 import { AllChecksList } from "./AllChecksList";
 import { VersionsSection } from "./VersionsSection";
-import { AuditHistoryTable } from "./AuditHistoryTable";
+import { DownloadReportDropdown } from "./DownloadReportDropdown";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type ThemeDetail = {
-  theme: { _id: string; name: string; demoStorePresets?: DemoStorePreset[] };
+  theme: { _id: string; name: string; demoStorePresets?: DemoStorePreset[]; googleSheetUrl?: string | null };
   versions: { _id: string; version: string; createdAt: string }[];
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string } | null;
@@ -30,7 +29,6 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTabId, setActiveTabId] = useState("");
-  const [selectedAuditRunId, setSelectedAuditRunId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     fetch(`/api/themes/${themeId}`)
@@ -42,7 +40,6 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
         }
         const data = await res.json();
         setDetail(data);
-        setSelectedAuditRunId((prev) => prev ?? data.latestAudit?._id ?? null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -51,11 +48,6 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
   useEffect(() => {
     load();
   }, [load]);
-
-  function viewReport(auditRunId: string) {
-    setSelectedAuditRunId(auditRunId);
-    setActiveTabId("report");
-  }
 
   // Latest completed audit's totals per ThemeVersion, derived from the
   // already-fetched previousAudits list (sorted newest-first) rather than a
@@ -78,6 +70,11 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
       <Breadcrumbs items={[{ label: "Themes", href: "/themes" }, { label: detail.theme.name }]} />
       <TabbedPageClient
         title={detail.theme.name}
+        titleAction={
+          detail.latestAudit && (
+            <DownloadReportDropdown auditRunId={detail.latestAudit._id} hasExistingSheet={Boolean(detail.theme.googleSheetUrl)} />
+          )
+        }
         defaultTabId=""
         orientation="vertical"
         activeTabId={activeTabId}
@@ -114,27 +111,8 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
             id: "versions",
             label: "Versions",
             content: (
-              <VersionsSection
-                versions={detail.versions}
-                latestVersionId={detail.latestVersion?._id ?? null}
-                totalsByVersion={totalsByVersion}
-                onViewHistory={() => setActiveTabId("audit-history")}
-              />
+              <VersionsSection versions={detail.versions} latestVersionId={detail.latestVersion?._id ?? null} totalsByVersion={totalsByVersion} />
             ),
-          },
-          {
-            id: "report",
-            label: "Report",
-            content: selectedAuditRunId ? (
-              <ReportContent key={selectedAuditRunId} auditRunId={selectedAuditRunId} showHeading={false} />
-            ) : (
-              <p className="text-sm text-zinc-500">Run an audit, or pick one from Audit History, to see its full report.</p>
-            ),
-          },
-          {
-            id: "audit-history",
-            label: "Audit History",
-            content: <AuditHistoryTable audits={detail.previousAudits} onSelect={viewReport} />,
           },
         ]}
       />

@@ -62,7 +62,7 @@ export function extractCoreMetrics(lhr: LighthouseResult): PsiMetrics {
  * invented numbers. Capped at "high" — this is advisory guidance, not a
  * hard Theme Store submission rule, so it's never a "blocker".
  */
-export function psiThresholdFindings(label: string, url: string, metrics: PsiMetrics): ExecutedFinding[] {
+export function psiThresholdFindings(label: string, url: string, metrics: PsiMetrics, strategy: PsiStrategy = "mobile"): ExecutedFinding[] {
   const findings: ExecutedFinding[] = [];
 
   if (metrics.performanceScore !== undefined) {
@@ -74,7 +74,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "high",
         presetLabel: label,
-        finding: `Lighthouse performance score (mobile) is ${metrics.performanceScore}/100 — Google classifies scores below 50 as "poor".`,
+        finding: `Lighthouse performance score (${strategy}) is ${metrics.performanceScore}/100 — Google classifies scores below 50 as "poor".`,
         recommendation: "See the \"Suggested fixes\" list below for the specific opportunities and diagnostics behind this score, ranked by impact.",
       });
     } else if (metrics.performanceScore < 90) {
@@ -85,7 +85,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "medium",
         presetLabel: label,
-        finding: `Lighthouse performance score (mobile) is ${metrics.performanceScore}/100 — Google classifies scores under 90 as "needs improvement".`,
+        finding: `Lighthouse performance score (${strategy}) is ${metrics.performanceScore}/100 — Google classifies scores under 90 as "needs improvement".`,
         recommendation: "See the \"Suggested fixes\" list below for the specific opportunities and diagnostics behind this score, ranked by impact.",
       });
     }
@@ -100,7 +100,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "high",
         presetLabel: label,
-        finding: `Largest Contentful Paint is ${(metrics.lcpMs / 1000).toFixed(2)}s — over Google's 4s "poor" threshold.`,
+        finding: `Largest Contentful Paint (${strategy}) is ${(metrics.lcpMs / 1000).toFixed(2)}s — over Google's 4s "poor" threshold.`,
         recommendation: "Optimize the largest above-the-fold element: preload/compress its image, or remove render-blocking resources ahead of it.",
       });
     } else if (metrics.lcpMs > 2500) {
@@ -111,7 +111,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "medium",
         presetLabel: label,
-        finding: `Largest Contentful Paint is ${(metrics.lcpMs / 1000).toFixed(2)}s — in Google's "needs improvement" range (2.5–4s).`,
+        finding: `Largest Contentful Paint (${strategy}) is ${(metrics.lcpMs / 1000).toFixed(2)}s — in Google's "needs improvement" range (2.5–4s).`,
         recommendation: "Optimize the largest above-the-fold element: preload/compress its image, or remove render-blocking resources ahead of it.",
       });
     }
@@ -126,7 +126,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "high",
         presetLabel: label,
-        finding: `Cumulative Layout Shift is ${metrics.clsScore.toFixed(2)} — over Google's 0.25 "poor" threshold.`,
+        finding: `Cumulative Layout Shift (${strategy}) is ${metrics.clsScore.toFixed(2)} — over Google's 0.25 "poor" threshold.`,
         recommendation: "Reserve space for images/embeds/ads and avoid inserting content above existing content after load.",
       });
     } else if (metrics.clsScore > 0.1) {
@@ -137,7 +137,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "medium",
         presetLabel: label,
-        finding: `Cumulative Layout Shift is ${metrics.clsScore.toFixed(2)} — in Google's "needs improvement" range (0.1–0.25).`,
+        finding: `Cumulative Layout Shift (${strategy}) is ${metrics.clsScore.toFixed(2)} — in Google's "needs improvement" range (0.1–0.25).`,
         recommendation: "Reserve space for images/embeds/ads and avoid inserting content above existing content after load.",
       });
     }
@@ -152,7 +152,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "high",
         presetLabel: label,
-        finding: `Total Blocking Time is ${Math.round(metrics.tbtMs)}ms — over Lighthouse's 600ms "poor" threshold.`,
+        finding: `Total Blocking Time (${strategy}) is ${Math.round(metrics.tbtMs)}ms — over Lighthouse's 600ms "poor" threshold.`,
         recommendation: "Break up long JavaScript tasks and defer non-critical scripts.",
       });
     } else if (metrics.tbtMs > 200) {
@@ -163,7 +163,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         category: "Performance",
         severity: "medium",
         presetLabel: label,
-        finding: `Total Blocking Time is ${Math.round(metrics.tbtMs)}ms — in Lighthouse's "needs improvement" range (200–600ms).`,
+        finding: `Total Blocking Time (${strategy}) is ${Math.round(metrics.tbtMs)}ms — in Lighthouse's "needs improvement" range (200–600ms).`,
         recommendation: "Break up long JavaScript tasks and defer non-critical scripts.",
       });
     }
@@ -306,7 +306,7 @@ function ruleIdForLighthouseAudit(auditId: string): string {
  * top-line scorecard, and duplicating them here would say the same thing
  * twice.
  */
-export function extractOpportunityFindings(label: string, url: string, lhr: LighthouseResult): ExecutedFinding[] {
+export function extractOpportunityFindings(label: string, url: string, lhr: LighthouseResult, strategy: PsiStrategy = "mobile"): ExecutedFinding[] {
   const audits = lhr.audits ?? {};
   const auditRefs = lhr.categories?.performance?.auditRefs ?? [];
   const findings: ExecutedFinding[] = [];
@@ -320,7 +320,7 @@ export function extractOpportunityFindings(label: string, url: string, lhr: Ligh
 
     const { text: description, url: learnMoreUrl } = stripMarkdownLinks(audit.description ?? "");
     const itemsSummary = summarizeAuditItems(audit.details);
-    const headline = [audit.title, audit.displayValue ? `(${audit.displayValue})` : null].filter(Boolean).join(" ");
+    const headline = [audit.title, `(${strategy})`, audit.displayValue ? `(${audit.displayValue})` : null].filter(Boolean).join(" ");
 
     findings.push({
       ruleId: ruleIdForLighthouseAudit(ref.id),
@@ -423,8 +423,8 @@ export async function runPageSpeedChecksForPresets(
       ...homeMetrics,
     };
     metrics.push(homeMetric);
-    findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
-    findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
+    findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics, "mobile"));
+    findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr, "mobile"));
     findings.push(...contrastFindingsFromPsi(preset.label, preset.url, homeLhr));
     findings.push(...touchTargetFindingsFromPsi(preset.label, preset.url, homeLhr));
 
@@ -437,15 +437,12 @@ export async function runPageSpeedChecksForPresets(
 
     const desktopHomeLhr = await desktopHomePromise;
     if (desktopHomeLhr) {
-      const m: PageSpeedMetric = {
-        label: preset.label,
-        url: preset.url,
-        pageType: "home",
-        strategy: "desktop",
-        ...extractCoreMetrics(desktopHomeLhr),
-      };
+      const desktopHomeMetrics = extractCoreMetrics(desktopHomeLhr);
+      const m: PageSpeedMetric = { label: preset.label, url: preset.url, pageType: "home", strategy: "desktop", ...desktopHomeMetrics };
       matrix.push(m);
       metrics.push(m);
+      findings.push(...psiThresholdFindings(preset.label, preset.url, desktopHomeMetrics, "desktop"));
+      findings.push(...extractOpportunityFindings(preset.label, preset.url, desktopHomeLhr, "desktop"));
     } else {
       errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
     }
@@ -468,9 +465,12 @@ export async function runPageSpeedChecksForPresets(
         errors.push({ label: preset.label, url: r.url, error: `PageSpeed Insights request failed for the ${r.pageType} page (${r.strategy}).` });
         continue;
       }
-      const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, ...extractCoreMetrics(r.lhr) };
+      const rMetrics = extractCoreMetrics(r.lhr);
+      const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, ...rMetrics };
       matrix.push(m);
       metrics.push(m);
+      findings.push(...psiThresholdFindings(preset.label, r.url, rMetrics, r.strategy));
+      findings.push(...extractOpportunityFindings(preset.label, r.url, r.lhr, r.strategy));
       if (r.strategy === "mobile") {
         findings.push(...contrastFindingsFromPsi(preset.label, r.url, r.lhr));
         findings.push(...touchTargetFindingsFromPsi(preset.label, r.url, r.lhr));

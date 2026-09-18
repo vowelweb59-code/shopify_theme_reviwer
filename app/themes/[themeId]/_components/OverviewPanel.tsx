@@ -47,12 +47,12 @@ type ReportEnhancementPoint = {
   detected: boolean | null;
 };
 
-// "(desktop)" is the one substring PSI-derived Performance findings use to
-// mark themselves desktop-specific (see lib/audit/pageSpeed.ts's
-// shopifySubmissionBarFindings) — every other Performance finding only
-// ever comes from a mobile PSI read (psiThresholdFindings/
-// extractOpportunityFindings/psiAccessibilityFindings are never called
-// with desktop data), so "not explicitly desktop" reliably means mobile.
+// Every Performance finding's text explicitly says "(mobile)" or
+// "(desktop)" (see lib/audit/pageSpeed.ts's psiThresholdFindings/
+// extractOpportunityFindings/shopifySubmissionBarFindings, all of which
+// take an explicit strategy) — no separate strategy field exists on
+// ExecutedFinding, so this substring is the one signal available to split
+// the two cards' issue lists without a schema change.
 function isDesktopPerformanceFinding(f: ReportFinding): boolean {
   return /\(desktop\)/i.test(f.finding);
 }
