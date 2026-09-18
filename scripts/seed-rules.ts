@@ -14,7 +14,7 @@ import { ALL_RULES } from "../lib/rules/registry";
 import { computeRuleCriticality } from "../lib/audit/ruleCriticality";
 import { ruleHasTestCoverage } from "../lib/audit/ruleTestCoverage";
 
-// Live-check rules (the LIVE-* ruleId convention, in lib/audit/liveCheck.ts
+// Live-check rules (the LIVE-* ruleId convention, in lib/audit/liveChecks/
 // and lib/audit/pageSpeed.ts) are deliberately never registered as Rule
 // documents — see ALL_RULES's own scope (static, source-code checks only).
 // But their requirementId references are just as real a coverage signal as
@@ -25,7 +25,9 @@ import { ruleHasTestCoverage } from "../lib/audit/ruleTestCoverage";
 // their finding-producing functions build ExecutedFinding objects at
 // runtime (no static list of "requirementIds this file covers" to import).
 const LIVE_CHECK_FILES = [
-  path.join(__dirname, "..", "lib", "audit", "liveCheck.ts"),
+  path.join(__dirname, "..", "lib", "audit", "liveChecks", "structuralFindings.ts"),
+  path.join(__dirname, "..", "lib", "audit", "liveChecks", "presetComparison.ts"),
+  path.join(__dirname, "..", "lib", "audit", "liveChecks", "psiAccessibilityFindings.ts"),
   path.join(__dirname, "..", "lib", "audit", "pageSpeed.ts"),
 ];
 

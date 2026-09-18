@@ -74,9 +74,9 @@ describe("computeScoreboard", () => {
     const cards = computeScoreboard({
       ...baseArgs,
       pageSpeed: [
-        { label: "A", url: "https://a", pageType: "home", strategy: "desktop", source: "psi", performanceScore: 80 },
-        { label: "A", url: "https://a", pageType: "collection", strategy: "desktop", source: "psi", performanceScore: 60 },
-        { label: "A", url: "https://a", pageType: "home", strategy: "mobile", source: "playwright" },
+        { label: "A", url: "https://a", pageType: "home", strategy: "desktop", performanceScore: 80 },
+        { label: "A", url: "https://a", pageType: "collection", strategy: "desktop", performanceScore: 60 },
+        { label: "A", url: "https://a", pageType: "home", strategy: "mobile" },
       ],
     });
     const desktop = cards.find((c) => c.id === "desktop-performance")!;

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { executeAuditRun } from "@/lib/audit/executeAuditRun";
-import type { PresetLink } from "@/lib/audit/liveCheck";
+import type { PresetLink } from "@/lib/audit/liveChecks/shared";
 
 const HTTP_URL_RE = /^https?:\/\//i;
 

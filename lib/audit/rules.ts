@@ -22,8 +22,8 @@ export type RuleFinding = {
   finding: string;
   recommendation?: string;
   // Which preset (of possibly several live demo URLs) this finding came
-  // from — set by lib/audit/liveCheck.ts for per-preset live findings,
-  // undefined for every static finding and for the cross-preset
+  // from — set by lib/audit/liveChecks/ and pageSpeed.ts for per-preset
+  // live findings, undefined for every static finding and for the cross-preset
   // comparison findings themselves (those are about the relationship
   // between presets, not about any one of them).
   presetLabel?: string | null;

@@ -1,19 +1,15 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   extractCoreMetrics,
   extractOpportunityFindings,
-  fallbackThresholdFindings,
-  fetchPsiLighthouseResult,
   psiThresholdFindings,
   shopifySubmissionBarFindings,
-  type LighthouseAudit,
-  type LighthouseAuditRef,
-  type LighthouseResult,
   type PageSpeedMetric,
 } from "./pageSpeed";
+import type { LighthouseAudit, LighthouseAuditRef, LighthouseResult } from "./psi";
 
 function metric(overrides: Partial<PageSpeedMetric> = {}): PageSpeedMetric {
-  return { label: "Demo store", url: "https://example.com", pageType: "home", strategy: "mobile", source: "psi", ...overrides };
+  return { label: "Demo store", url: "https://example.com", pageType: "home", strategy: "mobile", ...overrides };
 }
 
 describe("psiThresholdFindings", () => {
@@ -60,116 +56,6 @@ describe("psiThresholdFindings", () => {
   it("never produces a blocker-severity finding — this check is advisory, not a hard rule", () => {
     const findings = psiThresholdFindings("d", "u", { performanceScore: 0, lcpMs: 99999, clsScore: 1, tbtMs: 99999 });
     expect(findings.every((f) => f.severity !== "blocker")).toBe(true);
-  });
-});
-
-describe("fallbackThresholdFindings", () => {
-  it("flags nothing for fast TTFB and a light page", () => {
-    const findings = fallbackThresholdFindings("Demo store", "https://example.com", {
-      ttfbMs: 200,
-      fcpMs: 800,
-      pageWeightBytes: 500_000,
-    });
-    expect(findings).toHaveLength(0);
-  });
-
-  it("flags slow TTFB as a capped-medium, distinctly-named heuristic finding", () => {
-    const findings = fallbackThresholdFindings("Demo store", "https://example.com", {
-      ttfbMs: 1200,
-      fcpMs: null,
-      pageWeightBytes: 0,
-    });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].ruleId).toBe("LIVE-PERF-TTFB-001");
-    expect(findings[0].severity).toBe("medium");
-  });
-
-  it("flags heavy page weight as a capped-medium, distinctly-named heuristic finding", () => {
-    const findings = fallbackThresholdFindings("Demo store", "https://example.com", {
-      ttfbMs: 0,
-      fcpMs: null,
-      pageWeightBytes: 5_000_000,
-    });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].ruleId).toBe("LIVE-PERF-WEIGHT-001");
-    expect(findings[0].severity).toBe("medium");
-  });
-});
-
-describe("fetchPsiLighthouseResult", () => {
-  const originalEnv = process.env.PAGESPEED_API_KEY;
-  const originalFetch = global.fetch;
-
-  afterEach(() => {
-    process.env.PAGESPEED_API_KEY = originalEnv;
-    global.fetch = originalFetch;
-    vi.restoreAllMocks();
-  });
-
-  it("returns null without ever calling fetch when no API key is configured", async () => {
-    delete process.env.PAGESPEED_API_KEY;
-    const fetchSpy = vi.fn();
-    global.fetch = fetchSpy as unknown as typeof fetch;
-    const result = await fetchPsiLighthouseResult("https://example.com");
-    expect(result).toBeNull();
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("returns the full lighthouseResult object from a real-shaped PSI response", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const lighthouseResult = {
-      categories: { performance: { score: 0.87 } },
-      audits: { "largest-contentful-paint": { score: 1, numericValue: 2100 } },
-    };
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult }) }) as unknown as typeof fetch;
-
-    const result = await fetchPsiLighthouseResult("https://example.com");
-    expect(result).toEqual(lighthouseResult);
-  });
-
-  it("returns null when the PSI request fails", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    global.fetch = vi.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
-    expect(await fetchPsiLighthouseResult("https://example.com")).toBeNull();
-  });
-
-  it("returns null when fetch throws (e.g. timeout/network error)", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    global.fetch = vi.fn().mockRejectedValue(new Error("network error")) as unknown as typeof fetch;
-    expect(await fetchPsiLighthouseResult("https://example.com")).toBeNull();
-  });
-
-  it("retries once after a failure and returns the retry's result", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const lighthouseResult = { categories: { performance: { score: 0.5 } } };
-    const fetchSpy = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("network error"))
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ lighthouseResult }) });
-    global.fetch = fetchSpy as unknown as typeof fetch;
-
-    const result = await fetchPsiLighthouseResult("https://example.com");
-    expect(result).toEqual(lighthouseResult);
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("does not retry a second time when both attempts fail", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const fetchSpy = vi.fn().mockRejectedValue(new Error("network error"));
-    global.fetch = fetchSpy as unknown as typeof fetch;
-
-    expect(await fetchPsiLighthouseResult("https://example.com")).toBeNull();
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("does not retry when the first attempt succeeds", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const lighthouseResult = { categories: { performance: { score: 0.9 } } };
-    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult }) });
-    global.fetch = fetchSpy as unknown as typeof fetch;
-
-    await fetchPsiLighthouseResult("https://example.com");
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -287,41 +173,6 @@ describe("extractCoreMetrics — accessibility", () => {
   it("leaves accessibilityScore undefined when the category wasn't requested", () => {
     const lhr: LighthouseResult = { categories: { performance: { score: 0.8 } } };
     expect(extractCoreMetrics(lhr).accessibilityScore).toBeUndefined();
-  });
-});
-
-describe("fetchPsiLighthouseResult — strategy and categories", () => {
-  const originalEnv = process.env.PAGESPEED_API_KEY;
-  const originalFetch = global.fetch;
-
-  afterEach(() => {
-    process.env.PAGESPEED_API_KEY = originalEnv;
-    global.fetch = originalFetch;
-    vi.restoreAllMocks();
-  });
-
-  it("passes strategy and repeats category once per requested category", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult: {} }) });
-    global.fetch = fetchSpy as unknown as typeof fetch;
-
-    await fetchPsiLighthouseResult("https://example.com", "desktop", ["performance", "accessibility"]);
-
-    const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
-    expect(calledUrl.searchParams.get("strategy")).toBe("desktop");
-    expect(calledUrl.searchParams.getAll("category")).toEqual(["performance", "accessibility"]);
-  });
-
-  it("defaults to mobile strategy and performance-only category", async () => {
-    process.env.PAGESPEED_API_KEY = "test-key";
-    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lighthouseResult: {} }) });
-    global.fetch = fetchSpy as unknown as typeof fetch;
-
-    await fetchPsiLighthouseResult("https://example.com");
-
-    const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
-    expect(calledUrl.searchParams.get("strategy")).toBe("mobile");
-    expect(calledUrl.searchParams.getAll("category")).toEqual(["performance"]);
   });
 });
 

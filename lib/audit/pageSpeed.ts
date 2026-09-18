@@ -1,32 +1,22 @@
-import type { Page } from "playwright";
 import type { ExecutedFinding } from "./runRules";
-import {
-  findFirstProductLink,
-  launchBrowserWithTimeout,
-  mapWithConcurrency,
-  withNavigationRetry,
-  PRESET_CONCURRENCY_LIMIT,
-  type PresetLink,
-  type PresetLiveCheckError,
-} from "./liveCheck";
+import { fetchPsiLighthouseResult, type LighthouseAuditDetails, type LighthouseResult, type PsiStrategy } from "./psi";
+import { contrastFindingsFromPsi, touchTargetFindingsFromPsi } from "./liveChecks/psiAccessibilityFindings";
+import { fetchPageFacts } from "./liveChecks/fetchPageFacts";
+import type { PresetLink, PresetLiveCheckError } from "./liveChecks/shared";
 
 export type PageType = "home" | "collection" | "product";
-export type PsiStrategy = "mobile" | "desktop";
+export type { PsiStrategy };
 
 export type PageSpeedMetric = {
   label: string;
   url: string;
   pageType: PageType;
   strategy: PsiStrategy;
-  source: "psi" | "playwright";
   performanceScore?: number;
   accessibilityScore?: number;
   lcpMs?: number;
   clsScore?: number;
   tbtMs?: number;
-  fcpMs?: number;
-  ttfbMs?: number;
-  pageWeightBytes?: number;
 };
 
 export type PageSpeedCheckResult = {
@@ -35,93 +25,7 @@ export type PageSpeedCheckResult = {
   metrics: PageSpeedMetric[];
 };
 
-const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
-const PSI_TIMEOUT_MS = 25_000;
-// See lib/audit/liveCheck.ts's own NAV_TIMEOUT_MS comment — same reasoning
-// (a real store's first hit can be slow, plus this file's own
-// withNavigationRetry usage below absorbs one transient timeout).
-const NAV_TIMEOUT_MS = 30_000;
-
 type PsiMetrics = { performanceScore?: number; accessibilityScore?: number; lcpMs?: number; clsScore?: number; tbtMs?: number };
-
-// Only the fields this module actually reads from Lighthouse's real result
-// shape (the same JSON PSI returns and `lighthouse` itself produces) — see
-// https://github.com/GoogleChrome/lighthouse/blob/main/types/lhr/lhr.d.ts.
-// Loosely typed (`unknown`-safe optionals) since this is external API data.
-export type LighthouseAuditDetails = {
-  type?: string;
-  overallSavingsMs?: number;
-  overallSavingsBytes?: number;
-  items?: Array<Record<string, unknown>>;
-};
-export type LighthouseAudit = {
-  title?: string;
-  description?: string;
-  score: number | null;
-  scoreDisplayMode?: string;
-  displayValue?: string;
-  numericValue?: number;
-  details?: LighthouseAuditDetails;
-};
-export type LighthouseAuditRef = { id: string; weight?: number; group?: string };
-export type LighthouseResult = {
-  audits?: Record<string, LighthouseAudit | undefined>;
-  categories?: {
-    performance?: { score?: number | null; auditRefs?: LighthouseAuditRef[] };
-    accessibility?: { score?: number | null };
-  };
-};
-
-type PsiResponse = { lighthouseResult?: LighthouseResult };
-
-/**
- * Calls Google's PageSpeed Insights v5 API for a real Lighthouse read,
- * returning the full Lighthouse result object — not just a few extracted
- * numbers — so callers can surface its complete "Opportunities"/
- * "Diagnostics" audit list (the same data GTmetrix/PSI/Lighthouse itself
- * present), not just the headline score and Core Web Vitals. `categories`
- * defaults to performance only (the original single-page scorecard's
- * scope); pass `["performance", "accessibility"]` for the Shopify
- * submission-bar matrix, which needs both. Returns null — never throws —
- * whenever PAGESPEED_API_KEY isn't configured, the request fails, or it
- * times out, so the caller can fall back to Playwright-based metrics
- * instead of failing the whole audit.
- */
-async function fetchPsiOnce(url: string, strategy: PsiStrategy, categories: string[], apiKey: string): Promise<LighthouseResult | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PSI_TIMEOUT_MS);
-  try {
-    const params = new URLSearchParams({ url, key: apiKey, strategy });
-    for (const category of categories) params.append("category", category);
-    const res = await fetch(`${PSI_ENDPOINT}?${params.toString()}`, { signal: controller.signal });
-    if (!res.ok) return null;
-    const data = (await res.json()) as PsiResponse;
-    return data.lighthouseResult ?? null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-// A run against several presets makes many of these calls back to back, and
-// a single dropped connection or unusually slow PSI response on this
-// machine shouldn't permanently fall that one preset back to the much
-// coarser Playwright heuristic — one retry before giving up (observed in
-// practice: the exact same request that hung/failed once succeeded in
-// well under a second on an immediate retry).
-export async function fetchPsiLighthouseResult(
-  url: string,
-  strategy: PsiStrategy = "mobile",
-  categories: string[] = ["performance"]
-): Promise<LighthouseResult | null> {
-  const apiKey = process.env.PAGESPEED_API_KEY;
-  if (!apiKey) return null;
-
-  const first = await fetchPsiOnce(url, strategy, categories, apiKey);
-  if (first) return first;
-  return fetchPsiOnce(url, strategy, categories, apiKey);
-}
 
 /**
  * The headline numbers this module surfaces — accessibilityScore is only
@@ -424,122 +328,46 @@ export function extractOpportunityFindings(label: string, url: string, lhr: Ligh
   return findings;
 }
 
-type FallbackMetrics = { ttfbMs: number; fcpMs: number | null; pageWeightBytes: number };
-
-/**
- * Navigation Timing / Paint / Resource Timing read from a real page load —
- * used only when PSI isn't configured or fails. Deliberately not framed as
- * a Lighthouse-equivalent measurement (see LIVE-PERF-TTFB-001/
- * LIVE-PERF-WEIGHT-001's ruleIds and capped-at-medium severity below).
- */
-async function collectPlaywrightMetrics(page: Page, url: string): Promise<FallbackMetrics> {
-  await page.goto(url, { waitUntil: "load", timeout: NAV_TIMEOUT_MS });
-  return page.evaluate(() => {
-    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    const paint = performance.getEntriesByType("paint").find((e) => e.name === "first-contentful-paint");
-    const resources = performance.getEntriesByType("resource") as PerformanceResourceTiming[];
-    const pageWeightBytes =
-      resources.reduce((sum, r) => sum + (r.transferSize || 0), 0) + (nav?.transferSize || 0);
-    return {
-      ttfbMs: nav ? nav.responseStart - nav.requestStart : 0,
-      fcpMs: paint ? paint.startTime : null,
-      pageWeightBytes,
-    };
-  });
-}
-
 /**
  * Discovers the collection and product URLs to check alongside the
  * homepage — Shopify's submission bar requires all three. The collection
- * URL needs no navigation at all: `/collections/all` is a Shopify-provided
- * route every store has by default. The product URL does need a real page
- * load to find a real link (reusing lib/audit/liveCheck.ts's own product-
- * discovery function rather than duplicating it) — `product` stays
- * undefined, not an error, when none can be found, same as liveCheck.ts's
- * own graceful handling of a store with no visible product link.
+ * URL needs no request at all: `/collections/all` is a Shopify-provided
+ * route every store has by default. The product URL is found via a plain
+ * fetch+parse of the homepage's HTML (see fetchPageFacts.ts) rather than a
+ * browser navigation — `product` stays undefined, not an error, when none
+ * can be found.
  */
 async function discoverPageUrls(homeUrl: string): Promise<{ home: string; collection: string; product?: string }> {
   const collection = new URL("/collections/all", homeUrl).toString();
   let product: string | undefined;
-  let browser: import("playwright").Browser | undefined;
   try {
-    browser = await launchBrowserWithTimeout();
-    const activeBrowser = browser;
-    product = await withNavigationRetry(async () => {
-      const context = await activeBrowser.newContext();
-      try {
-        const page = await context.newPage();
-        await page.goto(homeUrl, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
-        return (await findFirstProductLink(page)) ?? undefined;
-      } finally {
-        await context.close();
-      }
-    });
+    const facts = await fetchPageFacts(homeUrl);
+    product = facts.firstProductLink ?? undefined;
   } catch {
     // Leave product undefined — home/collection are still checked below.
-  } finally {
-    await browser?.close();
   }
   return { home: homeUrl, collection, product };
 }
 
-const TTFB_THRESHOLD_MS = 800;
-const PAGE_WEIGHT_THRESHOLD_BYTES = 3_000_000;
-
 /**
- * A bounded heuristic, not a real Lighthouse measurement — deliberately
- * capped at "medium" severity and using distinct ruleIds so it's never
- * confused with the PSI-grounded findings above.
- */
-export function fallbackThresholdFindings(label: string, url: string, metrics: FallbackMetrics): ExecutedFinding[] {
-  const findings: ExecutedFinding[] = [];
-
-  if (metrics.ttfbMs > TTFB_THRESHOLD_MS) {
-    findings.push({
-      ruleId: "LIVE-PERF-TTFB-001",
-      requirementId: "PERF-BP-007",
-      filePath: url,
-      category: "Performance",
-      severity: "medium",
-      presetLabel: label,
-      finding: `Time to First Byte is ${Math.round(metrics.ttfbMs)}ms — over the commonly-cited 800ms "good" threshold. Measured via the browser's Navigation Timing API (no PageSpeed Insights API key configured), not a full Lighthouse audit — treat as a heuristic.`,
-      recommendation: "Investigate server/CDN response time for this store, or configure PAGESPEED_API_KEY for a real Lighthouse read.",
-    });
-  }
-
-  if (metrics.pageWeightBytes > PAGE_WEIGHT_THRESHOLD_BYTES) {
-    findings.push({
-      ruleId: "LIVE-PERF-WEIGHT-001",
-      requirementId: "PERF-BP-007",
-      filePath: url,
-      category: "Performance",
-      severity: "medium",
-      presetLabel: label,
-      finding: `Total transferred page weight is ${(metrics.pageWeightBytes / 1_000_000).toFixed(1)}MB — over the commonly-cited 3MB budget. Measured via the browser's Resource Timing API (no PageSpeed Insights API key configured), not a full Lighthouse audit — treat as a heuristic.`,
-      recommendation: "Audit and compress large images/scripts/fonts loaded on this page, or configure PAGESPEED_API_KEY for a real Lighthouse read.",
-    });
-  }
-
-  return findings;
-}
-
-/**
- * Runs a live page-speed check per preset demo URL: Google's PageSpeed
- * Insights API first — real Lighthouse performance score, Core Web Vitals,
- * and the full "Opportunities"/"Diagnostics" audit list (the same report
- * structure GTmetrix/PSI/Lighthouse itself show) — falling back to
- * Playwright-based Navigation Timing metrics for whichever presets PSI
- * couldn't service (that fallback only produces the basic TTFB/page-weight
- * heuristic findings, not the full audit list, since it isn't running real
- * Lighthouse). Never throws — a failure becomes an `errors` entry, same as
- * lib/audit/liveCheck.ts.
+ * Runs a live page-speed check per preset demo URL against Google's
+ * PageSpeed Insights API — real Lighthouse performance score, Core Web
+ * Vitals, the full "Opportunities"/"Diagnostics" audit list, and (since
+ * every home-page call now requests the accessibility category too)
+ * contrast/touch-target findings derived from the same response. A preset
+ * PSI can't reach becomes an `errors` entry rather than failing the whole
+ * run; there is no local-browser fallback — this module makes no use of
+ * Chromium/Playwright anywhere.
  *
- * Every preset gets the homepage/mobile scorecard + opportunities list, as
- * before. Only the first ("baseline") preset additionally gets the full
- * Shopify-submission-bar matrix (home + collection + product, mobile +
- * desktop, performance + accessibility) — see
- * shopifySubmissionBarFindings' own comment for why it's scoped to one
- * preset rather than every one.
+ * Every preset gets the homepage/mobile scorecard + opportunities list +
+ * accessibility findings, as before. Only the first ("baseline") preset
+ * additionally gets the full Shopify-submission-bar matrix (home +
+ * collection + product, mobile + desktop, performance + accessibility) —
+ * see shopifySubmissionBarFindings' own comment for why it's scoped to one
+ * preset rather than every one. A consequence of dropping the Playwright
+ * fallback: non-baseline presets' product pages are no longer individually
+ * checked for contrast/touch-target issues (only their homepage is) —
+ * accepted as part of eliminating Chromium entirely.
  */
 export async function runPageSpeedChecksForPresets(
   presets: PresetLink[],
@@ -548,27 +376,20 @@ export async function runPageSpeedChecksForPresets(
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const metrics: PageSpeedMetric[] = [];
-  const needsFallback: PresetLink[] = [];
 
   // Every preset's home-page read, and the baseline's extra matrix reads,
-  // run concurrently rather than one at a time. Sequentially, 5 presets
-  // (the baseline alone needing 6 PSI calls for its full matrix) meant a
-  // single slow/degraded PSI response multiplied across ~10 calls could
-  // turn one "Run Audit" click into several minutes — long enough that a
-  // browser/proxy gives up and the user just sees "failed to run the
-  // audit" even though the run was still quietly working server-side.
-  // Concurrency bounds the worst case to the slowest single call (plus its
-  // one retry) instead of the sum of every call.
+  // run concurrently rather than one at a time — these are plain fetch()
+  // calls to Google's API with no local memory cost, so there's no reason
+  // to queue them the way the old Chromium-based checks had to be.
   await Promise.all(
     presets.map(async (preset, index) => {
       const isBaseline = index === 0;
-      const homeCategories = isBaseline ? ["performance", "accessibility"] : ["performance"];
+      const homeCategories = ["performance", "accessibility"];
 
       // Kicked off immediately rather than after the mobile home-page read
-      // below — URL discovery is a Playwright navigation with no PSI
+      // below — URL discovery is an independent fetch with no PSI
       // dependency, and the desktop home-page read doesn't depend on the
-      // mobile one either. Overlapping them shortens the baseline preset's
-      // own critical path instead of chaining three independent requests.
+      // mobile one either.
       const urlsPromise = isBaseline ? discoverPageUrls(preset.url) : null;
       const desktopHomePromise = isBaseline
         ? fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"])
@@ -576,7 +397,8 @@ export async function runPageSpeedChecksForPresets(
 
       const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
       if (!homeLhr) {
-        needsFallback.push(preset);
+        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (mobile)." });
+        onItemComplete?.();
         return;
       }
 
@@ -586,12 +408,13 @@ export async function runPageSpeedChecksForPresets(
         url: preset.url,
         pageType: "home",
         strategy: "mobile",
-        source: "psi",
         ...homeMetrics,
       };
       metrics.push(homeMetric);
       findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
       findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
+      findings.push(...contrastFindingsFromPsi(preset.label, preset.url, homeLhr));
+      findings.push(...touchTargetFindingsFromPsi(preset.label, preset.url, homeLhr));
 
       if (!isBaseline) {
         onItemComplete?.();
@@ -607,7 +430,6 @@ export async function runPageSpeedChecksForPresets(
           url: preset.url,
           pageType: "home",
           strategy: "desktop",
-          source: "psi",
           ...extractCoreMetrics(desktopHomeLhr),
         };
         matrix.push(m);
@@ -633,59 +455,19 @@ export async function runPageSpeedChecksForPresets(
           errors.push({ label: preset.label, url: r.url, error: `PageSpeed Insights request failed for the ${r.pageType} page (${r.strategy}).` });
           continue;
         }
-        const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, source: "psi", ...extractCoreMetrics(r.lhr) };
+        const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, ...extractCoreMetrics(r.lhr) };
         matrix.push(m);
         metrics.push(m);
+        if (r.strategy === "mobile") {
+          findings.push(...contrastFindingsFromPsi(preset.label, r.url, r.lhr));
+          findings.push(...touchTargetFindingsFromPsi(preset.label, r.url, r.lhr));
+        }
       }
 
       findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
       onItemComplete?.();
     })
   );
-
-  if (needsFallback.length > 0) {
-    let browser: import("playwright").Browser | undefined;
-    try {
-      browser = await launchBrowserWithTimeout();
-      const activeBrowser = browser;
-      // Queued (PRESET_CONCURRENCY_LIMIT, currently 1) rather than every
-      // fallback preset's browser context open at once — same real-world
-      // OOM evidence as liveCheck.ts's own preset loop applies here too,
-      // since this is the exact same "launch a browser, render a real
-      // store page" shape of work.
-      await mapWithConcurrency(needsFallback, PRESET_CONCURRENCY_LIMIT, async (preset) => {
-        try {
-          const fallback = await withNavigationRetry(async () => {
-            // Roughly matches PSI's own default mobile viewport.
-            const context = await activeBrowser.newContext({ viewport: { width: 390, height: 844 } });
-            try {
-              const page = await context.newPage();
-              return await collectPlaywrightMetrics(page, preset.url);
-            } finally {
-              await context.close();
-            }
-          });
-          metrics.push({
-            label: preset.label,
-            url: preset.url,
-            pageType: "home",
-            strategy: "mobile",
-            source: "playwright",
-            ttfbMs: fallback.ttfbMs,
-            fcpMs: fallback.fcpMs ?? undefined,
-            pageWeightBytes: fallback.pageWeightBytes,
-          });
-          findings.push(...fallbackThresholdFindings(preset.label, preset.url, fallback));
-        } catch (err) {
-          errors.push({ label: preset.label, url: preset.url, error: err instanceof Error ? err.message : String(err) });
-        } finally {
-          onItemComplete?.();
-        }
-      });
-    } finally {
-      await browser?.close();
-    }
-  }
 
   return { findings, errors, metrics };
 }

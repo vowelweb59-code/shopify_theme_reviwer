@@ -10,7 +10,8 @@ import { runAuditRules } from "@/lib/audit";
 import { detectEnhancementPoints, type EnhancementDetectionResult } from "@/lib/audit/detectEnhancements";
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
-import { runLiveChecksForPresets, type PresetLink } from "@/lib/audit/liveCheck";
+import { runLiveChecksForPresets } from "@/lib/audit/liveChecks/runLiveChecks";
+import type { PresetLink } from "@/lib/audit/liveChecks/shared";
 import { runPageSpeedChecksForPresets, type PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
 import type { DiffableFinding } from "@/lib/audit/findingSignature";
@@ -169,7 +170,7 @@ export type ExecuteAuditRunHooks = {
  * finding history, persist Finding docs, finalize the AuditRun. Shared by
  * the original /api/audit/run route and every Themes-module route that
  * triggers an audit — neither duplicates this logic, and neither touches
- * lib/rules/, runRules, liveCheck.ts, or pageSpeed.ts directly. Never
+ * lib/rules/, runRules, lib/audit/liveChecks/, or pageSpeed.ts directly. Never
  * throws — a failure marks the AuditRun "failed" and returns { ok: false },
  * matching the original route's catch-all behavior.
  */
@@ -219,21 +220,20 @@ export async function executeAuditRun(params: ExecuteAuditRunParams, hooks?: Exe
         void setStage(auditRun._id, "checking_live", { completed: completedUnits, total: totalUnits });
       };
 
-      // Sequential, not concurrent: each phase drives its own Chromium
-      // instance, and running both at once was measured causing real OOM
-      // kills on a 512MB deployment (Render's own event log: "Ran out of
-      // memory (used over 512MB) while running your code") — the process
-      // gets hard-killed mid-run with no chance to record a failure, which
-      // looks identical to a permanently stuck audit from the outside.
-      // Sequential means only one Chromium instance is ever alive at a
-      // time; slower than the brief concurrent-phases experiment, but an
-      // audit that reliably finishes beats one that's fast until it isn't.
+      // Run concurrently: both phases are now plain fetch() calls (page-fact
+      // extraction, and calls to Google's PageSpeed Insights API) with no
+      // local browser involved, so there's no shared memory-budget reason
+      // to serialize them the way the old Chromium-based checks required —
+      // that constraint drove real OOM kills on a 512MB deployment when
+      // this was last tried with two live Chromium instances; neither phase
+      // launches one anymore.
       const liveCheckStart = Date.now();
-      const liveResult = await runLiveChecksForPresets(demoStorePresets, bumpProgress);
-      timer.record("liveChecks", Date.now() - liveCheckStart);
-
       const pageSpeedStart = Date.now();
-      const pageSpeedResult = await runPageSpeedChecksForPresets(demoStorePresets, bumpProgress);
+      const [liveResult, pageSpeedResult] = await Promise.all([
+        runLiveChecksForPresets(demoStorePresets, bumpProgress),
+        runPageSpeedChecksForPresets(demoStorePresets, bumpProgress),
+      ]);
+      timer.record("liveChecks", Date.now() - liveCheckStart);
       timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);
 
       liveFindings = [...liveResult.findings, ...pageSpeedResult.findings];

@@ -21,7 +21,9 @@ ENV PORT=3000
 # Playwright needs non-code runtime assets (browsers.json, its bundled
 # browser binaries) that Next.js's static-import file tracer doesn't know
 # to include, confirmed by testing the standalone build directly (it
-# crashed the moment a live check tried to launch Chromium).
+# crashed the moment a Chromium-dependent code path ran). PDF export
+# (lib/export/pdf.ts) is the only remaining Playwright/Chromium usage —
+# live checks and PageSpeed no longer launch a browser at all.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public

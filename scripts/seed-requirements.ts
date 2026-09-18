@@ -1186,7 +1186,7 @@ const requirements: SeedRequirement[] = [
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
     notes:
-      "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content). Partial automated coverage added 2026-08-14: the live demo-store check (LIVE-IMAGE-RESOLUTION-001) flags images whose source resolution is measurably lower than their rendered size — a narrower, objective check than the full 'professional images, real-life scenarios, no placeholder content' judgment call, which still needs manual review.",
+      "Requires reviewing the actual demo store content, not statically checkable from theme code (the ZIP doesn't contain merchant/demo content). The narrower LIVE-IMAGE-RESOLUTION-001 automated check (image resolution vs. rendered size) that partially covered this was removed 2026-09-18 along with all Chromium/Playwright-based live checks, since verifying rendered image size needs a real browser; this requirement is manual-review-only again.",
   },
 
   // Added 2026-08-17 from a ChatGPT-based design-originality audit export

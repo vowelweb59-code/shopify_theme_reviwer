@@ -42,12 +42,13 @@ export type FindingRow = {
   lineNumber?: number | null;
   category: string;
   severity: "blocker" | "high" | "medium" | "low";
-  // "live" findings come from actually rendering a real demo store URL
-  // (real computed contrast, real rendered JSON-LD) rather than parsing
-  // theme source — filePath holds the page URL checked, not a file.
+  // "live" findings come from actually requesting a real demo store URL
+  // (real rendered JSON-LD via fetch+parse, real Lighthouse contrast/
+  // touch-target audits via PageSpeed Insights) rather than parsing theme
+  // source — filePath holds the page URL checked, not a file.
   layer?: "static" | "live";
   // Which preset's demo URL this live finding came from, when an audit
-  // ran against more than one (see lib/audit/liveCheck.ts's
+  // ran against more than one (see lib/audit/liveChecks/runLiveChecks.ts's
   // runLiveChecksForPresets). null/undefined for a single-preset run, for
   // static findings, and for the cross-preset comparison findings
   // themselves (distinguishable instead by their LIVE-PRESET-SYNC-* ruleId).
@@ -281,9 +282,7 @@ const SEVERITY_DOT: Record<string, string> = {
 // Every finding lib/audit/pageSpeed.ts's extractOpportunityFindings produces
 // uses this ruleId prefix — distinguishes the per-issue "what to fix" list
 // from the 4 headline scorecard findings (LIVE-PERF-SCORE/LCP/CLS/TBT-001,
-// already shown in the metrics table above) and the Playwright-only
-// fallback heuristics (LIVE-PERF-TTFB/WEIGHT-001), which get their own note
-// instead since they're not real Lighthouse audits.
+// already shown in the metrics table above).
 const OPPORTUNITY_RULE_PREFIX = "LIVE-PERF-LH-";
 const SEVERITY_SORT: Record<string, number> = { blocker: 0, high: 1, medium: 2, low: 3 };
 
@@ -293,9 +292,6 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
   const opportunities = findings
     .filter((f) => f.category === "Performance" && f.ruleId.startsWith(OPPORTUNITY_RULE_PREFIX))
     .sort((a, b) => SEVERITY_SORT[a.severity] - SEVERITY_SORT[b.severity]);
-  const fallbackHeuristics = findings.filter(
-    (f) => f.category === "Performance" && (f.ruleId === "LIVE-PERF-TTFB-001" || f.ruleId === "LIVE-PERF-WEIGHT-001")
-  );
   const submissionBarFindings = findings
     .filter((f) => f.ruleId === "LIVE-SHOPIFY-A11Y-SCORE-001" || f.ruleId === "LIVE-SHOPIFY-PERF-SCORE-001")
     .sort((a, b) => SEVERITY_SORT[a.severity] - SEVERITY_SORT[b.severity]);
@@ -311,7 +307,6 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
               <th className="py-1 pr-3 font-medium">Preset</th>
               <th className="py-1 pr-3 font-medium">Page</th>
               <th className="py-1 pr-3 font-medium">Device</th>
-              <th className="py-1 pr-3 font-medium">Source</th>
               <th className="py-1 pr-3 font-medium">Perf.</th>
               <th className="py-1 pr-3 font-medium">A11y</th>
               <th className="py-1 pr-3 font-medium">LCP</th>
@@ -325,7 +320,6 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
                 <td className="py-1.5 pr-3 font-medium text-zinc-950 dark:text-zinc-50">{m.label}</td>
                 <td className="py-1.5 pr-3 capitalize">{m.pageType}</td>
                 <td className="py-1.5 pr-3 capitalize">{m.strategy}</td>
-                <td className="py-1.5 pr-3">{m.source === "psi" ? "Lighthouse (PSI)" : "Playwright (fallback)"}</td>
                 <td className={`py-1.5 pr-3 font-medium ${scoreBandClass(m.performanceScore)}`}>
                   {typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}
                 </td>
@@ -398,14 +392,6 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
         </div>
       )}
 
-      {fallbackHeuristics.length > 0 && (
-        <div className="mt-4 border-t border-black/[.08] pt-3 text-xs text-zinc-500 dark:border-white/[.145]">
-          <p>
-            No PageSpeed Insights API key configured — only basic timing heuristics were checked. Configure
-            PAGESPEED_API_KEY for the full Lighthouse opportunities/diagnostics list above.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

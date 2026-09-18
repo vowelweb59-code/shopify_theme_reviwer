@@ -51,9 +51,10 @@ const presetLiveCheckErrorSchema = new Schema({ label: String, url: String, erro
 // Raw page-speed numbers per preset (lib/audit/pageSpeed.ts) — kept
 // alongside the Performance-category Finding rows (which describe *why*
 // something's flagged) so a report can also show the plain numbers (score/
-// LCP/CLS/TBT) at a glance. `source` records which measurement produced
-// these: a real Lighthouse read via Google's PageSpeed Insights API, or the
-// Playwright-based fallback used when PSI isn't configured/fails.
+// LCP/CLS/TBT) at a glance. Always a real Lighthouse read via Google's
+// PageSpeed Insights API — there is no local-browser fallback (removed
+// along with all other Chromium/Playwright usage), so every metric here is
+// PSI-sourced.
 const pageSpeedMetricSchema = new Schema(
   {
     label: { type: String, required: true },
@@ -63,15 +64,11 @@ const pageSpeedMetricSchema = new Schema(
     // every one of them was, in effect, the home page checked on mobile.
     pageType: { type: String, enum: ["home", "collection", "product"], default: "home" },
     strategy: { type: String, enum: ["mobile", "desktop"], default: "mobile" },
-    source: { type: String, required: true, enum: ["psi", "playwright"] },
     performanceScore: { type: Number, default: null },
     accessibilityScore: { type: Number, default: null },
     lcpMs: { type: Number, default: null },
     clsScore: { type: Number, default: null },
     tbtMs: { type: Number, default: null },
-    fcpMs: { type: Number, default: null },
-    ttfbMs: { type: Number, default: null },
-    pageWeightBytes: { type: Number, default: null },
   },
   { _id: false }
 );
