@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "models/theme.ts": {
-    "mtime": 1789623759.9261787,
-    "ast_hash": "3ae1c865dc9d93f327d3f9cbcf036aba",
+    "mtime": 1789733717.2609148,
+    "ast_hash": "4da489ee51c97f0a140eb45bc8a616e7",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -970,8 +970,8 @@
     "semantic_hash": ""
   },
   "lib/audit/availableFeatures.ts": {
-    "mtime": 1789553418.3900352,
-    "ast_hash": "ebca47be98043ccbb1c4ae51fc4ce8af",
+    "mtime": 1789733771.4429655,
+    "ast_hash": "890740e4ab5d320b79cdf3502c4369b5",
     "semantic_hash": ""
   },
   "lib/rules/internal/index.test.ts": {
@@ -1030,8 +1030,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/route.ts": {
-    "mtime": 1789732988.018648,
-    "ast_hash": "caf3142fd797153d7fd5af7f82acd7e2",
+    "mtime": 1789733836.292812,
+    "ast_hash": "4ea30e85b06d229914b761bbb02ba470",
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/versions/[versionId]/audit/route.ts": {
@@ -1045,8 +1045,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/route.ts": {
-    "mtime": 1789733404.7774167,
-    "ast_hash": "8c1e6bc9aa9719bda27814f95ce55995",
+    "mtime": 1789733829.6057339,
+    "ast_hash": "54d61d449c98e8832b7d6aaf3fa437b8",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/AllChecksList.tsx": {
@@ -1055,13 +1055,13 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/OverviewPanel.tsx": {
-    "mtime": 1789732946.2403162,
-    "ast_hash": "15a92295025ff6f690ba9c062d4a26d3",
+    "mtime": 1789733953.5660112,
+    "ast_hash": "5bba407cf0dc4a6db133a234da716bcb",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
-    "mtime": 1789732837.1547742,
-    "ast_hash": "ba7a310a02b6dc0876379d5848f17c1d",
+    "mtime": 1789733879.2835813,
+    "ast_hash": "1ee5e49f56a84cd10c7d861da6d3e0ce",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/page.tsx": {
@@ -1255,8 +1255,8 @@
     "semantic_hash": ""
   },
   "lib/themes/computeScoreboard.ts": {
-    "mtime": 1789638657.8236318,
-    "ast_hash": "3128adc5b73ecc070e2dd7a07ceb6f85",
+    "mtime": 1789733816.7866278,
+    "ast_hash": "4ec0b43f87ac255bcaabc2694e6da0e0",
     "semantic_hash": ""
   },
   "lib/audit/progress.test.ts": {
@@ -1342,6 +1342,26 @@
   "app/themes/[themeId]/_components/DownloadReportDropdown.tsx": {
     "mtime": 1789726634.2298727,
     "ast_hash": "88c7800ea5cb939d0007256f2dd584d8",
+    "semantic_hash": ""
+  },
+  "app/api/themes/[themeId]/theme-store-features/route.ts": {
+    "mtime": 1789733852.9347987,
+    "ast_hash": "decc929f4262bb92b7c428cacab6d50f",
+    "semantic_hash": ""
+  },
+  "lib/audit/availableFeatures.test.ts": {
+    "mtime": 1789734000.7867675,
+    "ast_hash": "145ad890dcb5ee5718f84c21de32e3de",
+    "semantic_hash": ""
+  },
+  "lib/themes/themeStoreFeatures.test.ts": {
+    "mtime": 1789733748.8866973,
+    "ast_hash": "07898f7e58fa8fee7457ff9b91db99cc",
+    "semantic_hash": ""
+  },
+  "lib/themes/themeStoreFeatures.ts": {
+    "mtime": 1789733732.4217587,
+    "ast_hash": "15e098d1f74b21fa05e5e91381f2e059",
     "semantic_hash": ""
   }
 }
