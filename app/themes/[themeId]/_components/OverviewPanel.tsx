@@ -33,16 +33,19 @@ type Props = {
 };
 
 // The subset of a Finding document this panel actually reads, fetched
-// on demand (only once a Performance card is expanded) from the same
-// endpoint the Report tab uses.
+// from the same endpoint the Report tab used to use — loaded eagerly for
+// the Recommendations block below, and reused (not re-fetched) when a
+// scoreboard card is expanded.
 type ReportFinding = {
   _id: string;
   ruleId: string;
   category: string;
   severity: string;
   finding: string;
+  recommendation?: string | null;
   filePath: string;
   presetLabel?: string | null;
+  status?: string;
 };
 
 type ReportEnhancementPoint = {
@@ -50,6 +53,19 @@ type ReportEnhancementPoint = {
   title: string;
   description?: string;
   detected: boolean | null;
+};
+
+const SEVERITY_ORDER: Record<string, number> = { blocker: 0, high: 1, medium: 2, low: 3 };
+
+// Same bg/text pairing SeverityBadge uses (app/_components/findings.tsx's
+// SEVERITY_STYLES) — reused here as a left-border accent instead, so the
+// Recommendations list reads as color-coded-by-severity at a glance without
+// introducing a second, competing color convention.
+const SEVERITY_BORDER: Record<string, string> = {
+  blocker: "border-l-status-fail-icon",
+  high: "border-l-status-fail-icon",
+  medium: "border-l-status-warning-icon",
+  low: "border-l-status-not-tested-icon",
 };
 
 // Every Performance finding's text explicitly says "(mobile)" or
@@ -494,6 +510,33 @@ export function OverviewPanel({
   const [reportError, setReportError] = useState<string | null>(null);
   const healthPercent = checkTotals && checkTotals.total > 0 ? Math.round((checkTotals.passed / checkTotals.total) * 100) : null;
 
+  async function loadReportData(auditRunId: string) {
+    if (reportData?.auditRunId === auditRunId) return; // already loaded for this run
+    setReportLoading(true);
+    setReportError(null);
+    try {
+      const res = await fetch(`/api/reports/${auditRunId}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setReportError(data.error ?? "Failed to load issues for this run.");
+        return;
+      }
+      setReportData({ auditRunId, findings: data.findings ?? [], enhancementPoints: data.enhancementPoints ?? [] });
+    } catch {
+      setReportError("Lost connection to the server while loading issues.");
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  // Loaded eagerly (not just lazily on a scoreboard card click) since the
+  // Recommendations block below needs it immediately, unconditionally.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount/id-change is the well-established exception this rule itself documents
+    if (latestAudit) loadReportData(latestAudit._id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestAudit?._id]);
+
   async function handleToggleCard(card: ScoreCard) {
     if (expandedCardId === card.id) {
       setExpandedCardId(null);
@@ -501,24 +544,30 @@ export function OverviewPanel({
     }
     setExpandedCardId(card.id);
     if (!REPORT_BACKED_CARD_IDS.has(card.id) || !latestAudit) return;
-    if (reportData?.auditRunId === latestAudit._id) return; // already loaded for this run
-
-    setReportLoading(true);
-    setReportError(null);
-    try {
-      const res = await fetch(`/api/reports/${latestAudit._id}`);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setReportError(data.error ?? "Failed to load issues for this run.");
-        return;
-      }
-      setReportData({ auditRunId: latestAudit._id, findings: data.findings ?? [], enhancementPoints: data.enhancementPoints ?? [] });
-    } catch {
-      setReportError("Lost connection to the server while loading issues.");
-    } finally {
-      setReportLoading(false);
-    }
+    await loadReportData(latestAudit._id);
   }
+
+  // Top issues to prioritize for the next theme update: one per distinct
+  // rule (not one row per occurrence — the same issue can legitimately hit
+  // dozens of files/pages), worst severity first, capped at 5. Ignored/
+  // resolved findings are excluded since the user has already dealt with
+  // those. Uses each finding's own `recommendation` text (falling back to
+  // the finding description when a rule has none) — this is the one place
+  // in the app that surfaces that field as the headline rather than as a
+  // secondary detail.
+  const recommendations = (() => {
+    if (!reportData) return [];
+    const bestByRule = new Map<string, ReportFinding & { count: number }>();
+    for (const f of reportData.findings) {
+      if (f.status === "ignored" || f.status === "resolved") continue;
+      const existing = bestByRule.get(f.ruleId);
+      if (existing) existing.count += 1;
+      else bestByRule.set(f.ruleId, { ...f, count: 1 });
+    }
+    return [...bestByRule.values()]
+      .sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99))
+      .slice(0, 5);
+  })();
 
   function renderExpanded(card: ScoreCard) {
     if (REPORT_BACKED_CARD_IDS.has(card.id)) {
@@ -661,6 +710,29 @@ export function OverviewPanel({
             Page speed data couldn&apos;t be measured for this run (every PageSpeed Insights request failed) — Desktop/Mobile Performance
             below are the last real measurements, from the run on {formatDate(pageSpeedFallback.startedAt)}.
           </p>
+        )}
+
+        {latestAudit && recommendations.length > 0 && (
+          <div className="mt-4">
+            <Card>
+              <CardHeader
+                title="Recommendations for next update"
+                description="Top open issues to prioritize, ranked by severity — color-coded blocker/high (red), medium (amber), low (gray)."
+              />
+              <ul className="flex flex-col gap-2">
+                {recommendations.map((r) => (
+                  <li key={r.ruleId} className={`border-l-4 rounded-md bg-surface-muted p-3 text-sm ${SEVERITY_BORDER[r.severity] ?? SEVERITY_BORDER.low}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SeverityBadge severity={r.severity} />
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">{r.category}</span>
+                      {r.count > 1 && <span className="text-xs text-zinc-500">({r.count} occurrences)</span>}
+                    </div>
+                    <p className="mt-1 text-zinc-700 dark:text-zinc-300">{r.recommendation || r.finding}</p>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
         )}
 
         {scoreboard && (
