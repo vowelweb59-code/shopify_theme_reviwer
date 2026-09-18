@@ -49,6 +49,43 @@ export async function withNavigationRetry<T>(attempt: () => Promise<T>): Promise
 
 const BROWSER_LAUNCH_TIMEOUT_MS = 20_000;
 
+// Chromium's defaults assume a normal desktop/CI machine — on a 512MB
+// deployment, its own baseline overhead (GPU process, sandbox helper
+// processes, background timers/networking, crash reporting, etc.) is
+// itself enough to get OOM-killed even with a single instance processing
+// one preset at a time (confirmed via Render's own event log after
+// switching to fully-queued processing didn't stop the kills). This is
+// the standard flag set used to run headless Chromium in
+// memory-constrained/containerized environments (the same shape of flags
+// projects like chrome-aws-lambda/@sparticuz/chromium ship for AWS
+// Lambda, another very memory-constrained host) — none of it changes
+// what gets checked, only how much overhead the browser process itself
+// carries. --no-sandbox is included because container platforms
+// frequently can't provide a working sandbox at all (this tool only ever
+// renders theme-owner-supplied demo store URLs the user themselves
+// entered, not arbitrary public input, so the reduced process isolation
+// is an acceptable trade-off here).
+const LOW_MEMORY_CHROMIUM_ARGS = [
+  "--disable-dev-shm-usage",
+  "--disable-gpu",
+  "--disable-software-rasterizer",
+  "--disable-extensions",
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-background-networking",
+  "--disable-background-timer-throttling",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-breakpad",
+  "--disable-component-extensions-with-background-pages",
+  "--disable-features=TranslateUI",
+  "--disable-ipc-flooding-protection",
+  "--disable-renderer-backgrounding",
+  "--force-color-profile=srgb",
+  "--metrics-recording-only",
+  "--mute-audio",
+  "--no-first-run",
+];
+
 /**
  * chromium.launch() has no built-in timeout — on a memory/CPU-constrained
  * host (e.g. a 512MB free-tier deployment) it can hang indefinitely rather
@@ -61,7 +98,7 @@ const BROWSER_LAUNCH_TIMEOUT_MS = 20_000;
  */
 export async function launchBrowserWithTimeout(): Promise<import("playwright").Browser> {
   let timedOut = false;
-  const launchPromise = chromium.launch();
+  const launchPromise = chromium.launch({ args: LOW_MEMORY_CHROMIUM_ARGS });
   launchPromise.then(
     (browser) => {
       if (timedOut) void browser.close().catch(() => {});
