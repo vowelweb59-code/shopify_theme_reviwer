@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-18)
 
 ## Corpus Check
-- 259 files · ~1,565,196 words
+- 259 files · ~1,565,204 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `53d5f468`
+- Built from commit: `ca449619`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -109,8 +109,8 @@
   app/api/requirements/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/rules/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/enhancements/route.ts → lib/db/connect.ts
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -382,7 +382,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **433 isolated node(s):** `EnhancementDetection`, `FeatureMatrixRow`, `CheckTotals`, `ThemeRow`, `CategoryDiffSummary` (+428 more)
+- **433 isolated node(s):** `EnhancementDetection`, `FeatureMatrixRow`, `CategoryDiffSummary`, `FindingsDiff`, `FindingsDiffSummary` (+428 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -390,14 +390,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `diffFindings.ts`, `oauth.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `audit/route.ts`, `enhancement-point.ts`, `[themeId]/route.ts`, `requirement.ts`, `isValidObjectId`, `theme-store-features/route.ts`, `reports/[id]/route.ts`, `uploadThemeVersion.ts`, `[id]/export/route.ts`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `computeScoreboard.ts` to `executeAuditRun.ts`, `ReportContent.tsx`, `ThemeDetailTabs.tsx`, `findings.tsx`, `OverviewPanel.tsx`, `pageSpeed.ts`, `[themeId]/route.ts`, `insights/page.tsx`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **Why does `FINDING_CATEGORIES` connect `requirement.ts` to `sheetRows.ts`, `deriveChecksForAuditRun.ts`, `finding.ts`, `rules.ts`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `EnhancementDetection`, `FeatureMatrixRow`, `CheckTotals` to the rest of the system?**
+- **What connects `EnhancementDetection`, `FeatureMatrixRow`, `CategoryDiffSummary` to the rest of the system?**
   _433 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
