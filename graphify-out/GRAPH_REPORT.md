@@ -1,16 +1,16 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-18)
 
 ## Corpus Check
-- 255 files · ~1,561,464 words
+- 255 files · ~1,561,430 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1267 nodes · 2546 edges · 75 communities (69 shown, 6 thin omitted)
+- 1267 nodes · 2544 edges · 75 communities (69 shown, 6 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.58)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `416ecba6`
+- Built from commit: `313cad1f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -148,8 +148,8 @@ Cohesion: 0.21
 Nodes (9): AppShell(), isActive(), MobileNav(), NAV_ITEMS, isActive(), Sidebar(), geistMono, geistSans (+1 more)
 
 ### Community 9 - "ThemeDetailTabs.tsx"
-Cohesion: 0.17
-Nodes (10): BreadcrumbItem, Breadcrumbs(), CheckTotals, ThemeDetail, ThemeDetailTabs(), AuditTotals, formatDate(), VersionRow (+2 more)
+Cohesion: 0.16
+Nodes (11): BreadcrumbItem, Breadcrumbs(), DownloadReportDropdown(), CheckTotals, ThemeDetail, ThemeDetailTabs(), AuditTotals, formatDate() (+3 more)
 
 ### Community 10 - "settings.ts"
 Cohesion: 0.11
@@ -280,8 +280,8 @@ Cohesion: 0.18
 Nodes (12): buildEnhancementSheetTabs(), buildFutureUpdatesRow(), buildFutureUpdatesTab(), buildRow(), DETECTED_LABELS, ENHANCEMENT_TAB_COLUMNS, FUTURE_UPDATES_TAB_COLUMNS, SheetEnhancementPoint (+4 more)
 
 ### Community 47 - "AllChecksList.tsx"
-Cohesion: 0.17
-Nodes (10): SeverityBadge(), CheckStatusValue, STATUS_CONFIG, StatusBadge(), AllChecksList(), matchesSearch(), STATUS_FILTERS, baseArgs (+2 more)
+Cohesion: 0.27
+Nodes (7): SeverityBadge(), CheckStatusValue, STATUS_CONFIG, StatusBadge(), AllChecksList(), matchesSearch(), STATUS_FILTERS
 
 ### Community 48 - "sheetRows.ts"
 Cohesion: 0.13
@@ -336,12 +336,12 @@ Cohesion: 0.29
 Nodes (6): AvailableFeaturesPage(), FeatureRow, formatDate(), STATUS_CLASS, STATUS_LABEL, ThemeFeatures
 
 ### Community 62 - "computeScoreboard.ts"
-Cohesion: 0.22
-Nodes (13): GET(), AVAILABLE_FEATURES, AvailableFeature, featureStatus, buildEnhancementReportForRun(), EnhancementDetectionRecord, EnhancementReportPoint, averageDefined() (+5 more)
+Cohesion: 0.16
+Nodes (16): GET(), AVAILABLE_FEATURES, AvailableFeature, featureStatus, buildEnhancementReportForRun(), EnhancementDetectionRecord, EnhancementReportPoint, averageDefined() (+8 more)
 
 ### Community 63 - "Button.tsx"
-Cohesion: 0.20
-Nodes (9): Button, ButtonSize, ButtonVariant, SIZE_CLASSES, VARIANT_CLASSES, DownloadReportDropdown(), FileFormat, Format (+1 more)
+Cohesion: 0.22
+Nodes (8): Button, ButtonSize, ButtonVariant, SIZE_CLASSES, VARIANT_CLASSES, FileFormat, Format, FORMAT_LABELS
 
 ### Community 64 - "enhancementReport.tsx"
 Cohesion: 0.33
@@ -372,7 +372,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **430 isolated node(s):** `Tab`, `FileFormat`, `Format`, `FORMAT_LABELS`, `CheckTotals` (+425 more)
+- **430 isolated node(s):** `CheckTotals`, `ThemeDetail`, `Format`, `CategoryDiffSummary`, `FindingsDiff` (+425 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -380,14 +380,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `[id]/export/route.ts`, `oauth.ts`, `executeAuditRun.ts`, `[id]/export/google-sheet/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `finding.ts`, `deriveChecksForAuditRun.ts`, `uploadThemeVersion.ts`, `audit-run.ts`, `[themeId]/route.ts`, `computeScoreboard.ts`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `package.json`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Tab`, `FileFormat`, `Format` to the rest of the system?**
+- **What connects `CheckTotals`, `ThemeDetail`, `Format` to the rest of the system?**
   _430 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `[id]/export/route.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05119214586255259 - nodes in this community are weakly interconnected._

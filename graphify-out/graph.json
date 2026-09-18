@@ -401,10 +401,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_pagespeedcheckresult",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeedcheckresult"
+      "norm_label": "pagespeedcheckresult",
+      "id": "lib_audit_pagespeed_pagespeedcheckresult"
     },
     {
       "label": "PageSpeedMetric",
@@ -414,10 +414,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_pagespeedmetric",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeedmetric"
+      "norm_label": "pagespeedmetric",
+      "id": "lib_audit_pagespeed_pagespeedmetric"
     },
     {
       "label": "PageType",
@@ -427,10 +427,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_pagetype",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagetype"
+      "norm_label": "pagetype",
+      "id": "lib_audit_pagespeed_pagetype"
     },
     {
       "label": "PsiMetrics",
@@ -440,10 +440,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_psimetrics",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "psimetrics"
+      "norm_label": "psimetrics",
+      "id": "lib_audit_pagespeed_psimetrics"
     },
     {
       "label": "LighthouseAudit",
@@ -544,10 +544,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_components_tabbedpage_tab",
       "community": 13,
       "community_name": "settings/page.tsx",
-      "norm_label": "tab"
+      "norm_label": "tab",
+      "id": "app_components_tabbedpage_tab"
     },
     {
       "label": "MaintenanceSummary",
@@ -1844,10 +1844,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_checktotals",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "checktotals"
+      "norm_label": "checktotals",
+      "id": "app_themes_themeid_components_overviewpanel_checktotals"
     },
     {
       "label": "Props",
@@ -1857,10 +1857,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_props",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "props"
+      "norm_label": "props",
+      "id": "app_themes_themeid_components_overviewpanel_props"
     },
     {
       "label": "ReportEnhancementPoint",
@@ -1870,10 +1870,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportenhancementpoint"
+      "norm_label": "reportenhancementpoint",
+      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
     },
     {
       "label": "ReportFinding",
@@ -1883,10 +1883,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_reportfinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportfinding"
+      "norm_label": "reportfinding",
+      "id": "app_themes_themeid_components_overviewpanel_reportfinding"
     },
     {
       "label": "AuditStageKey",
@@ -1939,32 +1939,6 @@
       "community_name": "AllChecksList.tsx",
       "norm_label": "checkstatusvalue",
       "id": "app_components_ui_statusbadge_checkstatusvalue"
-    },
-    {
-      "label": "CategoryChecks",
-      "file_type": "code",
-      "source_file": "lib/themes/deriveChecksForAuditRun.ts",
-      "source_location": "L30",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 47,
-      "community_name": "AllChecksList.tsx",
-      "norm_label": "categorychecks",
-      "id": "lib_themes_derivechecksforauditrun_categorychecks"
-    },
-    {
-      "label": "CheckItem",
-      "file_type": "code",
-      "source_file": "lib/themes/deriveChecksForAuditRun.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 47,
-      "community_name": "AllChecksList.tsx",
-      "norm_label": "checkitem",
-      "id": "lib_themes_derivechecksforauditrun_checkitem"
     },
     {
       "label": "DiffFinding",
@@ -2669,6 +2643,32 @@
       "id": "lib_audit_enhancementreport_enhancementreportpoint"
     },
     {
+      "label": "CategoryChecks",
+      "file_type": "code",
+      "source_file": "lib/themes/deriveChecksForAuditRun.ts",
+      "source_location": "L30",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "computeScoreboard.ts",
+      "norm_label": "categorychecks",
+      "id": "lib_themes_derivechecksforauditrun_categorychecks"
+    },
+    {
+      "label": "CheckItem",
+      "file_type": "code",
+      "source_file": "lib/themes/deriveChecksForAuditRun.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "computeScoreboard.ts",
+      "norm_label": "checkitem",
+      "id": "lib_themes_derivechecksforauditrun_checkitem"
+    },
+    {
       "label": "ButtonSize",
       "file_type": "code",
       "source_file": "app/_components/ui/Button.tsx",
@@ -2702,10 +2702,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_downloadreportdropdown_fileformat",
       "community": 63,
       "community_name": "Button.tsx",
-      "norm_label": "fileformat"
+      "norm_label": "fileformat",
+      "id": "app_themes_themeid_components_downloadreportdropdown_fileformat"
     },
     {
       "label": "Format",
@@ -2715,10 +2715,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_downloadreportdropdown_format",
       "community": 63,
       "community_name": "Button.tsx",
-      "norm_label": "format"
+      "norm_label": "format",
+      "id": "app_themes_themeid_components_downloadreportdropdown_format"
     },
     {
       "label": "EnhancementMatch",
@@ -2906,7 +2906,7 @@
       "label": "CheckTotals",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
@@ -2919,7 +2919,7 @@
       "label": "ThemeDetail",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L17",
+      "source_location": "L16",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
@@ -2936,10 +2936,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection_audittotals",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "audittotals"
+      "norm_label": "audittotals",
+      "id": "app_themes_themeid_components_versionssection_audittotals"
     },
     {
       "label": "VersionRow",
@@ -2949,10 +2949,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection_versionrow",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "versionrow"
+      "norm_label": "versionrow",
+      "id": "app_themes_themeid_components_versionssection_versionrow"
     },
     {
       "label": "GET()",
@@ -3765,10 +3765,10 @@
       "source_location": "L178",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_averagedefined",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "averagedefined()"
+      "norm_label": "averagedefined()",
+      "id": "lib_audit_pagespeed_averagedefined"
     },
     {
       "label": "discoverPageUrls()",
@@ -3777,10 +3777,10 @@
       "source_location": "L351",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_discoverpageurls",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "discoverpageurls()"
+      "norm_label": "discoverpageurls()",
+      "id": "lib_audit_pagespeed_discoverpageurls"
     },
     {
       "label": "extractCoreMetrics()",
@@ -3789,10 +3789,10 @@
       "source_location": "L46",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_extractcoremetrics",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "extractcoremetrics()"
+      "norm_label": "extractcoremetrics()",
+      "id": "lib_audit_pagespeed_extractcoremetrics"
     },
     {
       "label": "extractOpportunityFindings()",
@@ -3801,10 +3801,10 @@
       "source_location": "L309",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_extractopportunityfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "extractopportunityfindings()"
+      "norm_label": "extractopportunityfindings()",
+      "id": "lib_audit_pagespeed_extractopportunityfindings"
     },
     {
       "label": "psiThresholdFindings()",
@@ -3813,10 +3813,10 @@
       "source_location": "L65",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_psithresholdfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "psithresholdfindings()"
+      "norm_label": "psithresholdfindings()",
+      "id": "lib_audit_pagespeed_psithresholdfindings"
     },
     {
       "label": "ruleIdForLighthouseAudit()",
@@ -3825,10 +3825,10 @@
       "source_location": "L293",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_ruleidforlighthouseaudit",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "ruleidforlighthouseaudit()"
+      "norm_label": "ruleidforlighthouseaudit()",
+      "id": "lib_audit_pagespeed_ruleidforlighthouseaudit"
     },
     {
       "label": "runPageSpeedChecksForPresets()",
@@ -3837,10 +3837,10 @@
       "source_location": "L383",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_runpagespeedchecksforpresets",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "runpagespeedchecksforpresets()"
+      "norm_label": "runpagespeedchecksforpresets()",
+      "id": "lib_audit_pagespeed_runpagespeedchecksforpresets"
     },
     {
       "label": "shopifySubmissionBarFindings()",
@@ -3849,10 +3849,10 @@
       "source_location": "L194",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_shopifysubmissionbarfindings",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "shopifysubmissionbarfindings()"
+      "norm_label": "shopifysubmissionbarfindings()",
+      "id": "lib_audit_pagespeed_shopifysubmissionbarfindings"
     },
     {
       "label": "stripMarkdownLinks()",
@@ -3861,10 +3861,10 @@
       "source_location": "L255",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_stripmarkdownlinks",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "stripmarkdownlinks()"
+      "norm_label": "stripmarkdownlinks()",
+      "id": "lib_audit_pagespeed_stripmarkdownlinks"
     },
     {
       "label": "summarizeAuditItems()",
@@ -3873,10 +3873,10 @@
       "source_location": "L271",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_summarizeaudititems",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "summarizeaudititems()"
+      "norm_label": "summarizeaudititems()",
+      "id": "lib_audit_pagespeed_summarizeaudititems"
     },
     {
       "label": "lhrWith()",
@@ -3993,10 +3993,10 @@
       "source_location": "L20",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_components_tabbedpage_tabbedpageclient",
       "community": 13,
       "community_name": "settings/page.tsx",
-      "norm_label": "tabbedpageclient()"
+      "norm_label": "tabbedpageclient()",
+      "id": "app_components_tabbedpage_tabbedpageclient"
     },
     {
       "label": "MaintenanceContent()",
@@ -6093,10 +6093,10 @@
       "source_location": "L60",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_formatdate",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatdate()"
+      "norm_label": "formatdate()",
+      "id": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "label": "healthTone()",
@@ -6105,10 +6105,10 @@
       "source_location": "L70",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_healthtone",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "healthtone()"
+      "norm_label": "healthtone()",
+      "id": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "label": "isDesktopPerformanceFinding()",
@@ -6117,10 +6117,10 @@
       "source_location": "L56",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "isdesktopperformancefinding()"
+      "norm_label": "isdesktopperformancefinding()",
+      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "label": "IssueRow()",
@@ -6129,10 +6129,10 @@
       "source_location": "L386",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_issuerow",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "issuerow()"
+      "norm_label": "issuerow()",
+      "id": "app_themes_themeid_components_overviewpanel_issuerow"
     },
     {
       "label": "OverviewPanel()",
@@ -6141,10 +6141,10 @@
       "source_location": "L399",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel()"
+      "norm_label": "overviewpanel()",
+      "id": "app_themes_themeid_components_overviewpanel_overviewpanel"
     },
     {
       "label": "PresetsSection()",
@@ -6153,10 +6153,10 @@
       "source_location": "L76",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_presetssection",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "presetssection()"
+      "norm_label": "presetssection()",
+      "id": "app_themes_themeid_components_overviewpanel_presetssection"
     },
     {
       "label": "RunAuditForm()",
@@ -6165,10 +6165,10 @@
       "source_location": "L219",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_runauditform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "runauditform()"
+      "norm_label": "runauditform()",
+      "id": "app_themes_themeid_components_overviewpanel_runauditform"
     },
     {
       "label": "UploadVersionForm()",
@@ -6177,10 +6177,10 @@
       "source_location": "L164",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_uploadversionform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "uploadversionform()"
+      "norm_label": "uploadversionform()",
+      "id": "app_themes_themeid_components_overviewpanel_uploadversionform"
     },
     {
       "label": "percentForStage()",
@@ -6301,18 +6301,6 @@
       "community_name": "AllChecksList.tsx",
       "norm_label": "matchessearch()",
       "id": "app_themes_themeid_components_allcheckslist_matchessearch"
-    },
-    {
-      "label": "categories()",
-      "file_type": "code",
-      "source_file": "lib/themes/computeScoreboard.test.ts",
-      "source_location": "L22",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 47,
-      "community_name": "AllChecksList.tsx",
-      "norm_label": "categories()",
-      "id": "lib_themes_computescoreboard_test_categories"
     },
     {
       "label": "mergeChecklistRows()",
@@ -7347,16 +7335,16 @@
       "id": "lib_themes_computescoreboard_performancescorecard"
     },
     {
-      "label": "DownloadReportDropdown()",
+      "label": "categories()",
       "file_type": "code",
-      "source_file": "app/themes/[themeId]/_components/DownloadReportDropdown.tsx",
-      "source_location": "L28",
+      "source_file": "lib/themes/computeScoreboard.test.ts",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown",
-      "community": 63,
-      "community_name": "Button.tsx",
-      "norm_label": "downloadreportdropdown()"
+      "community": 62,
+      "community_name": "computeScoreboard.ts",
+      "norm_label": "categories()",
+      "id": "lib_themes_computescoreboard_test_categories"
     },
     {
       "label": "EnhancementReportSection()",
@@ -7899,10 +7887,22 @@
       "id": "app_components_shell_breadcrumbs_breadcrumbs"
     },
     {
+      "label": "DownloadReportDropdown()",
+      "file_type": "code",
+      "source_file": "app/themes/[themeId]/_components/DownloadReportDropdown.tsx",
+      "source_location": "L28",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "ThemeDetailTabs.tsx",
+      "norm_label": "downloadreportdropdown()",
+      "id": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown"
+    },
+    {
       "label": "ThemeDetailTabs()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L27",
+      "source_location": "L26",
       "_callable": true,
       "_origin": "ast",
       "id": "app_themes_themeid_components_themedetailtabs_themedetailtabs",
@@ -7917,10 +7917,10 @@
       "source_location": "L6",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection_formatdate",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "formatdate()"
+      "norm_label": "formatdate()",
+      "id": "app_themes_themeid_components_versionssection_formatdate"
     },
     {
       "label": "VersionRowView()",
@@ -7929,10 +7929,10 @@
       "source_location": "L10",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection_versionrowview",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "versionrowview()"
+      "norm_label": "versionrowview()",
+      "id": "app_themes_themeid_components_versionssection_versionrowview"
     },
     {
       "label": "VersionsSection()",
@@ -7941,10 +7941,10 @@
       "source_location": "L38",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection_versionssection",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "versionssection()"
+      "norm_label": "versionssection()",
+      "id": "app_themes_themeid_components_versionssection_versionssection"
     },
     {
       "label": "ThemeDetailPage()",
@@ -9130,10 +9130,10 @@
       "source_file": "lib/audit/pageSpeed.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_audit_pagespeed",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "pagespeed.ts"
+      "norm_label": "pagespeed.ts",
+      "id": "lib_audit_pagespeed"
     },
     {
       "label": "OPPORTUNITY_AUDIT_GROUPS",
@@ -9141,10 +9141,10 @@
       "source_file": "lib/audit/pageSpeed.ts",
       "source_location": "L242",
       "_origin": "ast",
-      "id": "lib_audit_pagespeed_opportunity_audit_groups",
       "community": 12,
       "community_name": "pageSpeed.ts",
-      "norm_label": "opportunity_audit_groups"
+      "norm_label": "opportunity_audit_groups",
+      "id": "lib_audit_pagespeed_opportunity_audit_groups"
     },
     {
       "label": "pageSpeed.test.ts",
@@ -9207,10 +9207,10 @@
       "source_file": "app/_components/TabbedPage.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_components_tabbedpage",
       "community": 13,
       "community_name": "settings/page.tsx",
-      "norm_label": "tabbedpage.tsx"
+      "norm_label": "tabbedpage.tsx",
+      "id": "app_components_tabbedpage"
     },
     {
       "label": "MaintenanceContent.tsx",
@@ -12749,10 +12749,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel.tsx"
+      "norm_label": "overviewpanel.tsx",
+      "id": "app_themes_themeid_components_overviewpanel"
     },
     {
       "label": "REPORT_BACKED_CARD_IDS",
@@ -12760,10 +12760,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L384",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "report_backed_card_ids"
+      "norm_label": "report_backed_card_ids",
+      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
     },
     {
       "label": "progress.ts",
@@ -12962,28 +12962,6 @@
       "community_name": "AllChecksList.tsx",
       "norm_label": "status_filters",
       "id": "app_themes_themeid_components_allcheckslist_status_filters"
-    },
-    {
-      "label": "computeScoreboard.test.ts",
-      "file_type": "code",
-      "source_file": "lib/themes/computeScoreboard.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 47,
-      "community_name": "AllChecksList.tsx",
-      "norm_label": "computescoreboard.test.ts",
-      "id": "lib_themes_computescoreboard_test"
-    },
-    {
-      "label": "baseArgs",
-      "file_type": "code",
-      "source_file": "lib/themes/computeScoreboard.test.ts",
-      "source_location": "L28",
-      "_origin": "ast",
-      "community": 47,
-      "community_name": "AllChecksList.tsx",
-      "norm_label": "baseargs",
-      "id": "lib_themes_computescoreboard_test_baseargs"
     },
     {
       "label": "checklistMerge.ts",
@@ -14152,6 +14130,28 @@
       "id": "lib_themes_computescoreboard"
     },
     {
+      "label": "computeScoreboard.test.ts",
+      "file_type": "code",
+      "source_file": "lib/themes/computeScoreboard.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "computeScoreboard.ts",
+      "norm_label": "computescoreboard.test.ts",
+      "id": "lib_themes_computescoreboard_test"
+    },
+    {
+      "label": "baseArgs",
+      "file_type": "code",
+      "source_file": "lib/themes/computeScoreboard.test.ts",
+      "source_location": "L28",
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "computeScoreboard.ts",
+      "norm_label": "baseargs",
+      "id": "lib_themes_computescoreboard_test_baseargs"
+    },
+    {
       "label": "Button.tsx",
       "file_type": "code",
       "source_file": "app/_components/ui/Button.tsx",
@@ -14201,10 +14201,10 @@
       "source_file": "app/themes/[themeId]/_components/DownloadReportDropdown.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_downloadreportdropdown",
       "community": 63,
       "community_name": "Button.tsx",
-      "norm_label": "downloadreportdropdown.tsx"
+      "norm_label": "downloadreportdropdown.tsx",
+      "id": "app_themes_themeid_components_downloadreportdropdown"
     },
     {
       "label": "FORMAT_LABELS",
@@ -14212,10 +14212,10 @@
       "source_file": "app/themes/[themeId]/_components/DownloadReportDropdown.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_downloadreportdropdown_format_labels",
       "community": 63,
       "community_name": "Button.tsx",
-      "norm_label": "format_labels"
+      "norm_label": "format_labels",
+      "id": "app_themes_themeid_components_downloadreportdropdown_format_labels"
     },
     {
       "label": "enhancementReport.tsx",
@@ -14795,10 +14795,10 @@
       "source_file": "app/themes/[themeId]/_components/VersionsSection.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_themes_themeid_components_versionssection",
       "community": 9,
       "community_name": "ThemeDetailTabs.tsx",
-      "norm_label": "versionssection.tsx"
+      "norm_label": "versionssection.tsx",
+      "id": "app_themes_themeid_components_versionssection"
     },
     {
       "label": "[themeId]/page.tsx",
@@ -16369,9 +16369,9 @@
       "source_location": "L455",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "relation": "calls",
@@ -16381,9 +16381,9 @@
       "source_location": "L505",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "relation": "calls",
@@ -16393,9 +16393,9 @@
       "source_location": "L549",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "relation": "calls",
@@ -16429,9 +16429,9 @@
       "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection_versionrowview",
-      "target": "app_themes_themeid_components_versionssection_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_formatdate"
     },
     {
       "relation": "calls",
@@ -16909,9 +16909,9 @@
       "source_location": "L321",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_stripmarkdownlinks",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_stripmarkdownlinks"
     },
     {
       "relation": "calls",
@@ -16921,9 +16921,9 @@
       "source_location": "L322",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_summarizeaudititems",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_summarizeaudititems"
     },
     {
       "relation": "calls",
@@ -16933,9 +16933,9 @@
       "source_location": "L326",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_extractopportunityfindings",
-      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit"
     },
     {
       "relation": "calls",
@@ -16957,9 +16957,9 @@
       "source_location": "L405",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_discoverpageurls",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_discoverpageurls"
     },
     {
       "relation": "calls",
@@ -16981,9 +16981,9 @@
       "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_extractcoremetrics",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractcoremetrics"
     },
     {
       "relation": "calls",
@@ -16993,9 +16993,9 @@
       "source_location": "L426",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_psithresholdfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_psithresholdfindings"
     },
     {
       "relation": "calls",
@@ -17005,9 +17005,9 @@
       "source_location": "L427",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_extractopportunityfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractopportunityfindings"
     },
     {
       "relation": "calls",
@@ -17041,9 +17041,9 @@
       "source_location": "L480",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
     },
     {
       "relation": "calls",
@@ -17053,9 +17053,9 @@
       "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed_shopifysubmissionbarfindings",
-      "target": "lib_audit_pagespeed_averagedefined",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_averagedefined"
     },
     {
       "relation": "calls",
@@ -18757,9 +18757,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi",
-      "confidence_score": 1.0
+      "target": "lib_audit_psi"
     },
     {
       "relation": "re_exports",
@@ -22330,9 +22330,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_components_ui_button_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button_button"
     },
     {
       "relation": "imports",
@@ -22342,9 +22342,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard_scorecard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard_scorecard"
     },
     {
       "relation": "imports",
@@ -22354,9 +22354,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun_categorychecks",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun_categorychecks"
     },
     {
       "relation": "imports",
@@ -22366,9 +22366,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_audit_stages",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_audit_stages"
     },
     {
       "relation": "imports",
@@ -22378,9 +22378,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_auditstagekey",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_auditstagekey"
     },
     {
       "relation": "imports",
@@ -22390,9 +22390,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_percentforstage",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress_percentforstage"
     },
     {
       "relation": "imports",
@@ -22402,9 +22402,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_demostorepreset",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor_demostorepreset"
     },
     {
       "relation": "imports",
@@ -22414,9 +22414,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_presetlinkseditor",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor_presetlinkseditor"
     },
     {
       "relation": "imports",
@@ -22426,9 +22426,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings_severitybadge",
-      "confidence_score": 1.0
+      "target": "app_components_findings_severitybadge"
     },
     {
       "relation": "imports",
@@ -22438,9 +22438,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button_button"
     },
     {
       "relation": "imports",
@@ -22450,9 +22450,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_card",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card_card"
     },
     {
       "relation": "imports",
@@ -22462,9 +22462,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_cardheader",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card_cardheader"
     },
     {
       "relation": "imports",
@@ -22474,9 +22474,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
     },
     {
       "relation": "imports",
@@ -22511,18 +22511,6 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_allcheckslist_allcheckslist",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L12",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_themes_themeid_components_themedetailtabs",
       "target": "app_themes_themeid_components_versionssection_versionssection",
       "confidence_score": 1.0
     },
@@ -22531,7 +22519,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
@@ -23650,9 +23638,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_runrules_executedfinding",
-      "confidence_score": 1.0
+      "target": "lib_audit_runrules_executedfinding"
     },
     {
       "relation": "imports",
@@ -23662,9 +23650,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_fetchpsilighthouseresult",
-      "confidence_score": 1.0
+      "target": "lib_audit_psi_fetchpsilighthouseresult"
     },
     {
       "relation": "imports",
@@ -23674,9 +23662,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_lighthouseauditdetails",
-      "confidence_score": 1.0
+      "target": "lib_audit_psi_lighthouseauditdetails"
     },
     {
       "relation": "imports",
@@ -23686,9 +23674,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_lighthouseresult",
-      "confidence_score": 1.0
+      "target": "lib_audit_psi_lighthouseresult"
     },
     {
       "relation": "imports",
@@ -23698,9 +23686,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_psi_psistrategy",
-      "confidence_score": 1.0
+      "target": "lib_audit_psi_psistrategy"
     },
     {
       "relation": "imports",
@@ -23710,9 +23698,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings_contrastfindingsfrompsi",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_psiaccessibilityfindings_contrastfindingsfrompsi"
     },
     {
       "relation": "imports",
@@ -23722,9 +23710,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings_touchtargetfindingsfrompsi",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_psiaccessibilityfindings_touchtargetfindingsfrompsi"
     },
     {
       "relation": "imports",
@@ -23734,9 +23722,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_fetchpagefacts_fetchpagefacts",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_fetchpagefacts_fetchpagefacts"
     },
     {
       "relation": "imports",
@@ -23746,9 +23734,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_mapwithconcurrency",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_shared_mapwithconcurrency"
     },
     {
       "relation": "imports",
@@ -23758,9 +23746,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_presetlink",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_shared_presetlink"
     },
     {
       "relation": "imports",
@@ -23770,9 +23758,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared_presetlivecheckerror",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_shared_presetlivecheckerror"
     },
     {
       "relation": "imports",
@@ -29818,9 +29806,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_components_ui_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button"
     },
     {
       "relation": "imports_from",
@@ -29830,9 +29818,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard",
-      "confidence_score": 1.0
+      "target": "lib_themes_computescoreboard"
     },
     {
       "relation": "imports_from",
@@ -29842,9 +29830,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun",
-      "confidence_score": 1.0
+      "target": "lib_themes_derivechecksforauditrun"
     },
     {
       "relation": "imports_from",
@@ -29854,9 +29842,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress",
-      "confidence_score": 1.0
+      "target": "lib_audit_progress"
     },
     {
       "relation": "imports_from",
@@ -29866,9 +29854,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor",
-      "confidence_score": 1.0
+      "target": "app_components_presetlinkseditor"
     },
     {
       "relation": "imports_from",
@@ -29878,9 +29866,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings",
-      "confidence_score": 1.0
+      "target": "app_components_findings"
     },
     {
       "relation": "imports_from",
@@ -29890,9 +29878,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button"
     },
     {
       "relation": "imports_from",
@@ -29902,9 +29890,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card",
-      "confidence_score": 1.0
+      "target": "app_components_ui_card"
     },
     {
       "relation": "imports_from",
@@ -29914,9 +29902,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_scoreboardgrid"
     },
     {
       "relation": "imports_from",
@@ -29951,18 +29939,6 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
-      "target": "app_themes_themeid_components_allcheckslist",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L12",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_themes_themeid_components_themedetailtabs",
       "target": "app_themes_themeid_components_versionssection",
       "confidence_score": 1.0
     },
@@ -29971,7 +29947,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
@@ -30766,9 +30742,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_runrules",
-      "confidence_score": 1.0
+      "target": "lib_audit_runrules"
     },
     {
       "relation": "imports_from",
@@ -30778,9 +30754,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_psiaccessibilityfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_psiaccessibilityfindings"
     },
     {
       "relation": "imports_from",
@@ -30790,9 +30766,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_fetchpagefacts",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_fetchpagefacts"
     },
     {
       "relation": "imports_from",
@@ -30802,9 +30778,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_livechecks_shared",
-      "confidence_score": 1.0
+      "target": "lib_audit_livechecks_shared"
     },
     {
       "relation": "imports_from",
@@ -34485,9 +34461,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_tabbedpage",
-      "target": "app_components_tabbedpage_tab",
-      "confidence_score": 1.0
+      "target": "app_components_tabbedpage_tab"
     },
     {
       "relation": "contains",
@@ -34496,9 +34472,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_components_tabbedpage",
-      "target": "app_components_tabbedpage_tabbedpageclient",
-      "confidence_score": 1.0
+      "target": "app_components_tabbedpage_tabbedpageclient"
     },
     {
       "relation": "contains",
@@ -35409,9 +35385,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_themes_themeid_components_downloadreportdropdown_format_labels",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown_format_labels"
     },
     {
       "relation": "contains",
@@ -35420,9 +35396,9 @@
       "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown_downloadreportdropdown"
     },
     {
       "relation": "contains",
@@ -35431,9 +35407,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_themes_themeid_components_downloadreportdropdown_fileformat",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown_fileformat"
     },
     {
       "relation": "contains",
@@ -35442,9 +35418,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_downloadreportdropdown",
-      "target": "app_themes_themeid_components_downloadreportdropdown_format",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_downloadreportdropdown_format"
     },
     {
       "relation": "contains",
@@ -35453,9 +35429,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_checktotals",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_checktotals"
     },
     {
       "relation": "contains",
@@ -35464,9 +35440,9 @@
       "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_uploadversionform",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_uploadversionform"
     },
     {
       "relation": "contains",
@@ -35475,9 +35451,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_props",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_props"
     },
     {
       "relation": "contains",
@@ -35486,9 +35462,9 @@
       "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_runauditform",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_runauditform"
     },
     {
       "relation": "contains",
@@ -35497,9 +35473,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportfinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_reportfinding"
     },
     {
       "relation": "contains",
@@ -35508,9 +35484,9 @@
       "source_location": "L384",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
     },
     {
       "relation": "contains",
@@ -35519,9 +35495,9 @@
       "source_location": "L386",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_issuerow",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_issuerow"
     },
     {
       "relation": "contains",
@@ -35530,9 +35506,9 @@
       "source_location": "L399",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
     },
     {
       "relation": "contains",
@@ -35541,9 +35517,9 @@
       "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
     },
     {
       "relation": "contains",
@@ -35552,9 +35528,9 @@
       "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
     },
     {
       "relation": "contains",
@@ -35563,9 +35539,9 @@
       "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_formatdate"
     },
     {
       "relation": "contains",
@@ -35574,9 +35550,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_healthtone"
     },
     {
       "relation": "contains",
@@ -35585,9 +35561,9 @@
       "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_presetssection",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_overviewpanel_presetssection"
     },
     {
       "relation": "contains",
@@ -35637,7 +35613,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
@@ -35648,7 +35624,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L17",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
@@ -35659,7 +35635,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/ThemeDetailTabs.tsx",
-      "source_location": "L27",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_themedetailtabs",
@@ -35673,9 +35649,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection",
-      "target": "app_themes_themeid_components_versionssection_versionrowview",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_versionrowview"
     },
     {
       "relation": "contains",
@@ -35684,9 +35660,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection",
-      "target": "app_themes_themeid_components_versionssection_versionrow",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_versionrow"
     },
     {
       "relation": "contains",
@@ -35695,9 +35671,9 @@
       "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection",
-      "target": "app_themes_themeid_components_versionssection_versionssection",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_versionssection"
     },
     {
       "relation": "contains",
@@ -35706,9 +35682,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection",
-      "target": "app_themes_themeid_components_versionssection_audittotals",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_audittotals"
     },
     {
       "relation": "contains",
@@ -35717,9 +35693,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_versionssection",
-      "target": "app_themes_themeid_components_versionssection_formatdate",
-      "confidence_score": 1.0
+      "target": "app_themes_themeid_components_versionssection_formatdate"
     },
     {
       "relation": "contains",
@@ -36795,9 +36771,9 @@
       "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_averagedefined",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_averagedefined"
     },
     {
       "relation": "contains",
@@ -36806,9 +36782,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagetype",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_pagetype"
     },
     {
       "relation": "contains",
@@ -36817,9 +36793,9 @@
       "source_location": "L194",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_shopifysubmissionbarfindings"
     },
     {
       "relation": "contains",
@@ -36828,9 +36804,9 @@
       "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagespeedmetric",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_pagespeedmetric"
     },
     {
       "relation": "contains",
@@ -36839,9 +36815,9 @@
       "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_opportunity_audit_groups",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_opportunity_audit_groups"
     },
     {
       "relation": "contains",
@@ -36850,9 +36826,9 @@
       "source_location": "L255",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_stripmarkdownlinks",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_stripmarkdownlinks"
     },
     {
       "relation": "contains",
@@ -36861,9 +36837,9 @@
       "source_location": "L271",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_summarizeaudititems",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_summarizeaudititems"
     },
     {
       "relation": "contains",
@@ -36872,9 +36848,9 @@
       "source_location": "L293",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_ruleidforlighthouseaudit"
     },
     {
       "relation": "contains",
@@ -36883,9 +36859,9 @@
       "source_location": "L309",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_extractopportunityfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractopportunityfindings"
     },
     {
       "relation": "contains",
@@ -36894,9 +36870,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_pagespeedcheckresult",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_pagespeedcheckresult"
     },
     {
       "relation": "contains",
@@ -36905,9 +36881,9 @@
       "source_location": "L351",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_discoverpageurls",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_discoverpageurls"
     },
     {
       "relation": "contains",
@@ -36916,9 +36892,9 @@
       "source_location": "L383",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_runpagespeedchecksforpresets",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_runpagespeedchecksforpresets"
     },
     {
       "relation": "contains",
@@ -36927,9 +36903,9 @@
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_psimetrics",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_psimetrics"
     },
     {
       "relation": "contains",
@@ -36938,9 +36914,9 @@
       "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_extractcoremetrics",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_extractcoremetrics"
     },
     {
       "relation": "contains",
@@ -36949,9 +36925,9 @@
       "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_audit_pagespeed",
-      "target": "lib_audit_pagespeed_psithresholdfindings",
-      "confidence_score": 1.0
+      "target": "lib_audit_pagespeed_psithresholdfindings"
     },
     {
       "relation": "contains",
@@ -44355,5 +44331,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "416ecba627dc4cb554cd32ab986a7b42e1752804"
+  "built_at_commit": "313cad1f28ab80286d3a0fc2662f995a7cfdc9aa"
 }

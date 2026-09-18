@@ -1060,8 +1060,8 @@
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/ThemeDetailTabs.tsx": {
-    "mtime": 1789726528.8629177,
-    "ast_hash": "b1340f2f78d0666b29b6b8e6fed94e83",
+    "mtime": 1789727656.2135465,
+    "ast_hash": "0e5cca3bff1e7b3d9c56bb482cc56341",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/page.tsx": {
