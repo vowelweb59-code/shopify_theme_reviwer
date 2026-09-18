@@ -8,7 +8,6 @@ import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import type { DemoStorePreset } from "@/app/_components/PresetLinksEditor";
 import { OverviewPanel } from "./OverviewPanel";
-import { AllChecksList } from "./AllChecksList";
 import { VersionsSection } from "./VersionsSection";
 import { DownloadReportDropdown } from "./DownloadReportDropdown";
 
@@ -96,15 +95,6 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 categories={detail.checks?.categories ?? []}
                 onChanged={load}
               />
-            ),
-          },
-          {
-            id: "all-checks",
-            label: "All Checks",
-            content: detail.checks ? (
-              <AllChecksList categories={detail.checks.categories} />
-            ) : (
-              <p className="text-sm text-zinc-500">Run an audit to see every check&apos;s status.</p>
             ),
           },
           {
