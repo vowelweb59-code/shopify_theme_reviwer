@@ -1,16 +1,16 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-18)
 
 ## Corpus Check
-- 255 files · ~1,560,519 words
+- 255 files · ~1,560,699 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1261 nodes · 2539 edges · 76 communities (70 shown, 6 thin omitted)
+- 1261 nodes · 2541 edges · 76 communities (70 shown, 6 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.58)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `154b67eb`
+- Built from commit: `84610f5c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,18 +90,16 @@
 ## God Nodes (most connected - your core abstractions)
 1. `connectToDatabase()` - 69 edges
 2. `executeAuditRun()` - 19 edges
-3. `buildTestTheme()` - 18 edges
-4. `isValidObjectId()` - 18 edges
+3. `isValidObjectId()` - 18 edges
+4. `buildTestTheme()` - 18 edges
 5. `invalidIdResponse()` - 17 edges
 6. `compilerOptions` - 16 edges
-7. `AuditRun` - 14 edges
-8. `getPageLabel()` - 14 edges
-9. `parseJsonFile()` - 14 edges
-10. `POST()` - 14 edges
+7. `getPageLabel()` - 14 edges
+8. `parseJsonFile()` - 14 edges
+9. `POST()` - 14 edges
+10. `AuditRun` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/health/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
@@ -110,6 +108,8 @@
   app/api/requirements/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/rules/route.ts → lib/db/connect.ts
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -377,7 +377,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **425 isolated node(s):** `ReadinessStatus`, `SEVERITY_STYLES`, `SEVERITY_ICON`, `STATUS_STYLES`, `READINESS_STYLES` (+420 more)
+- **425 isolated node(s):** `PageType`, `PageSpeedCheckResult`, `PsiMetrics`, `OPPORTUNITY_AUDIT_GROUPS`, `PsiResponse` (+420 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -385,14 +385,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `diffFindings.ts`, `oauth.ts`, `[id]/export/google-sheet/route.ts`, `[id]/export/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `readiness/route.ts`, `finding.ts`, `audit-run.ts`, `[themeId]/route.ts`, `uploadThemeVersion.ts`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
 - **Why does `FINDING_CATEGORIES` connect `finding.ts` to `sheetRows.ts`, `rules.ts`, `deriveChecksForAuditRun.ts`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `PageContainer()` connect `PageContainer.tsx` to `ThemeDetailTabs.tsx`, `insights/page.tsx`, `themes/page.tsx`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `ReadinessStatus`, `SEVERITY_STYLES`, `SEVERITY_ICON` to the rest of the system?**
+- **What connects `PageType`, `PageSpeedCheckResult`, `PsiMetrics` to the rest of the system?**
   _425 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `diffFindings.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.06848357791754019 - nodes in this community are weakly interconnected._

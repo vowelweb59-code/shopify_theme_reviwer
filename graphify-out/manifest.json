@@ -940,8 +940,8 @@
     "semantic_hash": ""
   },
   "lib/audit/pageSpeed.ts": {
-    "mtime": 1789719111.4196064,
-    "ast_hash": "1b0dafc8840d41f05c54ef4a56ed4ca0",
+    "mtime": 1789723422.7529793,
+    "ast_hash": "89a9a0823531cdfc93c4bd0959e6a9bd",
     "semantic_hash": ""
   },
   "lib/rules/performance/index.test.ts": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "lib/audit/psi.ts": {
-    "mtime": 1789718959.3404098,
-    "ast_hash": "6b47a7c54b8a93f0e85ac0c21c281da4",
+    "mtime": 1789723432.8387606,
+    "ast_hash": "be3fdef15a51d3390a6f0daf97e6d2a6",
     "semantic_hash": ""
   }
 }
