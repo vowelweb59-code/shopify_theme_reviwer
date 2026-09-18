@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-18)
 
 ## Corpus Check
-- 255 files · ~1,562,912 words
+- 255 files · ~1,563,052 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ebe45995`
+- Built from commit: `0fd54b46`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -102,6 +102,8 @@
 
 ## Surprising Connections (you probably didn't know these)
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/health/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/maintenance/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/requirements/route.ts → lib/db/connect.ts
@@ -109,8 +111,6 @@
   app/api/rules/route.ts → lib/db/connect.ts
 - `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
   scripts/seed-requirements.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/enhancements/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -390,11 +390,11 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `oauth.ts`, `[id]/export/google-sheet/route.ts`, `diffFindings.ts`, `theme.ts`, `uploadThemeVersion.ts`, `enhancement-point.ts`, `finding.ts`, `deriveChecksForAuditRun.ts`, `audit-run.ts`, `[themeId]/route.ts`, `[id]/export/route.ts`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
 - **Why does `FINDING_CATEGORIES` connect `deriveChecksForAuditRun.ts` to `sheetRows.ts`, `finding.ts`, `rules.ts`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `PageContainer()` connect `PageContainer.tsx` to `ThemeDetailTabs.tsx`, `settings/page.tsx`, `themes/page.tsx`, `insights/page.tsx`, `available-features/page.tsx`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+- **Why does `PageSpeedMetric` connect `pageSpeed.ts` to `ReportContent.tsx`, `findings.tsx`, `executeAuditRun.ts`, `computeScoreboard.ts`?**
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `CheckTotals`, `Props`, `ReportFinding` to the rest of the system?**
