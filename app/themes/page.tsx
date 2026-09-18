@@ -8,14 +8,15 @@ import { Button } from "@/app/_components/ui/Button";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { AddThemeModal } from "./_components/AddThemeModal";
+import { FeatureMatrixTable } from "./_components/FeatureMatrixTable";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type ThemeRow = {
-  theme: { _id: string; name: string };
+  theme: { _id: string; name: string; themeStoreFeatures?: string[] };
   latestVersion: { _id: string; version: string } | null;
-  latestAudit: { _id: string; startedAt: string } | null;
+  latestAudit: { _id: string; startedAt: string; enhancementDetections?: { pointId: string; detected: boolean }[] } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
 };
@@ -204,6 +205,19 @@ export default function ThemesPage() {
             </p>
           </div>
           <ResponsiveTable columns={comparisonColumns} rows={rows} rowKey={(r) => r.theme._id} />
+        </div>
+      )}
+
+      {!loading && rows.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Feature Availability</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Every feature in the catalog, per theme — a checkmark means it was detected in that theme&apos;s latest audit (directly, or
+              confirmed via its Shopify Theme Store listing).
+            </p>
+          </div>
+          <FeatureMatrixTable rows={rows} />
         </div>
       )}
     </PageContainer>
