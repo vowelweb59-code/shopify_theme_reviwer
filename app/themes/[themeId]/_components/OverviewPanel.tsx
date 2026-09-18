@@ -10,6 +10,7 @@ import { ScoreboardGrid } from "./ScoreboardGrid";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import type { CategoryChecks } from "@/lib/themes/deriveChecksForAuditRun";
 import { AUDIT_STAGES, percentForStage, type AuditStageKey } from "@/lib/audit/progress";
+import { AVAILABLE_FEATURES, featureStatus } from "@/lib/audit/availableFeatures";
 
 const POLL_INTERVAL_MS = 1500;
 
@@ -73,17 +74,58 @@ function healthTone(percent: number) {
   return "text-status-fail-text";
 }
 
-function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string; initialPresets: DemoStorePreset[]; onSaved: () => void }) {
+function PresetsSection({
+  themeId,
+  initialPresets,
+  latestAuditId,
+  onSaved,
+}: {
+  themeId: string;
+  initialPresets: DemoStorePreset[];
+  latestAuditId: string | null;
+  onSaved: () => void;
+}) {
   const [presets, setPresets] = useState<DemoStorePreset[]>(initialPresets);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<DemoStorePreset[]>(initialPresets);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [expandedPreset, setExpandedPreset] = useState<string | null>(null);
+  const [findings, setFindings] = useState<{ auditRunId: string; items: ReportFinding[] } | null>(null);
+  const [findingsLoading, setFindingsLoading] = useState(false);
+  const [findingsError, setFindingsError] = useState<string | null>(null);
+
   function startEditing() {
     setDraft(presets);
     setError(null);
     setEditing(true);
+  }
+
+  async function togglePreset(label: string) {
+    if (expandedPreset === label) {
+      setExpandedPreset(null);
+      return;
+    }
+    setExpandedPreset(label);
+    if (!latestAuditId) return;
+    if (findings?.auditRunId === latestAuditId) return; // already loaded for this run
+
+    setFindingsLoading(true);
+    setFindingsError(null);
+    try {
+      const res = await fetch(`/api/reports/${latestAuditId}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFindingsError(data.error ?? "Failed to load issues for this preset.");
+        return;
+      }
+      setFindings({ auditRunId: latestAuditId, items: data.findings ?? [] });
+    } catch {
+      setFindingsError("Lost connection to the server while loading issues.");
+    } finally {
+      setFindingsLoading(false);
+    }
   }
 
   async function handleSave() {
@@ -128,14 +170,44 @@ function PresetsSection({ themeId, initialPresets, onSaved }: { themeId: string;
           <p className="text-sm text-zinc-500">No presets saved yet.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border-subtle">
-            {presets.map((preset, i) => (
-              <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">{preset.label}</span>
-                <a href={preset.url} target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-primary hover:underline">
-                  {preset.url}
-                </a>
-              </li>
-            ))}
+            {presets.map((preset, i) => {
+              const isOpen = expandedPreset === preset.label;
+              const presetFindings = findings?.items.filter((f) => f.presetLabel === preset.label) ?? [];
+              return (
+                <li key={i} className="py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => togglePreset(preset.label)}
+                    aria-expanded={isOpen}
+                    className="flex w-full flex-wrap items-center justify-between gap-2 text-left text-sm"
+                  >
+                    <span className="font-medium text-zinc-900 underline decoration-dotted hover:text-primary dark:text-zinc-100">
+                      {preset.label}
+                    </span>
+                    <span className="text-zinc-500">{preset.url}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="mt-2 rounded-md border border-border-subtle bg-surface-muted p-3">
+                      {!latestAuditId ? (
+                        <p className="text-xs text-zinc-500">Run an audit to see this preset&apos;s issues.</p>
+                      ) : findingsLoading ? (
+                        <p className="text-xs text-zinc-500">Loading issues…</p>
+                      ) : findingsError ? (
+                        <p className="text-xs text-status-fail-text">{findingsError}</p>
+                      ) : presetFindings.length === 0 ? (
+                        <p className="text-xs text-zinc-500">No issues found for this preset.</p>
+                      ) : (
+                        <ul className="flex flex-col gap-2">
+                          {presetFindings.map((f) => (
+                            <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.filePath} />
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Card>
@@ -381,7 +453,7 @@ function RunAuditForm({
 // `categories` prop — expanding one of these lazily fetches
 // /api/reports/{auditRunId} (the same endpoint the Report tab uses) the
 // first time it's opened, then reuses that result for the rest.
-const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities"]);
+const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities", "features"]);
 
 function IssueRow({ title, body, severity, filePath }: { title?: string; body: string; severity?: string; filePath?: string }) {
   return (
@@ -446,6 +518,24 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
           <ul className="flex flex-col gap-2">
             {remaining.map((p) => (
               <IssueRow key={p.pointId} title={p.title} body={p.description ?? "Not yet covered by this theme."} />
+            ))}
+          </ul>
+        );
+      }
+
+      if (card.id === "features") {
+        // Reuses the same enhancementPoints this run already returned (the
+        // same source featuresScoreCard's score is computed from) — a
+        // feature's `pointIds` are OR'd together, matching featureStatus's
+        // own logic, just built from the report response instead of
+        // AuditRun.enhancementDetections directly.
+        const detections = new Map(reportData.enhancementPoints.map((p) => [p.pointId, p.detected === true]));
+        const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections) === "not_detected");
+        if (missing.length === 0) return <p className="text-sm text-zinc-500">No missing features among those checked.</p>;
+        return (
+          <ul className="flex flex-col gap-2">
+            {missing.map((f) => (
+              <IssueRow key={f.id} title={f.label} body={f.note ?? `Not detected in this theme (category: ${f.category}).`} />
             ))}
           </ul>
         );
@@ -541,7 +631,7 @@ export function OverviewPanel({ themeId, themeName, demoStorePresets, latestVers
         />
       )}
 
-      <PresetsSection themeId={themeId} initialPresets={demoStorePresets} onSaved={onChanged} />
+      <PresetsSection themeId={themeId} initialPresets={demoStorePresets} latestAuditId={latestAudit?._id ?? null} onSaved={onChanged} />
 
       <div>
         <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Latest Audit</h3>

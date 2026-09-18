@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 
 function scoreTone(score: number | null) {
@@ -10,18 +9,8 @@ function scoreTone(score: number | null) {
   return "text-status-fail-text";
 }
 
-// "Features" links straight to the existing cross-theme feature checklist
-// page rather than expanding inline — that page isn't scoped to one audit
-// run the way the other 7 cards' issues are.
 function CardHeading({ card, isExpanded, onToggle }: { card: ScoreCard; isExpanded: boolean; onToggle?: (card: ScoreCard) => void }) {
   const className = "text-sm font-medium text-zinc-700 underline decoration-dotted hover:text-primary dark:text-zinc-300";
-  if (card.id === "features") {
-    return (
-      <Link href="/available-features" className={className}>
-        {card.label}
-      </Link>
-    );
-  }
   return (
     <button type="button" onClick={() => onToggle?.(card)} aria-expanded={isExpanded} className={className}>
       {card.label}
@@ -47,9 +36,8 @@ const CARD_ACCENTS: Record<string, string> = {
  * The Lighthouse-style scoreboard replacing the flat Checks/Passed/Failed/
  * Warnings/Not-tested row — 8 independent scores (see
  * lib/themes/computeScoreboard.ts for how each is derived). Clicking any
- * card's heading (except "Features", a real link) toggles that card's
- * issues open directly beneath the grid — see OverviewPanel's
- * renderExpanded for what's shown per card.
+ * card's heading toggles that card's issues open directly beneath the grid
+ * — see OverviewPanel's renderExpanded for what's shown per card.
  */
 export function ScoreboardGrid({
   cards,
