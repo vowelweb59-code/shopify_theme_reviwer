@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./navItems";
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -15,7 +14,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border-subtle bg-surface-sidebar md:flex">
       <div className="px-4 py-5">
-        <Link href="/" className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+        <Link href="/themes" className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
           Shopify Theme Auditor
         </Link>
       </div>
