@@ -31,7 +31,12 @@ export type LighthouseResult = {
 type PsiResponse = { lighthouseResult?: LighthouseResult };
 
 const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
-const PSI_TIMEOUT_MS = 25_000;
+// A real Lighthouse run on Google's end typically finishes in 5-10s, but a
+// resource-constrained caller (e.g. a free-tier host under concurrent load)
+// can see its own request/response handling add noticeable overhead on top
+// of that — 25s left too little margin in practice (confirmed against a
+// real deployment, several calls failed even with the one-retry below).
+const PSI_TIMEOUT_MS = 35_000;
 
 /**
  * Calls Google's PageSpeed Insights v5 API for a real Lighthouse read,

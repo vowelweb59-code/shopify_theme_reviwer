@@ -2,7 +2,18 @@ import type { ExecutedFinding } from "./runRules";
 import { fetchPsiLighthouseResult, type LighthouseAuditDetails, type LighthouseResult, type PsiStrategy } from "./psi";
 import { contrastFindingsFromPsi, touchTargetFindingsFromPsi } from "./liveChecks/psiAccessibilityFindings";
 import { fetchPageFacts } from "./liveChecks/fetchPageFacts";
-import type { PresetLink, PresetLiveCheckError } from "./liveChecks/shared";
+import { mapWithConcurrency, type PresetLink, type PresetLiveCheckError } from "./liveChecks/shared";
+
+// Not a memory concern (these are plain fetch() calls) — this bounds how
+// many simultaneous outbound requests to Google's PSI API a single Render
+// instance fires at once. Confirmed by testing against a real deployment:
+// fully unbounded (5 presets × up to 3 concurrent calls each, ~13 requests
+// at once) caused several PSI calls to fail outright even after their
+// built-in retry, apparently because a resource-constrained free-tier
+// instance's network stack couldn't service that many concurrent HTTPS
+// requests reliably. A modest cap fixes that without reintroducing the
+// old queue-of-1 slowness.
+const PSI_CONCURRENCY_LIMIT = 2;
 
 export type PageType = "home" | "collection" | "product";
 export type { PsiStrategy };
@@ -380,94 +391,95 @@ export async function runPageSpeedChecksForPresets(
   // Every preset's home-page read, and the baseline's extra matrix reads,
   // run concurrently rather than one at a time — these are plain fetch()
   // calls to Google's API with no local memory cost, so there's no reason
-  // to queue them the way the old Chromium-based checks had to be.
-  await Promise.all(
-    presets.map(async (preset, index) => {
-      const isBaseline = index === 0;
-      const homeCategories = ["performance", "accessibility"];
+  // to queue them the way the old Chromium-based checks had to be. Still
+  // throttled (PSI_CONCURRENCY_LIMIT), not fully unbounded — see its own
+  // comment for why.
+  await mapWithConcurrency(presets, PSI_CONCURRENCY_LIMIT, async (preset, index) => {
+    const isBaseline = index === 0;
+    const homeCategories = ["performance", "accessibility"];
 
-      // Kicked off immediately rather than after the mobile home-page read
-      // below — URL discovery is an independent fetch with no PSI
-      // dependency, and the desktop home-page read doesn't depend on the
-      // mobile one either.
-      const urlsPromise = isBaseline ? discoverPageUrls(preset.url) : null;
-      const desktopHomePromise = isBaseline
-        ? fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"])
-        : null;
+    // Kicked off immediately rather than after the mobile home-page read
+    // below — URL discovery is an independent fetch with no PSI
+    // dependency, and the desktop home-page read doesn't depend on the
+    // mobile one either.
+    const urlsPromise = isBaseline ? discoverPageUrls(preset.url) : null;
+    const desktopHomePromise = isBaseline
+      ? fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"])
+      : null;
 
-      const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
-      if (!homeLhr) {
-        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (mobile)." });
-        onItemComplete?.();
-        return;
-      }
+    const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
+    if (!homeLhr) {
+      errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (mobile)." });
+      onItemComplete?.();
+      return;
+    }
 
-      const homeMetrics = extractCoreMetrics(homeLhr);
-      const homeMetric: PageSpeedMetric = {
+    const homeMetrics = extractCoreMetrics(homeLhr);
+    const homeMetric: PageSpeedMetric = {
+      label: preset.label,
+      url: preset.url,
+      pageType: "home",
+      strategy: "mobile",
+      ...homeMetrics,
+    };
+    metrics.push(homeMetric);
+    findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
+    findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
+    findings.push(...contrastFindingsFromPsi(preset.label, preset.url, homeLhr));
+    findings.push(...touchTargetFindingsFromPsi(preset.label, preset.url, homeLhr));
+
+    if (!isBaseline) {
+      onItemComplete?.();
+      return;
+    }
+
+    const matrix: PageSpeedMetric[] = [homeMetric];
+
+    const desktopHomeLhr = await desktopHomePromise;
+    if (desktopHomeLhr) {
+      const m: PageSpeedMetric = {
         label: preset.label,
         url: preset.url,
         pageType: "home",
-        strategy: "mobile",
-        ...homeMetrics,
+        strategy: "desktop",
+        ...extractCoreMetrics(desktopHomeLhr),
       };
-      metrics.push(homeMetric);
-      findings.push(...psiThresholdFindings(preset.label, preset.url, homeMetrics));
-      findings.push(...extractOpportunityFindings(preset.label, preset.url, homeLhr));
-      findings.push(...contrastFindingsFromPsi(preset.label, preset.url, homeLhr));
-      findings.push(...touchTargetFindingsFromPsi(preset.label, preset.url, homeLhr));
+      matrix.push(m);
+      metrics.push(m);
+    } else {
+      errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+    }
 
-      if (!isBaseline) {
-        onItemComplete?.();
-        return;
+    const urls = await urlsPromise!;
+    const remainingPages: { pageType: PageType; url: string }[] = [
+      { pageType: "collection", url: urls.collection },
+      ...(urls.product ? [{ pageType: "product" as const, url: urls.product }] : []),
+    ];
+    const requests: { pageType: PageType; url: string; strategy: PsiStrategy }[] = remainingPages.flatMap((p) =>
+      (["mobile", "desktop"] as const).map((strategy) => ({ ...p, strategy }))
+    );
+
+    const results = await mapWithConcurrency(requests, PSI_CONCURRENCY_LIMIT, async (r) => ({
+      ...r,
+      lhr: await fetchPsiLighthouseResult(r.url, r.strategy, ["performance", "accessibility"]),
+    }));
+    for (const r of results) {
+      if (!r.lhr) {
+        errors.push({ label: preset.label, url: r.url, error: `PageSpeed Insights request failed for the ${r.pageType} page (${r.strategy}).` });
+        continue;
       }
-
-      const matrix: PageSpeedMetric[] = [homeMetric];
-
-      const desktopHomeLhr = await desktopHomePromise;
-      if (desktopHomeLhr) {
-        const m: PageSpeedMetric = {
-          label: preset.label,
-          url: preset.url,
-          pageType: "home",
-          strategy: "desktop",
-          ...extractCoreMetrics(desktopHomeLhr),
-        };
-        matrix.push(m);
-        metrics.push(m);
-      } else {
-        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+      const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, ...extractCoreMetrics(r.lhr) };
+      matrix.push(m);
+      metrics.push(m);
+      if (r.strategy === "mobile") {
+        findings.push(...contrastFindingsFromPsi(preset.label, r.url, r.lhr));
+        findings.push(...touchTargetFindingsFromPsi(preset.label, r.url, r.lhr));
       }
+    }
 
-      const urls = await urlsPromise!;
-      const remainingPages: { pageType: PageType; url: string }[] = [
-        { pageType: "collection", url: urls.collection },
-        ...(urls.product ? [{ pageType: "product" as const, url: urls.product }] : []),
-      ];
-      const requests: { pageType: PageType; url: string; strategy: PsiStrategy }[] = remainingPages.flatMap((p) =>
-        (["mobile", "desktop"] as const).map((strategy) => ({ ...p, strategy }))
-      );
-
-      const results = await Promise.all(
-        requests.map(async (r) => ({ ...r, lhr: await fetchPsiLighthouseResult(r.url, r.strategy, ["performance", "accessibility"]) }))
-      );
-      for (const r of results) {
-        if (!r.lhr) {
-          errors.push({ label: preset.label, url: r.url, error: `PageSpeed Insights request failed for the ${r.pageType} page (${r.strategy}).` });
-          continue;
-        }
-        const m: PageSpeedMetric = { label: preset.label, url: r.url, pageType: r.pageType, strategy: r.strategy, ...extractCoreMetrics(r.lhr) };
-        matrix.push(m);
-        metrics.push(m);
-        if (r.strategy === "mobile") {
-          findings.push(...contrastFindingsFromPsi(preset.label, r.url, r.lhr));
-          findings.push(...touchTargetFindingsFromPsi(preset.label, r.url, r.lhr));
-        }
-      }
-
-      findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
-      onItemComplete?.();
-    })
-  );
+    findings.push(...shopifySubmissionBarFindings(preset.label, matrix));
+    onItemComplete?.();
+  });
 
   return { findings, errors, metrics };
 }
