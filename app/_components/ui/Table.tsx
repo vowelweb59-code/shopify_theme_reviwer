@@ -26,12 +26,18 @@ export function ResponsiveTable<T>({
   rowKey,
   onRowClick,
   emptyMessage,
+  theadClassName,
 }: {
   columns: TableColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
+  // Defaults to the plain neutral header every other table already uses;
+  // pass a tinted variant (e.g. "bg-primary-tint text-primary-tint-text")
+  // for a page that wants a more colorful header without changing every
+  // other table in the app that shares this component.
+  theadClassName?: string;
 }) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -65,7 +71,7 @@ export function ResponsiveTable<T>({
     <>
       <div className="hidden overflow-x-auto rounded-lg border border-border-subtle sm:block">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-border-subtle bg-surface-muted text-xs uppercase text-zinc-500">
+          <thead className={`border-b border-border-subtle text-xs uppercase ${theadClassName ?? "bg-surface-muted text-zinc-500"}`}>
             <tr>
               {columns.map((c) => (
                 <th key={c.key} className={`px-4 py-3 font-medium ${c.className ?? ""}`}>

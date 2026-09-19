@@ -29,11 +29,11 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
   return (
     <div className="max-h-[70vh] overflow-auto rounded-lg border border-border-subtle">
       <table className="w-full text-left text-xs">
-        <thead className="sticky top-0 z-10 bg-surface-muted text-zinc-500">
+        <thead className="sticky top-0 z-10 bg-primary-tint text-primary-tint-text">
           <tr>
-            <th className="sticky left-0 z-20 min-w-[180px] bg-surface-muted px-3 py-2 font-medium">Feature</th>
+            <th className="sticky left-0 z-20 min-w-[180px] bg-primary-tint px-3 py-2.5 font-semibold">Feature</th>
             {rows.map((r) => (
-              <th key={r.theme._id} className="min-w-[90px] px-2 py-2 text-center font-medium">
+              <th key={r.theme._id} className="min-w-[90px] px-2 py-2.5 text-center font-semibold">
                 {r.theme.name}
               </th>
             ))}
@@ -48,7 +48,12 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
               {rows.map((r, themeIndex) => (
                 <td key={r.theme._id} className="px-2 py-2 text-center">
                   {statusByTheme[themeIndex][featureIndex] === "detected" && (
-                    <Check className="mx-auto h-3.5 w-3.5 text-status-pass-icon" aria-label="Available" />
+                    <span
+                      className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-status-pass-icon shadow-sm"
+                      title="Available"
+                    >
+                      <Check className="h-4 w-4 stroke-[3] text-white" aria-label="Available" />
+                    </span>
                   )}
                 </td>
               ))}

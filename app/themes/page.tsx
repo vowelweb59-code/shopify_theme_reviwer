@@ -194,7 +194,9 @@ export default function ThemesPage() {
         />
       )}
 
-      {!loading && rows.length > 0 && <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r.theme._id} />}
+      {!loading && rows.length > 0 && (
+        <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r.theme._id} theadClassName="bg-primary-tint text-primary-tint-text" />
+      )}
 
       {!loading && rows.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -204,7 +206,12 @@ export default function ThemesPage() {
               Features, future-update opportunities, and performance across every theme&apos;s latest audit.
             </p>
           </div>
-          <ResponsiveTable columns={comparisonColumns} rows={rows} rowKey={(r) => r.theme._id} />
+          <ResponsiveTable
+            columns={comparisonColumns}
+            rows={rows}
+            rowKey={(r) => r.theme._id}
+            theadClassName="bg-primary-tint text-primary-tint-text"
+          />
         </div>
       )}
 
