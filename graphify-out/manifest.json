@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "models/theme.ts": {
-    "mtime": 1789733717.2609148,
-    "ast_hash": "4da489ee51c97f0a140eb45bc8a616e7",
+    "mtime": 1789812245.6849637,
+    "ast_hash": "a219aa08d8a3a6d4cfee5db310761e31",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -1070,8 +1070,8 @@
     "semantic_hash": ""
   },
   "app/themes/page.tsx": {
-    "mtime": 1789801614.6614487,
-    "ast_hash": "e9e82119215743e377893df00901af25",
+    "mtime": 1789812393.8832617,
+    "ast_hash": "aa84e24d3dc69c35a818e86dc620f447",
     "semantic_hash": ""
   },
   "lib/audit/executeAuditRun.ts": {
@@ -1220,8 +1220,8 @@
     "semantic_hash": ""
   },
   "app/_components/ui/Table.tsx": {
-    "mtime": 1789800000.6421213,
-    "ast_hash": "3aa1b94bed2ce063681c659935ab000c",
+    "mtime": 1789812283.794068,
+    "ast_hash": "4fbb12e2eafb7178610dae729561908c",
     "semantic_hash": ""
   },
   "app/themes/[themeId]/_components/VersionsSection.tsx": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/theme-store-features/route.ts": {
-    "mtime": 1789733852.9347987,
-    "ast_hash": "decc929f4262bb92b7c428cacab6d50f",
+    "mtime": 1789812259.9201472,
+    "ast_hash": "58f91f0a8cc1e4505520b1482ad7c522",
     "semantic_hash": ""
   },
   "lib/audit/availableFeatures.test.ts": {
@@ -1350,18 +1350,28 @@
     "semantic_hash": ""
   },
   "lib/themes/themeStoreFeatures.test.ts": {
-    "mtime": 1789733748.8866973,
-    "ast_hash": "07898f7e58fa8fee7457ff9b91db99cc",
+    "mtime": 1789812230.7736163,
+    "ast_hash": "6a4460cd59d58077bc38136c5f3760c1",
     "semantic_hash": ""
   },
   "lib/themes/themeStoreFeatures.ts": {
-    "mtime": 1789733732.4217587,
-    "ast_hash": "15e098d1f74b21fa05e5e91381f2e059",
+    "mtime": 1789812215.0857186,
+    "ast_hash": "e4b739f7662a6e55fc37841513610c68",
     "semantic_hash": ""
   },
   "app/themes/_components/FeatureMatrixTable.tsx": {
     "mtime": 1789801607.0323315,
     "ast_hash": "dbfda46794f0ab56bf108b3ee141d8b3",
+    "semantic_hash": ""
+  },
+  "lib/themes/updatePriority.test.ts": {
+    "mtime": 1789812342.1339593,
+    "ast_hash": "f751c8d6a26b3a22288cc7a146432044",
+    "semantic_hash": ""
+  },
+  "lib/themes/updatePriority.ts": {
+    "mtime": 1789812328.49906,
+    "ast_hash": "baaff5a3387ef08321e891be641d3176",
     "semantic_hash": ""
   }
 }
