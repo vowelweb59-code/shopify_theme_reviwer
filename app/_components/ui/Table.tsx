@@ -27,6 +27,7 @@ export function ResponsiveTable<T>({
   onRowClick,
   emptyMessage,
   theadClassName,
+  rowClassName,
 }: {
   columns: TableColumn<T>[];
   rows: T[];
@@ -38,6 +39,10 @@ export function ResponsiveTable<T>({
   // for a page that wants a more colorful header without changing every
   // other table in the app that shares this component.
   theadClassName?: string;
+  // Per-row extra classes (e.g. a colored left border to flag a row that
+  // needs attention) — applied to both the desktop <tr> and the mobile
+  // stacked card, so a "highlighted box" reads the same at every width.
+  rowClassName?: (row: T) => string;
 }) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -99,7 +104,7 @@ export function ResponsiveTable<T>({
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={`border-b border-border-subtle last:border-0 ${
                   onRowClick ? "cursor-pointer hover:bg-black/[.02] dark:hover:bg-white/[.03]" : ""
-                }`}
+                } ${rowClassName?.(row) ?? ""}`}
               >
                 {columns.map((c) => (
                   <td key={c.key} className={`px-4 py-3 ${c.className ?? ""}`}>
@@ -117,7 +122,7 @@ export function ResponsiveTable<T>({
           <div
             key={rowKey(row)}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`rounded-lg border border-border-subtle p-4 ${onRowClick ? "cursor-pointer" : ""}`}
+            className={`rounded-lg border border-border-subtle p-4 ${onRowClick ? "cursor-pointer" : ""} ${rowClassName?.(row) ?? ""}`}
           >
             {columns.map((c) => (
               <div key={c.key} className="flex items-center justify-between gap-3 py-1 text-sm first:pt-0 last:pb-0">

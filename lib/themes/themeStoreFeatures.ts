@@ -17,7 +17,7 @@ export function deriveThemeStoreSlug(themeName: string): string {
 const THEME_STORE_TIMEOUT_MS = 20_000;
 
 export type ThemeStoreFeaturesResult =
-  | { ok: true; slug: string; features: string[] }
+  | { ok: true; slug: string; features: string[]; latestVersion: string | null; latestVersionReleasedAt: string | null }
   | { ok: false; slug: string; error: string };
 
 // Every feature name on a real listing page renders as
@@ -56,6 +56,62 @@ function extractFeatureLabels(html: string): string[] {
   return [...labels];
 }
 
+type LatestRelease = { version: string; releasedAt: string | null };
+
+// The listing's "Release Notes" section inlines only its current live
+// version's changelog entry as `<h3>Version X.Y.Z</h3>` followed by a
+// bullet-separator `<span>` and a second `<span>` holding the
+// human-readable release date (e.g. "August 18, 2026") — confirmed against
+// a real listing. Full version history lives behind a separate "View
+// details" modal (a different URL) this app has no reason to fetch — the
+// current version is exactly what "is this theme's uploaded copy behind
+// the live listing" needs.
+function extractLatestRelease(html: string): LatestRelease | null {
+  let result: LatestRelease | null = null;
+  let mode: "idle" | "in-h3" | "awaiting-date" | "in-date-span" | "done" = "idle";
+  let buffer = "";
+
+  const parser = new Parser(
+    {
+      onopentag(name) {
+        if (mode === "idle" && name === "h3") {
+          mode = "in-h3";
+          buffer = "";
+        } else if (mode === "awaiting-date" && name === "span") {
+          mode = "in-date-span";
+          buffer = "";
+        }
+      },
+      ontext(text) {
+        if (mode === "in-h3" || mode === "in-date-span") buffer += text;
+      },
+      onclosetag(name) {
+        if (mode === "in-h3" && name === "h3") {
+          const match = /^Version\s+(.+)$/i.exec(buffer.trim());
+          if (match) {
+            result = { version: match[1].trim(), releasedAt: null };
+            mode = "awaiting-date";
+          } else {
+            mode = "idle";
+          }
+        } else if (mode === "in-date-span" && name === "span") {
+          const text = buffer.trim();
+          if (text && text !== "•") {
+            if (result) result.releasedAt = text;
+            mode = "done";
+          } else {
+            mode = "awaiting-date";
+          }
+        }
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+  return result;
+}
+
 /**
  * Fetches a theme's public Shopify Theme Store listing (derived from its
  * name — see deriveThemeStoreSlug) and extracts the feature names it
@@ -85,7 +141,8 @@ export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<T
     if (features.length === 0) {
       return { ok: false, slug, error: "Reached a Theme Store page, but couldn't find its Features section — the page layout may have changed." };
     }
-    return { ok: true, slug, features };
+    const latestRelease = extractLatestRelease(html);
+    return { ok: true, slug, features, latestVersion: latestRelease?.version ?? null, latestVersionReleasedAt: latestRelease?.releasedAt ?? null };
   } catch (err) {
     return { ok: false, slug, error: err instanceof Error ? err.message : "Failed to reach the Shopify Theme Store." };
   } finally {

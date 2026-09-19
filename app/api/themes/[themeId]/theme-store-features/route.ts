@@ -27,6 +27,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
   if (result.ok) {
     theme.themeStoreFeatures = result.features;
     theme.themeStoreError = null;
+    theme.themeStoreVersion = result.latestVersion;
+    const releasedAt = result.latestVersionReleasedAt ? new Date(result.latestVersionReleasedAt) : null;
+    theme.themeStoreVersionReleasedAt = releasedAt && !Number.isNaN(releasedAt.getTime()) ? releasedAt : null;
   } else {
     theme.themeStoreError = result.error;
   }

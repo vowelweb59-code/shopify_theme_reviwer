@@ -41,6 +41,18 @@ const REAL_SHAPE_HTML = `
       </ul>
     </details>
   </div>
+  <div id="ReleaseNotes">
+    <div class="tw-flex tw-flex-col tw-gap-xs">
+      <div class="tw-flex tw-flex-row tw-gap-xs tw-text-body-lg tw-text-fg-primary">
+          <h3>Version 2.3.6</h3>
+          <span class="tw-text-fg-disabled">•</span>
+          <span> August 18, 2026</span>
+      </div>
+      <div class="tw-text-body-lg tw-text-fg-secondary">
+        <p>Bug fixes and performance improvements.</p>
+      </div>
+    </div>
+  </div>
 `;
 
 describe("fetchThemeStoreFeatureLabels", () => {
@@ -57,6 +69,27 @@ describe("fetchThemeStoreFeatureLabels", () => {
     if (result.ok) {
       expect(result.slug).toBe("adorn");
       expect(result.features.sort()).toEqual(["Cart notes", "Gift wrapping", "Trust badges"]);
+    }
+  });
+
+  it("extracts the current live version and its release date from the Release Notes section", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => REAL_SHAPE_HTML }) as unknown as typeof fetch;
+    const result = await fetchThemeStoreFeatureLabels("Adorn");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.latestVersion).toBe("2.3.6");
+      expect(result.latestVersionReleasedAt).toBe("August 18, 2026");
+    }
+  });
+
+  it("returns null latest version/date when the page has no Release Notes section", async () => {
+    const html = `<div id="features"><span class="tw-mr-sm">Cart notes</span></div>`;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => html }) as unknown as typeof fetch;
+    const result = await fetchThemeStoreFeatureLabels("Adorn");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.latestVersion).toBeNull();
+      expect(result.latestVersionReleasedAt).toBeNull();
     }
   });
 

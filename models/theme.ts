@@ -36,6 +36,12 @@ const themeSchema = new Schema(
     themeStoreFeatures: { type: [String], default: undefined },
     themeStoreCheckedAt: { type: Date, default: null },
     themeStoreError: { type: String, default: null },
+    // The Theme Store listing's current live version + when that version
+    // shipped (from its Release Notes section) — lets the Themes list flag
+    // a theme whose uploaded ZIP is behind the live listing, and shows a
+    // real "last updated" date instead of this app's own audit cadence.
+    themeStoreVersion: { type: String, default: null },
+    themeStoreVersionReleasedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

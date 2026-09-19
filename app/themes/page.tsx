@@ -10,16 +10,25 @@ import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { AddThemeModal } from "./_components/AddThemeModal";
 import { FeatureMatrixTable } from "./_components/FeatureMatrixTable";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
+import { computeUpdatePriority, type UpdatePriorityResult } from "@/lib/themes/updatePriority";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
 type ThemeRow = {
-  theme: { _id: string; name: string; themeStoreFeatures?: string[] };
+  theme: {
+    _id: string;
+    name: string;
+    themeStoreFeatures?: string[];
+    themeStoreVersion?: string | null;
+    themeStoreVersionReleasedAt?: string | null;
+  };
   latestVersion: { _id: string; version: string } | null;
   latestAudit: { _id: string; startedAt: string; enhancementDetections?: { pointId: string; detected: boolean }[] } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
 };
+
+type PrioritizedThemeRow = ThemeRow & { priority: UpdatePriorityResult };
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -36,6 +45,14 @@ function healthTone(percent: number) {
   return "text-status-fail-text";
 }
 
+// Inverse of healthTone: a HIGH number here means "needs attention," not
+// "doing well," so the color scale runs the opposite direction.
+function priorityTone(percent: number) {
+  if (percent >= 60) return "text-status-fail-text";
+  if (percent >= 30) return "text-status-warning-text";
+  return "text-status-pass-text";
+}
+
 function scoreCard(scoreboard: ScoreCard[] | null, id: string): ScoreCard | undefined {
   return scoreboard?.find((c) => c.id === id);
 }
@@ -45,8 +62,48 @@ function scoreCell(card: ScoreCard | undefined) {
   return <span className={`font-semibold ${healthTone(card.score)}`}>{card.score}%</span>;
 }
 
+const STALE_THRESHOLD_DAYS = 90;
+
+function isVersionMismatch(r: ThemeRow): boolean {
+  const uploaded = r.latestVersion?.version;
+  const live = r.theme.themeStoreVersion;
+  return Boolean(uploaded && live && uploaded !== live);
+}
+
+function isStale(daysSinceUpdate: number | null): boolean {
+  return daysSinceUpdate !== null && daysSinceUpdate > STALE_THRESHOLD_DAYS;
+}
+
+// A row is flagged for at most one reason visually (a colored left border +
+// tint) — version mismatch takes precedence over plain staleness since it's
+// the more actionable signal ("re-upload the current ZIP" vs. "check back
+// later"), even though both conditions can be true at once.
+function rowTone(r: PrioritizedThemeRow): "mismatch" | "stale" | null {
+  if (isVersionMismatch(r)) return "mismatch";
+  if (isStale(r.priority.daysSinceUpdate)) return "stale";
+  return null;
+}
+
+const ROW_TONE_CLASS: Record<"mismatch" | "stale", string> = {
+  mismatch: "border-l-4 border-l-status-fail-icon bg-status-fail-bg/40",
+  stale: "border-l-4 border-l-status-warning-icon bg-status-warning-bg/40",
+};
+
+function withPriority(row: ThemeRow): PrioritizedThemeRow {
+  return {
+    ...row,
+    priority: computeUpdatePriority({
+      themeStoreVersionReleasedAt: row.theme.themeStoreVersionReleasedAt,
+      featuresScore: scoreCard(row.scoreboard, "features")?.score ?? null,
+      desktopPerformanceScore: scoreCard(row.scoreboard, "desktop-performance")?.score ?? null,
+      mobilePerformanceScore: scoreCard(row.scoreboard, "mobile-performance")?.score ?? null,
+      opportunitiesScore: scoreCard(row.scoreboard, "opportunities")?.score ?? null,
+    }),
+  };
+}
+
 export default function ThemesPage() {
-  const [rows, setRows] = useState<ThemeRow[]>([]);
+  const [rows, setRows] = useState<PrioritizedThemeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -54,7 +111,17 @@ export default function ThemesPage() {
     fetch("/api/themes")
       .then((res) => res.json())
       .then((data) => {
-        setRows(data.themes ?? []);
+        const prioritized = ((data.themes ?? []) as ThemeRow[]).map(withPriority);
+        // Default order: the theme most in need of an update first. Ties
+        // (including every theme with no data at all, score: null) keep
+        // the API's own name-ascending order via a stable sort.
+        prioritized.sort((a, b) => {
+          if (a.priority.score === null && b.priority.score === null) return 0;
+          if (a.priority.score === null) return 1;
+          if (b.priority.score === null) return -1;
+          return b.priority.score - a.priority.score;
+        });
+        setRows(prioritized);
         setLoading(false);
       });
   }
@@ -63,7 +130,7 @@ export default function ThemesPage() {
     load();
   }, []);
 
-  const columns: TableColumn<ThemeRow>[] = [
+  const columns: TableColumn<PrioritizedThemeRow>[] = [
     {
       key: "theme",
       header: "Theme",
@@ -75,15 +142,52 @@ export default function ThemesPage() {
       sortValue: (r) => r.theme.name,
     },
     {
-      key: "version",
-      header: "Current Version",
-      render: (r) => (r.latestVersion ? <span className="font-mono text-xs">{r.latestVersion.version}</span> : <span className="text-zinc-400">—</span>),
+      key: "priority",
+      header: "Update Priority",
+      render: (r) =>
+        r.priority.score === null ? (
+          <span className="text-zinc-400">—</span>
+        ) : (
+          <span className={`font-semibold ${priorityTone(r.priority.score)}`}>{r.priority.score}%</span>
+        ),
+      sortValue: (r) => r.priority.score ?? -1,
     },
     {
-      key: "latestAudit",
-      header: "Latest Audit",
-      render: (r) => (r.latestAudit ? formatDate(r.latestAudit.startedAt) : <span className="text-zinc-400">—</span>),
-      sortValue: (r) => r.latestAudit?.startedAt ?? "",
+      key: "version",
+      header: "Current Version",
+      render: (r) => {
+        if (!r.latestVersion) return <span className="text-zinc-400">—</span>;
+        const mismatch = isVersionMismatch(r);
+        return (
+          <span className="inline-flex flex-wrap items-center gap-1.5">
+            <span className="font-mono text-xs">{r.latestVersion.version}</span>
+            {mismatch && (
+              <span
+                className="rounded-full bg-status-fail-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-fail-text"
+                title="The uploaded ZIP's version doesn't match the version currently live on the Shopify Theme Store."
+              >
+                Theme Store: {r.theme.themeStoreVersion}
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      key: "lastUpdate",
+      header: "Last Update",
+      render: (r) => {
+        const releasedAt = r.theme.themeStoreVersionReleasedAt;
+        if (!releasedAt) return <span className="text-zinc-400">—</span>;
+        const stale = isStale(r.priority.daysSinceUpdate);
+        return (
+          <span className={stale ? "font-medium text-status-warning-text" : ""}>
+            {formatDate(releasedAt)}
+            {stale && <span className="ml-1 text-xs">({r.priority.daysSinceUpdate}d ago)</span>}
+          </span>
+        );
+      },
+      sortValue: (r) => (r.theme.themeStoreVersionReleasedAt ? new Date(r.theme.themeStoreVersionReleasedAt).getTime() : -1),
     },
     {
       key: "health",
@@ -131,7 +235,7 @@ export default function ThemesPage() {
   // Requirement, per what this comparison is meant to answer ("which
   // themes cover what features/future-update opportunities, and how do
   // they perform"), not a full compliance comparison.
-  const comparisonColumns: TableColumn<ThemeRow>[] = [
+  const comparisonColumns: TableColumn<PrioritizedThemeRow>[] = [
     {
       key: "theme",
       header: "Theme",
@@ -195,7 +299,30 @@ export default function ThemesPage() {
       )}
 
       {!loading && rows.length > 0 && (
-        <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r.theme._id} theadClassName="bg-primary-tint text-primary-tint-text" />
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-zinc-500">
+            Sorted by <span className="font-medium text-zinc-700 dark:text-zinc-300">Update Priority</span> — a weighted score (days since the
+            Theme Store&apos;s last release 40%, feature coverage 30%, Core Web Vitals 20%, future-update opportunities 10%) — highest first.{" "}
+            <span className="inline-flex items-center gap-1 font-medium text-status-fail-text">
+              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-fail-icon" /> Red rows
+            </span>{" "}
+            have a different version live on the Theme Store than what&apos;s uploaded here.{" "}
+            <span className="inline-flex items-center gap-1 font-medium text-status-warning-text">
+              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-warning-icon" /> Amber rows
+            </span>{" "}
+            haven&apos;t had a Theme Store release in over {STALE_THRESHOLD_DAYS} days.
+          </p>
+          <ResponsiveTable
+            columns={columns}
+            rows={rows}
+            rowKey={(r) => r.theme._id}
+            theadClassName="bg-primary-tint text-primary-tint-text"
+            rowClassName={(r) => {
+              const tone = rowTone(r);
+              return tone ? ROW_TONE_CLASS[tone] : "";
+            }}
+          />
+        </div>
       )}
 
       {!loading && rows.length > 0 && (
