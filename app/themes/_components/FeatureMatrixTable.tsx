@@ -45,18 +45,29 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
               <td className="sticky left-0 z-10 bg-surface px-3 py-2 font-medium text-zinc-900 dark:text-zinc-100" title={f.category}>
                 {f.label}
               </td>
-              {rows.map((r, themeIndex) => (
-                <td key={r.theme._id} className="px-2 py-2 text-center">
-                  {statusByTheme[themeIndex][featureIndex] === "detected" && (
-                    <span
-                      className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-status-pass-icon shadow-sm"
-                      title="Available"
-                    >
-                      <Check className="h-4 w-4 stroke-[3] text-white" aria-label="Available" />
-                    </span>
-                  )}
-                </td>
-              ))}
+              {rows.map((r, themeIndex) => {
+                const status = statusByTheme[themeIndex][featureIndex];
+                return (
+                  <td key={r.theme._id} className="px-2 py-2 text-center">
+                    {status === "detected" && (
+                      <span
+                        className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-status-pass-icon shadow-sm"
+                        title="Available"
+                      >
+                        <Check className="h-4 w-4 stroke-[3] text-white" aria-label="Available" />
+                      </span>
+                    )}
+                    {status === "conflict" && (
+                      <span
+                        className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-status-warning-icon shadow-sm"
+                        title="Listed on the Theme Store, but not detected in the theme's code — worth a second look"
+                      >
+                        <Check className="h-4 w-4 stroke-[3] text-white" aria-label="Conflicting signal" />
+                      </span>
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

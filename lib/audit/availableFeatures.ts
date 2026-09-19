@@ -145,7 +145,15 @@ export const AVAILABLE_FEATURES: AvailableFeature[] = [
   },
 ];
 
-export type FeatureStatus = "detected" | "not_detected" | "not_checked";
+// "conflict": our own code-level detector explicitly found the feature
+// absent, but the theme's Shopify Theme Store listing names it — e.g. the
+// listing advertises a capability the merchant gets from an app (Markets,
+// Translate & Adapt) rather than from files shipped in the theme package
+// itself. Still counts as "checked" for scoring (we do have an answer),
+// but never as "detected" (the code-level signal remains authoritative for
+// coverage) — surfaced separately so it reads as "worth a second look",
+// not silently identical to a plain, uncontested absence.
+export type FeatureStatus = "detected" | "not_detected" | "not_checked" | "conflict";
 
 /**
  * `detections` is a run's AuditRun.enhancementDetections (pointId ->
@@ -156,13 +164,17 @@ export type FeatureStatus = "detected" | "not_detected" | "not_checked";
  * used to confirm a feature is present, never to conclude it's absent: the
  * Theme Store listing not mentioning something doesn't prove the theme
  * lacks it, it just means the merchant-facing marketing copy didn't call
- * it out.
+ * it out. When a detector explicitly says "absent" but the listing says
+ * otherwise, that's a real disagreement worth flagging — see "conflict".
  */
 export function featureStatus(feature: AvailableFeature, detections: Map<string, boolean>, themeStoreLabels?: Set<string>): FeatureStatus {
+  const themeStoreConfirms = themeStoreLabels?.has(feature.label.toLowerCase()) ?? false;
   if (feature.pointIds.length > 0) {
     const relevant = feature.pointIds.map((id) => detections.get(id)).filter((v): v is boolean => v !== undefined);
-    if (relevant.length > 0) return relevant.some(Boolean) ? "detected" : "not_detected";
+    if (relevant.length > 0) {
+      if (relevant.some(Boolean)) return "detected";
+      return themeStoreConfirms ? "conflict" : "not_detected";
+    }
   }
-  if (themeStoreLabels?.has(feature.label.toLowerCase())) return "detected";
-  return "not_checked";
+  return themeStoreConfirms ? "detected" : "not_checked";
 }

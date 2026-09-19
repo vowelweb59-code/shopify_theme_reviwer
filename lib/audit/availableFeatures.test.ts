@@ -16,10 +16,20 @@ describe("featureStatus", () => {
     expect(featureStatus(f, new Map([["POINT-1", false]]))).toBe("not_detected");
   });
 
-  it("never falls back to Theme Store data when the detector already ran (even if it says not_detected)", () => {
+  it("returns conflict when the detector explicitly says absent but the Theme Store listing names it", () => {
     const f = feature({ pointIds: ["POINT-1"], label: "Test Feature" });
     const themeStoreLabels = new Set(["test feature"]);
-    expect(featureStatus(f, new Map([["POINT-1", false]]), themeStoreLabels)).toBe("not_detected");
+    expect(featureStatus(f, new Map([["POINT-1", false]]), themeStoreLabels)).toBe("conflict");
+  });
+
+  it("stays not_detected (not conflict) when the detector says absent and there's no Theme Store data", () => {
+    const f = feature({ pointIds: ["POINT-1"] });
+    expect(featureStatus(f, new Map([["POINT-1", false]]))).toBe("not_detected");
+  });
+
+  it("never returns conflict when the detector says detected, regardless of Theme Store data", () => {
+    const f = feature({ pointIds: ["POINT-1"], label: "Test Feature" });
+    expect(featureStatus(f, new Map([["POINT-1", true]]), new Set(["test feature"]))).toBe("detected");
   });
 
   it("falls back to Theme Store confirmation when there's no detector at all", () => {

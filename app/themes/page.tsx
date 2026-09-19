@@ -220,8 +220,15 @@ export default function ThemesPage() {
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Feature Availability</h2>
             <p className="mt-1 text-sm text-zinc-500">
-              Every feature in the catalog, per theme — a checkmark means it was detected in that theme&apos;s latest audit (directly, or
-              confirmed via its Shopify Theme Store listing).
+              Every feature in the catalog, per theme — a{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-status-pass-text">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-pass-icon" /> green check
+              </span>{" "}
+              means it was detected in that theme&apos;s latest audit (directly, or confirmed via its Shopify Theme Store listing); an{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-status-warning-text">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-warning-icon" /> orange check
+              </span>{" "}
+              means the Theme Store listing names it but our own code check didn&apos;t detect it — worth a second look.
             </p>
           </div>
           <FeatureMatrixTable rows={rows} />

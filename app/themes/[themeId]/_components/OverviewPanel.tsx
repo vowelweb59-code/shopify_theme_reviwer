@@ -537,16 +537,29 @@ function IssueRow({
   severity,
   filePath,
   recommendation,
+  tone,
 }: {
   title?: string;
   body: string;
   severity?: string;
   filePath?: string;
   recommendation?: string | null;
+  // "conflict": our own detector says absent but the Theme Store listing
+  // names it — visually distinct (amber) from a plain, uncontested miss.
+  tone?: "conflict";
 }) {
   return (
-    <li className="rounded-md bg-surface-muted p-3 text-xs">
+    <li
+      className={`rounded-md p-3 text-xs ${
+        tone === "conflict" ? "border border-status-warning-bg bg-status-warning-bg/60" : "bg-surface-muted"
+      }`}
+    >
       <div className="flex flex-wrap items-center gap-2">
+        {tone === "conflict" && (
+          <span className="rounded-full bg-status-warning-icon px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+            Worth a second look
+          </span>
+        )}
         {severity && <SeverityBadge severity={severity} />}
         {title && <span className="font-medium text-zinc-900 dark:text-zinc-100">{title}</span>}
       </div>
@@ -695,6 +708,7 @@ export function OverviewPanel({
         const detections = new Map(reportData.enhancementPoints.map((p) => [p.pointId, p.detected === true]));
         const themeStoreLabels = themeStoreFeatures ? new Set(themeStoreFeatures.map((f) => f.toLowerCase())) : undefined;
         const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_detected");
+        const conflicts = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "conflict");
         const uncheckedCount = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_checked").length;
 
         return (
@@ -725,6 +739,26 @@ export function OverviewPanel({
                 )}
               </div>
             </div>
+            {conflicts.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-status-warning-text">
+                  Listed on the Theme Store, but not detected in the theme&apos;s code ({conflicts.length})
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {conflicts.map((f) => (
+                    <IssueRow
+                      key={f.id}
+                      title={f.label}
+                      tone="conflict"
+                      body={
+                        f.note ??
+                        `The Shopify Theme Store listing names this feature, but our code check didn't find it in this theme's files — could be an app-provided feature (e.g. Markets, Translate & Adapt), a stale listing, or a real gap. Worth confirming by hand.`
+                      }
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
             {missing.length === 0 ? (
               <p className="text-sm text-zinc-500">No missing features among those checked.</p>
             ) : (
