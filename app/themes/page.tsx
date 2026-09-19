@@ -45,14 +45,6 @@ function healthTone(percent: number) {
   return "text-status-fail-text";
 }
 
-// Inverse of healthTone: a HIGH number here means "needs attention," not
-// "doing well," so the color scale runs the opposite direction.
-function priorityTone(percent: number) {
-  if (percent >= 60) return "text-status-fail-text";
-  if (percent >= 30) return "text-status-warning-text";
-  return "text-status-pass-text";
-}
-
 function scoreCard(scoreboard: ScoreCard[] | null, id: string): ScoreCard | undefined {
   return scoreboard?.find((c) => c.id === id);
 }
@@ -106,6 +98,8 @@ export default function ThemesPage() {
   const [rows, setRows] = useState<PrioritizedThemeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [checkingAll, setCheckingAll] = useState(false);
+  const [checkAllProgress, setCheckAllProgress] = useState<{ done: number; total: number } | null>(null);
 
   function load() {
     fetch("/api/themes")
@@ -130,6 +124,28 @@ export default function ThemesPage() {
     load();
   }, []);
 
+  // "Last Update"/version-mismatch data only exists for a theme once its
+  // Theme Store listing has been checked (a per-theme, on-request action —
+  // see OverviewPanel's "Check Theme Store" button) — a real chore across a
+  // long theme list, so this runs that same check for every theme here,
+  // one at a time (a burst of a dozen simultaneous external page fetches
+  // would be impolite and easy to rate-limit), then reloads once done.
+  async function handleCheckAllThemeStores() {
+    setCheckingAll(true);
+    setCheckAllProgress({ done: 0, total: rows.length });
+    for (let i = 0; i < rows.length; i++) {
+      try {
+        await fetch(`/api/themes/${rows[i].theme._id}/theme-store-features`, { method: "POST" });
+      } catch {
+        // Best-effort — one theme's listing failing to fetch shouldn't stop the rest.
+      }
+      setCheckAllProgress({ done: i + 1, total: rows.length });
+    }
+    setCheckingAll(false);
+    setCheckAllProgress(null);
+    load();
+  }
+
   const columns: TableColumn<PrioritizedThemeRow>[] = [
     {
       key: "theme",
@@ -140,17 +156,6 @@ export default function ThemesPage() {
         </Link>
       ),
       sortValue: (r) => r.theme.name,
-    },
-    {
-      key: "priority",
-      header: "Update Priority",
-      render: (r) =>
-        r.priority.score === null ? (
-          <span className="text-zinc-400">—</span>
-        ) : (
-          <span className={`font-semibold ${priorityTone(r.priority.score)}`}>{r.priority.score}%</span>
-        ),
-      sortValue: (r) => r.priority.score ?? -1,
     },
     {
       key: "version",
@@ -300,18 +305,23 @@ export default function ThemesPage() {
 
       {!loading && rows.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-zinc-500">
-            Sorted by <span className="font-medium text-zinc-700 dark:text-zinc-300">Update Priority</span> — a weighted score (days since the
-            Theme Store&apos;s last release 40%, feature coverage 30%, Core Web Vitals 20%, future-update opportunities 10%) — highest first.{" "}
-            <span className="inline-flex items-center gap-1 font-medium text-status-fail-text">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-fail-icon" /> Red rows
-            </span>{" "}
-            have a different version live on the Theme Store than what&apos;s uploaded here.{" "}
-            <span className="inline-flex items-center gap-1 font-medium text-status-warning-text">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-warning-icon" /> Amber rows
-            </span>{" "}
-            haven&apos;t had a Theme Store release in over {STALE_THRESHOLD_DAYS} days.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="text-sm text-zinc-500">
+              The theme most in need of an update is listed first — ranked by how long it&apos;s been since its last Theme Store release,
+              feature coverage, Core Web Vitals, and future-update opportunities, together.{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-status-fail-text">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-fail-icon" /> Red rows
+              </span>{" "}
+              have a different version live on the Theme Store than what&apos;s uploaded here.{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-status-warning-text">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-warning-icon" /> Amber rows
+              </span>{" "}
+              haven&apos;t had a Theme Store release in over {STALE_THRESHOLD_DAYS} days.
+            </p>
+            <Button variant="secondary" size="sm" onClick={handleCheckAllThemeStores} loading={checkingAll}>
+              {checkingAll ? `Checking ${checkAllProgress?.done ?? 0}/${checkAllProgress?.total ?? rows.length}…` : "Check All Theme Stores"}
+            </Button>
+          </div>
           <ResponsiveTable
             columns={columns}
             rows={rows}
