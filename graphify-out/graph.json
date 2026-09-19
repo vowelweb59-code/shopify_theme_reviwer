@@ -1766,10 +1766,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_checktotals",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "checktotals",
-      "id": "app_themes_themeid_components_overviewpanel_checktotals"
+      "norm_label": "checktotals"
     },
     {
       "label": "Props",
@@ -1779,10 +1779,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_props",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "props",
-      "id": "app_themes_themeid_components_overviewpanel_props"
+      "norm_label": "props"
     },
     {
       "label": "ReportEnhancementPoint",
@@ -1792,10 +1792,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportenhancementpoint",
-      "id": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
+      "norm_label": "reportenhancementpoint"
     },
     {
       "label": "ReportFinding",
@@ -1805,10 +1805,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_reportfinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "reportfinding",
-      "id": "app_themes_themeid_components_overviewpanel_reportfinding"
+      "norm_label": "reportfinding"
     },
     {
       "label": "AuditStageKey",
@@ -2260,10 +2260,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_page_checktotals",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "checktotals",
-      "id": "app_themes_page_checktotals"
+      "norm_label": "checktotals"
     },
     {
       "label": "ThemeRow",
@@ -2273,10 +2273,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "app_themes_page_themerow",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "themerow",
-      "id": "app_themes_page_themerow"
+      "norm_label": "themerow"
     },
     {
       "label": "CheckStatusValue",
@@ -2624,23 +2624,23 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures_availablefeature",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "availablefeature",
-      "id": "lib_audit_availablefeatures_availablefeature"
+      "norm_label": "availablefeature"
     },
     {
       "label": "featureStatus",
       "file_type": "code",
       "source_file": "lib/audit/availableFeatures.ts",
-      "source_location": "L161",
+      "source_location": "L170",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures_featurestatus",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "featurestatus",
-      "id": "lib_audit_availablefeatures_featurestatus"
+      "norm_label": "featurestatus"
     },
     {
       "label": "PageSpeedMetric",
@@ -5855,10 +5855,10 @@
       "source_location": "L501",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_corewebvitalstable",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "corewebvitalstable()",
-      "id": "app_themes_themeid_components_overviewpanel_corewebvitalstable"
+      "norm_label": "corewebvitalstable()"
     },
     {
       "label": "formatDate()",
@@ -5867,10 +5867,10 @@
       "source_location": "L94",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_formatdate",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatdate()",
-      "id": "app_themes_themeid_components_overviewpanel_formatdate"
+      "norm_label": "formatdate()"
     },
     {
       "label": "formatMs()",
@@ -5879,10 +5879,10 @@
       "source_location": "L491",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_formatms",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "formatms()",
-      "id": "app_themes_themeid_components_overviewpanel_formatms"
+      "norm_label": "formatms()"
     },
     {
       "label": "healthTone()",
@@ -5891,10 +5891,10 @@
       "source_location": "L104",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_healthtone",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "healthtone()",
-      "id": "app_themes_themeid_components_overviewpanel_healthtone"
+      "norm_label": "healthtone()"
     },
     {
       "label": "isDesktopPerformanceFinding()",
@@ -5903,10 +5903,10 @@
       "source_location": "L90",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "isdesktopperformancefinding()",
-      "id": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "norm_label": "isdesktopperformancefinding()"
     },
     {
       "label": "IssueRow()",
@@ -5915,22 +5915,22 @@
       "source_location": "L534",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_issuerow",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "issuerow()",
-      "id": "app_themes_themeid_components_overviewpanel_issuerow"
+      "norm_label": "issuerow()"
     },
     {
       "label": "OverviewPanel()",
       "file_type": "code",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L571",
+      "source_location": "L584",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel()",
-      "id": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "norm_label": "overviewpanel()"
     },
     {
       "label": "PresetsSection()",
@@ -5939,10 +5939,10 @@
       "source_location": "L110",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_presetssection",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "presetssection()",
-      "id": "app_themes_themeid_components_overviewpanel_presetssection"
+      "norm_label": "presetssection()"
     },
     {
       "label": "RunAuditForm()",
@@ -5951,10 +5951,10 @@
       "source_location": "L324",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_runauditform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "runauditform()",
-      "id": "app_themes_themeid_components_overviewpanel_runauditform"
+      "norm_label": "runauditform()"
     },
     {
       "label": "UploadVersionForm()",
@@ -5963,10 +5963,10 @@
       "source_location": "L269",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_uploadversionform",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "uploadversionform()",
-      "id": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "norm_label": "uploadversionform()"
     },
     {
       "label": "percentForStage()",
@@ -6623,10 +6623,10 @@
       "source_location": "L24",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_formatdate",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "formatdate()",
-      "id": "app_themes_page_formatdate"
+      "norm_label": "formatdate()"
     },
     {
       "label": "healthPercent()",
@@ -6635,10 +6635,10 @@
       "source_location": "L28",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_healthpercent",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "healthpercent()",
-      "id": "app_themes_page_healthpercent"
+      "norm_label": "healthpercent()"
     },
     {
       "label": "healthTone()",
@@ -6647,10 +6647,10 @@
       "source_location": "L33",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_healthtone",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "healthtone()",
-      "id": "app_themes_page_healthtone"
+      "norm_label": "healthtone()"
     },
     {
       "label": "scoreCard()",
@@ -6659,10 +6659,10 @@
       "source_location": "L39",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_scorecard",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "scorecard()",
-      "id": "app_themes_page_scorecard"
+      "norm_label": "scorecard()"
     },
     {
       "label": "scoreCell()",
@@ -6671,10 +6671,10 @@
       "source_location": "L43",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_scorecell",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "scorecell()",
-      "id": "app_themes_page_scorecell"
+      "norm_label": "scorecell()"
     },
     {
       "label": "ThemesPage()",
@@ -6683,10 +6683,10 @@
       "source_location": "L48",
       "_callable": true,
       "_origin": "ast",
+      "id": "app_themes_page_themespage",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "themespage()",
-      "id": "app_themes_page_themespage"
+      "norm_label": "themespage()"
     },
     {
       "label": "proxy()",
@@ -7211,10 +7211,10 @@
       "source_location": "L4",
       "_callable": true,
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures_test_feature",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "feature()",
-      "id": "lib_audit_availablefeatures_test_feature"
+      "norm_label": "feature()"
     },
     {
       "label": "averageDefined()",
@@ -12706,10 +12706,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "overviewpanel.tsx",
-      "id": "app_themes_themeid_components_overviewpanel"
+      "norm_label": "overviewpanel.tsx"
     },
     {
       "label": "REPORT_BACKED_CARD_IDS",
@@ -12717,10 +12717,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L489",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "report_backed_card_ids",
-      "id": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
+      "norm_label": "report_backed_card_ids"
     },
     {
       "label": "SEVERITY_BORDER",
@@ -12728,10 +12728,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L77",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_severity_border",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "severity_border",
-      "id": "app_themes_themeid_components_overviewpanel_severity_border"
+      "norm_label": "severity_border"
     },
     {
       "label": "SEVERITY_ORDER",
@@ -12739,10 +12739,10 @@
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
       "source_location": "L71",
       "_origin": "ast",
+      "id": "app_themes_themeid_components_overviewpanel_severity_order",
       "community": 44,
       "community_name": "OverviewPanel.tsx",
-      "norm_label": "severity_order",
-      "id": "app_themes_themeid_components_overviewpanel_severity_order"
+      "norm_label": "severity_order"
     },
     {
       "label": "progress.ts",
@@ -13608,10 +13608,10 @@
       "source_file": "app/themes/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_themes_page",
       "community": 54,
       "community_name": "themes/page.tsx",
-      "norm_label": "themes/page.tsx",
-      "id": "app_themes_page"
+      "norm_label": "themes/page.tsx"
     },
     {
       "label": "proxy.ts",
@@ -14169,10 +14169,10 @@
       "source_file": "lib/audit/availableFeatures.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "availablefeatures.ts",
-      "id": "lib_audit_availablefeatures"
+      "norm_label": "availablefeatures.ts"
     },
     {
       "label": "AVAILABLE_FEATURES",
@@ -14180,10 +14180,10 @@
       "source_file": "lib/audit/availableFeatures.ts",
       "source_location": "L26",
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures_available_features",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "available_features",
-      "id": "lib_audit_availablefeatures_available_features"
+      "norm_label": "available_features"
     },
     {
       "label": "availableFeatures.test.ts",
@@ -14191,10 +14191,10 @@
       "source_file": "lib/audit/availableFeatures.test.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "lib_audit_availablefeatures_test",
       "community": 61,
       "community_name": "computeScoreboard.ts",
-      "norm_label": "availablefeatures.test.ts",
-      "id": "lib_audit_availablefeatures_test"
+      "norm_label": "availablefeatures.test.ts"
     },
     {
       "label": "computeScoreboard.ts",
@@ -16509,9 +16509,9 @@
       "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_scorecell",
-      "target": "app_themes_page_healthtone"
+      "target": "app_themes_page_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16521,9 +16521,9 @@
       "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_themespage",
-      "target": "app_themes_page_scorecard"
+      "target": "app_themes_page_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16533,9 +16533,9 @@
       "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_themespage",
-      "target": "app_themes_page_scorecell"
+      "target": "app_themes_page_scorecell",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16545,9 +16545,9 @@
       "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_themespage",
-      "target": "app_themes_page_formatdate"
+      "target": "app_themes_page_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16557,9 +16557,9 @@
       "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_themespage",
-      "target": "app_themes_page_healthpercent"
+      "target": "app_themes_page_healthpercent",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16569,9 +16569,9 @@
       "source_location": "L93",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page_themespage",
-      "target": "app_themes_page_healthtone"
+      "target": "app_themes_page_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16593,9 +16593,9 @@
       "source_location": "L523",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_corewebvitalstable",
-      "target": "app_themes_themeid_components_overviewpanel_formatms"
+      "target": "app_themes_themeid_components_overviewpanel_formatms",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16603,7 +16603,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L697",
+      "source_location": "L710",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
@@ -16614,36 +16614,36 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L720",
+      "source_location": "L734",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L743",
+      "source_location": "L777",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L806",
+      "source_location": "L840",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -22470,9 +22470,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_components_addthememodal_addthememodal"
+      "target": "app_themes_components_addthememodal_addthememodal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22482,9 +22482,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_components_featurematrixtable_featurematrixtable"
+      "target": "app_themes_components_featurematrixtable_featurematrixtable",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22494,9 +22494,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "lib_themes_computescoreboard_scorecard"
+      "target": "lib_themes_computescoreboard_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22506,9 +22506,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_shell_pagecontainer_pagecontainer"
+      "target": "app_components_shell_pagecontainer_pagecontainer",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22518,9 +22518,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_button_button"
+      "target": "app_components_ui_button_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22530,9 +22530,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_table_responsivetable"
+      "target": "app_components_ui_table_responsivetable",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22542,9 +22542,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_table_tablecolumn"
+      "target": "app_components_ui_table_tablecolumn",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22554,9 +22554,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_emptystate_emptystate"
+      "target": "app_components_ui_emptystate_emptystate",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22638,9 +22638,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard_scorecard"
+      "target": "lib_themes_computescoreboard_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22650,9 +22650,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_pagespeed_pagespeedmetric"
+      "target": "lib_audit_pagespeed_pagespeedmetric",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22662,9 +22662,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun_categorychecks"
+      "target": "lib_themes_derivechecksforauditrun_categorychecks",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22674,9 +22674,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_audit_stages"
+      "target": "lib_audit_progress_audit_stages",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22686,9 +22686,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_auditstagekey"
+      "target": "lib_audit_progress_auditstagekey",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22698,9 +22698,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress_percentforstage"
+      "target": "lib_audit_progress_percentforstage",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22710,9 +22710,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures_available_features"
+      "target": "lib_audit_availablefeatures_available_features",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22722,9 +22722,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures_featurestatus"
+      "target": "lib_audit_availablefeatures_featurestatus",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22734,9 +22734,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_demostorepreset"
+      "target": "app_components_presetlinkseditor_demostorepreset",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22746,9 +22746,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor_presetlinkseditor"
+      "target": "app_components_presetlinkseditor_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22758,9 +22758,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings_severitybadge"
+      "target": "app_components_findings_severitybadge",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22770,9 +22770,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button_button"
+      "target": "app_components_ui_button_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22782,9 +22782,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_card"
+      "target": "app_components_ui_card_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22794,9 +22794,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card_cardheader"
+      "target": "app_components_ui_card_cardheader",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22806,9 +22806,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid"
+      "target": "app_themes_themeid_components_scoreboardgrid_scoreboardgrid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22974,9 +22974,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures_test",
-      "target": "lib_audit_availablefeatures_availablefeature"
+      "target": "lib_audit_availablefeatures_availablefeature",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -22986,9 +22986,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures_test",
-      "target": "lib_audit_availablefeatures_featurestatus"
+      "target": "lib_audit_availablefeatures_featurestatus",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -30126,9 +30126,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_components_addthememodal"
+      "target": "app_themes_components_addthememodal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30138,9 +30138,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_components_featurematrixtable"
+      "target": "app_themes_components_featurematrixtable",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30150,9 +30150,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "lib_themes_computescoreboard"
+      "target": "lib_themes_computescoreboard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30162,9 +30162,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_shell_pagecontainer"
+      "target": "app_components_shell_pagecontainer",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30174,9 +30174,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_button"
+      "target": "app_components_ui_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30186,9 +30186,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_table"
+      "target": "app_components_ui_table",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30198,9 +30198,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_components_ui_emptystate"
+      "target": "app_components_ui_emptystate",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30258,9 +30258,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_computescoreboard"
+      "target": "lib_themes_computescoreboard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30270,9 +30270,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_pagespeed"
+      "target": "lib_audit_pagespeed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30282,9 +30282,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_themes_derivechecksforauditrun"
+      "target": "lib_themes_derivechecksforauditrun",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30294,9 +30294,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_progress"
+      "target": "lib_audit_progress",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30306,9 +30306,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "lib_audit_availablefeatures"
+      "target": "lib_audit_availablefeatures",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30318,9 +30318,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_presetlinkseditor"
+      "target": "app_components_presetlinkseditor",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30330,9 +30330,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_findings"
+      "target": "app_components_findings",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30342,9 +30342,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_button"
+      "target": "app_components_ui_button",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30354,9 +30354,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_components_ui_card"
+      "target": "app_components_ui_card",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30366,9 +30366,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_scoreboardgrid"
+      "target": "app_themes_themeid_components_scoreboardgrid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30534,9 +30534,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures_test",
-      "target": "lib_audit_availablefeatures"
+      "target": "lib_audit_availablefeatures",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -35775,9 +35775,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_checktotals"
+      "target": "app_themes_page_checktotals",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35786,9 +35786,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_themerow"
+      "target": "app_themes_page_themerow",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35797,9 +35797,9 @@
       "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_formatdate"
+      "target": "app_themes_page_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35808,9 +35808,9 @@
       "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_healthpercent"
+      "target": "app_themes_page_healthpercent",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35819,9 +35819,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_healthtone"
+      "target": "app_themes_page_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35830,9 +35830,9 @@
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_scorecard"
+      "target": "app_themes_page_scorecard",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35841,9 +35841,9 @@
       "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_scorecell"
+      "target": "app_themes_page_scorecell",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35852,9 +35852,9 @@
       "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_page",
-      "target": "app_themes_page_themespage"
+      "target": "app_themes_page_themespage",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35951,9 +35951,9 @@
       "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_healthtone"
+      "target": "app_themes_themeid_components_overviewpanel_healthtone",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35962,9 +35962,9 @@
       "source_location": "L110",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_presetssection"
+      "target": "app_themes_themeid_components_overviewpanel_presetssection",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35973,9 +35973,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_checktotals"
+      "target": "app_themes_themeid_components_overviewpanel_checktotals",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35984,9 +35984,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_props"
+      "target": "app_themes_themeid_components_overviewpanel_props",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -35995,9 +35995,9 @@
       "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_uploadversionform"
+      "target": "app_themes_themeid_components_overviewpanel_uploadversionform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36006,9 +36006,9 @@
       "source_location": "L324",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_runauditform"
+      "target": "app_themes_themeid_components_overviewpanel_runauditform",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36017,9 +36017,9 @@
       "source_location": "L489",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids"
+      "target": "app_themes_themeid_components_overviewpanel_report_backed_card_ids",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36028,9 +36028,9 @@
       "source_location": "L491",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatms"
+      "target": "app_themes_themeid_components_overviewpanel_formatms",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36039,9 +36039,9 @@
       "source_location": "L501",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_corewebvitalstable"
+      "target": "app_themes_themeid_components_overviewpanel_corewebvitalstable",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36050,9 +36050,9 @@
       "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportfinding"
+      "target": "app_themes_themeid_components_overviewpanel_reportfinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36061,20 +36061,20 @@
       "source_location": "L534",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_issuerow"
+      "target": "app_themes_themeid_components_overviewpanel_issuerow",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/themes/[themeId]/_components/OverviewPanel.tsx",
-      "source_location": "L571",
+      "source_location": "L584",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_overviewpanel"
+      "target": "app_themes_themeid_components_overviewpanel_overviewpanel",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36083,9 +36083,9 @@
       "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint"
+      "target": "app_themes_themeid_components_overviewpanel_reportenhancementpoint",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36094,9 +36094,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_severity_order"
+      "target": "app_themes_themeid_components_overviewpanel_severity_order",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36105,9 +36105,9 @@
       "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_severity_border"
+      "target": "app_themes_themeid_components_overviewpanel_severity_border",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36116,9 +36116,9 @@
       "source_location": "L90",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding"
+      "target": "app_themes_themeid_components_overviewpanel_isdesktopperformancefinding",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36127,9 +36127,9 @@
       "source_location": "L94",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "app_themes_themeid_components_overviewpanel",
-      "target": "app_themes_themeid_components_overviewpanel_formatdate"
+      "target": "app_themes_themeid_components_overviewpanel_formatdate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36311,12 +36311,12 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/audit/availableFeatures.ts",
-      "source_location": "L161",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures",
-      "target": "lib_audit_availablefeatures_featurestatus"
+      "target": "lib_audit_availablefeatures_featurestatus",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36325,9 +36325,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures",
-      "target": "lib_audit_availablefeatures_availablefeature"
+      "target": "lib_audit_availablefeatures_availablefeature",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36336,9 +36336,9 @@
       "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures",
-      "target": "lib_audit_availablefeatures_available_features"
+      "target": "lib_audit_availablefeatures_available_features",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -36347,9 +36347,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "lib_audit_availablefeatures_test",
-      "target": "lib_audit_availablefeatures_test_feature"
+      "target": "lib_audit_availablefeatures_test_feature",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -44963,5 +44963,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ca449619b235acc4ffbb4970f3344e28c26bc9d6"
+  "built_at_commit": "bd5077a4912957c53edd20f7dd2850bef9c578c7"
 }
