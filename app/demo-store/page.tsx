@@ -55,6 +55,50 @@ type RankingData = {
   lastError: string | null;
 };
 
+// One row per theme AND one row per preset, flattened — a preset's row
+// uses the exact same column formatting as its parent theme's, just in a
+// lighter shade of the same color, rather than being crammed into the
+// theme's own cell.
+type RankRow = {
+  id: string;
+  isPreset: boolean;
+  name: string;
+  url: string | null;
+  rank: number | null;
+  page: number | null;
+  rankStatus: "not-checked" | "not-listed" | "unranked" | null;
+  checkedAt: string | null;
+};
+
+function flattenRankRows(themes: RankedTheme[]): RankRow[] {
+  const rows: RankRow[] = [];
+  for (const t of themes) {
+    rows.push({
+      id: t._id,
+      isPreset: false,
+      name: t.name,
+      url: t.themeStoreSlug ? `https://themes.shopify.com/themes/${t.themeStoreSlug}` : null,
+      rank: t.themeStoreRank,
+      page: t.themeStoreRankPage,
+      rankStatus: t.themeStoreRank ? null : !t.themeStoreCheckedAt ? "not-checked" : t.themeStoreError ? "not-listed" : "unranked",
+      checkedAt: t.themeStoreRankCheckedAt,
+    });
+    for (const p of t.themeStorePresets ?? []) {
+      rows.push({
+        id: `${t._id}-${p.slug}`,
+        isPreset: true,
+        name: p.name,
+        url: t.themeStoreSlug ? `https://themes.shopify.com/themes/${t.themeStoreSlug}/presets/${p.slug}` : null,
+        rank: p.rank,
+        page: p.page,
+        rankStatus: p.rank ? null : "unranked",
+        checkedAt: t.themeStoreRankCheckedAt,
+      });
+    }
+  }
+  return rows;
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
     year: "numeric",
@@ -196,67 +240,53 @@ export default function DemoStorePage() {
     },
   ];
 
-  const rankingColumns: TableColumn<RankedTheme>[] = [
+  const RANK_STATUS_LABEL: Record<NonNullable<RankRow["rankStatus"]>, string> = {
+    "not-checked": "Theme Store not checked",
+    "not-listed": "Not listed",
+    unranked: "Not checked yet",
+  };
+
+  const rankingColumns: TableColumn<RankRow>[] = [
     {
       key: "theme",
       header: "Theme",
-      render: (r) => (
-        <div className="flex flex-col gap-1.5">
-          {r.themeStoreSlug && r.themeStoreRank ? (
-            <a
-              href={`https://themes.shopify.com/themes/${r.themeStoreSlug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-primary underline-offset-2 hover:underline"
-            >
-              {r.name}
-            </a>
-          ) : (
-            <span className="font-semibold text-primary">{r.name}</span>
-          )}
-          {r.themeStorePresets && r.themeStorePresets.length > 0 && (
-            <div className="flex flex-col gap-1 border-l-2 border-primary/20 pl-2.5">
-              {r.themeStorePresets.map((p) => (
-                <a
-                  key={p.slug}
-                  href={`https://themes.shopify.com/themes/${r.themeStoreSlug}/presets/${p.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-baseline gap-1.5 text-xs font-medium text-primary/70 hover:underline"
-                >
-                  {p.name}
-                  <span className="font-normal text-primary/50">{p.rank ? `#${p.rank} (page ${p.page})` : "unranked"}</span>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      ),
+      // Same format for a theme and a preset row — bold name, same size —
+      // the only difference is color: full-strength primary for a theme,
+      // a lighter tint of that same primary for its preset.
+      render: (r) =>
+        r.url ? (
+          <a
+            href={r.url}
+            target="_blank"
+            rel="noreferrer"
+            className={`font-semibold underline-offset-2 hover:underline ${r.isPreset ? "text-primary/60" : "text-primary"}`}
+          >
+            {r.name}
+          </a>
+        ) : (
+          <span className={`font-semibold ${r.isPreset ? "text-primary/60" : "text-primary"}`}>{r.name}</span>
+        ),
       sortValue: (r) => r.name,
     },
     {
       key: "rank",
       header: "Ranking",
       render: (r) =>
-        r.themeStoreRank ? (
-          <span className="font-medium text-zinc-950 dark:text-zinc-50">
-            #{r.themeStoreRank}
-            <span className="ml-1 font-normal text-zinc-500">(page {r.themeStoreRankPage})</span>
+        r.rank ? (
+          <span className={`font-medium ${r.isPreset ? "text-zinc-500" : "text-zinc-950 dark:text-zinc-50"}`}>
+            #{r.rank}
+            <span className={`ml-1 font-normal ${r.isPreset ? "text-zinc-400" : "text-zinc-500"}`}>(page {r.page})</span>
           </span>
-        ) : r.themeStoreCheckedAt && !r.themeStoreError ? (
-          <span className="text-xs text-zinc-400">Not checked yet</span>
-        ) : r.themeStoreCheckedAt ? (
-          <span className="text-xs text-zinc-400">Not listed</span>
         ) : (
-          <span className="text-xs text-zinc-400">Theme Store not checked</span>
+          <span className="text-xs text-zinc-400">{r.rankStatus ? RANK_STATUS_LABEL[r.rankStatus] : "—"}</span>
         ),
-      sortValue: (r) => r.themeStoreRank ?? Infinity,
+      sortValue: (r) => r.rank ?? Infinity,
     },
     {
       key: "rankCheckedAt",
       header: "Checked",
-      render: (r) => (r.themeStoreRankCheckedAt ? formatDateTime(r.themeStoreRankCheckedAt) : <span className="text-zinc-400">—</span>),
-      sortValue: (r) => (r.themeStoreRankCheckedAt ? new Date(r.themeStoreRankCheckedAt).getTime() : 0),
+      render: (r) => (r.checkedAt ? formatDateTime(r.checkedAt) : <span className="text-zinc-400">—</span>),
+      sortValue: (r) => (r.checkedAt ? new Date(r.checkedAt).getTime() : 0),
     },
   ];
 
@@ -338,8 +368,8 @@ export default function DemoStorePage() {
           ) : (
             <ResponsiveTable
               columns={rankingColumns}
-              rows={rankingData.themes}
-              rowKey={(r) => r._id}
+              rows={flattenRankRows(rankingData.themes)}
+              rowKey={(r) => r.id}
               theadClassName="bg-primary-tint text-primary-tint-text"
             />
           )}
