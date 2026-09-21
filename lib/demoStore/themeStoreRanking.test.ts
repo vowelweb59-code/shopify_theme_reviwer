@@ -47,6 +47,24 @@ describe("findThemeStoreRankings", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it("finds a card whose link uses surface_type=industry instead of surface_type=all (an active Collection filter)", async () => {
+    // Regression test: an earlier version of extractCatalogCards required
+    // the literal string "surface_type=all" to recognize a card link, but
+    // a real industry-filtered listing's cards use
+    // `surface_type=industry&surface_detail=<slug>` instead (confirmed
+    // live) — every industry-filtered crawl silently found zero cards on
+    // every page as a result, reporting "no matches" for themes that were
+    // actually there.
+    const html =
+      `<a href="/themes/radian/presets/radian?surface_detail=clothing&surface_inter_position=1&surface_intra_position=1&surface_type=industry">card</a>` +
+      `<a href="/themes/gravity/presets/gravity?surface_detail=clothing&surface_inter_position=1&surface_intra_position=2&surface_type=industry">card</a>`;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => html }) as unknown as typeof fetch;
+
+    const results = await findThemeStoreRankings(new Map([["gravity", new Set(["gravity"])]]), { industry: "clothing" });
+
+    expect(results.get("gravity")).toEqual([{ presetSlug: "gravity", rank: 2, page: 1 }]);
+  });
+
   it("stops after the single page when there's no pagination beyond it", async () => {
     const html = cardHtml([{ baseSlug: "adorn", presetSlug: "adorn" }], 1);
     global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => html }) as unknown as typeof fetch;

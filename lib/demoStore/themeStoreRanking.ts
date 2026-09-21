@@ -10,20 +10,32 @@ const RANK_MAX_PAGES = 200;
 type PageCardEntry = { baseSlug: string; presetSlug: string; page: number };
 
 // Every catalog card links to
-// `/themes/<baseSlug>/presets/<presetSlug>?...&surface_type=all`
-// (confirmed against a real listing) — surface_type=all excludes unrelated
-// nav/filter links that also start with /themes/. Crucially, a theme with
-// multiple named style presets gets ONE separately-ranked card per preset,
-// not a single card for the whole theme (confirmed live: Adorn's Ace/
-// Choice/Closet/Precious and Gravity's Decor/Everbloom/Gold/Mario each
-// have their own card, scattered anywhere across the ~50+ pages, not
-// necessarily near the theme's default listing) — so uniqueness must be
-// keyed on the full (baseSlug, presetSlug) pair, never baseSlug alone. An
-// earlier version of this crawler deduped by baseSlug only, which
-// silently collapsed a multi-preset theme's several distinct cards into
-// one and undercounted every rank after it on the page — a real bug,
-// caught by a user checking the arithmetic (theme found on page 32 with
-// 24 cards/page should rank in the 745-768 range, not below 720).
+// `/themes/<baseSlug>/presets/<presetSlug>?...&surface_inter_position=N&surface_intra_position=M...`
+// (confirmed against a real listing) — requiring both position params
+// present excludes unrelated nav/filter links that also start with
+// /themes/. The exact `surface_type`/`surface_detail` params on that
+// link vary by view and are NOT a reliable card marker: the unfiltered
+// and sort-only views use `surface_type=all`, but an industry-filtered
+// view uses `surface_type=industry&surface_detail=<industry-slug>`
+// instead (confirmed live) — an earlier version of this function
+// required the literal string "surface_type=all", which meant every
+// industry-filtered crawl silently found zero cards on every page and
+// reported "no matches" for themes that were actually there (caught by a
+// user screenshotting a theme that plainly appeared in a real filtered
+// browse, contradicting the app's own "No matches").
+//
+// Crucially, a theme with multiple named style presets gets ONE
+// separately-ranked card per preset, not a single card for the whole
+// theme (confirmed live: Adorn's Ace/Choice/Closet/Precious and
+// Gravity's Decor/Everbloom/Gold/Mario each have their own card,
+// scattered anywhere across the ~50+ pages, not necessarily near the
+// theme's default listing) — so uniqueness must be keyed on the full
+// (baseSlug, presetSlug) pair, never baseSlug alone. An earlier version
+// of this crawler deduped by baseSlug only, which silently collapsed a
+// multi-preset theme's several distinct cards into one and undercounted
+// every rank after it on the page — a real bug, caught by a user
+// checking the arithmetic (theme found on page 32 with 24 cards/page
+// should rank in the 745-768 range, not below 720).
 function extractCatalogCards(html: string, page: number): PageCardEntry[] {
   const entries: PageCardEntry[] = [];
   const seen = new Set<string>();
@@ -32,7 +44,7 @@ function extractCatalogCards(html: string, page: number): PageCardEntry[] {
       onopentag(name, attribs) {
         if (name !== "a") return;
         const href = attribs.href;
-        if (!href || !href.startsWith("/themes/") || !href.includes("surface_type=all")) return;
+        if (!href || !href.startsWith("/themes/") || !href.includes("surface_inter_position=") || !href.includes("surface_intra_position=")) return;
         const match = /^\/themes\/([a-z0-9-]+)\/presets\/([a-z0-9-]+)\?/.exec(href);
         if (!match) return;
         const [, baseSlug, presetSlug] = match;
