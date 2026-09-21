@@ -7,6 +7,14 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // be checked against.
 const themeDemoStorePresetSchema = new Schema({ label: { type: String, required: true }, url: { type: String, required: true } }, { _id: false });
 
+// A Theme Store listing's own named style variants (e.g. Adorn ships as
+// "Adorn", "Ace", "Choice", "Closet", "Precious") — confirmed against a
+// real listing page: each preset gets its own sub-URL
+// (/themes/<slug>/presets/<presetSlug>) but is NOT a separate catalog
+// entry with its own ranking — the public "/themes" catalog only ranks
+// the theme once, via its default preset. Purely informational.
+const themeStorePresetSchema = new Schema({ name: { type: String, required: true }, slug: { type: String, required: true } }, { _id: false });
+
 const themeSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -34,6 +42,7 @@ const themeSchema = new Schema(
     // every audit run.
     themeStoreSlug: { type: String, default: null },
     themeStoreFeatures: { type: [String], default: undefined },
+    themeStorePresets: { type: [themeStorePresetSchema], default: undefined },
     themeStoreCheckedAt: { type: Date, default: null },
     themeStoreError: { type: String, default: null },
     // The Theme Store listing's current live version + when that version

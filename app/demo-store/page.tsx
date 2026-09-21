@@ -34,15 +34,25 @@ type DemoStoreData = {
 // DemoStoreRecord above, which is the ops demo store's install history.
 // "Our themes" here means whatever's tracked in the Themes module
 // (app/themes), not whatever's happened to be live on the demo store.
+type ThemeStorePreset = { name: string; slug: string };
+
 type RankedTheme = {
   _id: string;
   name: string;
   themeStoreSlug: string | null;
   themeStoreCheckedAt: string | null;
   themeStoreError: string | null;
+  themeStorePresets: ThemeStorePreset[] | null;
   themeStoreRank: number | null;
   themeStoreRankPage: number | null;
   themeStoreRankCheckedAt: string | null;
+};
+
+type RankingData = {
+  themes: RankedTheme[];
+  lastCheckedAt: string | null;
+  nextCheckAt: string | null;
+  lastError: string | null;
 };
 
 function formatDateTime(iso: string) {
@@ -72,10 +82,9 @@ export default function DemoStorePage() {
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
 
-  const [rankedThemes, setRankedThemes] = useState<RankedTheme[] | null>(null);
+  const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [rankingLoading, setRankingLoading] = useState(true);
   const [checkingRanking, setCheckingRanking] = useState(false);
-  const [rankingError, setRankingError] = useState<string | null>(null);
 
   function load() {
     fetch("/api/demo-store")
@@ -90,7 +99,7 @@ export default function DemoStorePage() {
     fetch("/api/themes/ranking")
       .then((res) => res.json())
       .then((d) => {
-        setRankedThemes(d.themes);
+        setRankingData(d);
         setRankingLoading(false);
       });
   }
@@ -112,13 +121,8 @@ export default function DemoStorePage() {
 
   async function handleCheckRanking() {
     setCheckingRanking(true);
-    setRankingError(null);
     try {
-      const res = await fetch("/api/themes/check-ranking", { method: "POST" });
-      const body = await res.json();
-      if (!body.ok) setRankingError(body.error ?? "Failed to check ranking.");
-    } catch {
-      setRankingError("Failed to reach the app's own server.");
+      await fetch("/api/themes/check-ranking", { method: "POST" });
     } finally {
       setCheckingRanking(false);
       loadRanking();
@@ -196,27 +200,20 @@ export default function DemoStorePage() {
     {
       key: "theme",
       header: "Theme",
-      render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.name}</span>,
-      sortValue: (r) => r.name,
-    },
-    {
-      key: "themeStore",
-      header: "Theme Store",
       render: (r) =>
-        r.themeStoreSlug && r.themeStoreCheckedAt && !r.themeStoreError ? (
+        r.themeStoreSlug && r.themeStoreRank ? (
           <a
             href={`https://themes.shopify.com/themes/${r.themeStoreSlug}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text underline-offset-2 hover:underline"
+            className="font-medium text-zinc-950 underline-offset-2 hover:underline dark:text-zinc-50"
           >
-            Live on Theme Store
+            {r.name}
           </a>
-        ) : r.themeStoreCheckedAt ? (
-          <span className="text-xs text-zinc-400">Not listed</span>
         ) : (
-          <span className="text-xs text-zinc-400">Not checked</span>
+          <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.name}</span>
         ),
+      sortValue: (r) => r.name,
     },
     {
       key: "rank",
@@ -227,10 +224,36 @@ export default function DemoStorePage() {
             #{r.themeStoreRank}
             <span className="ml-1 font-normal text-zinc-500">(page {r.themeStoreRankPage})</span>
           </span>
+        ) : r.themeStoreCheckedAt && !r.themeStoreError ? (
+          <span className="text-xs text-zinc-400">Not checked yet</span>
+        ) : r.themeStoreCheckedAt ? (
+          <span className="text-xs text-zinc-400">Not listed</span>
+        ) : (
+          <span className="text-xs text-zinc-400">Theme Store not checked</span>
+        ),
+      sortValue: (r) => r.themeStoreRank ?? Infinity,
+    },
+    {
+      key: "presets",
+      header: "Presets",
+      render: (r) =>
+        r.themeStorePresets && r.themeStorePresets.length > 0 ? (
+          <span className="inline-flex flex-wrap justify-end gap-1">
+            {r.themeStorePresets.map((p) => (
+              <a
+                key={p.slug}
+                href={`https://themes.shopify.com/themes/${r.themeStoreSlug}/presets/${p.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 hover:underline dark:text-zinc-300"
+              >
+                {p.name}
+              </a>
+            ))}
+          </span>
         ) : (
           <span className="text-xs text-zinc-400">—</span>
         ),
-      sortValue: (r) => r.themeStoreRank ?? Infinity,
     },
     {
       key: "rankCheckedAt",
@@ -291,8 +314,9 @@ export default function DemoStorePage() {
             <a href="https://themes.shopify.com/themes" target="_blank" rel="noreferrer" className="underline hover:no-underline">
               themes.shopify.com/themes
             </a>{" "}
-            catalog, once it&apos;s listed there. Found by crawling the catalog&apos;s default order page by page — a manual check, since it can mean
-            walking dozens of pages.
+            catalog, once it&apos;s listed there — including its named style presets, if it has any (informational only: the catalog ranks a theme
+            once, not per preset). Checked automatically once a day at a randomized time, same as the demo store poll above; a full crawl can mean
+            walking dozens of pages, so it&apos;s not tied to that same daily check.
           </p>
         </div>
         <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>
@@ -300,23 +324,28 @@ export default function DemoStorePage() {
         </Button>
       </div>
 
-      {rankingError && <p className="text-xs text-status-fail-text">{rankingError}</p>}
-
       {rankingLoading && <p className="text-sm text-zinc-500">Loading…</p>}
 
-      {!rankingLoading && rankedThemes && (
-        <>
-          {rankedThemes.length === 0 ? (
+      {!rankingLoading && rankingData && (
+        <div className="flex flex-col gap-4">
+          <p className="text-xs text-zinc-500">
+            Last checked: {rankingData.lastCheckedAt ? formatDateTime(rankingData.lastCheckedAt) : "never"}
+            {" · "}
+            Next automatic check: {rankingData.nextCheckAt ? formatDateTime(rankingData.nextCheckAt) : "—"}
+            {rankingData.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {rankingData.lastError}</span>}
+          </p>
+
+          {rankingData.themes.length === 0 ? (
             <EmptyState icon={Store} title="No themes yet" description="Add a theme in the Themes tab first." />
           ) : (
             <ResponsiveTable
               columns={rankingColumns}
-              rows={rankedThemes}
+              rows={rankingData.themes}
               rowKey={(r) => r._id}
               theadClassName="bg-primary-tint text-primary-tint-text"
             />
           )}
-        </>
+        </div>
       )}
     </PageContainer>
   );

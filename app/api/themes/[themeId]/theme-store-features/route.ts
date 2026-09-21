@@ -26,6 +26,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
   theme.themeStoreCheckedAt = new Date();
   if (result.ok) {
     theme.themeStoreFeatures = result.features;
+    theme.themeStorePresets = result.presets;
     theme.themeStoreError = null;
     theme.themeStoreVersion = result.latestVersion;
     const releasedAt = result.latestVersionReleasedAt ? new Date(result.latestVersionReleasedAt) : null;

@@ -16,8 +16,10 @@ export function deriveThemeStoreSlug(themeName: string): string {
 
 const THEME_STORE_TIMEOUT_MS = 20_000;
 
+export type ThemeStorePreset = { name: string; slug: string };
+
 export type ThemeStoreFeaturesResult =
-  | { ok: true; slug: string; features: string[]; latestVersion: string | null; latestVersionReleasedAt: string | null }
+  | { ok: true; slug: string; features: string[]; presets: ThemeStorePreset[]; latestVersion: string | null; latestVersionReleasedAt: string | null }
   | { ok: false; slug: string; error: string };
 
 // Every feature name on a real listing page renders as
@@ -54,6 +56,40 @@ function extractFeatureLabels(html: string): string[] {
   parser.write(html);
   parser.end();
   return [...labels];
+}
+
+// A listing's style-variant picker links each preset card as
+// `<a href="https://themes.shopify.com/themes/<slug>/presets/<presetSlug>" aria-label="View <Name>">`
+// (confirmed against a real listing, e.g. Adorn's "Ace"/"Choice"/"Closet"/
+// "Precious" variants) — every other same-shaped href on the page (reviews,
+// version-details modal, locale switcher) lacks a "View ..." aria-label, so
+// requiring both the URL shape and that label avoids false matches. A card
+// can render the same href twice (image + caption), so only the first
+// occurrence per slug counts.
+function extractPresets(html: string): ThemeStorePreset[] {
+  const presets: ThemeStorePreset[] = [];
+  const seen = new Set<string>();
+  const parser = new Parser(
+    {
+      onopentag(name, attribs) {
+        if (name !== "a") return;
+        const href = attribs.href;
+        const ariaLabel = attribs["aria-label"];
+        if (!href || !ariaLabel) return;
+        const hrefMatch = /^https:\/\/themes\.shopify\.com\/themes\/[a-z0-9-]+\/presets\/([a-z0-9-]+)$/.exec(href);
+        const labelMatch = /^View (.+)$/.exec(ariaLabel);
+        if (!hrefMatch || !labelMatch) return;
+        const slug = hrefMatch[1];
+        if (seen.has(slug)) return;
+        seen.add(slug);
+        presets.push({ slug, name: labelMatch[1].trim() });
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+  return presets;
 }
 
 type LatestRelease = { version: string; releasedAt: string | null };
@@ -142,7 +178,15 @@ export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<T
       return { ok: false, slug, error: "Reached a Theme Store page, but couldn't find its Features section — the page layout may have changed." };
     }
     const latestRelease = extractLatestRelease(html);
-    return { ok: true, slug, features, latestVersion: latestRelease?.version ?? null, latestVersionReleasedAt: latestRelease?.releasedAt ?? null };
+    const presets = extractPresets(html);
+    return {
+      ok: true,
+      slug,
+      features,
+      presets,
+      latestVersion: latestRelease?.version ?? null,
+      latestVersionReleasedAt: latestRelease?.releasedAt ?? null,
+    };
   } catch (err) {
     return { ok: false, slug, error: err instanceof Error ? err.message : "Failed to reach the Shopify Theme Store." };
   } finally {

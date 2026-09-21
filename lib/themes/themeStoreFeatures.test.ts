@@ -41,6 +41,14 @@ const REAL_SHAPE_HTML = `
       </ul>
     </details>
   </div>
+  <div id="style-variants">
+    <a href="https://themes.shopify.com/themes/adorn/presets/adorn" aria-label="View Adorn"><picture></picture></a>
+    <a href="https://themes.shopify.com/themes/adorn/presets/adorn" aria-label="View Adorn"><span>Adorn</span></a>
+    <a href="https://themes.shopify.com/themes/adorn/presets/ace" aria-label="View Ace"><picture></picture></a>
+    <a href="https://themes.shopify.com/themes/adorn/presets/ace" aria-label="View Ace"><span>Ace</span></a>
+    <a href="https://themes.shopify.com/themes/adorn/presets/adorn/reviews" aria-label="Read reviews">reviews</a>
+    <a href="https://themes.shopify.com/themes/adorn/presets/adorn?locale=fr">locale switcher, no aria-label</a>
+  </div>
   <div id="ReleaseNotes">
     <div class="tw-flex tw-flex-col tw-gap-xs">
       <div class="tw-flex tw-flex-row tw-gap-xs tw-text-body-lg tw-text-fg-primary">
@@ -69,6 +77,18 @@ describe("fetchThemeStoreFeatureLabels", () => {
     if (result.ok) {
       expect(result.slug).toBe("adorn");
       expect(result.features.sort()).toEqual(["Cart notes", "Gift wrapping", "Trust badges"]);
+    }
+  });
+
+  it("extracts each named style preset, deduping repeated links to the same slug", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => REAL_SHAPE_HTML }) as unknown as typeof fetch;
+    const result = await fetchThemeStoreFeatureLabels("Adorn");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.presets).toEqual([
+        { slug: "adorn", name: "Adorn" },
+        { slug: "ace", name: "Ace" },
+      ]);
     }
   });
 
