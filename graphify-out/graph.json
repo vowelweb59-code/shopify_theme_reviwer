@@ -635,10 +635,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_demostoredata",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "demostoredata"
+      "norm_label": "demostoredata",
+      "id": "app_demo_store_page_demostoredata"
     },
     {
       "label": "DemoStoreRecord",
@@ -648,10 +648,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_demostorerecord",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "demostorerecord"
+      "norm_label": "demostorerecord",
+      "id": "app_demo_store_page_demostorerecord"
     },
     {
       "label": "CoverageResult",
@@ -2767,10 +2767,10 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "models_demo_store_theme_record_demostorethemerecorddoc",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "demostorethemerecorddoc"
+      "norm_label": "demostorethemerecorddoc",
+      "id": "models_demo_store_theme_record_demostorethemerecorddoc"
     },
     {
       "label": "ButtonSize",
@@ -4338,10 +4338,10 @@
       "source_location": "L54",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_demostorepage",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "demostorepage()"
+      "norm_label": "demostorepage()",
+      "id": "app_demo_store_page_demostorepage"
     },
     {
       "label": "durationMs()",
@@ -4350,10 +4350,10 @@
       "source_location": "L42",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_durationms",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "durationms()"
+      "norm_label": "durationms()",
+      "id": "app_demo_store_page_durationms"
     },
     {
       "label": "formatDateTime()",
@@ -4362,10 +4362,10 @@
       "source_location": "L32",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_formatdatetime",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "formatdatetime()"
+      "norm_label": "formatdatetime()",
+      "id": "app_demo_store_page_formatdatetime"
     },
     {
       "label": "formatDuration()",
@@ -4374,10 +4374,10 @@
       "source_location": "L46",
       "_callable": true,
       "_origin": "ast",
-      "id": "app_demo_store_page_formatduration",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "formatduration()"
+      "norm_label": "formatduration()",
+      "id": "app_demo_store_page_formatduration"
     },
     {
       "label": "composedHeadingEntries()",
@@ -7470,16 +7470,16 @@
       "source_location": "L20",
       "_callable": true,
       "_origin": "ast",
-      "id": "lib_demostore_checkthemestorelistings_checkpendingthemestorelistings",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "checkpendingthemestorelistings()"
+      "norm_label": "checkpendingthemestorelistings()",
+      "id": "lib_demostore_checkthemestorelistings_checkpendingthemestorelistings"
     },
     {
       "label": "runDemoStoreCheck()",
       "file_type": "code",
       "source_file": "lib/demoStore/runCheck.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
       "id": "lib_demostore_runcheck_rundemostorecheck",
@@ -10136,10 +10136,10 @@
       "source_file": "app/demo-store/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app_demo_store_page",
       "community": 22,
       "community_name": "demo-store/page.tsx",
-      "norm_label": "demo-store/page.tsx"
+      "norm_label": "demo-store/page.tsx",
+      "id": "app_demo_store_page"
     },
     {
       "label": "cross-file/index.ts",
@@ -14426,10 +14426,10 @@
       "source_file": "lib/demoStore/checkThemeStoreListings.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "lib_demostore_checkthemestorelistings",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "checkthemestorelistings.ts"
+      "norm_label": "checkthemestorelistings.ts",
+      "id": "lib_demostore_checkthemestorelistings"
     },
     {
       "label": "runCheck.ts",
@@ -14470,10 +14470,10 @@
       "source_file": "models/demo-store-theme-record.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "models_demo_store_theme_record",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "demo-store-theme-record.ts"
+      "norm_label": "demo-store-theme-record.ts",
+      "id": "models_demo_store_theme_record"
     },
     {
       "label": "DemoStoreThemeRecord",
@@ -14481,10 +14481,10 @@
       "source_file": "models/demo-store-theme-record.ts",
       "source_location": "L36",
       "_origin": "ast",
-      "id": "models_demo_store_theme_record_demostorethemerecord",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "demostorethemerecord"
+      "norm_label": "demostorethemerecord",
+      "id": "models_demo_store_theme_record_demostorethemerecord"
     },
     {
       "label": "demoStoreThemeRecordSchema",
@@ -14492,10 +14492,10 @@
       "source_file": "models/demo-store-theme-record.ts",
       "source_location": "L10",
       "_origin": "ast",
-      "id": "models_demo_store_theme_record_demostorethemerecordschema",
       "community": 62,
       "community_name": "themeStoreFeatures.ts",
-      "norm_label": "demostorethemerecordschema"
+      "norm_label": "demostorethemerecordschema",
+      "id": "models_demo_store_theme_record_demostorethemerecordschema"
     },
     {
       "label": "Button.tsx",
@@ -16793,9 +16793,9 @@
       "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page_demostorepage",
-      "target": "app_demo_store_page_formatdatetime",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_formatdatetime"
     },
     {
       "relation": "calls",
@@ -16805,9 +16805,9 @@
       "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page_demostorepage",
-      "target": "app_demo_store_page_durationms",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_durationms"
     },
     {
       "relation": "calls",
@@ -16817,9 +16817,9 @@
       "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page_demostorepage",
-      "target": "app_demo_store_page_formatduration",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_formatduration"
     },
     {
       "relation": "calls",
@@ -17979,7 +17979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/demoStore/runCheck.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_demostore_runcheck_rundemostorecheck",
@@ -17991,7 +17991,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/demoStore/runCheck.ts",
-      "source_location": "L26",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_demostore_runcheck_rundemostorecheck",
@@ -22334,9 +22334,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_shell_pagecontainer_pagecontainer",
-      "confidence_score": 1.0
+      "target": "app_components_shell_pagecontainer_pagecontainer"
     },
     {
       "relation": "imports",
@@ -22346,9 +22346,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_button_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button_button"
     },
     {
       "relation": "imports",
@@ -22358,9 +22358,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_table_responsivetable",
-      "confidence_score": 1.0
+      "target": "app_components_ui_table_responsivetable"
     },
     {
       "relation": "imports",
@@ -22370,9 +22370,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_table_tablecolumn",
-      "confidence_score": 1.0
+      "target": "app_components_ui_table_tablecolumn"
     },
     {
       "relation": "imports",
@@ -22382,9 +22382,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_emptystate_emptystate",
-      "confidence_score": 1.0
+      "target": "app_components_ui_emptystate_emptystate"
     },
     {
       "relation": "imports",
@@ -25226,9 +25226,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_demostore_checkthemestorelistings",
-      "target": "models_demo_store_theme_record_demostorethemerecord",
-      "confidence_score": 1.0
+      "target": "models_demo_store_theme_record_demostorethemerecord"
     },
     {
       "relation": "imports",
@@ -25238,9 +25238,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_demostore_checkthemestorelistings",
-      "target": "lib_themes_themestorefeatures_fetchthemestorefeaturelabels",
-      "confidence_score": 1.0
+      "target": "lib_themes_themestorefeatures_fetchthemestorefeaturelabels"
     },
     {
       "relation": "imports",
@@ -30458,9 +30458,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_shell_pagecontainer",
-      "confidence_score": 1.0
+      "target": "app_components_shell_pagecontainer"
     },
     {
       "relation": "imports_from",
@@ -30470,9 +30470,9 @@
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_button",
-      "confidence_score": 1.0
+      "target": "app_components_ui_button"
     },
     {
       "relation": "imports_from",
@@ -30482,9 +30482,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_table",
-      "confidence_score": 1.0
+      "target": "app_components_ui_table"
     },
     {
       "relation": "imports_from",
@@ -30494,9 +30494,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_components_ui_emptystate",
-      "confidence_score": 1.0
+      "target": "app_components_ui_emptystate"
     },
     {
       "relation": "imports_from",
@@ -32318,9 +32318,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_demostore_checkthemestorelistings",
-      "target": "models_demo_store_theme_record",
-      "confidence_score": 1.0
+      "target": "models_demo_store_theme_record"
     },
     {
       "relation": "imports_from",
@@ -32330,9 +32330,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_demostore_checkthemestorelistings",
-      "target": "lib_themes_themestorefeatures",
-      "confidence_score": 1.0
+      "target": "lib_themes_themestorefeatures"
     },
     {
       "relation": "imports_from",
@@ -35960,9 +35960,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_demostorerecord",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_demostorerecord"
     },
     {
       "relation": "contains",
@@ -35971,9 +35971,9 @@
       "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_demostoredata",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_demostoredata"
     },
     {
       "relation": "contains",
@@ -35982,9 +35982,9 @@
       "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_formatdatetime",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_formatdatetime"
     },
     {
       "relation": "contains",
@@ -35993,9 +35993,9 @@
       "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_durationms",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_durationms"
     },
     {
       "relation": "contains",
@@ -36004,9 +36004,9 @@
       "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_formatduration",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_formatduration"
     },
     {
       "relation": "contains",
@@ -36015,9 +36015,9 @@
       "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "app_demo_store_page",
-      "target": "app_demo_store_page_demostorepage",
-      "confidence_score": 1.0
+      "target": "app_demo_store_page_demostorepage"
     },
     {
       "relation": "contains",
@@ -39106,15 +39106,15 @@
       "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "lib_demostore_checkthemestorelistings",
-      "target": "lib_demostore_checkthemestorelistings_checkpendingthemestorelistings",
-      "confidence_score": 1.0
+      "target": "lib_demostore_checkthemestorelistings_checkpendingthemestorelistings"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/demoStore/runCheck.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_demostore_runcheck",
@@ -43957,9 +43957,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_demo_store_theme_record",
-      "target": "models_demo_store_theme_record_demostorethemerecordschema",
-      "confidence_score": 1.0
+      "target": "models_demo_store_theme_record_demostorethemerecordschema"
     },
     {
       "relation": "contains",
@@ -43968,9 +43968,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_demo_store_theme_record",
-      "target": "models_demo_store_theme_record_demostorethemerecorddoc",
-      "confidence_score": 1.0
+      "target": "models_demo_store_theme_record_demostorethemerecorddoc"
     },
     {
       "relation": "contains",
@@ -43979,9 +43979,9 @@
       "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "models_demo_store_theme_record",
-      "target": "models_demo_store_theme_record_demostorethemerecord",
-      "confidence_score": 1.0
+      "target": "models_demo_store_theme_record_demostorethemerecord"
     },
     {
       "relation": "contains",
@@ -46051,5 +46051,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "48fd7487d06c209194df676bcdc88c17c6930a6a"
+  "built_at_commit": "43ad3fd280053010b5085f4d913405aa3a21fb17"
 }

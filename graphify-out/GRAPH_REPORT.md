@@ -1,7 +1,7 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-21)
 
 ## Corpus Check
-- 271 files · ~1,570,065 words
+- 271 files · ~1,570,087 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `48fd7487`
+- Built from commit: `43ad3fd2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -100,14 +100,14 @@
 10. `POST()` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/health/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/enhancements/route.ts → lib/db/connect.ts
 - `PATCH()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/enhancements/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/health/route.ts → lib/db/connect.ts
-- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  scripts/seed-requirements.ts → lib/db/connect.ts
 - `GET()` --calls--> `featureStatus`  [EXTRACTED]
   app/api/available-features/route.ts → lib/audit/availableFeatures.ts
 
@@ -377,7 +377,7 @@ Cohesion: 0.44
 Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), composeTemplateMainContent(), orderedSectionTypes(), resolveLayoutFile(), templateBaseName()
 
 ## Knowledge Gaps
-- **443 isolated node(s):** `DemoStoreRecord`, `DemoStoreData`, `demoStoreThemeRecordSchema`, `DemoStoreThemeRecordDoc`, `SchemaNameContext` (+438 more)
+- **443 isolated node(s):** `SchemaNameContext`, `SchemaSettingsContext`, `EngineVersions`, `ReadinessStatus`, `SortKey` (+438 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -385,14 +385,14 @@ Nodes (7): collectRenderedSnippets(), ComposedTemplate, composeTemplate(), compo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `isValidObjectId`, `oauth.ts`, `sheetsExport.ts`, `readiness/route.ts`, `runRules.ts`, `seed-rules.ts`, `enhancement-point.ts`, `diffFindings.ts`, `[id]/export/google-sheet/route.ts`, `finding.ts`, `[id]/export/route.ts`, `[themeId]/route.ts`, `themeStoreFeatures.ts`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `pageSpeed.ts` to `executeAuditRun.ts`, `ReportContent.tsx`, `ThemeDetailTabs.tsx`, `findings.tsx`, `OverviewPanel.tsx`, `insights/page.tsx`, `[themeId]/route.ts`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+- **Why does `devDependencies` connect `devDependencies` to `package.json`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `DemoStoreRecord`, `DemoStoreData`, `demoStoreThemeRecordSchema` to the rest of the system?**
+- **What connects `SchemaNameContext`, `SchemaSettingsContext`, `EngineVersions` to the rest of the system?**
   _443 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
