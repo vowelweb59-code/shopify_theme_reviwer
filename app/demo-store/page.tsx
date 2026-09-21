@@ -20,6 +20,9 @@ type DemoStoreRecord = {
   themeStoreListed: boolean | null;
   themeStoreSlug: string | null;
   themeStoreCheckedAt: string | null;
+  themeStoreRank: number | null;
+  themeStoreRankPage: number | null;
+  themeStoreRankCheckedAt: string | null;
 };
 
 type DemoStoreData = {
@@ -55,6 +58,8 @@ export default function DemoStorePage() {
   const [data, setData] = useState<DemoStoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [checkingRanking, setCheckingRanking] = useState(false);
+  const [rankingError, setRankingError] = useState<string | null>(null);
 
   function load() {
     fetch("/api/demo-store")
@@ -75,6 +80,21 @@ export default function DemoStorePage() {
       await fetch("/api/demo-store/check", { method: "POST" });
     } finally {
       setChecking(false);
+      load();
+    }
+  }
+
+  async function handleCheckRanking() {
+    setCheckingRanking(true);
+    setRankingError(null);
+    try {
+      const res = await fetch("/api/demo-store/check-ranking", { method: "POST" });
+      const body = await res.json();
+      if (!body.ok) setRankingError(body.error ?? "Failed to check ranking.");
+    } catch {
+      setRankingError("Failed to reach the app's own server.");
+    } finally {
+      setCheckingRanking(false);
       load();
     }
   }
@@ -146,6 +166,63 @@ export default function DemoStorePage() {
     },
   ];
 
+  // One row per distinct theme id (not per history period, unlike the
+  // table above) — a theme's Theme Store rank doesn't depend on which
+  // stretch of demo-store time it's being viewed from.
+  const rankingRows = data
+    ? Array.from(new Map(data.records.map((r) => [r.shopifyThemeId, r])).values()).sort(
+        (a, b) => (a.themeStoreRank ?? Infinity) - (b.themeStoreRank ?? Infinity)
+      )
+    : [];
+
+  const rankingColumns: TableColumn<DemoStoreRecord>[] = [
+    {
+      key: "theme",
+      header: "Theme",
+      render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.themeName}</span>,
+      sortValue: (r) => r.themeName,
+    },
+    {
+      key: "themeStore",
+      header: "Theme Store",
+      render: (r) =>
+        r.themeStoreListed ? (
+          <a
+            href={`https://themes.shopify.com/themes/${r.themeStoreSlug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text underline-offset-2 hover:underline"
+          >
+            Live on Theme Store
+          </a>
+        ) : (
+          <span className="text-xs text-zinc-400">Not listed yet</span>
+        ),
+    },
+    {
+      key: "rank",
+      header: "Ranking",
+      render: (r) =>
+        r.themeStoreRank ? (
+          <span className="font-medium text-zinc-950 dark:text-zinc-50">
+            #{r.themeStoreRank}
+            <span className="ml-1 font-normal text-zinc-500">(page {r.themeStoreRankPage})</span>
+          </span>
+        ) : r.themeStoreListed ? (
+          <span className="text-xs text-zinc-400">Not checked yet</span>
+        ) : (
+          <span className="text-xs text-zinc-400">—</span>
+        ),
+      sortValue: (r) => r.themeStoreRank ?? Infinity,
+    },
+    {
+      key: "rankCheckedAt",
+      header: "Checked",
+      render: (r) => (r.themeStoreRankCheckedAt ? formatDateTime(r.themeStoreRankCheckedAt) : <span className="text-zinc-400">—</span>),
+      sortValue: (r) => (r.themeStoreRankCheckedAt ? new Date(r.themeStoreRankCheckedAt).getTime() : 0),
+    },
+  ];
+
   return (
     <PageContainer>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -181,6 +258,36 @@ export default function DemoStorePage() {
             <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record the store's currently live theme." />
           ) : (
             <ResponsiveTable columns={columns} rows={data.records} rowKey={(r) => r._id} theadClassName="bg-primary-tint text-primary-tint-text" />
+          )}
+
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Theme Store Ranking</h2>
+              <p className="mt-1 max-w-2xl text-sm text-zinc-500">
+                Where each of these themes sits in the public{" "}
+                <a href="https://themes.shopify.com/themes" target="_blank" rel="noreferrer" className="underline hover:no-underline">
+                  themes.shopify.com/themes
+                </a>{" "}
+                catalog, once it&apos;s listed. Found by crawling the catalog&apos;s default order page by page — a manual check, not part of the daily
+                poll, since it can mean walking dozens of pages.
+              </p>
+            </div>
+            <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>
+              Check Ranking
+            </Button>
+          </div>
+
+          {rankingError && <p className="text-xs text-status-fail-text">{rankingError}</p>}
+
+          {rankingRows.length === 0 ? (
+            <EmptyState icon={Store} title="Nothing to rank yet" description="No demo-store theme has been confirmed on the Theme Store yet." />
+          ) : (
+            <ResponsiveTable
+              columns={rankingColumns}
+              rows={rankingRows}
+              rowKey={(r) => String(r.shopifyThemeId)}
+              theadClassName="bg-primary-tint text-primary-tint-text"
+            />
           )}
         </div>
       )}
