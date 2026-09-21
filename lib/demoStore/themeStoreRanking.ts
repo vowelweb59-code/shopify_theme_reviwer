@@ -7,16 +7,25 @@ const RANK_TIMEOUT_MS = 20_000;
 // something absurd shouldn't turn one click into thousands of requests.
 const RANK_MAX_PAGES = 200;
 
-type PageThemeEntry = { slug: string; page: number };
+type PageCardEntry = { baseSlug: string; presetSlug: string; page: number };
 
-// Every theme card on a listing page links to
-// `/themes/<slug>/presets/<slug>?...&surface_type=all` (confirmed against
-// a real listing) — surface_type=all excludes unrelated nav/filter links
-// that also start with /themes/. A card can render more than one <a> to
-// the same slug (image + title), so only the first occurrence per page
-// counts toward that page's order.
-function extractThemeCardSlugs(html: string, page: number): PageThemeEntry[] {
-  const entries: PageThemeEntry[] = [];
+// Every catalog card links to
+// `/themes/<baseSlug>/presets/<presetSlug>?...&surface_type=all`
+// (confirmed against a real listing) — surface_type=all excludes unrelated
+// nav/filter links that also start with /themes/. Crucially, a theme with
+// multiple named style presets gets ONE separately-ranked card per preset,
+// not a single card for the whole theme (confirmed live: Adorn's Ace/
+// Choice/Closet/Precious and Gravity's Decor/Everbloom/Gold/Mario each
+// have their own card, scattered anywhere across the ~50+ pages, not
+// necessarily near the theme's default listing) — so uniqueness must be
+// keyed on the full (baseSlug, presetSlug) pair, never baseSlug alone. An
+// earlier version of this crawler deduped by baseSlug only, which
+// silently collapsed a multi-preset theme's several distinct cards into
+// one and undercounted every rank after it on the page — a real bug,
+// caught by a user checking the arithmetic (theme found on page 32 with
+// 24 cards/page should rank in the 745-768 range, not below 720).
+function extractCatalogCards(html: string, page: number): PageCardEntry[] {
+  const entries: PageCardEntry[] = [];
   const seen = new Set<string>();
   const parser = new Parser(
     {
@@ -24,12 +33,13 @@ function extractThemeCardSlugs(html: string, page: number): PageThemeEntry[] {
         if (name !== "a") return;
         const href = attribs.href;
         if (!href || !href.startsWith("/themes/") || !href.includes("surface_type=all")) return;
-        const match = /^\/themes\/([a-z0-9-]+)\//.exec(href);
+        const match = /^\/themes\/([a-z0-9-]+)\/presets\/([a-z0-9-]+)\?/.exec(href);
         if (!match) return;
-        const slug = match[1];
-        if (seen.has(slug)) return;
-        seen.add(slug);
-        entries.push({ slug, page });
+        const [, baseSlug, presetSlug] = match;
+        const key = `${baseSlug}/${presetSlug}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        entries.push({ baseSlug, presetSlug, page });
       },
     },
     { decodeEntities: true }
@@ -75,37 +85,47 @@ async function fetchListingPage(page: number): Promise<string> {
   }
 }
 
-export type ThemeRankResult = { rank: number; page: number };
+export type CatalogRankResult = { presetSlug: string; rank: number; page: number };
 
 /**
  * Crawls the public Shopify Theme Store's default "/themes" catalog,
- * page by page, to find each of the given slugs' overall position in it —
- * the closest thing to a "ranking" the storefront exposes (there's no
- * per-theme rank endpoint, only this paginated default sort). A single
- * pass serves every slug at once and stops as soon as all of them have
- * been found, or the listing's own last page is reached, so checking a
- * theme that ranks on page 1 costs one request, not fifty-four. Throws on
- * any individual page fetch failure — a partial crawl can't tell "ranks
+ * page by page, looking for each requested theme's own default listing
+ * AND every one of its known alternate style presets — the closest thing
+ * to a "ranking" the storefront exposes (there's no per-theme rank
+ * endpoint, only this paginated default sort). `targets` maps a theme's
+ * base Theme Store slug to every preset slug expected for it (at least
+ * its own default listing, i.e. presetSlug === baseSlug, plus whatever
+ * lib/themes/themeStoreFeatures.ts's "Check Theme Store" action already
+ * found for it — see that module's extractPresets); a theme with no
+ * known alternates still short-circuits as soon as its one card turns
+ * up. The crawl stops once every expected pair across all targets has
+ * been found, or the listing's own last page is reached. Throws on any
+ * individual page fetch failure — a partial crawl can't tell "ranks
  * beyond where we stopped" apart from "isn't listed at all", so the
  * caller gets nothing rather than a misleadingly confident answer.
  */
-export async function findThemeStoreRankings(slugs: string[]): Promise<Map<string, ThemeRankResult | null>> {
-  const results = new Map<string, ThemeRankResult | null>(slugs.map((s) => [s, null]));
-  const targets = new Set(slugs);
-  if (targets.size === 0) return results;
+export async function findThemeStoreRankings(targets: Map<string, Set<string>>): Promise<Map<string, CatalogRankResult[]>> {
+  const results = new Map<string, CatalogRankResult[]>([...targets.keys()].map((s) => [s, []]));
+  const remaining = new Map<string, Set<string>>([...targets].map(([slug, presets]) => [slug, new Set(presets)]));
+  for (const [slug, presets] of [...remaining]) {
+    if (presets.size === 0) remaining.delete(slug);
+  }
+  if (remaining.size === 0) return results;
 
   const firstPageHtml = await fetchListingPage(1);
   const lastPage = Math.min(extractLastPage(firstPageHtml), RANK_MAX_PAGES);
 
   let overallIndex = 0;
   let html = firstPageHtml;
-  for (let page = 1; page <= lastPage && targets.size > 0; page++) {
+  for (let page = 1; page <= lastPage && remaining.size > 0; page++) {
     if (page > 1) html = await fetchListingPage(page);
-    for (const entry of extractThemeCardSlugs(html, page)) {
+    for (const entry of extractCatalogCards(html, page)) {
       overallIndex += 1;
-      if (targets.has(entry.slug)) {
-        results.set(entry.slug, { rank: overallIndex, page });
-        targets.delete(entry.slug);
+      const expectedPresets = remaining.get(entry.baseSlug);
+      if (expectedPresets?.has(entry.presetSlug)) {
+        results.get(entry.baseSlug)!.push({ presetSlug: entry.presetSlug, rank: overallIndex, page });
+        expectedPresets.delete(entry.presetSlug);
+        if (expectedPresets.size === 0) remaining.delete(entry.baseSlug);
       }
     }
   }

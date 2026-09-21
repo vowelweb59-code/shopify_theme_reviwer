@@ -8,12 +8,24 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 const themeDemoStorePresetSchema = new Schema({ label: { type: String, required: true }, url: { type: String, required: true } }, { _id: false });
 
 // A Theme Store listing's own named style variants (e.g. Adorn ships as
-// "Adorn", "Ace", "Choice", "Closet", "Precious") — confirmed against a
-// real listing page: each preset gets its own sub-URL
-// (/themes/<slug>/presets/<presetSlug>) but is NOT a separate catalog
-// entry with its own ranking — the public "/themes" catalog only ranks
-// the theme once, via its default preset. Purely informational.
-const themeStorePresetSchema = new Schema({ name: { type: String, required: true }, slug: { type: String, required: true } }, { _id: false });
+// "Adorn", "Ace", "Choice", "Closet", "Precious") — confirmed against
+// real listings: each preset gets its own sub-URL
+// (/themes/<slug>/presets/<presetSlug>) AND its own separately-ranked
+// card in the public "/themes" catalog, scattered anywhere across the
+// ~50+ pages (not necessarily near the theme's default listing) — e.g.
+// Gravity's presets landed on pages 32, 47, 49, 51 and 53. name/slug come
+// from lib/themes/themeStoreFeatures.ts's "Check Theme Store" action;
+// rank/page come from the separate "Check Ranking" crawl (see
+// lib/demoStore/themeStoreRanking.ts), null until that's run.
+const themeStorePresetSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    slug: { type: String, required: true },
+    rank: { type: Number, default: null },
+    page: { type: Number, default: null },
+  },
+  { _id: false }
+);
 
 const themeSchema = new Schema(
   {
@@ -51,13 +63,15 @@ const themeSchema = new Schema(
     // real "last updated" date instead of this app's own audit cadence.
     themeStoreVersion: { type: String, default: null },
     themeStoreVersionReleasedAt: { type: Date, default: null },
-    // This theme's overall position in the public Theme Store's default
-    // "/themes" catalog listing (see lib/demoStore/themeStoreRanking.ts —
-    // shared with the demo-store module since it's the same public
-    // catalog, nothing demo-store-specific about the crawl itself). Only
-    // meaningful once themeStoreSlug resolves to a real listing; set by a
-    // manual "Check Ranking" action, not the Theme Store feature check
-    // above — a full catalog crawl can mean dozens of page fetches.
+    // This theme's own default listing's overall position in the public
+    // Theme Store's "/themes" catalog (see lib/demoStore/themeStoreRanking.ts
+    // — shared with the demo-store module since it's the same public
+    // catalog, nothing demo-store-specific about the crawl itself); each
+    // alternate preset in themeStorePresets carries its own rank/page
+    // instead, since presets are separately ranked too. Only meaningful
+    // once themeStoreSlug resolves to a real listing; set by a manual
+    // "Check Ranking" action, not the Theme Store feature check above — a
+    // full catalog crawl can mean dozens of page fetches.
     themeStoreRank: { type: Number, default: null },
     themeStoreRankPage: { type: Number, default: null },
     themeStoreRankCheckedAt: { type: Date, default: null },

@@ -34,7 +34,7 @@ type DemoStoreData = {
 // DemoStoreRecord above, which is the ops demo store's install history.
 // "Our themes" here means whatever's tracked in the Themes module
 // (app/themes), not whatever's happened to be live on the demo store.
-type ThemeStorePreset = { name: string; slug: string };
+type ThemeStorePreset = { name: string; slug: string; rank: number | null; page: number | null };
 
 type RankedTheme = {
   _id: string;
@@ -238,16 +238,16 @@ export default function DemoStorePage() {
       header: "Presets",
       render: (r) =>
         r.themeStorePresets && r.themeStorePresets.length > 0 ? (
-          <span className="inline-flex flex-wrap justify-end gap-1">
+          <span className="flex flex-col items-end gap-1">
             {r.themeStorePresets.map((p) => (
               <a
                 key={p.slug}
                 href={`https://themes.shopify.com/themes/${r.themeStoreSlug}/presets/${p.slug}`}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 hover:underline dark:text-zinc-300"
+                className="whitespace-nowrap rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 hover:underline dark:text-zinc-300"
               >
-                {p.name}
+                {p.name} {p.rank ? <span className="text-zinc-400">#{p.rank} (p{p.page})</span> : <span className="text-zinc-400">unranked</span>}
               </a>
             ))}
           </span>
@@ -314,9 +314,10 @@ export default function DemoStorePage() {
             <a href="https://themes.shopify.com/themes" target="_blank" rel="noreferrer" className="underline hover:no-underline">
               themes.shopify.com/themes
             </a>{" "}
-            catalog, once it&apos;s listed there — including its named style presets, if it has any (informational only: the catalog ranks a theme
-            once, not per preset). Checked automatically once a day at a randomized time, same as the demo store poll above; a full crawl can mean
-            walking dozens of pages, so it&apos;s not tied to that same daily check.
+            catalog, once it&apos;s listed there — including each of its named style presets separately, since a preset gets its own ranked card
+            too (they can land on completely different pages from the theme&apos;s own default listing). Checked automatically once a day at a
+            randomized time, same as the demo store poll above; a full crawl can mean walking dozens of pages, so it&apos;s not tied to that same
+            daily check.
           </p>
         </div>
         <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>

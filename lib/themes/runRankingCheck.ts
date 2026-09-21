@@ -8,20 +8,24 @@ export type RankingCheckResult = { ok: true; checked: number } | { ok: false; er
 /**
  * Crawls the public Theme Store catalog for every Theme confirmed listed
  * there (themeStoreSlug resolved successfully via the per-theme "Check
- * Theme Store" action) and stamps its overall catalog position onto the
- * Theme document. The one place that owns this — called by both the
- * daily scheduler and the manual "Check Ranking" button, same split as
- * lib/demoStore/runCheck.ts. A crawl failure (the whole catalog walk
- * throws, e.g. a network blip) is recorded as lastError without
- * touching any Theme's existing rank — better to keep yesterday's known
- * rank than overwrite it with nothing.
+ * Theme Store" action) and stamps its own default listing's overall
+ * catalog position onto the Theme document, plus each of its known
+ * alternate presets' own position (themeStorePresets[].rank/page) — a
+ * multi-preset theme gets a separately-ranked card per preset (confirmed
+ * live), so those aren't derived from the theme's rank, they're looked
+ * up independently in the same crawl pass. The one place that owns
+ * this — called by both the daily scheduler and the manual "Check
+ * Ranking" button, same split as lib/demoStore/runCheck.ts. A crawl
+ * failure (the whole catalog walk throws, e.g. a network blip) is
+ * recorded as lastError without touching any Theme's existing rank —
+ * better to keep yesterday's known rank than overwrite it with nothing.
  */
 export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
   await connectToDatabase();
   const now = new Date();
 
   const listed = await Theme.find({ themeStoreSlug: { $ne: null }, themeStoreCheckedAt: { $ne: null }, themeStoreError: null }).select(
-    "themeStoreSlug"
+    "themeStoreSlug themeStorePresets"
   );
 
   if (listed.length === 0) {
@@ -30,15 +34,30 @@ export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
   }
 
   try {
-    const slugs = listed.map((t) => t.themeStoreSlug as string);
-    const rankings = await findThemeStoreRankings(slugs);
+    const targets = new Map<string, Set<string>>();
+    for (const theme of listed) {
+      const slug = theme.themeStoreSlug as string;
+      const presetSlugs = (theme.themeStorePresets ?? []).map((p: { slug: string }) => p.slug);
+      targets.set(slug, new Set([slug, ...presetSlugs]));
+    }
+
+    const rankings = await findThemeStoreRankings(targets);
 
     await Promise.all(
       listed.map((theme) => {
-        const found = rankings.get(theme.themeStoreSlug as string) ?? null;
-        theme.themeStoreRank = found?.rank ?? null;
-        theme.themeStoreRankPage = found?.page ?? null;
+        const slug = theme.themeStoreSlug as string;
+        const found = rankings.get(slug) ?? [];
+        const ownListing = found.find((f) => f.presetSlug === slug);
+        theme.themeStoreRank = ownListing?.rank ?? null;
+        theme.themeStoreRankPage = ownListing?.page ?? null;
         theme.themeStoreRankCheckedAt = now;
+        if (theme.themeStorePresets) {
+          for (const preset of theme.themeStorePresets) {
+            const match = found.find((f) => f.presetSlug === preset.slug);
+            preset.rank = match?.rank ?? null;
+            preset.page = match?.page ?? null;
+          }
+        }
         return theme.save();
       })
     );
