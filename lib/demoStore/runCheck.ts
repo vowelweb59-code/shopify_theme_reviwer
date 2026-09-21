@@ -14,19 +14,19 @@ import { checkPendingThemeStoreListings } from "./checkThemeStoreListings";
  * lastError instead. Called by both the daily scheduler and the manual
  * "Check Now" button, so this is the one place that owns the reconciliation
  * logic. Also re-checks whether any not-yet-confirmed theme has since gone
- * live on the public Theme Store (see checkPendingThemeStoreListings) —
- * unconditionally, since that's a separate external fetch unrelated to
- * whether today's demo-store poll itself succeeded.
+ * live on the public Theme Store (see checkPendingThemeStoreListings), run
+ * last so a brand-new history record created by this same reconciliation
+ * (a theme swap just observed for the first time) gets its first Theme
+ * Store check immediately instead of waiting for the next cycle.
  */
 export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
   await connectToDatabase();
   const result = await fetchLiveDemoStoreTheme();
   const now = new Date();
 
-  await checkPendingThemeStoreListings();
-
   if (!result.ok) {
     await DemoStoreCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: result.error }, { upsert: true });
+    await checkPendingThemeStoreListings();
     return result;
   }
 
@@ -52,5 +52,6 @@ export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
   }
 
   await DemoStoreCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: null }, { upsert: true });
+  await checkPendingThemeStoreListings();
   return result;
 }
