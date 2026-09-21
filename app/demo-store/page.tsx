@@ -201,7 +201,7 @@ export default function DemoStorePage() {
       key: "theme",
       header: "Theme",
       render: (r) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {r.themeStoreSlug && r.themeStoreRank ? (
             <a
               href={`https://themes.shopify.com/themes/${r.themeStoreSlug}`}
@@ -214,18 +214,22 @@ export default function DemoStorePage() {
           ) : (
             <span className="font-semibold text-primary">{r.name}</span>
           )}
-          {r.themeStorePresets?.map((p) => (
-            <a
-              key={p.slug}
-              href={`https://themes.shopify.com/themes/${r.themeStoreSlug}/presets/${p.slug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="pl-3 text-xs text-zinc-500 hover:underline dark:text-zinc-400"
-            >
-              {p.name}
-              {p.rank ? ` — #${p.rank} (page ${p.page})` : " — unranked"}
-            </a>
-          ))}
+          {r.themeStorePresets && r.themeStorePresets.length > 0 && (
+            <div className="flex flex-col gap-1 border-l-2 border-primary/20 pl-2.5">
+              {r.themeStorePresets.map((p) => (
+                <a
+                  key={p.slug}
+                  href={`https://themes.shopify.com/themes/${r.themeStoreSlug}/presets/${p.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-baseline gap-1.5 text-xs font-medium text-primary/70 hover:underline"
+                >
+                  {p.name}
+                  <span className="font-normal text-primary/50">{p.rank ? `#${p.rank} (page ${p.page})` : "unranked"}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       ),
       sortValue: (r) => r.name,
