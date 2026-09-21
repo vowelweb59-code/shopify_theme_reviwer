@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "models/theme.ts": {
-    "mtime": 1789984376.276626,
-    "ast_hash": "d850d86964b7dcda8e9cafed3a72f0b8",
+    "mtime": 1789988929.1626234,
+    "ast_hash": "09990594e7d8fc1b91b42bae64e5631a",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/theme-store-features/route.ts": {
-    "mtime": 1789983735.5619555,
-    "ast_hash": "1980746ea35f5ff404dca0b614e58215",
+    "mtime": 1789989398.762066,
+    "ast_hash": "7686b8c80b637a2096f17996ab2040b2",
     "semantic_hash": ""
   },
   "lib/audit/availableFeatures.test.ts": {
@@ -1350,13 +1350,13 @@
     "semantic_hash": ""
   },
   "lib/themes/themeStoreFeatures.test.ts": {
-    "mtime": 1789983749.0227797,
-    "ast_hash": "a208846565dc4bfc3c83b8365c25ab88",
+    "mtime": 1789989063.8736897,
+    "ast_hash": "73b872666c46d643ca414f07b7996a03",
     "semantic_hash": ""
   },
   "lib/themes/themeStoreFeatures.ts": {
-    "mtime": 1789983732.439512,
-    "ast_hash": "a8e90207440fb4e950477f505b917eb8",
+    "mtime": 1789988944.629557,
+    "ast_hash": "68b6eb10013f485e00a81de942b19800",
     "semantic_hash": ""
   },
   "app/themes/_components/FeatureMatrixTable.tsx": {
@@ -1385,8 +1385,8 @@
     "semantic_hash": ""
   },
   "app/demo-store/page.tsx": {
-    "mtime": 1789986086.88397,
-    "ast_hash": "9d2d2fcbb4b81be51e82f3f8ff57c46a",
+    "mtime": 1789989239.174255,
+    "ast_hash": "7eba79099e66ff45e61a8d0e5a1ad4ec",
     "semantic_hash": ""
   },
   "instrumentation.ts": {
@@ -1435,8 +1435,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/ranking/route.ts": {
-    "mtime": 1789983700.7500746,
-    "ast_hash": "36bae92c719ed03690df844ef7ca4147",
+    "mtime": 1789988972.0706272,
+    "ast_hash": "bfff0b8a0a0c660572df2f49c7a88eae",
     "semantic_hash": ""
   },
   "lib/themes/rankingScheduler.ts": {
@@ -1445,8 +1445,8 @@
     "semantic_hash": ""
   },
   "lib/themes/runRankingCheck.ts": {
-    "mtime": 1789984425.4107325,
-    "ast_hash": "a0e1798072997de99edf36453caf72ed",
+    "mtime": 1789988966.4400976,
+    "ast_hash": "d057bcf8c4e5c74681c4612ab6c8ca15",
     "semantic_hash": ""
   },
   "models/theme-ranking-check-state.ts": {
