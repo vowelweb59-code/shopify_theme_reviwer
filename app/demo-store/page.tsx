@@ -17,6 +17,9 @@ type DemoStoreRecord = {
   schemaVersion: string | null;
   startedAt: string;
   endedAt: string | null;
+  themeStoreListed: boolean | null;
+  themeStoreSlug: string | null;
+  themeStoreCheckedAt: string | null;
 };
 
 type DemoStoreData = {
@@ -121,6 +124,26 @@ export default function DemoStorePage() {
       render: (r) => formatDuration(durationMs(r.startedAt, r.endedAt)),
       sortValue: (r) => durationMs(r.startedAt, r.endedAt),
     },
+    {
+      key: "themeStore",
+      header: "Theme Store",
+      render: (r) =>
+        r.themeStoreListed ? (
+          <a
+            href={`https://themes.shopify.com/themes/${r.themeStoreSlug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text underline-offset-2 hover:underline"
+          >
+            Live on Theme Store
+          </a>
+        ) : r.themeStoreCheckedAt ? (
+          <span className="text-xs text-zinc-400">Not listed yet</span>
+        ) : (
+          <span className="text-xs text-zinc-400">Checking…</span>
+        ),
+      sortValue: (r) => (r.themeStoreListed ? 1 : 0),
+    },
   ];
 
   return (
@@ -134,7 +157,8 @@ export default function DemoStorePage() {
               theme-store-ops-admin.myshopify.com
             </a>
             , and for how long. Checked automatically once a day at a randomized time (never more than once per 24h) by reading the storefront&apos;s
-            publicly embedded theme info — only the currently published theme is visible this way, not the store&apos;s full theme library.
+            publicly embedded theme info — only the currently published theme is visible this way, not the store&apos;s full theme library. The same
+            daily check also watches the public Shopify Theme Store for each of these themes, so if one goes live there later it gets flagged below.
           </p>
         </div>
         <Button variant="secondary" onClick={handleCheckNow} loading={checking}>

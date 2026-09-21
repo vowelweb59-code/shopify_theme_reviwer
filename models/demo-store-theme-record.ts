@@ -15,6 +15,18 @@ const demoStoreThemeRecordSchema = new Schema(
     schemaVersion: { type: String, default: null },
     startedAt: { type: Date, required: true },
     endedAt: { type: Date, default: null },
+    // Whether this theme (by shopifyThemeId) has since been spotted on the
+    // *public* Shopify Theme Store listing (themes.shopify.com) — a theme
+    // seen live on the internal ops demo store is often still unreleased,
+    // and this flags the moment it ships publicly. null = not checked yet,
+    // false = checked but not found there (yet). See
+    // lib/demoStore/checkThemeStoreListings.ts, run as part of every daily
+    // check (and manual "Check Now") alongside the demo-store poll itself.
+    // Never flipped back to false/null once true — a listing disappearing
+    // from the store isn't something this app tries to detect.
+    themeStoreListed: { type: Boolean, default: null },
+    themeStoreSlug: { type: String, default: null },
+    themeStoreCheckedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

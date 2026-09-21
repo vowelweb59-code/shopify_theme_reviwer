@@ -2,6 +2,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { DemoStoreThemeRecord } from "@/models/demo-store-theme-record";
 import { DemoStoreCheckState } from "@/models/demo-store-check-state";
 import { fetchLiveDemoStoreTheme, type LiveThemeResult } from "./fetchLiveTheme";
+import { checkPendingThemeStoreListings } from "./checkThemeStoreListings";
 
 /**
  * Reads the ops demo store's currently live theme and reconciles it against
@@ -12,12 +13,17 @@ import { fetchLiveDemoStoreTheme, type LiveThemeResult } from "./fetchLiveTheme"
  * know the theme changed, only that we couldn't check — it's recorded as
  * lastError instead. Called by both the daily scheduler and the manual
  * "Check Now" button, so this is the one place that owns the reconciliation
- * logic.
+ * logic. Also re-checks whether any not-yet-confirmed theme has since gone
+ * live on the public Theme Store (see checkPendingThemeStoreListings) —
+ * unconditionally, since that's a separate external fetch unrelated to
+ * whether today's demo-store poll itself succeeded.
  */
 export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
   await connectToDatabase();
   const result = await fetchLiveDemoStoreTheme();
   const now = new Date();
+
+  await checkPendingThemeStoreListings();
 
   if (!result.ok) {
     await DemoStoreCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: result.error }, { upsert: true });
