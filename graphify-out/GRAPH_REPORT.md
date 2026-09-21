@@ -1,21 +1,21 @@
 # Graph Report - Shopify Theme Auditor  (2026-09-21)
 
 ## Corpus Check
-- 286 files · ~1,578,882 words
+- 286 files · ~1,579,108 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1391 nodes · 2803 edges · 87 communities (82 shown, 5 thin omitted)
+- 1391 nodes · 2803 edges · 88 communities (83 shown, 5 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.57)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dae0e9ca`
+- Built from commit: `aa6fbf85`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- connect.ts
+- connectToDatabase
 - devDependencies
 - dependencies
 - compilerOptions
@@ -33,12 +33,12 @@
 - postcss.config.mjs
 - parseJsonFile.ts
 - demo-store/page.tsx
-- requirement.ts
+- finding.ts
 - extractReadmeVersion.ts
 - bugs/index.ts
 - available-features/page.tsx
 - cross-file/index.ts
-- finding.ts
+- getPageLabel
 - internal/index.ts
 - Shopify Theme Auditor
 - accessibility/index.ts
@@ -85,10 +85,10 @@
 - oauth.ts
 - AddThemeModal.tsx
 - mongodb
-- connectToDatabase
+- [id]/export/route.ts
 - insights/page.tsx
 - ranking/page.tsx
-- themeStoreRanking.ts
+- isValidObjectId
 - templateComposition.ts
 - theme.ts
 - [themeId]/route.ts
@@ -96,39 +96,40 @@
 - RequirementsReview.tsx
 - ScoreboardGrid.tsx
 - VersionsSection.tsx
+- readiness/route.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `connectToDatabase()` - 86 edges
 2. `executeAuditRun()` - 19 edges
-3. `buildTestTheme()` - 18 edges
-4. `isValidObjectId()` - 18 edges
+3. `isValidObjectId()` - 18 edges
+4. `buildTestTheme()` - 18 edges
 5. `invalidIdResponse()` - 17 edges
 6. `compilerOptions` - 16 edges
-7. `Theme` - 14 edges
-8. `getPageLabel()` - 14 edges
-9. `runPageSpeedChecksForPresets()` - 14 edges
-10. `parseJsonFile()` - 14 edges
+7. `runPageSpeedChecksForPresets()` - 14 edges
+8. `parseJsonFile()` - 14 edges
+9. `getPageLabel()` - 14 edges
+10. `POST()` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/themes/[themeId]/history/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/themes/ranking/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/maintenance/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/requirements/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/rules/route.ts → lib/db/connect.ts
+- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  scripts/seed-requirements.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/health/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (87 total, 5 thin omitted)
+## Communities (88 total, 5 thin omitted)
 
-### Community 0 - "connect.ts"
-Cohesion: 0.16
-Nodes (11): GET(), GET(), globalForMongoose, MongooseCache, RankingCheckResult, ThemeRankHistory, ThemeRankHistoryDoc, themeRankHistorySchema (+3 more)
+### Community 0 - "connectToDatabase"
+Cohesion: 0.11
+Nodes (24): GET(), GET(), POST(), GET(), GET(), register(), connectToDatabase(), globalForMongoose (+16 more)
 
 ### Community 1 - "devDependencies"
 Cohesion: 0.09
@@ -186,9 +187,9 @@ Nodes (17): DuplicateJsonKey, findDuplicateJsonKeys(), Frame, extractJsImports()
 Cohesion: 0.12
 Nodes (17): EmptyState(), ResponsiveTable(), TableColumn, DemoStoreData, DemoStorePage(), DemoStoreRecord, durationMs(), FilteredRankingData (+9 more)
 
-### Community 19 - "requirement.ts"
-Cohesion: 0.12
-Nodes (22): GET(), GET(), RequirementImplementationType, GET(), FINDING_CATEGORIES, FINDING_SEVERITIES, Requirement, REQUIREMENT_SOURCE_TYPES (+14 more)
+### Community 19 - "finding.ts"
+Cohesion: 0.10
+Nodes (26): GET(), GET(), RequirementImplementationType, GET(), FINDING_CATEGORIES, FINDING_HISTORICAL_STATES, FINDING_LAYERS, FINDING_STATUSES (+18 more)
 
 ### Community 20 - "extractReadmeVersion.ts"
 Cohesion: 0.18
@@ -206,9 +207,9 @@ Nodes (6): AvailableFeaturesPage(), FeatureRow, formatDate(), STATUS_CLASS, STAT
 Cohesion: 0.07
 Nodes (23): ComposedHeading, ComposedHeadingIssue, findMultipleH1(), findMultipleH1Across(), findSkippedHeadingLevels(), findSkippedHeadingLevelsAcross(), HeadingIssue, brokenAriaReferenceRule (+15 more)
 
-### Community 24 - "finding.ts"
-Cohesion: 0.05
-Nodes (58): GET(), GET(), PATCH(), GET(), GET(), CONTENT_TYPES, Format, FORMATS (+50 more)
+### Community 24 - "getPageLabel"
+Cohesion: 0.10
+Nodes (20): BASE_TEMPLATE_LABELS, EXACT_TEMPLATE_LABELS, getPageLabel(), buildFindingsCsv(), COLUMNS, CsvFindingRow, escapeCsvField(), buildDiffCsv() (+12 more)
 
 ### Community 25 - "internal/index.ts"
 Cohesion: 0.15
@@ -227,8 +228,8 @@ Cohesion: 0.11
 Nodes (15): AUDIT_RUN_STATUSES, auditRunSchema, auditRunSummarySchema, cascadeDeleteFindings(), demoStorePresetSchema, diagnosticsSchema, enhancementDetectionSchema, fileErrorSchema (+7 more)
 
 ### Community 30 - "runFilteredRankingCheck.ts"
-Cohesion: 0.23
-Nodes (12): currentRows(), GET(), parseQuery(), POST(), FilteredRankingCheckResult, runFilteredRankingCheck(), ThemeFilteredRank, ThemeFilteredRankDoc (+4 more)
+Cohesion: 0.12
+Nodes (20): currentRows(), GET(), parseQuery(), POST(), buildListingUrl(), CatalogFilter, CatalogRankResult, extractCatalogCards() (+12 more)
 
 ### Community 31 - "available-features/route.ts"
 Cohesion: 0.29
@@ -386,9 +387,9 @@ Nodes (14): GET(), POST(), GET(), GET(), createOAuthClient(), disconnectGoogle()
 Cohesion: 0.36
 Nodes (4): DemoStorePreset, PresetLinksEditor(), Modal(), AddThemeModal()
 
-### Community 75 - "connectToDatabase"
-Cohesion: 0.24
-Nodes (12): GET(), POST(), register(), connectToDatabase(), globalForScheduler, randomNextDelayMs(), runAndReschedule(), scheduleTimer() (+4 more)
+### Community 75 - "[id]/export/route.ts"
+Cohesion: 0.18
+Nodes (16): CONTENT_TYPES, Format, FORMATS, GET(), GET(), computeCoverage(), computeCoverageByCategory(), CoverageResult (+8 more)
 
 ### Community 77 - "insights/page.tsx"
 Cohesion: 0.23
@@ -398,9 +399,9 @@ Nodes (8): FutureUpdatesContent(), CodeReviewContent(), RequirementsReview(), St
 Cohesion: 0.23
 Nodes (8): BreadcrumbItem, Breadcrumbs(), ChartSeries, LineChart(), nearestIndex(), PAD, SERIES_VARS, HistoryData
 
-### Community 79 - "themeStoreRanking.ts"
-Cohesion: 0.24
-Nodes (8): buildListingUrl(), CatalogFilter, CatalogRankResult, extractCatalogCards(), extractLastPage(), fetchListingPage(), findThemeStoreRankings(), PageCardEntry
+### Community 79 - "isValidObjectId"
+Cohesion: 0.36
+Nodes (8): GET(), GET(), PATCH(), GET(), invalidIdResponse(), isValidObjectId(), AuditRun, Finding
 
 ### Community 80 - "templateComposition.ts"
 Cohesion: 0.44
@@ -430,25 +431,29 @@ Nodes (4): CARD_ACCENTS, ScoreboardGrid(), scoreTone(), ScoreCard
 Cohesion: 0.40
 Nodes (5): AuditTotals, formatDate(), VersionRow, VersionRowView(), VersionsSection()
 
+### Community 87 - "readiness/route.ts"
+Cohesion: 0.27
+Nodes (9): GET(), PATCH(), DEFAULT_READINESS_CONFIG, ReadinessConfig, loadReadinessConfig(), FINDING_SEVERITIES, ReadinessConfigDoc, ReadinessConfigModel (+1 more)
+
 ## Knowledge Gaps
-- **469 isolated node(s):** `DemoStoreRecord`, `DemoStoreData`, `ThemeStorePreset`, `RankedTheme`, `RankingData` (+464 more)
+- **469 isolated node(s):** `PageCardEntry`, `CatalogFilter`, `CatalogRankResult`, `MongooseCache`, `RankingCheckResult` (+464 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `connectToDatabase()` connect `connectToDatabase` to `connect.ts`, `[id]/export/google-sheet/route.ts`, `requirement.ts`, `finding.ts`, `runFilteredRankingCheck.ts`, `available-features/route.ts`, `uploadThemeVersion.ts`, `executeAuditRun.ts`, `runRules.ts`, `audit/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `seed-native-capabilities.ts`, `themes/route.ts`, `themeStoreFeatures.ts`, `presets.ts`, `oauth.ts`, `theme.ts`, `[themeId]/route.ts`?**
-  _High betweenness centrality (0.124) - this node is a cross-community bridge._
+- **Why does `connectToDatabase()` connect `connectToDatabase` to `[id]/export/google-sheet/route.ts`, `finding.ts`, `runFilteredRankingCheck.ts`, `available-features/route.ts`, `uploadThemeVersion.ts`, `executeAuditRun.ts`, `runRules.ts`, `audit/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `seed-native-capabilities.ts`, `themes/route.ts`, `themeStoreFeatures.ts`, `presets.ts`, `oauth.ts`, `[id]/export/route.ts`, `isValidObjectId`, `theme.ts`, `[themeId]/route.ts`, `readiness/route.ts`?**
+  _High betweenness centrality (0.093) - this node is a cross-community bridge._
+- **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `pageSpeed.ts` to `executeAuditRun.ts`, `ReportContent.tsx`, `ThemeDetailTabs.tsx`, `findings.tsx`, `OverviewPanel.tsx`, `insights/page.tsx`, `[themeId]/route.ts`, `themes/route.ts`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `devDependencies` connect `devDependencies` to `package.json`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `DemoStoreRecord`, `DemoStoreData`, `ThemeStorePreset` to the rest of the system?**
+- **What connects `PageCardEntry`, `CatalogFilter`, `CatalogRankResult` to the rest of the system?**
   _469 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `connectToDatabase` be split into smaller, more focused modules?**
+  _Cohesion score 0.1126984126984127 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
-- **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
