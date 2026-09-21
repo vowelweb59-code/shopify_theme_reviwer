@@ -1385,8 +1385,8 @@
     "semantic_hash": ""
   },
   "app/demo-store/page.tsx": {
-    "mtime": 1789971737.2137182,
-    "ast_hash": "7de14353bf8fb28ba263c0793d6a3b95",
+    "mtime": 1789981418.259945,
+    "ast_hash": "46d5468fa51eaf30c435cd675cc408c1",
     "semantic_hash": ""
   },
   "instrumentation.ts": {
@@ -1420,8 +1420,18 @@
     "semantic_hash": ""
   },
   "models/demo-store-theme-record.ts": {
-    "mtime": 1789971688.5874553,
-    "ast_hash": "c207d982992bbfeda571908040bd5314",
+    "mtime": 1789981344.1578996,
+    "ast_hash": "0abc1f6a97f267e557dc3869f5c7bd65",
+    "semantic_hash": ""
+  },
+  "app/api/demo-store/check-ranking/route.ts": {
+    "mtime": 1789981365.3089175,
+    "ast_hash": "63ce558fc64f0efe9ff15854f77a4025",
+    "semantic_hash": ""
+  },
+  "lib/demoStore/themeStoreRanking.ts": {
+    "mtime": 1789981358.3981314,
+    "ast_hash": "5c05b12f8b1a170c1b8ec4a9deaac799",
     "semantic_hash": ""
   }
 }
