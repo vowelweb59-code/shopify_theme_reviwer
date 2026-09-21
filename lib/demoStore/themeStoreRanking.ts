@@ -49,11 +49,19 @@ function extractCatalogCards(html: string, page: number): PageCardEntry[] {
   return entries;
 }
 
-// The pager renders numbered page links as `<a href="/themes?page=N">` —
-// including the true last page explicitly even when earlier pages are
-// collapsed behind an ellipsis (confirmed against a real listing: page 1
-// of 54 still links directly to page=54). Falls back to 1 if the page
-// this is called on turns out to be the only page.
+// The pager renders numbered page links as `<a href="/themes?page=N">` on
+// the unfiltered default view — including the true last page explicitly
+// even when earlier pages are collapsed behind an ellipsis (confirmed
+// against a real listing: page 1 of 54 still links directly to page=54).
+// Under a sort/industry filter the same link instead carries every active
+// param, in varying order (confirmed live: `/themes?page=54&sort_by=newest`,
+// page first) — an earlier version of this matched only the bare
+// `?page=N` shape and silently found "1 page" for every filtered crawl,
+// making every filtered check return zero results (nothing wrong, it just
+// never looked past page 1). Matching `page=(\d+)` anywhere in the query
+// string, regardless of what else surrounds it, handles both shapes.
+// Falls back to 1 if the page this is called on turns out to be the only
+// one.
 function extractLastPage(html: string): number {
   let last = 1;
   const parser = new Parser(
@@ -61,8 +69,8 @@ function extractLastPage(html: string): number {
       onopentag(name, attribs) {
         if (name !== "a") return;
         const href = attribs.href;
-        if (!href) return;
-        const match = /^\/themes\?page=(\d+)$/.exec(href);
+        if (!href || !href.startsWith("/themes?")) return;
+        const match = /[?&]page=(\d+)(?:&|$)/.exec(href);
         if (match) last = Math.max(last, Number(match[1]));
       },
     },
@@ -73,11 +81,29 @@ function extractLastPage(html: string): number {
   return last;
 }
 
-async function fetchListingPage(page: number): Promise<string> {
+// Confirmed live against themes.shopify.com: `sort_by` and `industry[]`
+// are real server-side query params (a `sort_by=newest` request returns a
+// genuinely different card order; `industry[]=beauty` genuinely narrows
+// the total from ~1274 to ~136). A `feature[]` param was tried and did
+// NOT filter anything — the checkboxes that looked like a feature filter
+// turned out to belong to an unrelated newsletter-signup form elsewhere
+// on the page, not the catalog filter — so feature-wise filtering isn't
+// implemented (skipped per explicit product decision rather than guessed
+// at further).
+export type CatalogFilter = { sortBy?: "relevance" | "newest"; industry?: string | null };
+
+function buildListingUrl(page: number, filter?: CatalogFilter): string {
+  const params = new URLSearchParams({ page: String(page) });
+  if (filter?.sortBy && filter.sortBy !== "relevance") params.set("sort_by", filter.sortBy);
+  if (filter?.industry) params.append("industry[]", filter.industry);
+  return `${THEME_STORE_LISTING_URL}?${params.toString()}`;
+}
+
+async function fetchListingPage(page: number, filter?: CatalogFilter): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RANK_TIMEOUT_MS);
   try {
-    const res = await fetch(`${THEME_STORE_LISTING_URL}?page=${page}`, { signal: controller.signal, redirect: "follow" });
+    const res = await fetch(buildListingUrl(page, filter), { signal: controller.signal, redirect: "follow" });
     if (!res.ok) throw new Error(`Theme Store listing page ${page} responded with status ${res.status}.`);
     return await res.text();
   } finally {
@@ -102,9 +128,17 @@ export type CatalogRankResult = { presetSlug: string; rank: number; page: number
  * been found, or the listing's own last page is reached. Throws on any
  * individual page fetch failure — a partial crawl can't tell "ranks
  * beyond where we stopped" apart from "isn't listed at all", so the
- * caller gets nothing rather than a misleadingly confident answer.
+ * caller gets nothing rather than a misleadingly confident answer. An
+ * optional `filter` (sort order / industry) crawls that filtered view of
+ * the catalog instead of the unfiltered default — a theme that doesn't
+ * belong to the given industry simply never turns up, same as it
+ * wouldn't on the real site; a smaller filtered catalog also means fewer
+ * pages to walk, not more.
  */
-export async function findThemeStoreRankings(targets: Map<string, Set<string>>): Promise<Map<string, CatalogRankResult[]>> {
+export async function findThemeStoreRankings(
+  targets: Map<string, Set<string>>,
+  filter?: CatalogFilter
+): Promise<Map<string, CatalogRankResult[]>> {
   const results = new Map<string, CatalogRankResult[]>([...targets.keys()].map((s) => [s, []]));
   const remaining = new Map<string, Set<string>>([...targets].map(([slug, presets]) => [slug, new Set(presets)]));
   for (const [slug, presets] of [...remaining]) {
@@ -112,13 +146,13 @@ export async function findThemeStoreRankings(targets: Map<string, Set<string>>):
   }
   if (remaining.size === 0) return results;
 
-  const firstPageHtml = await fetchListingPage(1);
+  const firstPageHtml = await fetchListingPage(1, filter);
   const lastPage = Math.min(extractLastPage(firstPageHtml), RANK_MAX_PAGES);
 
   let overallIndex = 0;
   let html = firstPageHtml;
   for (let page = 1; page <= lastPage && remaining.size > 0; page++) {
-    if (page > 1) html = await fetchListingPage(page);
+    if (page > 1) html = await fetchListingPage(page, filter);
     for (const entry of extractCatalogCards(html, page)) {
       overallIndex += 1;
       const expectedPresets = remaining.get(entry.baseSlug);

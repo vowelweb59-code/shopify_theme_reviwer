@@ -15,7 +15,7 @@ export async function GET() {
     Theme.find()
       .select(
         "name themeStoreSlug themeStoreCheckedAt themeStoreError themeStorePresets themeStoreReviewCount themeStorePositivePercent " +
-          "themeStoreRank themeStoreRankPage themeStoreRankCheckedAt themeStorePreviousRank"
+          "themeStorePreviousReviewCount themeStoreRank themeStoreRankPage themeStoreRankCheckedAt themeStorePreviousRank"
       )
       .sort({ name: 1 })
       .lean(),

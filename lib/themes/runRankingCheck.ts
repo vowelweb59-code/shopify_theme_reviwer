@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeRankingCheckState } from "@/models/theme-ranking-check-state";
+import { ThemeRankHistory } from "@/models/theme-rank-history";
 import { findThemeStoreRankings } from "@/lib/demoStore/themeStoreRanking";
 
 export type RankingCheckResult = { ok: true; checked: number } | { ok: false; error: string };
@@ -21,14 +22,17 @@ export type RankingCheckResult = { ok: true; checked: number } | { ok: false; er
  * check. A crawl failure (the whole catalog walk throws, e.g. a network
  * blip) is recorded as lastError without touching any Theme's existing
  * rank — better to keep yesterday's known rank than overwrite it with
- * nothing.
+ * nothing. Also appends one models/theme-rank-history.ts row per theme
+ * (and per preset) to this crawl's own findings — the append-only log
+ * behind the ranking-history charts, distinct from the Theme document's
+ * own single-prior-value previousRank fields.
  */
 export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
   await connectToDatabase();
   const now = new Date();
 
   const listed = await Theme.find({ themeStoreSlug: { $ne: null }, themeStoreCheckedAt: { $ne: null }, themeStoreError: null }).select(
-    "themeStoreSlug themeStorePresets themeStoreRank themeStoreRankPage"
+    "name themeStoreSlug themeStorePresets themeStoreRank themeStoreRankPage"
   );
 
   if (listed.length === 0) {
@@ -45,6 +49,14 @@ export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
     }
 
     const rankings = await findThemeStoreRankings(targets);
+    const historyRows: {
+      themeId: unknown;
+      presetSlug: string;
+      presetName: string;
+      rank: number | null;
+      page: number | null;
+      checkedAt: Date;
+    }[] = [];
 
     await Promise.all(
       listed.map((theme) => {
@@ -55,17 +67,35 @@ export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
         theme.themeStoreRank = ownListing?.rank ?? null;
         theme.themeStoreRankPage = ownListing?.page ?? null;
         theme.themeStoreRankCheckedAt = now;
+        historyRows.push({
+          themeId: theme._id,
+          presetSlug: slug,
+          presetName: theme.name,
+          rank: theme.themeStoreRank,
+          page: theme.themeStoreRankPage,
+          checkedAt: now,
+        });
         if (theme.themeStorePresets) {
           for (const preset of theme.themeStorePresets) {
             const match = found.find((f) => f.presetSlug === preset.slug);
             preset.previousRank = preset.rank;
             preset.rank = match?.rank ?? null;
             preset.page = match?.page ?? null;
+            historyRows.push({
+              themeId: theme._id,
+              presetSlug: preset.slug,
+              presetName: preset.name,
+              rank: preset.rank,
+              page: preset.page,
+              checkedAt: now,
+            });
           }
         }
         return theme.save();
       })
     );
+
+    if (historyRows.length > 0) await ThemeRankHistory.insertMany(historyRows);
 
     await ThemeRankingCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: null }, { upsert: true });
     return { ok: true, checked: listed.length };

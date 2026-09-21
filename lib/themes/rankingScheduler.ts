@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/db/connect";
 import { ThemeRankingCheckState } from "@/models/theme-ranking-check-state";
 import { runThemeStoreRankingCheck } from "./runRankingCheck";
+import { runAllTrackedFilteredRankingChecks } from "./runFilteredRankingCheck";
 
 // Same cadence/jitter policy as lib/demoStore/scheduler.ts: never more than
 // one crawl per 24h, at a randomized time rather than a fixed clock time.
@@ -32,6 +33,14 @@ async function runAndReschedule() {
     await runThemeStoreRankingCheck();
   } catch (err) {
     console.error("[theme-ranking] scheduled check failed:", err);
+  }
+  // Every Sort/Collection combination the user has ever picked stays
+  // fresh too, alongside the default crawl — explicit product decision,
+  // not tied to a page load or a "Check Ranking" click for that filter.
+  try {
+    await runAllTrackedFilteredRankingChecks();
+  } catch (err) {
+    console.error("[theme-ranking-filter] scheduled check failed:", err);
   }
   const nextAt = new Date(Date.now() + randomNextDelayMs());
   await connectToDatabase();

@@ -69,6 +69,11 @@ const themeSchema = new Schema(
     // page shows the identical numbers, reviews aren't preset-specific.
     themeStoreReviewCount: { type: Number, default: null },
     themeStorePositivePercent: { type: Number, default: null },
+    // Same "one prior data point, shifted forward on every check" idea as
+    // themeStorePreviousRank, but for the review count — shifted in the
+    // "Check Theme Store" route (not the ranking crawl, since that's
+    // where reviewCount itself gets refreshed).
+    themeStorePreviousReviewCount: { type: Number, default: null },
     themeStoreCheckedAt: { type: Date, default: null },
     themeStoreError: { type: String, default: null },
     // The Theme Store listing's current live version + when that version

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
+import { ThemeRankHistory } from "@/models/theme-rank-history";
 import { fetchThemeStoreFeatureLabels } from "@/lib/themes/themeStoreFeatures";
 
 /**
@@ -40,6 +41,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
       const existing = existingPresetsBySlug.get(p.slug);
       return { name: p.name, slug: p.slug, rank: existing?.rank ?? null, page: existing?.page ?? null, previousRank: existing?.previousRank ?? null };
     });
+    theme.themeStorePreviousReviewCount = theme.themeStoreReviewCount;
     theme.themeStoreReviewCount = result.reviewCount;
     theme.themeStorePositivePercent = result.positivePercent;
     theme.themeStoreError = null;
@@ -50,6 +52,20 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
     theme.themeStoreError = result.error;
   }
   await theme.save();
+
+  // A review-count/rating snapshot for the ranking-history charts — see
+  // models/theme-rank-history.ts. Only on a successful check with a
+  // resolved slug; an error means nothing new was actually observed.
+  if (result.ok) {
+    await ThemeRankHistory.create({
+      themeId: theme._id,
+      presetSlug: result.slug,
+      presetName: theme.name,
+      reviewCount: result.reviewCount,
+      positivePercent: result.positivePercent,
+      checkedAt: theme.themeStoreCheckedAt,
+    });
+  }
 
   return NextResponse.json({ theme });
 }
