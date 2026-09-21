@@ -26,7 +26,22 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
   theme.themeStoreCheckedAt = new Date();
   if (result.ok) {
     theme.themeStoreFeatures = result.features;
-    theme.themeStorePresets = result.presets;
+    // Re-derive the preset list (a theme can add/rename/drop presets over
+    // time) but preserve rank/page/previousRank for any slug that still
+    // exists — those come from the separate "Check Ranking" crawl, not
+    // this fetch, and blindly overwriting with fresh {name, slug} objects
+    // would silently wipe out already-crawled ranking data on every
+    // re-check.
+    type ExistingPreset = { rank: number | null; page: number | null; previousRank: number | null };
+    const existingPresetsBySlug = new Map<string, ExistingPreset>(
+      (theme.themeStorePresets ?? []).map((p: { slug: string } & ExistingPreset) => [p.slug, p])
+    );
+    theme.themeStorePresets = result.presets.map((p) => {
+      const existing = existingPresetsBySlug.get(p.slug);
+      return { name: p.name, slug: p.slug, rank: existing?.rank ?? null, page: existing?.page ?? null, previousRank: existing?.previousRank ?? null };
+    });
+    theme.themeStoreReviewCount = result.reviewCount;
+    theme.themeStorePositivePercent = result.positivePercent;
     theme.themeStoreError = null;
     theme.themeStoreVersion = result.latestVersion;
     const releasedAt = result.latestVersionReleasedAt ? new Date(result.latestVersionReleasedAt) : null;

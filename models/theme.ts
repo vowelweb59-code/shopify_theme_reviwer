@@ -23,6 +23,13 @@ const themeStorePresetSchema = new Schema(
     slug: { type: String, required: true },
     rank: { type: Number, default: null },
     page: { type: Number, default: null },
+    // The rank this preset had as of the check *before* the current one —
+    // shifted forward (current -> previous) at the start of every "Check
+    // Ranking" crawl, so the UI can show how much it moved since then. Not
+    // a full history, just the one prior data point — a manual re-check
+    // sooner than a day later still shifts it, so "since last check" is
+    // the honest framing, not strictly "since yesterday".
+    previousRank: { type: Number, default: null },
   },
   { _id: false }
 );
@@ -55,6 +62,13 @@ const themeSchema = new Schema(
     themeStoreSlug: { type: String, default: null },
     themeStoreFeatures: { type: [String], default: undefined },
     themeStorePresets: { type: [themeStorePresetSchema], default: undefined },
+    // The listing's aggregate review stats (confirmed against real
+    // listings: Shopify's Theme Store shows a review count + "NN%
+    // positive" score, not a 1-5 star average — there's no star rating to
+    // report). Shared across a theme and all its presets — a preset's own
+    // page shows the identical numbers, reviews aren't preset-specific.
+    themeStoreReviewCount: { type: Number, default: null },
+    themeStorePositivePercent: { type: Number, default: null },
     themeStoreCheckedAt: { type: Date, default: null },
     themeStoreError: { type: String, default: null },
     // The Theme Store listing's current live version + when that version
@@ -75,6 +89,9 @@ const themeSchema = new Schema(
     themeStoreRank: { type: Number, default: null },
     themeStoreRankPage: { type: Number, default: null },
     themeStoreRankCheckedAt: { type: Date, default: null },
+    // See themeStorePresetSchema's previousRank for the same "one prior
+    // data point, shifted forward on every crawl" semantics.
+    themeStorePreviousRank: { type: Number, default: null },
   },
   { timestamps: true }
 );

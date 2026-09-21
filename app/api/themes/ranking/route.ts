@@ -13,7 +13,10 @@ export async function GET() {
 
   const [themes, state] = await Promise.all([
     Theme.find()
-      .select("name themeStoreSlug themeStoreCheckedAt themeStoreError themeStorePresets themeStoreRank themeStoreRankPage themeStoreRankCheckedAt")
+      .select(
+        "name themeStoreSlug themeStoreCheckedAt themeStoreError themeStorePresets themeStoreReviewCount themeStorePositivePercent " +
+          "themeStoreRank themeStoreRankPage themeStoreRankCheckedAt themeStorePreviousRank"
+      )
       .sort({ name: 1 })
       .lean(),
     ThemeRankingCheckState.findOne(),

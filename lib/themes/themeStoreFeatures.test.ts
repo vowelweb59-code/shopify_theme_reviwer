@@ -49,6 +49,10 @@ const REAL_SHAPE_HTML = `
     <a href="https://themes.shopify.com/themes/adorn/presets/adorn/reviews" aria-label="Read reviews">reviews</a>
     <a href="https://themes.shopify.com/themes/adorn/presets/adorn?locale=fr">locale switcher, no aria-label</a>
   </div>
+  <div data-testid="reviews__ratings">
+    <span class="tw-text-heading-3xl tw-font-body" role="note">97% positive</span>
+    <span class="tw-text-body-lg tw-text-fg-secondary" role="note">29 reviews</span>
+  </div>
   <div id="ReleaseNotes">
     <div class="tw-flex tw-flex-col tw-gap-xs">
       <div class="tw-flex tw-flex-row tw-gap-xs tw-text-body-lg tw-text-fg-primary">
@@ -89,6 +93,27 @@ describe("fetchThemeStoreFeatureLabels", () => {
         { slug: "adorn", name: "Adorn" },
         { slug: "ace", name: "Ace" },
       ]);
+    }
+  });
+
+  it("extracts the review count and percent-positive score", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => REAL_SHAPE_HTML }) as unknown as typeof fetch;
+    const result = await fetchThemeStoreFeatureLabels("Adorn");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.reviewCount).toBe(29);
+      expect(result.positivePercent).toBe(97);
+    }
+  });
+
+  it("returns null review stats when the page has no reviews summary block", async () => {
+    const html = `<div id="features"><span class="tw-mr-sm">Cart notes</span></div>`;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => html }) as unknown as typeof fetch;
+    const result = await fetchThemeStoreFeatureLabels("Adorn");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.reviewCount).toBeNull();
+      expect(result.positivePercent).toBeNull();
     }
   });
 

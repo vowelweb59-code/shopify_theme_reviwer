@@ -34,7 +34,7 @@ type DemoStoreData = {
 // DemoStoreRecord above, which is the ops demo store's install history.
 // "Our themes" here means whatever's tracked in the Themes module
 // (app/themes), not whatever's happened to be live on the demo store.
-type ThemeStorePreset = { name: string; slug: string; rank: number | null; page: number | null };
+type ThemeStorePreset = { name: string; slug: string; rank: number | null; page: number | null; previousRank: number | null };
 
 type RankedTheme = {
   _id: string;
@@ -43,9 +43,12 @@ type RankedTheme = {
   themeStoreCheckedAt: string | null;
   themeStoreError: string | null;
   themeStorePresets: ThemeStorePreset[] | null;
+  themeStoreReviewCount: number | null;
+  themeStorePositivePercent: number | null;
   themeStoreRank: number | null;
   themeStoreRankPage: number | null;
   themeStoreRankCheckedAt: string | null;
+  themeStorePreviousRank: number | null;
 };
 
 type RankingData = {
@@ -65,9 +68,11 @@ type RankRow = {
   name: string;
   url: string | null;
   rank: number | null;
+  previousRank: number | null;
   page: number | null;
   rankStatus: "not-checked" | "not-listed" | "unranked" | null;
-  checkedAt: string | null;
+  reviewCount: number | null;
+  positivePercent: number | null;
 };
 
 function flattenRankRows(themes: RankedTheme[]): RankRow[] {
@@ -79,9 +84,11 @@ function flattenRankRows(themes: RankedTheme[]): RankRow[] {
       name: t.name,
       url: t.themeStoreSlug ? `https://themes.shopify.com/themes/${t.themeStoreSlug}` : null,
       rank: t.themeStoreRank,
+      previousRank: t.themeStorePreviousRank,
       page: t.themeStoreRankPage,
       rankStatus: t.themeStoreRank ? null : !t.themeStoreCheckedAt ? "not-checked" : t.themeStoreError ? "not-listed" : "unranked",
-      checkedAt: t.themeStoreRankCheckedAt,
+      reviewCount: t.themeStoreReviewCount,
+      positivePercent: t.themeStorePositivePercent,
     });
     for (const p of t.themeStorePresets ?? []) {
       rows.push({
@@ -90,9 +97,14 @@ function flattenRankRows(themes: RankedTheme[]): RankRow[] {
         name: p.name,
         url: t.themeStoreSlug ? `https://themes.shopify.com/themes/${t.themeStoreSlug}/presets/${p.slug}` : null,
         rank: p.rank,
+        previousRank: p.previousRank,
         page: p.page,
         rankStatus: p.rank ? null : "unranked",
-        checkedAt: t.themeStoreRankCheckedAt,
+        // Reviews are theme-wide, not preset-specific (confirmed live: a
+        // preset's own listing page shows the identical numbers) — reused
+        // from the parent theme rather than fetched again per preset.
+        reviewCount: t.themeStoreReviewCount,
+        positivePercent: t.themeStorePositivePercent,
       });
     }
   }
@@ -283,10 +295,44 @@ export default function DemoStorePage() {
       sortValue: (r) => r.rank ?? Infinity,
     },
     {
-      key: "rankCheckedAt",
-      header: "Checked",
-      render: (r) => (r.checkedAt ? formatDateTime(r.checkedAt) : <span className="text-zinc-400">—</span>),
-      sortValue: (r) => (r.checkedAt ? new Date(r.checkedAt).getTime() : 0),
+      key: "change",
+      header: "Change",
+      // A lower rank number is better, so previousRank - rank > 0 means it
+      // moved up the catalog (gained) since the last check — not
+      // necessarily exactly 24h ago, just whatever the prior check was.
+      render: (r) => {
+        if (r.rank == null || r.previousRank == null) return <span className="text-xs text-zinc-400">—</span>;
+        const delta = r.previousRank - r.rank;
+        if (delta === 0) return <span className="text-xs text-zinc-400">No change</span>;
+        return (
+          <span className={`text-xs font-semibold ${delta > 0 ? "text-status-pass-text" : "text-status-fail-text"}`}>
+            {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}
+          </span>
+        );
+      },
+      sortValue: (r) => (r.rank != null && r.previousRank != null ? r.previousRank - r.rank : 0),
+    },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (r) => (r.reviewCount != null ? <span>{r.reviewCount}</span> : <span className="text-zinc-400">—</span>),
+      sortValue: (r) => r.reviewCount ?? -1,
+    },
+    {
+      key: "rating",
+      header: "Average Rating",
+      // The Theme Store doesn't publish a 1-5 star average — its own
+      // rating metric is "NN% positive" of all reviews, so that's what's
+      // shown here rather than a fabricated star score.
+      render: (r) =>
+        r.positivePercent != null ? (
+          <span>
+            {r.positivePercent}% <span className="text-zinc-400">positive</span>
+          </span>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
+      sortValue: (r) => r.positivePercent ?? -1,
     },
   ];
 
@@ -342,9 +388,9 @@ export default function DemoStorePage() {
               themes.shopify.com/themes
             </a>{" "}
             catalog, once it&apos;s listed there — including each of its named style presets separately, since a preset gets its own ranked card
-            too (they can land on completely different pages from the theme&apos;s own default listing). Checked automatically once a day at a
-            randomized time, same as the demo store poll above; a full crawl can mean walking dozens of pages, so it&apos;s not tied to that same
-            daily check.
+            too (they can land on completely different pages from the theme&apos;s own default listing). Change shows how much a rank moved since
+            the last check. Checked automatically once a day at a randomized time, same as the demo store poll above; a full crawl can mean walking
+            dozens of pages, so it&apos;s not tied to that same daily check.
           </p>
         </div>
         <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>

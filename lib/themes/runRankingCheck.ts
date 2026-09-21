@@ -15,17 +15,20 @@ export type RankingCheckResult = { ok: true; checked: number } | { ok: false; er
  * live), so those aren't derived from the theme's rank, they're looked
  * up independently in the same crawl pass. The one place that owns
  * this — called by both the daily scheduler and the manual "Check
- * Ranking" button, same split as lib/demoStore/runCheck.ts. A crawl
- * failure (the whole catalog walk throws, e.g. a network blip) is
- * recorded as lastError without touching any Theme's existing rank —
- * better to keep yesterday's known rank than overwrite it with nothing.
+ * Ranking" button, same split as lib/demoStore/runCheck.ts. Before
+ * overwriting, shifts each theme's (and preset's) current rank into
+ * previousRank, so the UI can show how much it moved since the last
+ * check. A crawl failure (the whole catalog walk throws, e.g. a network
+ * blip) is recorded as lastError without touching any Theme's existing
+ * rank — better to keep yesterday's known rank than overwrite it with
+ * nothing.
  */
 export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
   await connectToDatabase();
   const now = new Date();
 
   const listed = await Theme.find({ themeStoreSlug: { $ne: null }, themeStoreCheckedAt: { $ne: null }, themeStoreError: null }).select(
-    "themeStoreSlug themeStorePresets"
+    "themeStoreSlug themeStorePresets themeStoreRank themeStoreRankPage"
   );
 
   if (listed.length === 0) {
@@ -48,12 +51,14 @@ export async function runThemeStoreRankingCheck(): Promise<RankingCheckResult> {
         const slug = theme.themeStoreSlug as string;
         const found = rankings.get(slug) ?? [];
         const ownListing = found.find((f) => f.presetSlug === slug);
+        theme.themeStorePreviousRank = theme.themeStoreRank;
         theme.themeStoreRank = ownListing?.rank ?? null;
         theme.themeStoreRankPage = ownListing?.page ?? null;
         theme.themeStoreRankCheckedAt = now;
         if (theme.themeStorePresets) {
           for (const preset of theme.themeStorePresets) {
             const match = found.find((f) => f.presetSlug === preset.slug);
+            preset.previousRank = preset.rank;
             preset.rank = match?.rank ?? null;
             preset.page = match?.page ?? null;
           }

@@ -19,7 +19,16 @@ const THEME_STORE_TIMEOUT_MS = 20_000;
 export type ThemeStorePreset = { name: string; slug: string };
 
 export type ThemeStoreFeaturesResult =
-  | { ok: true; slug: string; features: string[]; presets: ThemeStorePreset[]; latestVersion: string | null; latestVersionReleasedAt: string | null }
+  | {
+      ok: true;
+      slug: string;
+      features: string[];
+      presets: ThemeStorePreset[];
+      reviewCount: number | null;
+      positivePercent: number | null;
+      latestVersion: string | null;
+      latestVersionReleasedAt: string | null;
+    }
   | { ok: false; slug: string; error: string };
 
 // Every feature name on a real listing page renders as
@@ -90,6 +99,52 @@ function extractPresets(html: string): ThemeStorePreset[] {
   parser.write(html);
   parser.end();
   return presets;
+}
+
+type ReviewSummary = { reviewCount: number; positivePercent: number };
+
+// The listing's aggregate review summary renders as exactly two
+// `<span role="note">...</span>` elements on the whole page (confirmed
+// against real listings — every other rating/review indicator on the page
+// uses an aria-label, not role="note"): the percent-positive score first
+// (e.g. "97% positive"), then the total review count (e.g. "29 reviews").
+// Shared across a theme's default listing and all its presets — a
+// preset's own page shows the identical two spans. Returns null if the
+// page doesn't have this block at all (e.g. a theme with zero reviews may
+// omit it entirely — unconfirmed, so this degrades gracefully either way).
+function extractReviewSummary(html: string): ReviewSummary | null {
+  const noteTexts: string[] = [];
+  let capturing = false;
+  let buffer = "";
+
+  const parser = new Parser(
+    {
+      onopentag(name, attribs) {
+        if (name === "span" && attribs.role === "note") {
+          capturing = true;
+          buffer = "";
+        }
+      },
+      ontext(text) {
+        if (capturing) buffer += text;
+      },
+      onclosetag(name) {
+        if (name === "span" && capturing) {
+          capturing = false;
+          noteTexts.push(buffer.trim());
+        }
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+
+  const [positiveText, reviewText] = noteTexts;
+  const positiveMatch = positiveText ? /(\d+)%/.exec(positiveText) : null;
+  const reviewMatch = reviewText ? /(\d+)/.exec(reviewText) : null;
+  if (!positiveMatch || !reviewMatch) return null;
+  return { positivePercent: Number(positiveMatch[1]), reviewCount: Number(reviewMatch[1]) };
 }
 
 type LatestRelease = { version: string; releasedAt: string | null };
@@ -179,11 +234,14 @@ export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<T
     }
     const latestRelease = extractLatestRelease(html);
     const presets = extractPresets(html);
+    const reviewSummary = extractReviewSummary(html);
     return {
       ok: true,
       slug,
       features,
       presets,
+      reviewCount: reviewSummary?.reviewCount ?? null,
+      positivePercent: reviewSummary?.positivePercent ?? null,
       latestVersion: latestRelease?.version ?? null,
       latestVersionReleasedAt: latestRelease?.releasedAt ?? null,
     };
