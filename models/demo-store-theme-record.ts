@@ -27,17 +27,6 @@ const demoStoreThemeRecordSchema = new Schema(
     themeStoreListed: { type: Boolean, default: null },
     themeStoreSlug: { type: String, default: null },
     themeStoreCheckedAt: { type: Date, default: null },
-    // This theme's overall position in the public Theme Store's default
-    // "/themes" catalog listing once it's confirmed listed there — the
-    // closest thing to a "ranking" the storefront exposes (there's no
-    // per-theme rank endpoint, only this paginated default sort). Set by
-    // the manual "Check Ranking" crawl (see
-    // lib/demoStore/themeStoreRanking.ts) rather than the daily check —
-    // finding a rank can mean walking dozens of listing pages, too heavy
-    // to run automatically every day.
-    themeStoreRank: { type: Number, default: null },
-    themeStoreRankPage: { type: Number, default: null },
-    themeStoreRankCheckedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
