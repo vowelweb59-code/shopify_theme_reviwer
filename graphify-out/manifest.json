@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "models/theme.ts": {
-    "mtime": 1789988929.1626234,
-    "ast_hash": "09990594e7d8fc1b91b42bae64e5631a",
+    "mtime": 1789990755.3630378,
+    "ast_hash": "ba84bcf1cf8f4f752595d4faed7b8e93",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "app/api/themes/[themeId]/theme-store-features/route.ts": {
-    "mtime": 1789989398.762066,
-    "ast_hash": "7686b8c80b637a2096f17996ab2040b2",
+    "mtime": 1789990962.7621956,
+    "ast_hash": "a3f3fa1dab788278f1392463b3b1201c",
     "semantic_hash": ""
   },
   "lib/audit/availableFeatures.test.ts": {
@@ -1385,8 +1385,8 @@
     "semantic_hash": ""
   },
   "app/demo-store/page.tsx": {
-    "mtime": 1789989239.174255,
-    "ast_hash": "7eba79099e66ff45e61a8d0e5a1ad4ec",
+    "mtime": 1789991926.4326174,
+    "ast_hash": "34d3a3295949d8723938886d1fe8fd3b",
     "semantic_hash": ""
   },
   "instrumentation.ts": {
@@ -1425,8 +1425,8 @@
     "semantic_hash": ""
   },
   "lib/demoStore/themeStoreRanking.ts": {
-    "mtime": 1789984363.0302713,
-    "ast_hash": "eb6d77d4d85ebcb74c105a25db4ad3e9",
+    "mtime": 1789992077.6133018,
+    "ast_hash": "d49ddb58b9a15da70e6dba637570c766",
     "semantic_hash": ""
   },
   "app/api/themes/check-ranking/route.ts": {
@@ -1435,23 +1435,68 @@
     "semantic_hash": ""
   },
   "app/api/themes/ranking/route.ts": {
-    "mtime": 1789988972.0706272,
-    "ast_hash": "bfff0b8a0a0c660572df2f49c7a88eae",
+    "mtime": 1789990765.8791656,
+    "ast_hash": "64bed6c334bf5f0fa9372d6ac4e6d8bf",
     "semantic_hash": ""
   },
   "lib/themes/rankingScheduler.ts": {
-    "mtime": 1789983682.889403,
-    "ast_hash": "7c5ab530055084e75e281d7ce1a8cf71",
+    "mtime": 1789991724.7939315,
+    "ast_hash": "6d5631c6929361497a000f44363fe92f",
     "semantic_hash": ""
   },
   "lib/themes/runRankingCheck.ts": {
-    "mtime": 1789988966.4400976,
-    "ast_hash": "d057bcf8c4e5c74681c4612ab6c8ca15",
+    "mtime": 1789990952.7103493,
+    "ast_hash": "ed273510f1bf356a93804fcbb5a59b2e",
     "semantic_hash": ""
   },
   "models/theme-ranking-check-state.ts": {
     "mtime": 1789983388.9572728,
     "ast_hash": "a36772dd687111f2338603a2ce4cdcc9",
+    "semantic_hash": ""
+  },
+  "app/api/themes/[themeId]/history/route.ts": {
+    "mtime": 1789991146.7514303,
+    "ast_hash": "b46957bd84c97156bc32a79f13f1635f",
+    "semantic_hash": ""
+  },
+  "app/api/themes/ranking-filtered/route.ts": {
+    "mtime": 1789991742.1855786,
+    "ast_hash": "ee0d347c23f69984e1e66f4fe9bd6a8a",
+    "semantic_hash": ""
+  },
+  "app/themes/[themeId]/_components/LineChart.tsx": {
+    "mtime": 1789991055.3653,
+    "ast_hash": "208ea8459318bc1b1fdccf3199441662",
+    "semantic_hash": ""
+  },
+  "app/themes/[themeId]/ranking/page.tsx": {
+    "mtime": 1789991083.2133374,
+    "ast_hash": "617be9cb97adb517a0504cc908d43bfe",
+    "semantic_hash": ""
+  },
+  "lib/demoStore/themeStoreRanking.test.ts": {
+    "mtime": 1789992129.629643,
+    "ast_hash": "e3e56eba537f24fddbeed15e19c442b3",
+    "semantic_hash": ""
+  },
+  "lib/themes/runFilteredRankingCheck.ts": {
+    "mtime": 1789991713.7554936,
+    "ast_hash": "1cdf1365b56c341f11cfb8e2709c2505",
+    "semantic_hash": ""
+  },
+  "models/theme-filtered-rank.ts": {
+    "mtime": 1789991698.759883,
+    "ast_hash": "ca367cde7056cd094530adbe7c0ecd60",
+    "semantic_hash": ""
+  },
+  "models/theme-rank-history.ts": {
+    "mtime": 1789990929.7220373,
+    "ast_hash": "622f77890606da26b7ff9ccc61e288eb",
+    "semantic_hash": ""
+  },
+  "models/theme-ranking-filter.ts": {
+    "mtime": 1789991692.3148038,
+    "ast_hash": "70b589f6b528be2fa34032fd50329460",
     "semantic_hash": ""
   }
 }
