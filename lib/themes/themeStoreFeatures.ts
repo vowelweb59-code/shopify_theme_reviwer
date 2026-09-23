@@ -158,6 +158,70 @@ function extractReviewSummary(html: string): ReviewSummary | null {
   return { positivePercent: Number(positiveMatch[1]), reviewCount: Number(reviewMatch[1]) };
 }
 
+// Every preset's own listing page (/themes/<slug>/presets/<presetSlug>)
+// embeds its live storefront preview as
+// `<section id="demo-container" data-controller="demo-store"
+// data-demo-store-iframe-url-value="https://<store>.myshopify.com/" ...>`
+// (confirmed live against real listings, e.g. Gravity's own page carries
+// its default preset's URL, and gravity/presets/decor carries a
+// DIFFERENT store's URL for that preset) — this is the exact URL this
+// app's Presets editor otherwise expects a merchant to copy in by hand.
+function extractDemoStoreIframeUrl(html: string): string | null {
+  let found: string | null = null;
+  const parser = new Parser(
+    {
+      onopentag(_name, attribs) {
+        if (!found && attribs["data-demo-store-iframe-url-value"]) {
+          found = attribs["data-demo-store-iframe-url-value"];
+        }
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+  return found;
+}
+
+export type PresetDemoUrlResult = { slug: string; name: string; url: string | null; error?: string };
+
+/**
+ * Fetches each preset's own Theme Store page and pulls out its embedded
+ * live demo store URL, for the Presets editor's "Autofetch" action —
+ * powers filling in demoStorePresets without the merchant hand-copying
+ * each preset's URL from themes.shopify.com. One request per preset, run
+ * concurrently; a single preset's page failing (network hiccup, unexpected
+ * layout) doesn't fail the others — it comes back with url: null and an
+ * error string so the caller can show exactly what didn't resolve.
+ */
+export async function fetchPresetDemoStoreUrls(baseSlug: string, presets: ThemeStorePreset[]): Promise<PresetDemoUrlResult[]> {
+  return Promise.all(
+    presets.map(async (preset): Promise<PresetDemoUrlResult> => {
+      const url = `https://themes.shopify.com/themes/${baseSlug}/presets/${preset.slug}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), THEME_STORE_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, { signal: controller.signal, redirect: "follow", headers: { "User-Agent": BROWSER_USER_AGENT } });
+        if (!res.ok) {
+          return { slug: preset.slug, name: preset.name, url: null, error: `Theme Store page responded with status ${res.status}.` };
+        }
+        const html = await res.text();
+        const demoUrl = extractDemoStoreIframeUrl(html);
+        return {
+          slug: preset.slug,
+          name: preset.name,
+          url: demoUrl,
+          error: demoUrl ? undefined : "No live demo store link found on this preset's page.",
+        };
+      } catch (err) {
+        return { slug: preset.slug, name: preset.name, url: null, error: err instanceof Error ? err.message : "Failed to reach the Shopify Theme Store." };
+      } finally {
+        clearTimeout(timeout);
+      }
+    })
+  );
+}
+
 type LatestRelease = { version: string; releasedAt: string | null };
 
 // The listing's "Release Notes" section inlines only its current live

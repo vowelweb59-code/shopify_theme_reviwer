@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deriveThemeStoreSlug, fetchThemeStoreFeatureLabels } from "./themeStoreFeatures";
+import { deriveThemeStoreSlug, fetchPresetDemoStoreUrls, fetchThemeStoreFeatureLabels } from "./themeStoreFeatures";
 
 describe("deriveThemeStoreSlug", () => {
   it("lowercases and hyphenates a simple name", () => {
@@ -163,5 +163,63 @@ describe("fetchThemeStoreFeatureLabels", () => {
     const result = await fetchThemeStoreFeatureLabels("Adorn");
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("network error");
+  });
+});
+
+// A trimmed real fixture matching a preset's own listing page (confirmed
+// against a real page, e.g. themes.shopify.com/themes/gravity/presets/decor)
+// — the embedded storefront preview's controller element carrying the
+// preset's live demo store URL.
+function presetPageHtml(demoUrl: string) {
+  return `<section id="demo-container" data-controller="demo-store" data-demo-store-iframe-url-value="${demoUrl}"></section>`;
+}
+
+describe("fetchPresetDemoStoreUrls", () => {
+  const originalFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it("fetches each preset's own page and extracts its demo store URL", async () => {
+    const fetchSpy = vi.fn(async (url: string) => ({
+      ok: true,
+      text: async () => presetPageHtml(`https://${url.includes("/presets/decor") ? "decor-demo" : "gravity-demo"}.myshopify.com/`),
+    }));
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    const results = await fetchPresetDemoStoreUrls("gravity", [
+      { slug: "gravity", name: "Gravity" },
+      { slug: "decor", name: "Decor" },
+    ]);
+
+    expect(results).toEqual([
+      { slug: "gravity", name: "Gravity", url: "https://gravity-demo.myshopify.com/", error: undefined },
+      { slug: "decor", name: "Decor", url: "https://decor-demo.myshopify.com/", error: undefined },
+    ]);
+    expect(fetchSpy).toHaveBeenCalledWith("https://themes.shopify.com/themes/gravity/presets/gravity", expect.anything());
+    expect(fetchSpy).toHaveBeenCalledWith("https://themes.shopify.com/themes/gravity/presets/decor", expect.anything());
+  });
+
+  it("reports one preset's failure without failing the others", async () => {
+    global.fetch = vi.fn(async (url: string) =>
+      url.includes("/presets/broken") ? { ok: false, status: 403 } : { ok: true, text: async () => presetPageHtml("https://ok-demo.myshopify.com/") }
+    ) as unknown as typeof fetch;
+
+    const results = await fetchPresetDemoStoreUrls("gravity", [
+      { slug: "gravity", name: "Gravity" },
+      { slug: "broken", name: "Broken" },
+    ]);
+
+    expect(results[0]).toEqual({ slug: "gravity", name: "Gravity", url: "https://ok-demo.myshopify.com/", error: undefined });
+    expect(results[1].url).toBeNull();
+    expect(results[1].error).toContain("403");
+  });
+
+  it("returns a null url with an error when the page has no demo-store element", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => "<html><body>no demo here</body></html>" }) as unknown as typeof fetch;
+    const results = await fetchPresetDemoStoreUrls("gravity", [{ slug: "gravity", name: "Gravity" }]);
+    expect(results[0].url).toBeNull();
+    expect(results[0].error).toBeTruthy();
   });
 });

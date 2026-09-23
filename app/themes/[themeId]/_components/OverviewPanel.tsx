@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Pencil } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
+import { MAX_PRESETS } from "@/lib/themes/presets";
 import { SeverityBadge } from "@/app/_components/findings";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
@@ -123,6 +124,8 @@ function PresetsSection({
   const [draft, setDraft] = useState<DemoStorePreset[]>(initialPresets);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autofetching, setAutofetching] = useState(false);
+  const [autofetchWarning, setAutofetchWarning] = useState<string | null>(null);
 
   const [expandedPreset, setExpandedPreset] = useState<string | null>(null);
   const [findings, setFindings] = useState<{ auditRunId: string; items: ReportFinding[] } | null>(null);
@@ -132,6 +135,7 @@ function PresetsSection({
   function startEditing() {
     setDraft(presets);
     setError(null);
+    setAutofetchWarning(null);
     setEditing(true);
   }
 
@@ -183,6 +187,26 @@ function PresetsSection({
     } catch {
       setSaving(false);
       setError("Lost connection to the server. Try again.");
+    }
+  }
+
+  async function handleAutofetch() {
+    setAutofetching(true);
+    setError(null);
+    setAutofetchWarning(null);
+    try {
+      const res = await fetch(`/api/themes/${themeId}/preset-demo-urls`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Failed to fetch preset demo URLs.");
+        return;
+      }
+      setDraft((data.presets ?? []).slice(0, MAX_PRESETS));
+      if (data.errors?.length) setAutofetchWarning(data.errors.join(" "));
+    } catch {
+      setError("Lost connection to the server. Try again.");
+    } finally {
+      setAutofetching(false);
     }
   }
 
@@ -249,9 +273,22 @@ function PresetsSection({
 
   return (
     <Card>
-      <CardHeader title="Presets" description="Edit this theme’s style-variant demo store URLs." />
+      <CardHeader
+        title="Presets"
+        description="Edit this theme’s style-variant demo store URLs."
+        action={
+          <Button variant="secondary" size="sm" onClick={handleAutofetch} loading={autofetching}>
+            {autofetching ? "Fetching…" : "Autofetch from Theme Store"}
+          </Button>
+        }
+      />
       <div className="flex flex-col gap-3">
         <PresetLinksEditor presets={draft} onChange={setDraft} />
+        {autofetchWarning && (
+          <div className="rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">
+            {autofetchWarning}
+          </div>
+        )}
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={handleSave} loading={saving}>
