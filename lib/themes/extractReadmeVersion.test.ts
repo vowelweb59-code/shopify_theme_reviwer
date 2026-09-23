@@ -156,4 +156,33 @@ describe("extractVersionFromSettingsSchema", () => {
     });
     expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.0.0" });
   });
+
+  it("tolerates a //-commented-out block left in as disabled documentation (real-world Gravity theme shape)", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": [
+        "[",
+        '  { "name": "theme_info", "theme_version": "1.1.6" },',
+        '  { "name": "colors", "settings": [',
+        '    { "type": "color", "id": "body_bg" }',
+        "  ] },",
+        "  // {",
+        '  //   "name": "Gift wrapping",',
+        "  //   \"settings\": [",
+        "  //     { \"type\": \"checkbox\", \"id\": \"enable_gift_wrapping\" }",
+        "  //   ]",
+        "  // },",
+        "]",
+      ].join("\n"),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.1.6" });
+  });
+
+  it("does not treat // inside a string value (e.g. a URL) as a comment", () => {
+    const root = makeThemeDir({
+      "config/settings_schema.json": settingsSchema([
+        { name: "theme_info", theme_version: "1.1.6", theme_documentation_url: "https://example.com/docs/" },
+      ]),
+    });
+    expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.1.6" });
+  });
 });

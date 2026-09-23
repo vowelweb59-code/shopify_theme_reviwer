@@ -47,6 +47,46 @@ export function extractVersionFromReadmeText(text: string): { version: string } 
 
 const SETTINGS_SCHEMA_RELATIVE_PATH = path.join("config", "settings_schema.json");
 
+// Real-world theme editors (and hand-edited settings_schema.json files)
+// commonly leave a whole `//`-commented-out block in as disabled
+// documentation (confirmed against a real Gravity theme ZIP: an entire
+// disabled "Gift wrapping" settings section, one `//` per line) — invalid
+// strict JSON, but tolerated by Shopify's own admin. Tracks string-literal
+// state (respecting \" escapes) so a `//` that happens to appear inside a
+// string value — e.g. a "https://..." URL in theme_documentation_url,
+// which this same real file also has — is never touched. Doesn't handle
+// `/* */` block comments: not seen in a real file yet, so not guessed at.
+// Run before stripTrailingCommas below (not combined into one pass): a
+// trailing comma followed by a now-removed comment, then the closing
+// bracket, still needs to read as "trailing" once the comment is gone.
+function stripLineComments(text: string): string {
+  let result = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      result += ch;
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      result += ch;
+      continue;
+    }
+    if (ch === "/" && text[i + 1] === "/") {
+      while (i < text.length && text[i] !== "\n") i++;
+      i--; // back up so the loop's i++ lands back on the newline itself, which then falls through and is kept
+      continue;
+    }
+    result += ch;
+  }
+  return result;
+}
+
 // Real-world theme editors (and hand-edited settings_schema.json files) commonly
 // leave a trailing comma before a closing `}`/`]` — invalid strict JSON, but
 // tolerated by Shopify's own admin. Strips only commas that precede a closing
@@ -92,7 +132,7 @@ export function extractVersionFromSettingsSchema(themeRootDir: string): { versio
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(stripTrailingCommas(fs.readFileSync(filePath, "utf-8")));
+    parsed = JSON.parse(stripTrailingCommas(stripLineComments(fs.readFileSync(filePath, "utf-8"))));
   } catch {
     return null;
   }
