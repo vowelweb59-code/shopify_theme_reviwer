@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 
 export type TableColumn<T> = {
@@ -28,6 +28,7 @@ export function ResponsiveTable<T>({
   emptyMessage,
   theadClassName,
   rowClassName,
+  pageSize,
 }: {
   columns: TableColumn<T>[];
   rows: T[];
@@ -43,9 +44,15 @@ export function ResponsiveTable<T>({
   // needs attention) — applied to both the desktop <tr> and the mobile
   // stacked card, so a "highlighted box" reads the same at every width.
   rowClassName?: (row: T) => string;
+  // Opt-in: once `rows` exceeds this count, the table splits into pages of
+  // this size with Prev/Next controls instead of rendering every row at
+  // once. Omitted (the default everywhere else) means no pagination at
+  // all — unaffected callers keep rendering every row exactly as before.
+  pageSize?: number;
 }) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(0);
 
   const sorted = useMemo(() => {
     const col = columns.find((c) => c.key === sortKey);
@@ -59,6 +66,13 @@ export function ResponsiveTable<T>({
     });
   }, [rows, sortKey, sortDir, columns]);
 
+  const pageCount = pageSize ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
+  // Clamped rather than stored pre-clamped — a shorter `rows` arriving after
+  // a refetch (or a page the user was already past) shouldn't strand them on
+  // a blank page.
+  const currentPage = Math.min(page, pageCount - 1);
+  const paged = pageSize ? sorted.slice(currentPage * pageSize, currentPage * pageSize + pageSize) : sorted;
+
   function toggleSort(key: string) {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -66,6 +80,7 @@ export function ResponsiveTable<T>({
       setSortKey(key);
       setSortDir("asc");
     }
+    setPage(0);
   }
 
   if (rows.length === 0) {
@@ -98,7 +113,7 @@ export function ResponsiveTable<T>({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => (
+            {paged.map((row) => (
               <tr
                 key={rowKey(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -118,7 +133,7 @@ export function ResponsiveTable<T>({
       </div>
 
       <div className="flex flex-col gap-3 sm:hidden">
-        {sorted.map((row) => (
+        {paged.map((row) => (
           <div
             key={rowKey(row)}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -133,6 +148,34 @@ export function ResponsiveTable<T>({
           </div>
         ))}
       </div>
+
+      {pageSize && sorted.length > pageSize && (
+        <div className="flex items-center justify-between gap-3 pt-3 text-sm text-zinc-500">
+          <span>
+            Page {currentPage + 1} of {pageCount}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className="inline-flex items-center gap-1 rounded-md border border-border-subtle px-2 py-1 hover:bg-black/[.02] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:hover:bg-white/[.03] dark:disabled:hover:bg-transparent"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={currentPage >= pageCount - 1}
+              className="inline-flex items-center gap-1 rounded-md border border-border-subtle px-2 py-1 hover:bg-black/[.02] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:hover:bg-white/[.03] dark:disabled:hover:bg-transparent"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

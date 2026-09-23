@@ -16,6 +16,17 @@ export function deriveThemeStoreSlug(themeName: string): string {
 
 const THEME_STORE_TIMEOUT_MS = 20_000;
 
+// themes.shopify.com's bot protection intermittently 403s a request with no
+// User-Agent at all (confirmed live: the exact same URL, fetched back-to-back
+// with no other change, 403'd once and then 200'd twice) — a plain
+// browser-like UA reliably avoids it. Without this, a theme's review/rating
+// fetch could land on a 403 and store that as a persistent themeStoreError,
+// which then also excludes it from the ranking crawl (see
+// lib/themes/runRankingCheck.ts's `themeStoreError: null` filter) until the
+// next manual re-check happens to land on a 200.
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
+
 export type ThemeStorePreset = { name: string; slug: string };
 
 export type ThemeStoreFeaturesResult =
@@ -219,7 +230,7 @@ export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<T
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), THEME_STORE_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { signal: controller.signal, redirect: "follow" });
+    const res = await fetch(url, { signal: controller.signal, redirect: "follow", headers: { "User-Agent": BROWSER_USER_AGENT } });
     if (!res.ok) {
       return {
         ok: false,

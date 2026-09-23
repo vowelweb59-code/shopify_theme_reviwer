@@ -506,7 +506,13 @@ export default function DemoStorePage() {
           {data.records.length === 0 ? (
             <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record the store's currently live theme." />
           ) : (
-            <ResponsiveTable columns={columns} rows={data.records} rowKey={(r) => r._id} theadClassName="bg-primary-tint text-primary-tint-text" />
+            <ResponsiveTable
+              columns={columns}
+              rows={data.records}
+              rowKey={(r) => r._id}
+              theadClassName="bg-primary-tint text-primary-tint-text"
+              pageSize={5}
+            />
           )}
         </div>
       )}

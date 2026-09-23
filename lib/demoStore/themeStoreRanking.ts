@@ -2,6 +2,13 @@ import { Parser } from "htmlparser2";
 
 const THEME_STORE_LISTING_URL = "https://themes.shopify.com/themes";
 const RANK_TIMEOUT_MS = 20_000;
+// Same bot-protection workaround as lib/themes/themeStoreFeatures.ts's fetch
+// of a single listing page — a UA-less request to themes.shopify.com
+// intermittently 403s (confirmed live), which for a multi-page crawl would
+// throw and discard the whole crawl per the "partial crawl can't tell ranks
+// beyond where we stopped apart from not listed" policy below.
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 // Independent safety cap on top of whatever the listing's own pagination
 // reports (extractLastPage) — a future redesign misparsing "last page" as
 // something absurd shouldn't turn one click into thousands of requests.
@@ -115,7 +122,11 @@ async function fetchListingPage(page: number, filter?: CatalogFilter): Promise<s
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RANK_TIMEOUT_MS);
   try {
-    const res = await fetch(buildListingUrl(page, filter), { signal: controller.signal, redirect: "follow" });
+    const res = await fetch(buildListingUrl(page, filter), {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "User-Agent": BROWSER_USER_AGENT },
+    });
     if (!res.ok) throw new Error(`Theme Store listing page ${page} responded with status ${res.status}.`);
     return await res.text();
   } finally {
