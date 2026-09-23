@@ -291,7 +291,18 @@ export default function DemoStorePage() {
         <span className="inline-flex flex-wrap items-center gap-1.5">
           <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.themeName}</span>
           {!r.endedAt && (
-            <span className="rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text">Current</span>
+            <>
+              <span className="rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text">Current</span>
+              <a
+                href={DEMO_STORE_URL}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="View on the Shopify demo store"
+                className="text-primary/50 hover:text-primary"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            </>
           )}
         </span>
       ),
