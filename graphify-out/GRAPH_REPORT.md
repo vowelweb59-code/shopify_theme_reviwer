@@ -1,7 +1,7 @@
-# Graph Report - Shopify Theme Auditor  (2026-09-21)
+# Graph Report - Shopify Theme Auditor  (2026-09-23)
 
 ## Corpus Check
-- 286 files · ~1,579,108 words
+- 286 files · ~1,579,520 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `aa6fbf85`
+- Built from commit: `56575a02`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -101,8 +101,8 @@
 ## God Nodes (most connected - your core abstractions)
 1. `connectToDatabase()` - 86 edges
 2. `executeAuditRun()` - 19 edges
-3. `isValidObjectId()` - 18 edges
-4. `buildTestTheme()` - 18 edges
+3. `buildTestTheme()` - 18 edges
+4. `isValidObjectId()` - 18 edges
 5. `invalidIdResponse()` - 17 edges
 6. `compilerOptions` - 16 edges
 7. `runPageSpeedChecksForPresets()` - 14 edges
@@ -112,15 +112,15 @@
 
 ## Surprising Connections (you probably didn't know these)
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/enhancements/route.ts → lib/db/connect.ts
+- `PATCH()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/enhancements/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
+  app/api/health/route.ts → lib/db/connect.ts
+- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/maintenance/route.ts → lib/db/connect.ts
 - `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
   app/api/requirements/route.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/rules/route.ts → lib/db/connect.ts
-- `main()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  scripts/seed-requirements.ts → lib/db/connect.ts
-- `GET()` --calls--> `connectToDatabase()`  [EXTRACTED]
-  app/api/health/route.ts → lib/db/connect.ts
 
 ## Import Cycles
 - None detected.
@@ -436,7 +436,7 @@ Cohesion: 0.27
 Nodes (9): GET(), PATCH(), DEFAULT_READINESS_CONFIG, ReadinessConfig, loadReadinessConfig(), FINDING_SEVERITIES, ReadinessConfigDoc, ReadinessConfigModel (+1 more)
 
 ## Knowledge Gaps
-- **469 isolated node(s):** `PageCardEntry`, `CatalogFilter`, `CatalogRankResult`, `MongooseCache`, `RankingCheckResult` (+464 more)
+- **469 isolated node(s):** `DemoStoreRecord`, `DemoStoreData`, `ThemeStorePreset`, `RankedTheme`, `RankingData` (+464 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -444,14 +444,14 @@ Nodes (9): GET(), PATCH(), DEFAULT_READINESS_CONFIG, ReadinessConfig, loadReadin
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `connectToDatabase()` connect `connectToDatabase` to `[id]/export/google-sheet/route.ts`, `finding.ts`, `runFilteredRankingCheck.ts`, `available-features/route.ts`, `uploadThemeVersion.ts`, `executeAuditRun.ts`, `runRules.ts`, `audit/route.ts`, `seed-rules.ts`, `enhancement-point.ts`, `seed-native-capabilities.ts`, `themes/route.ts`, `themeStoreFeatures.ts`, `presets.ts`, `oauth.ts`, `[id]/export/route.ts`, `isValidObjectId`, `theme.ts`, `[themeId]/route.ts`, `readiness/route.ts`?**
-  _High betweenness centrality (0.093) - this node is a cross-community bridge._
+  _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `dependencies` to `googleapis`, `mongodb`, `package.json`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Why does `PageSpeedMetric` connect `pageSpeed.ts` to `executeAuditRun.ts`, `ReportContent.tsx`, `ThemeDetailTabs.tsx`, `findings.tsx`, `OverviewPanel.tsx`, `insights/page.tsx`, `[themeId]/route.ts`, `themes/route.ts`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `executeAuditRun()` (e.g. with `.record()` and `.toRecord()`) actually correct?**
   _`executeAuditRun()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `PageCardEntry`, `CatalogFilter`, `CatalogRankResult` to the rest of the system?**
+- **What connects `DemoStoreRecord`, `DemoStoreData`, `ThemeStorePreset` to the rest of the system?**
   _469 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `connectToDatabase` be split into smaller, more focused modules?**
   _Cohesion score 0.1126984126984127 - nodes in this community are weakly interconnected._
