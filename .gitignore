@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the template, which holds placeholders only and documents setup
+!.env.example
 
 # graphify: track graph.json/graph.html/GRAPH_REPORT.md (the merge driver in
 # .gitattributes expects graph.json to be versioned), but not its local cache

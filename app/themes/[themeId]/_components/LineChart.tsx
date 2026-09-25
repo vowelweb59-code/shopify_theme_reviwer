@@ -47,12 +47,16 @@ export function LineChart({
   yTickFormat = (v: number) => String(Math.round(v)),
   xTickFormat = (ms: number) => new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
   emptyMessage = "No data yet.",
+  yFloor,
 }: {
   series: ChartSeries[];
   invertY?: boolean;
   yTickFormat?: (value: number) => string;
   xTickFormat?: (ms: number) => string;
   emptyMessage?: string;
+  // Lowest value the y-axis may show — e.g. 0 for counts, so the headroom
+  // padding never produces a negative tick. Omitted = unclamped (as before).
+  yFloor?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
@@ -67,8 +71,9 @@ export function LineChart({
     const yHi = Math.max(...allY);
     // A little headroom so a flat or near-flat series isn't glued to an edge.
     const yPad = Math.max((yHi - yLo) * 0.1, 1);
-    return { xMin: Math.min(...allX), xMax: Math.max(...allX), yMin: yLo - yPad, yMax: yHi + yPad };
-  }, [nonEmpty]);
+    const paddedMin = yLo - yPad;
+    return { xMin: Math.min(...allX), xMax: Math.max(...allX), yMin: yFloor === undefined ? paddedMin : Math.max(yFloor, paddedMin), yMax: yHi + yPad };
+  }, [nonEmpty, yFloor]);
 
   const plotW = WIDTH - PAD.left - PAD.right;
   const plotH = HEIGHT - PAD.top - PAD.bottom;
