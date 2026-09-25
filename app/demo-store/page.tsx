@@ -7,6 +7,7 @@ import { PageContainer } from "@/app/_components/shell/PageContainer";
 import { Button } from "@/app/_components/ui/Button";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
+import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore/liveWindow";
 
 const DEMO_STORE_URL = "https://theme-store-ops-admin.myshopify.com/";
 
@@ -17,6 +18,8 @@ type DemoStoreRecord = {
   schemaName: string | null;
   schemaVersion: string | null;
   startedAt: string;
+  startedAfter?: string | null;
+  lastSeenAt?: string | null;
   endedAt: string | null;
   themeStoreListed: boolean | null;
   themeStoreSlug: string | null;
@@ -193,16 +196,28 @@ function formatDateTime(iso: string) {
   });
 }
 
-function durationMs(startIso: string, endIso: string | null) {
-  return (endIso ? new Date(endIso).getTime() : Date.now()) - new Date(startIso).getTime();
-}
-
-function formatDuration(ms: number) {
-  const days = Math.floor(ms / (24 * 60 * 60 * 1000));
-  const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-  if (days === 0 && hours === 0) return "<1h";
-  if (days === 0) return `${hours}h`;
-  return `${days}d ${hours}h`;
+// A switch time is only known to within the window between two checks
+// (lib/demoStore/liveWindow.ts). Within the hourly-check slack it shows as
+// one time; wider (a failed check, or a record from before hourly checking)
+// it shows as "between … and …", or "by …" when the earlier bound is unknown.
+function SwitchTime({ low, high }: { low: number | null; high: number }) {
+  if (low !== null && high - low <= PRECISE_ENOUGH_MS) {
+    return <span title={`Between ${formatDateTime(new Date(low).toISOString())} and ${formatDateTime(new Date(high).toISOString())}`}>{formatDateTime(new Date(high).toISOString())}</span>;
+  }
+  if (low !== null) {
+    return (
+      <span className="text-xs">
+        between {formatDateTime(new Date(low).toISOString())}
+        <br />
+        and {formatDateTime(new Date(high).toISOString())}
+      </span>
+    );
+  }
+  return (
+    <span title="No earlier check to narrow this down: the change happened at or before this time.">
+      by {formatDateTime(new Date(high).toISOString())}
+    </span>
+  );
 }
 
 export default function DemoStorePage() {
@@ -324,20 +339,37 @@ export default function DemoStorePage() {
     {
       key: "installedFrom",
       header: "Installed From",
-      render: (r) => formatDateTime(r.startedAt),
+      render: (r) => {
+        const w = liveWindow(r);
+        return <SwitchTime low={w.startLow} high={w.startHigh} />;
+      },
       sortValue: (r) => new Date(r.startedAt).getTime(),
     },
     {
       key: "installedUntil",
       header: "Installed Until",
-      render: (r) => (r.endedAt ? formatDateTime(r.endedAt) : <span className="text-status-pass-text">Still live</span>),
+      render: (r) => {
+        if (!r.endedAt) return <span className="text-status-pass-text">Still live</span>;
+        const w = liveWindow(r);
+        return <SwitchTime low={w.endLow} high={w.endHigh} />;
+      },
       sortValue: (r) => (r.endedAt ? new Date(r.endedAt).getTime() : Date.now()),
     },
     {
       key: "duration",
       header: "Duration",
-      render: (r) => formatDuration(durationMs(r.startedAt, r.endedAt)),
-      sortValue: (r) => durationMs(r.startedAt, r.endedAt),
+      render: (r) => {
+        const d = describeDuration(liveWindow(r));
+        const title = d.range
+          ? `Between ${d.range}, from the checks either side of each switch.`
+          : "Only one side of this period was pinned by a check (or it was recorded before hourly checking), so this is a bound, not an exact figure.";
+        return (
+          <span title={title} className={d.exact ? undefined : "text-zinc-500"}>
+            {d.text}
+          </span>
+        );
+      },
+      sortValue: (r) => liveWindow(r).estimateMs,
     },
     {
       key: "themeStore",
@@ -493,9 +525,10 @@ export default function DemoStorePage() {
             <a href={DEMO_STORE_URL} target="_blank" rel="noreferrer" className="underline hover:no-underline">
               theme-store-ops-admin.myshopify.com
             </a>
-            , and for how long. Checked automatically once a day at a randomized time (never more than once per 24h) by reading the storefront&apos;s
-            publicly embedded theme info — only the currently published theme is visible this way, not the store&apos;s full theme library. The same
-            daily check also watches the public Shopify Theme Store for each of these themes, so if one goes live there later it gets flagged below.
+            , and for how long. Checked automatically every hour by reading the storefront&apos;s publicly embedded theme info — only the
+            currently published theme is visible this way, not the store&apos;s full theme library, and not the moment a theme was published. So
+            each switch is pinned between two checks, accurate to about an hour. Once a day the check also looks for each of these themes on the
+            public Shopify Theme Store, so if one goes live there later it gets flagged below.
           </p>
         </div>
         <Button variant="secondary" onClick={handleCheckNow} loading={checking}>

@@ -19,14 +19,14 @@ import { checkPendingThemeStoreListings } from "./checkThemeStoreListings";
  * (a theme swap just observed for the first time) gets its first Theme
  * Store check immediately instead of waiting for the next cycle.
  */
-export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
+export async function runDemoStoreCheck({ manual = false }: { manual?: boolean } = {}): Promise<LiveThemeResult> {
   await connectToDatabase();
   const result = await fetchLiveDemoStoreTheme();
   const now = new Date();
 
   if (!result.ok) {
     await DemoStoreCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: result.error }, { upsert: true });
-    await checkPendingThemeStoreListings();
+    await checkPendingThemeStoreListings({ force: manual });
     return result;
   }
 
@@ -35,9 +35,18 @@ export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
     open.themeName = result.themeName;
     open.schemaName = result.schemaName;
     open.schemaVersion = result.schemaVersion;
+    open.lastSeenAt = now;
     await open.save();
   } else {
+    // The switch happened after the last check that still saw the old
+    // theme. A record from before hourly checking has no lastSeenAt; the
+    // previous check stands in for it, but only if that check succeeded
+    // (a failed one saw nothing).
+    let startedAfter: Date | null = null;
     if (open) {
+      const state = await DemoStoreCheckState.findOne().lean<{ lastCheckedAt?: Date | null; lastError?: string | null }>();
+      startedAfter = open.lastSeenAt ?? (state?.lastCheckedAt && !state.lastError ? state.lastCheckedAt : null);
+      if (!open.lastSeenAt && startedAfter) open.lastSeenAt = startedAfter;
       open.endedAt = now;
       await open.save();
     }
@@ -47,11 +56,13 @@ export async function runDemoStoreCheck(): Promise<LiveThemeResult> {
       schemaName: result.schemaName,
       schemaVersion: result.schemaVersion,
       startedAt: now,
+      startedAfter,
+      lastSeenAt: now,
       endedAt: null,
     });
   }
 
   await DemoStoreCheckState.findOneAndUpdate({}, { lastCheckedAt: now, lastError: null }, { upsert: true });
-  await checkPendingThemeStoreListings();
+  await checkPendingThemeStoreListings({ force: manual });
   return result;
 }
