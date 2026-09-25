@@ -18,6 +18,32 @@ function timingSafeStringEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/**
+ * CSRF guard for state-changing API calls. Browsers send Basic Auth
+ * credentials on cross-site requests too, so without this any page a
+ * signed-in teammate visits could, say, auto-submit a form that
+ * disconnects a Google account. Blocks a mutating /api request when the
+ * browser says it came from another site (Sec-Fetch-Site), or its Origin's
+ * host isn't this app's. Requests with neither header (curl, scripts,
+ * server-to-server) aren't browser-driven and pass. The scheme is ignored
+ * on purpose: behind Render's TLS proxy the app itself may see http.
+ */
+export function isCrossSiteMutation(request: { method: string; headers: Headers; nextUrl: { pathname: string; host: string } }): boolean {
+  if (!MUTATING_METHODS.has(request.method) || !request.nextUrl.pathname.startsWith("/api/")) return false;
+  const site = request.headers.get("sec-fetch-site");
+  if (site === "cross-site" || site === "same-site") return true;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host;
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true; // "null" or garbage Origin on a mutating request
+  }
+}
+
 const UNAUTHORIZED = () =>
   new NextResponse("Authentication required.", {
     status: 401,
@@ -34,6 +60,8 @@ const UNAUTHORIZED = () =>
  * node_modules/next/dist/docs/.../proxy.md's migration notes.
  */
 export function proxy(request: NextRequest) {
+  if (isCrossSiteMutation(request)) return new NextResponse("Cross-site request blocked.", { status: 403 });
+
   const expectedUser = process.env.BASIC_AUTH_USER;
   const expectedPassword = process.env.BASIC_AUTH_PASSWORD;
   if (!expectedUser || !expectedPassword) return NextResponse.next();

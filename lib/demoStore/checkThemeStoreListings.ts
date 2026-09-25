@@ -14,11 +14,23 @@ import { fetchThemeStoreFeatureLabels } from "@/lib/themes/themeStoreFeatures";
  * ok/slug part matters here, not the feature list.
  *
  * Called by runDemoStoreCheck alongside the demo-store poll itself, so it
- * runs once a day automatically (and on manual "Check Now") without a
- * separate schedule or button of its own.
+ * runs automatically (and on manual "Check Now") without a separate
+ * schedule or button of its own — each theme at most once a day.
  */
-export async function checkPendingThemeStoreListings(): Promise<void> {
-  const pending = await DemoStoreThemeRecord.find({ themeStoreListed: { $ne: true } })
+// The demo-store poll runs hourly, but a theme's public listing doesn't
+// need checking that often — each pending theme is looked up at most once
+// per this interval, so hourly polling doesn't mean hourly requests to
+// themes.shopify.com. A theme swap still gets its first lookup right away
+// (its new record has never been checked).
+export const LISTING_RECHECK_MS = 23 * 60 * 60 * 1000;
+
+export async function checkPendingThemeStoreListings({ force = false, now = new Date() }: { force?: boolean; now?: Date } = {}): Promise<void> {
+  const recheckBefore = new Date(now.getTime() - LISTING_RECHECK_MS);
+  const pending = await DemoStoreThemeRecord.find({
+    themeStoreListed: { $ne: true },
+    // A manual "Check Now" re-checks every pending theme, as it always has.
+    ...(force ? {} : { $or: [{ themeStoreCheckedAt: null }, { themeStoreCheckedAt: { $lt: recheckBefore } }] }),
+  })
     .sort({ startedAt: -1 })
     .select("shopifyThemeId themeName");
 
@@ -29,7 +41,6 @@ export async function checkPendingThemeStoreListings(): Promise<void> {
     }
   }
 
-  const now = new Date();
   for (const [shopifyThemeId, themeName] of latestNameByThemeId) {
     const result = await fetchThemeStoreFeatureLabels(themeName);
     await DemoStoreThemeRecord.updateMany(
