@@ -1,15 +1,6 @@
 import { ENHANCEMENT_TAB_COLUMNS, FUTURE_UPDATES_TAB_COLUMNS } from "@/lib/export/enhancementSheetRows";
 import type { SheetFormattingRequest, SheetTab } from "@/lib/export/sheetRows";
-
-type RGB = { red: number; green: number; blue: number };
-
-function hexToRgb(hex: string): RGB {
-  const n = parseInt(hex.slice(1), 16);
-  return { red: ((n >> 16) & 255) / 255, green: ((n >> 8) & 255) / 255, blue: (n & 255) / 255 };
-}
-
-const HEADER_BACKGROUND = hexToRgb("#1e293b");
-const HEADER_TEXT = hexToRgb("#ffffff");
+import { HEADER_BACKGROUND, HEADER_TEXT, hexToRgb, type RGB } from "./sheetsFormatting";
 
 // Same visual language as the tier badges on /enhancements
 // (app/enhancements/page.tsx's TIER_STYLES) — emerald/sky/amber/zinc.

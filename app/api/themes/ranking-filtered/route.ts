@@ -4,11 +4,19 @@ import { ThemeRankingFilter } from "@/models/theme-ranking-filter";
 import { ThemeFilteredRank } from "@/models/theme-filtered-rank";
 import { runFilteredRankingCheck } from "@/lib/themes/runFilteredRankingCheck";
 
-function parseQuery(request: Request) {
+// Theme Store industry slugs are short kebab-case words (see the
+// Collection list in app/demo-store/page.tsx). Anything else is refused
+// rather than stored: every tracked filter is re-crawled daily.
+const INDUSTRY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function parseQuery(request: Request): { sortBy: "newest" | "relevance"; industry: string | null } | { error: string } {
   const { searchParams } = new URL(request.url);
   const sortByRaw = searchParams.get("sortBy");
   const sortBy = sortByRaw === "newest" ? "newest" : "relevance";
   const industry = searchParams.get("industry") || null;
+  if (industry && (industry.length > 40 || !INDUSTRY_SLUG.test(industry))) return { error: "Unknown collection." };
+  // Relevance with no collection is the default ranking (/api/themes/check-ranking), not a filter.
+  if (sortBy === "relevance" && !industry) return { error: "Choose a sort order or collection." };
   return { sortBy, industry };
 }
 
@@ -25,12 +33,15 @@ async function currentRows(filterId: unknown) {
   }));
 }
 
-/** Returns the last-crawled rows for a Sort/Collection combination — no live fetch, just what's stored. Creates (and so starts tracking) the filter if it's new, with empty rows until a crawl runs. */
+/** Returns the last-crawled rows for a Sort/Collection combination — no live fetch, just what's stored. Read-only: a filter only starts being tracked (and re-crawled daily) once it's POSTed. */
 export async function GET(request: Request) {
+  const parsed = parseQuery(request);
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
   await connectToDatabase();
-  const { sortBy, industry } = parseQuery(request);
+  const { sortBy, industry } = parsed;
 
-  const filter = await ThemeRankingFilter.findOneAndUpdate({ sortBy, industry }, {}, { upsert: true, new: true });
+  const filter = await ThemeRankingFilter.findOne({ sortBy, industry }).lean<{ _id: unknown; sortBy: string; industry: string | null; lastCheckedAt?: Date | null; lastError?: string | null }>();
+  if (!filter) return NextResponse.json({ filter: { sortBy, industry, lastCheckedAt: null, lastError: null }, rows: [] });
   const rows = await currentRows(filter._id);
 
   return NextResponse.json({
@@ -41,8 +52,10 @@ export async function GET(request: Request) {
 
 /** Runs a fresh crawl for this Sort/Collection combination (same on-request pattern as /api/themes/check-ranking) and returns the result. */
 export async function POST(request: Request) {
+  const parsed = parseQuery(request);
+  if ("error" in parsed) return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
   await connectToDatabase();
-  const { sortBy, industry } = parseQuery(request);
+  const { sortBy, industry } = parsed;
 
   const filter = await ThemeRankingFilter.findOneAndUpdate({ sortBy, industry }, {}, { upsert: true, new: true });
   const result = await runFilteredRankingCheck(filter);

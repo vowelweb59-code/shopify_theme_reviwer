@@ -46,13 +46,24 @@ function severityBucket(matches: { severity: string }[]): "PASS" | "FAIL" | "WAR
  * live-check regex scan) is NOT_TESTED unless this run actually had a demo
  * store URL.
  */
-export async function deriveChecksForAuditRun(
-  auditRunId: unknown,
-  hadLiveChecks: boolean
-): Promise<{ categories: CategoryChecks[]; totals: { total: number; passed: number; failed: number; warnings: number; notTested: number } }> {
-  const [requirements, rules, findings] = await Promise.all([
+/** The requirement/rule catalog every run's checks are derived against. Load once when deriving checks for many runs. */
+export async function loadCheckCatalog() {
+  const [requirements, rules] = await Promise.all([
     Requirement.find({ status: "active" }).sort({ requirementId: 1 }).lean(),
     Rule.find({ enabled: true }).lean(),
+  ]);
+  return { requirements, rules };
+}
+
+export type CheckCatalog = Awaited<ReturnType<typeof loadCheckCatalog>>;
+
+export async function deriveChecksForAuditRun(
+  auditRunId: unknown,
+  hadLiveChecks: boolean,
+  catalog?: CheckCatalog
+): Promise<{ categories: CategoryChecks[]; totals: { total: number; passed: number; failed: number; warnings: number; notTested: number } }> {
+  const [{ requirements, rules }, findings] = await Promise.all([
+    catalog ?? loadCheckCatalog(),
     Finding.find({ auditRunId }).select("ruleId requirementId category severity filePath lineNumber sourceSnippet finding recommendation").lean(),
   ]);
 

@@ -12,6 +12,7 @@ import { computeCoverage, computeCoverageByCategory } from "@/lib/audit/coverage
 import { computeReadiness } from "@/lib/audit/readiness";
 import { loadReadinessConfig } from "@/lib/audit/readinessConfigStore";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -24,7 +25,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
 
   const [findings, requirements, readinessConfig, enhancementPoints] = await Promise.all([
-    Finding.find({ auditRunId: id }).sort({ createdAt: -1 }).lean(),
+    Finding.find({ auditRunId: id }).sort({ createdAt: -1 }).lean().then(withRuleCitations),
     Requirement.find().select("ruleStatus category").lean(),
     loadReadinessConfig(),
     EnhancementPoint.find().lean(),

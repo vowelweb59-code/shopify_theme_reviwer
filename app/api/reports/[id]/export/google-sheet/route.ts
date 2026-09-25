@@ -11,6 +11,7 @@ import { buildChecklistSheetTabs, type SheetChecklistFinding, type SheetTab } fr
 import { buildFutureUpdatesTab, type SheetFutureUpdatesPoint } from "@/lib/export/enhancementSheetRows";
 import { mergeChecklistRows } from "@/lib/export/checklistMerge";
 import { withFutureUpdatesFormatting } from "@/lib/google/enhancementSheetFormatting";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 import {
   createGoogleSheet,
   updateGoogleSheet,
@@ -37,9 +38,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const theme = await Theme.findById(auditRun.themeId);
   if (!theme) return NextResponse.json({ error: "Theme not found." }, { status: 404 });
 
-  const currentFindings = (await Finding.find({ auditRunId: id })
-    .sort({ severity: 1, filePath: 1 })
-    .lean()) as unknown as SheetChecklistFinding[];
+  const currentFindings = withRuleCitations(
+    (await Finding.find({ auditRunId: id }).sort({ severity: 1, filePath: 1 }).lean()) as unknown as SheetChecklistFinding[]
+  );
 
   // Auto-selected baseline (no manual picking, unlike the on-screen diff
   // section) — the immediately preceding completed run of the same theme,
@@ -53,7 +54,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     .lean();
   const baselineFindings =
     baselineRuns.length > 0
-      ? ((await Finding.find({ auditRunId: baselineRuns[0]._id }).lean()) as unknown as SheetChecklistFinding[])
+      ? withRuleCitations((await Finding.find({ auditRunId: baselineRuns[0]._id }).lean()) as unknown as SheetChecklistFinding[])
       : [];
 
   const diff = computeFindingsDiff<SheetChecklistFinding>(baselineFindings, currentFindings);

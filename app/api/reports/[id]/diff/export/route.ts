@@ -8,6 +8,7 @@ import { buildDiffCsv, type DiffCsvFinding } from "@/lib/export/diffCsv";
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -36,8 +37,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const [currentFindings, baselineFindings] = await Promise.all([
-    Finding.find({ auditRunId: id }).lean(),
-    Finding.find({ auditRunId: baselineId }).lean(),
+    Finding.find({ auditRunId: id }).lean().then(withRuleCitations),
+    Finding.find({ auditRunId: baselineId }).lean().then(withRuleCitations),
   ]);
   const diff = computeFindingsDiff(baselineFindings as unknown as DiffCsvFinding[], currentFindings as unknown as DiffCsvFinding[]);
   const csv = buildDiffCsv(diff.findings);

@@ -7,20 +7,22 @@ import { computeCoverage, computeCoverageByCategory } from "@/lib/audit/coverage
 import { computeReadiness } from "@/lib/audit/readiness";
 import { loadReadinessConfig } from "@/lib/audit/readinessConfigStore";
 import { buildFindingsCsv } from "@/lib/export/csv";
-import { buildReportHtml, renderReportPdf } from "@/lib/export/pdf";
+import { buildReportHtml } from "@/lib/export/pdf";
 import { buildAuditReportJson } from "@/lib/export/json";
 import { buildReportXlsx } from "@/lib/export/xlsx";
 // Registers the "Theme" model with Mongoose — required for the populate()
 // below; see app/api/reports/route.ts for why this matters.
 import "@/models/theme";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 
 const FORMATS = ["csv", "pdf", "html", "json", "xlsx"] as const;
 type Format = (typeof FORMATS)[number];
 
 const CONTENT_TYPES: Record<Format, string> = {
   csv: "text/csv; charset=utf-8",
-  pdf: "application/pdf",
+  // PDF is the print-ready HTML page; the browser's "Save as PDF" makes the file.
+  pdf: "text/html; charset=utf-8",
   html: "text/html; charset=utf-8",
   json: "application/json",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -40,7 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!auditRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
 
   const [findings, requirements, readinessConfig] = await Promise.all([
-    Finding.find({ auditRunId: id }).sort({ severity: 1, filePath: 1 }).lean(),
+    Finding.find({ auditRunId: id }).sort({ severity: 1, filePath: 1 }).lean().then(withRuleCitations),
     Requirement.find().select("ruleStatus category").lean(),
     loadReadinessConfig(),
   ]);
@@ -59,7 +61,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return new Response(payload, {
       headers: {
         "Content-Type": CONTENT_TYPES[format as Format],
-        "Content-Disposition": `attachment; filename="${filenameBase}.${format}"`,
+        // The print page opens in a tab rather than downloading.
+        "Content-Disposition": format === "pdf" ? "inline" : `attachment; filename="${filenameBase}.${format}"`,
       },
     });
   }
@@ -111,15 +114,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         }
       : undefined,
     findings,
+    // format === "pdf": the same report, as a page that opens the browser's
+    // print dialog (phase-5 §13: PDF reuses the report data/logic).
+    print: format === "pdf",
   });
-
-  if (format === "html") {
-    return respond(html);
-  }
-
-  // format === "pdf" — same html builder as above, per phase-5 §13's note
-  // that PDF should reuse the same report data/logic rather than a
-  // separate implementation.
-  const pdf = await renderReportPdf(html);
-  return respond(pdf);
+  return respond(html);
 }

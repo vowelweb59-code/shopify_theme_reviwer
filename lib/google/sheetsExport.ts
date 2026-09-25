@@ -1,7 +1,8 @@
-import { google, type sheets_v4 } from "googleapis";
+import { sheets as sheetsApi, type sheets_v4 } from "@googleapis/sheets";
 import { getAuthorizedClient } from "./oauth";
 import { buildSheetFormattingRequests } from "./sheetsFormatting";
 import { TAB_COLUMNS, type SheetTab } from "@/lib/export/sheetRows";
+import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 
 export class GoogleSheetsNotConnectedError extends Error {}
 
@@ -119,7 +120,7 @@ export async function createGoogleSheet(title: string, tabs: SheetTab[]): Promis
     throw new Error("This theme has no findings to export.");
   }
 
-  const sheets = google.sheets({ version: "v4", auth: client });
+  const sheets = sheetsApi({ version: "v4", auth: client, timeout: GOOGLE_API_TIMEOUT_MS });
   const { data } = await sheets.spreadsheets.create({
     requestBody: {
       properties: { title },
@@ -148,7 +149,7 @@ export async function getSpreadsheetSheetsList(spreadsheetId: string): Promise<S
   if (!client) {
     throw new GoogleSheetsNotConnectedError("Google Sheets is not connected. Connect it from Settings first.");
   }
-  const sheets = google.sheets({ version: "v4", auth: client });
+  const sheets = sheetsApi({ version: "v4", auth: client, timeout: GOOGLE_API_TIMEOUT_MS });
   try {
     const { data } = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties(sheetId,title)" });
     return (data.sheets ?? [])
@@ -170,7 +171,7 @@ export async function readExistingChecklistRows(spreadsheetId: string, tabTitles
   if (!client) {
     throw new GoogleSheetsNotConnectedError("Google Sheets is not connected. Connect it from Settings first.");
   }
-  const sheets = google.sheets({ version: "v4", auth: client });
+  const sheets = sheetsApi({ version: "v4", auth: client, timeout: GOOGLE_API_TIMEOUT_MS });
   const lastColumn = columnLetter(TAB_COLUMNS.length - 1);
   const { data } = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
@@ -223,7 +224,7 @@ export async function updateGoogleSheet(
     throw new Error("This theme has no findings to export.");
   }
 
-  const sheets = google.sheets({ version: "v4", auth: client });
+  const sheets = sheetsApi({ version: "v4", auth: client, timeout: GOOGLE_API_TIMEOUT_MS });
 
   const { data: addData } = await sheets.spreadsheets.batchUpdate({
     spreadsheetId,

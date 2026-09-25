@@ -5,7 +5,7 @@ import { DemoStoreCheckState } from "@/models/demo-store-check-state";
 
 export async function GET() {
   await connectToDatabase();
-  const [records, state] = await Promise.all([DemoStoreThemeRecord.find().sort({ startedAt: -1 }), DemoStoreCheckState.findOne()]);
+  const [records, state] = await Promise.all([DemoStoreThemeRecord.find().sort({ startedAt: -1 }).lean(), DemoStoreCheckState.findOne().lean()]);
 
   return NextResponse.json({
     records,

@@ -13,7 +13,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // whatever fields the other source doesn't supply — a chart reads only
 // the rows where its field of interest is non-null.
 const themeRankHistorySchema = new Schema({
-  themeId: { type: Schema.Types.ObjectId, ref: "Theme", required: true, index: true },
+  themeId: { type: Schema.Types.ObjectId, ref: "Theme", required: true }, // indexed via {themeId, checkedAt} below
   presetSlug: { type: String, required: true },
   presetName: { type: String, required: true },
   rank: { type: Number, default: null },

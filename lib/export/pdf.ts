@@ -1,4 +1,3 @@
-import { chromium } from "playwright";
 import { getPageLabel } from "@/lib/audit/pageLabel";
 
 export type PdfFindingRow = {
@@ -33,9 +32,12 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 /**
- * Builds a self-contained, print-friendly HTML document for one audit run.
- * Kept separate from the PDF renderer so the HTML itself is unit-testable
- * without launching a browser, and reusable as a plain HTML export later.
+ * Builds a self-contained, print-friendly HTML document for one audit run —
+ * both the HTML export and the PDF export. PDF is produced by the browser's
+ * own print engine ("Save as PDF") rather than a server-side headless
+ * Chromium: `print: true` adds print page setup, a Print button, and opens
+ * the print dialog on load. (Running Chromium on the server only for this
+ * cost ~4 GB of Docker image and a memory spike per export.)
  */
 export function buildReportHtml(opts: {
   themeName: string;
@@ -43,8 +45,9 @@ export function buildReportHtml(opts: {
   startedAt: string;
   summary?: PdfSummary;
   findings: PdfFindingRow[];
+  print?: boolean;
 }): string {
-  const { themeName, auditRunId, startedAt, summary, findings } = opts;
+  const { themeName, auditRunId, startedAt, summary, findings, print = false } = opts;
 
   const rows = findings
     .map(
@@ -78,9 +81,17 @@ export function buildReportHtml(opts: {
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th { text-align: left; border-bottom: 1px solid #d4d4d8; padding: 6px 8px; font-size: 10px; text-transform: uppercase; color: #71717a; }
   td { border-bottom: 1px solid #e4e4e7; padding: 6px 8px; vertical-align: top; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  .toolbar { position: sticky; top: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 8px 0 16px; background: #fff; }
+  .toolbar button { font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 0; background: #4f46e5; color: #fff; cursor: pointer; }
+  @page { size: A4; margin: 16px; }
+  @media print { body { margin: 0; } .toolbar { display: none; } }
 </style>
+${print ? `<title>${escapeHtml(themeName)} audit ${escapeHtml(auditRunId)}</title>` : ""}
 </head>
 <body>
+  ${print ? `<div class="toolbar"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>` : ""}
   <h1>${escapeHtml(themeName)}</h1>
   <div class="meta">Audit ${escapeHtml(auditRunId)} — started ${escapeHtml(startedAt)}</div>
   ${
@@ -98,19 +109,7 @@ export function buildReportHtml(opts: {
     <thead><tr><th>Severity</th><th>Category</th><th>Page</th><th>File</th><th>Finding</th><th>Rule</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
+  ${print ? `<script>window.addEventListener("load", () => setTimeout(() => window.print(), 300));</script>` : ""}
 </body>
 </html>`;
-}
-
-/** Renders the report HTML to a PDF buffer via a real headless Chromium page — reuses the same Playwright dependency the live-check feature already installs. */
-export async function renderReportPdf(html: string): Promise<Buffer> {
-  const browser = await chromium.launch();
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "load" });
-    const pdf = await page.pdf({ format: "A4", margin: { top: "16px", bottom: "16px", left: "16px", right: "16px" } });
-    return pdf;
-  } finally {
-    await browser.close();
-  }
 }

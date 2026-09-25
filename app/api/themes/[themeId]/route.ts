@@ -5,7 +5,7 @@ import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
 import { EnhancementPoint } from "@/models/enhancement-point";
 import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/themes/compareVersions";
-import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
+import { deriveChecksForAuditRun, loadCheckCatalog } from "@/lib/themes/deriveChecksForAuditRun";
 import { sanitizePresets } from "@/lib/themes/presets";
 import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
@@ -32,8 +32,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   const versionIds = versions.map((v) => v._id);
   const allAudits =
     versionIds.length > 0
-      ? await AuditRun.find({ themeVersionId: { $in: versionIds } }).sort({ startedAt: -1 }).lean()
+      ? await AuditRun.find({ themeVersionId: { $in: versionIds } })
+          .sort({ startedAt: -1 })
+          // Every run feeds "Previous Audits"; only the latest's page-speed
+          // and enhancement data are used, and the client reads just _id/startedAt.
+          .select("_id themeVersionId status startedAt demoStorePresets pageSpeed enhancementDetections")
+          .lean()
       : [];
+  // One catalog for this run and every previous run's totals below,
+  // instead of re-reading Requirement/Rule once per run.
+  const catalog = await loadCheckCatalog();
 
   const versionById = new Map(versions.map((v) => [String(v._id), v]));
 
@@ -54,7 +62,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   if (latestVersion) {
     latestAudit = allAudits.find((a) => String(a.themeVersionId) === String(latestVersion._id) && a.status === "complete") ?? null;
     if (latestAudit) {
-      checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
+      checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length), catalog);
       const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
 
       pageSpeed = latestAudit.pageSpeed ?? [];
@@ -79,13 +87,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   }
 
   // "Previous Audits" — every complete run across every version, newest
-  // first, each with its own derived totals (cheap: Requirement/Rule are
-  // small collections, Finding lookups are indexed by auditRunId).
+  // first, each with its own derived totals (the catalog is loaded once
+  // above; Finding lookups are indexed by auditRunId).
   const previousAudits = await Promise.all(
     allAudits
       .filter((a) => a.status === "complete")
       .map(async (a) => {
-        const { totals } = await deriveChecksForAuditRun(a._id, Boolean(a.demoStorePresets?.length));
+        const { totals } = await deriveChecksForAuditRun(a._id, Boolean(a.demoStorePresets?.length), catalog);
         return {
           auditRunId: a._id,
           version: versionById.get(String(a.themeVersionId))?.version ?? null,

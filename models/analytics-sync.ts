@@ -54,6 +54,11 @@ analyticsSyncSchema.index({ analyticsThemeId: 1 }, { unique: true, partialFilter
 analyticsSyncSchema.index({ analyticsThemeId: 1, createdAt: -1 });
 analyticsSyncSchema.index({ status: 1, nextRetryAt: 1 });
 
+// Finished jobs are only needed for recent history and troubleshooting;
+// expire them 90 days after completion so the collection doesn't grow one
+// row per sync forever. Queued/running jobs (completedAt null) never expire.
+analyticsSyncSchema.index({ completedAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+
 export type AnalyticsSyncDoc = InferSchemaType<typeof analyticsSyncSchema>;
 
 export const AnalyticsSync = models.AnalyticsSync ?? model("AnalyticsSync", analyticsSyncSchema);

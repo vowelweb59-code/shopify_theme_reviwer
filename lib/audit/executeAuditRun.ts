@@ -1,4 +1,7 @@
 import type { Types } from "mongoose";
+import { capSnippetLine } from "./snippet";
+import { pruneOldAuditRuns } from "./retention";
+import { withoutRuleCitation } from "./ruleCitations";
 import { AuditRun, type AuditRunDoc } from "@/models/audit-run";
 import { Finding } from "@/models/finding";
 import { Rule } from "@/models/rule";
@@ -105,7 +108,7 @@ function extractSourceSnippet(files: ParsedFile[], filePath: string, lineNumber:
   const end = Math.min(lines.length, lineNumber + SNIPPET_CONTEXT_LINES);
   return lines
     .slice(start, end)
-    .map((line, i) => `${start + i + 1}${start + i + 1 === lineNumber ? " >" : "  "} ${line}`)
+    .map((line, i) => `${start + i + 1}${start + i + 1 === lineNumber ? " >" : "  "} ${capSnippetLine(line)}`)
     .join("\n");
 }
 
@@ -116,25 +119,34 @@ function toFindingDocs(
   files: ParsedFile[],
   history: HistoryClassification[]
 ) {
-  return findings.map((f, i) => ({
-    auditRunId,
-    ruleId: f.ruleId,
-    requirementId: f.requirementId ?? null,
-    filePath: f.filePath,
-    lineNumber: f.lineNumber ?? null,
-    category: f.category,
-    severity: f.severity,
-    layer,
-    presetLabel: f.presetLabel ?? null,
-    finding: f.finding,
-    recommendation: f.recommendation ?? null,
-    sourceReference: f.sourceReference ?? null,
-    sourceUrl: f.sourceUrl ?? null,
-    sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
-    historicalState: history[i].historicalState,
-    status: history[i].carriedStatus ?? "open",
-    ignoredReason: history[i].carriedIgnoredReason,
-  }));
+  return findings.map((f, i) =>
+    withoutEmpty(withoutRuleCitation({
+      auditRunId,
+      ruleId: f.ruleId,
+      requirementId: f.requirementId,
+      filePath: f.filePath,
+      lineNumber: f.lineNumber,
+      category: f.category,
+      severity: f.severity,
+      layer,
+      presetLabel: f.presetLabel,
+      finding: f.finding,
+      recommendation: f.recommendation,
+      sourceReference: f.sourceReference,
+      sourceUrl: f.sourceUrl,
+      sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
+      historicalState: history[i].historicalState,
+      status: history[i].carriedStatus ?? "open",
+      ignoredReason: history[i].carriedIgnoredReason,
+    }))
+  );
+}
+
+// Optional finding fields are left out rather than stored as null: across
+// thousands of findings the null keys alone were ~7% of the collection.
+// Readers already treat missing and null alike (?? / truthiness checks).
+function withoutEmpty<T extends Record<string, unknown>>(doc: T): Partial<T> {
+  return Object.fromEntries(Object.entries(doc).filter(([, v]) => v !== null && v !== undefined)) as Partial<T>;
 }
 
 export type ExecuteAuditRunParams = {
@@ -289,6 +301,10 @@ export async function executeAuditRun(params: ExecuteAuditRunParams, hooks?: Exe
     auditRun.requirementsVersion = REQUIREMENTS_VERSION;
     auditRun.timingMs = timer.toRecord();
     await auditRun.save();
+
+    // Keep only this theme's latest few audits (lib/audit/retention.ts).
+    // Best-effort: a failed prune must not turn a finished audit into an error.
+    await pruneOldAuditRuns(theme._id).catch((err) => console.error("[audit] retention prune failed:", err instanceof Error ? err.message : err));
 
     const findings = [
       ...staticFindings.map((f) => ({ ...f, layer: "static" as const })),

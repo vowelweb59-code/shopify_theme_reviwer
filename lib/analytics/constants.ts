@@ -68,20 +68,6 @@ export type AggregateDimension =
   | "landingPage"
   | "pagePath";
 
-export const AGGREGATE_DIMENSIONS: readonly AggregateDimension[] = [
-  "country",
-  "city",
-  "deviceCategory",
-  "browser",
-  "operatingSystem",
-  "sessionSource",
-  "sessionMedium",
-  "sessionCampaignName",
-  "sessionDefaultChannelGroup",
-  "landingPage",
-  "pagePath",
-];
-
 /**
  * Stored on rows that aggregate over every event (the per-property user and
  * session totals), so eventName is never null and stays part of the

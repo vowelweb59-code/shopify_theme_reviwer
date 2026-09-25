@@ -2,15 +2,16 @@ import { TAB_COLUMNS, type SheetFormattingRequest } from "@/lib/export/sheetRows
 
 export type { SheetFormattingRequest };
 
-type RGB = { red: number; green: number; blue: number };
+export type RGB = { red: number; green: number; blue: number };
 
-function hexToRgb(hex: string): RGB {
+export function hexToRgb(hex: string): RGB {
   const n = parseInt(hex.slice(1), 16);
   return { red: ((n >> 16) & 255) / 255, green: ((n >> 8) & 255) / 255, blue: (n & 255) / 255 };
 }
 
-const HEADER_BACKGROUND = hexToRgb("#1e293b");
-const HEADER_TEXT = hexToRgb("#ffffff");
+// Shared by every sheet this app writes (findings and enhancement exports).
+export const HEADER_BACKGROUND = hexToRgb("#1e293b");
+export const HEADER_TEXT = hexToRgb("#ffffff");
 
 // Mirrors app/_components/findings.tsx's SEVERITY_STYLES badge colors
 // (Tailwind red/orange/amber/zinc -100/-800 pairs), so the sheet reads as

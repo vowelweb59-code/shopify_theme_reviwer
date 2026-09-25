@@ -5,7 +5,7 @@ import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
 import { EnhancementPoint } from "@/models/enhancement-point";
 import { pickLatestVersion } from "@/lib/themes/compareVersions";
-import { deriveChecksForAuditRun } from "@/lib/themes/deriveChecksForAuditRun";
+import { deriveChecksForAuditRun, loadCheckCatalog } from "@/lib/themes/deriveChecksForAuditRun";
 import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import { uploadThemeVersion } from "@/lib/themes/uploadThemeVersion";
 import { sanitizePresets } from "@/lib/themes/presets";
@@ -36,7 +36,8 @@ export async function GET() {
   // Fetched once, not per theme — the same global catalog every theme's
   // "Opportunities"/"Features" scores are computed against (see
   // computeScoreboard.ts), same as the Theme Detail route does.
-  const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
+  // Likewise the requirement/rule catalog every theme's checks derive from.
+  const [enhancementPoints, catalog] = await Promise.all([EnhancementPoint.find().select("pointId themeCount").lean(), loadCheckCatalog()]);
 
   const rows = await Promise.all(
     themes.map(async (theme) => {
@@ -46,14 +47,17 @@ export async function GET() {
         return { theme, latestVersion: null, latestAudit: null, checkTotals: null, scoreboard: null };
       }
 
+      // Only what this route and the list page use — not the whole run
+      // (timings, diagnostics, version snapshots, ...).
       const latestAudit = await AuditRun.findOne({ themeVersionId: latestVersion._id, status: "complete" })
         .sort({ startedAt: -1 })
+        .select("_id startedAt enhancementDetections pageSpeed demoStorePresets")
         .lean();
       if (!latestAudit) {
         return { theme, latestVersion, latestAudit: null, checkTotals: null, scoreboard: null };
       }
 
-      const checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length));
+      const checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length), catalog);
 
       // Same reasoning as the Theme Detail route: if this run's own PSI
       // calls all failed, fall back to the most recent other complete run
@@ -70,6 +74,7 @@ export async function GET() {
           "pageSpeed.0": { $exists: true },
         })
           .sort({ startedAt: -1 })
+          .select("pageSpeed")
           .lean();
         if (fallbackAudit) pageSpeed = fallbackAudit.pageSpeed ?? [];
       }

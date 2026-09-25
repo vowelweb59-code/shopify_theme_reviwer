@@ -1,11 +1,9 @@
 "use client";
 
+import { formatDateOnly as formatDate } from "@/app/_components/formatDate";
+
 type VersionRow = { _id: string; version: string; createdAt: string };
 type AuditTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
 
 function VersionRowView({ version, totals }: { version: VersionRow; totals: AuditTotals | undefined }) {
   return (

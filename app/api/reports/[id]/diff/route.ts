@@ -11,6 +11,7 @@ import {
   type DiffableFinding,
 } from "@/lib/audit/diffFindings";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 
 // Mongoose Map-typed fields normally come back as plain objects through
 // .lean(), but that's an implementation detail, not a contract — handle a
@@ -42,8 +43,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const [currentFindings, baselineFindings] = await Promise.all([
-    Finding.find({ auditRunId: id }).lean(),
-    Finding.find({ auditRunId: baselineId }).lean(),
+    Finding.find({ auditRunId: id }).lean().then(withRuleCitations),
+    Finding.find({ auditRunId: baselineId }).lean().then(withRuleCitations),
   ]);
 
   const diff = computeFindingsDiff(baselineFindings as unknown as DiffableFinding[], currentFindings as unknown as DiffableFinding[]);

@@ -7,7 +7,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // rather than per-theme since enhancement points aren't scoped to a
 // specific theme audit. Mirrors the ReadinessConfig/GoogleAuth convention
 // of one small dedicated singleton model per concern rather than growing
-// the (currently unused) AuditSettings model to cover unrelated things.
+// a general settings model to cover unrelated things.
 const enhancementSheetSchema = new Schema(
   {
     googleSpreadsheetId: { type: String, default: null },

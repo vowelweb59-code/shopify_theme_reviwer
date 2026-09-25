@@ -1,5 +1,5 @@
 import "server-only";
-import type { Auth } from "googleapis";
+import type { OAuth2Client } from "google-auth-library";
 import { GoogleConnection } from "@/models/google-connection";
 import { decryptSecret, encryptSecret } from "./crypto";
 import { Ga4OAuthError, classifyRefreshError, createGa4OAuthClient, type Ga4OAuthResult } from "./googleOAuth";
@@ -139,7 +139,7 @@ async function recordRefreshFailure(connectionId: string, err: unknown): Promise
   return kind;
 }
 
-function persistRefreshedTokens(connectionId: string, client: Auth.OAuth2Client) {
+function persistRefreshedTokens(connectionId: string, client: OAuth2Client) {
   client.on("tokens", (tokens) => {
     if (!tokens.access_token) return;
     void GoogleConnection.updateOne(
@@ -170,7 +170,7 @@ export class Ga4ConnectionError extends Error {
  * An OAuth2 client for one stored account, refreshing (and re-saving) its
  * access token automatically. For Phase 3+ GA4 API calls.
  */
-export async function getAuthorizedClient(connectionId: string, clientFactory: () => Auth.OAuth2Client = createGa4OAuthClient): Promise<Auth.OAuth2Client> {
+export async function getAuthorizedClient(connectionId: string, clientFactory: () => OAuth2Client = createGa4OAuthClient): Promise<OAuth2Client> {
   const doc = await loadWithTokens(connectionId);
   if (!doc) throw new Ga4ConnectionError("not_found", "Google connection not found.");
   if (doc.status !== "active" || !doc.encryptedRefreshToken) {
@@ -196,7 +196,7 @@ export type ValidationOutcome = { ok: true } | { ok: false; reason: "revoked" | 
  */
 export async function validateConnection(
   connectionId: string,
-  clientFactory: () => Auth.OAuth2Client = createGa4OAuthClient
+  clientFactory: () => OAuth2Client = createGa4OAuthClient
 ): Promise<{ outcome: ValidationOutcome; connection: PublicGoogleConnection | null }> {
   const doc = await loadWithTokens(connectionId);
   if (!doc) return { outcome: { ok: false, reason: "not_connected" }, connection: null };

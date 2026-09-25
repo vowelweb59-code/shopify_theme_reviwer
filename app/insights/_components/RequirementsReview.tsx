@@ -105,7 +105,7 @@ function RequirementRow({ requirement, isOpen, onToggle }: { requirement: Requir
  * = only checkable by visiting a real, running demo store URL (the LIVE-*
  * convention). See app/api/requirements/route.ts for how implementationType
  * is derived. Rendered as compact, expandable rows (progressive disclosure —
- * matching AllChecksList's idiom) rather than a flat table with the full
+ * matching the old All Checks list's idiom) rather than a flat table with the full
  * description inline, which made every row a different, often very tall,
  * height and was hard to scan.
  */

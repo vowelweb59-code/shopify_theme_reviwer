@@ -1,9 +1,8 @@
-# Both stages use Playwright's own base image (not plain node) — it ships
-# Chromium's OS-level shared libraries already installed, which a plain
-# node:20 image doesn't have and getting right by hand (apt-get list of
-# ~20 packages) is easy to get subtly wrong. Keep this tag's version in
-# sync with the `playwright` version in package.json.
-FROM mcr.microsoft.com/playwright:v1.62.1-jammy AS builder
+# Plain Node images: nothing in the app needs a browser any more (PDF export
+# is the report page printed by the user's own browser), so the old
+# Playwright base image — ~4 GB of Chromium/Firefox/WebKit and their OS
+# libraries — is gone.
+FROM node:22-slim AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -12,22 +11,19 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM mcr.microsoft.com/playwright:v1.62.1-jammy AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# The full node_modules, not next.config.ts's standalone-trace output —
-# Playwright needs non-code runtime assets (browsers.json, its bundled
-# browser binaries) that Next.js's static-import file tracer doesn't know
-# to include, confirmed by testing the standalone build directly (it
-# crashed the moment a Chromium-dependent code path ran). PDF export
-# (lib/export/pdf.ts) is the only remaining Playwright/Chromium usage —
-# live checks and PageSpeed no longer launch a browser at all.
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
+# Next's standalone output (next.config.ts): a minimal server.js plus only
+# the node_modules files the server actually uses. Static assets and
+# public/ aren't included in it by design, so they're copied alongside.
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
 
+USER node
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

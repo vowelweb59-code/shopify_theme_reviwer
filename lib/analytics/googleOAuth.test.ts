@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Auth } from "googleapis";
+import type { OAuth2Client } from "google-auth-library";
 import {
   ANALYTICS_READONLY_SCOPE,
   Ga4OAuthError,
@@ -32,7 +32,7 @@ function fakeClient({ tokens, payload, getTokenError }: { tokens?: Record<string
       if (!payload) throw new Error("bad signature");
       return { getPayload: () => payload };
     }),
-  } as unknown as Auth.OAuth2Client;
+  } as unknown as OAuth2Client;
 }
 
 const goodTokens = {

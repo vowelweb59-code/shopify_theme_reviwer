@@ -81,7 +81,7 @@ const enhancementPointSchema = new Schema(
   {
     // Stable human-assigned ID (e.g. "TREND-CART-001"), mirroring the
     // Requirement.requirementId convention so re-seeding never duplicates.
-    pointId: { type: String, required: true, unique: true, index: true },
+    pointId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     category: { type: String, required: true, enum: ENHANCEMENT_CATEGORIES, index: true },
     description: { type: String, required: true },
@@ -91,7 +91,7 @@ const enhancementPointSchema = new Schema(
     source: { type: String, required: true, enum: ENHANCEMENT_SOURCES, default: "theme-store-trend", index: true },
 
     // --- theme-store-trend fields — null for source: "native-capability" ---
-    adoptionTier: { type: String, enum: ADOPTION_TIERS, default: null, index: true },
+    adoptionTier: { type: String, enum: ADOPTION_TIERS, default: null }, // indexed via {adoptionTier, themeCount} below
     // Distinct themes (of themeTotal analysed) whose release notes ship this.
     themeCount: { type: Number, default: null },
     themeTotal: { type: Number, default: null },

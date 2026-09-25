@@ -11,6 +11,7 @@ import { AddThemeModal } from "./_components/AddThemeModal";
 import { FeatureMatrixTable } from "./_components/FeatureMatrixTable";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import { computeUpdatePriority, type UpdatePriorityResult } from "@/lib/themes/updatePriority";
+import { formatDateOnly as formatDate } from "@/app/_components/formatDate";
 
 type CheckTotals = { total: number; passed: number; failed: number; warnings: number; notTested: number };
 
@@ -30,9 +31,6 @@ type ThemeRow = {
 
 type PrioritizedThemeRow = ThemeRow & { priority: UpdatePriorityResult };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
 
 function healthPercent(totals: CheckTotals | null): number | null {
   if (!totals || totals.total === 0) return null;

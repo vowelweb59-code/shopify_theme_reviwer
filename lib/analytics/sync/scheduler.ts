@@ -38,6 +38,9 @@ export async function runSchedulerTick(deps: SyncDeps = defaultSyncDeps): Promis
   for (const job of due) await executeSync(job._id.toString(), deps);
 
   const activeAccounts = await GoogleConnection.find({ status: "active" }).select("_id").lean<{ _id: unknown }[]>();
+  // Nothing connected yet (the normal state until GA4 is set up): skip the
+  // per-theme queries entirely.
+  if (activeAccounts.length === 0) return { resumed: due.length, started: 0 };
   const themes = await AnalyticsTheme.find({
     isActive: true,
     connectionStatus: "connected",

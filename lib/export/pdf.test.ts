@@ -37,4 +37,13 @@ describe("buildReportHtml", () => {
     const html = buildReportHtml({ themeName: "Adorn", auditRunId: "run1", startedAt: "2026-08-14", findings: [] });
     expect(html).not.toContain("class=\"summary\"");
   });
+
+  it("adds print setup, a Print button and auto-print only for the PDF (print) version", () => {
+    const plain = buildReportHtml({ themeName: "Adorn", auditRunId: "run1", startedAt: "2026-08-14", findings: [] });
+    const print = buildReportHtml({ themeName: "Adorn", auditRunId: "run1", startedAt: "2026-08-14", findings: [], print: true });
+    expect(plain).not.toContain("window.print");
+    expect(print).toContain("Print / Save as PDF");
+    expect(print).toContain("window.print()");
+    expect(print).toContain("@page");
+  });
 });

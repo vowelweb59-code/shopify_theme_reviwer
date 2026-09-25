@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
+import { formatDateTime as formatDate } from "@/app/_components/formatDate";
 
 type FeatureRow = {
   id: string;
@@ -22,15 +23,6 @@ type ThemeFeatures = {
   features: FeatureRow[];
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 const STATUS_LABEL: Record<FeatureRow["status"], string> = {
   detected: "Detected",

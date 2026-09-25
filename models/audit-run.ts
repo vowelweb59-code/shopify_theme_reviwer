@@ -94,13 +94,13 @@ const enhancementDetectionSchema = new Schema(
 
 const auditRunSchema = new Schema(
   {
-    themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
+    themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme" },
     // Populated only for runs triggered through the Themes module
     // (app/api/themes/.../audit/route.ts) — null for every run created via
     // the original /audit -> /api/audit/run flow, which stays unaffected.
     themeVersionId: { type: Schema.Types.ObjectId, ref: "ThemeVersion", default: null, index: true },
-    themeZipId: { type: Schema.Types.ObjectId, ref: "ThemeZip", default: null, index: true },
-    status: { type: String, required: true, enum: AUDIT_RUN_STATUSES, default: "pending", index: true },
+    themeZipId: { type: Schema.Types.ObjectId, ref: "ThemeZip", default: null },
+    status: { type: String, required: true, enum: AUDIT_RUN_STATUSES, default: "pending" },
     startedAt: { type: Date, required: true, default: () => new Date(), index: true },
     completedAt: { type: Date, default: null },
     error: { type: String, default: null },
@@ -159,6 +159,8 @@ const auditRunSchema = new Schema(
 // loadThemeFindingHistory runs on every single audit: find this theme's
 // prior complete runs, newest first (phase-8 §17 asks for indexes based
 // on actual query patterns, not a blanket "index everything").
+// Serves every per-theme lookup (themeId alone is its prefix). Status and
+// themeZipId are never queried on their own, so they have no index.
 auditRunSchema.index({ themeId: 1, status: 1, startedAt: -1 });
 
 async function cascadeDeleteFindings(auditRunId: unknown) {

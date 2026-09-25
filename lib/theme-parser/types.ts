@@ -1,11 +1,6 @@
 // Structural facts extracted from a theme file. The parser makes no rule
 // judgments, assigns no severity — Phase 3 decides what these facts mean.
 
-export type SourceLocation = {
-  line: number;
-  column?: number;
-};
-
 // "asset" covers images/fonts/anything else under assets/ that isn't one
 // of the parseable types — never structurally parsed (no Liquid/CSS/JS
 // content to extract), but still discovered so ThemeIndex.assetBasenames

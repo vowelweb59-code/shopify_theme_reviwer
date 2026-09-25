@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Finding } from "@/models/finding";
 import { isValidObjectId, invalidIdResponse } from "@/lib/api/validation";
+import { withRuleCitations } from "@/lib/audit/ruleCitations";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -10,6 +11,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   // Severity-aware sorting/filtering is a Phase 5 reporting concern —
   // this just returns everything for the run, newest first.
-  const findings = await Finding.find({ auditRunId: id }).sort({ createdAt: -1 }).lean();
+  const findings = withRuleCitations(await Finding.find({ auditRunId: id }).sort({ createdAt: -1 }).lean());
   return NextResponse.json({ findings });
 }

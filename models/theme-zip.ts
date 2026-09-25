@@ -8,11 +8,11 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // source (lib/themes/themeSource.ts) can be added without a schema change.
 const themeZipSchema = new Schema(
   {
-    themeVersionId: { type: Schema.Types.ObjectId, required: true, ref: "ThemeVersion", index: true },
+    themeVersionId: { type: Schema.Types.ObjectId, required: true, ref: "ThemeVersion" }, // indexed via {themeVersionId, checksumSha256} below
     sourceType: { type: String, required: true, enum: ["local_upload"], default: "local_upload" },
     filename: { type: String, required: true },
     sizeBytes: { type: Number, required: true },
-    checksumSha256: { type: String, required: true, index: true },
+    checksumSha256: { type: String, required: true },
     // GridFS file _id (bucket "themeZips" — lib/themes/zipStorage.ts). The
     // actual bytes live in GridFS, not in this document.
     gridFsFileId: { type: Schema.Types.ObjectId, required: true },

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
+import { formatDateTime as formatDate } from "@/app/_components/formatDate";
 
 type AuditRunRow = {
   _id: string;
@@ -13,15 +14,6 @@ type AuditRunRow = {
   error: string | null;
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 export default function ReportsPage() {
   const [auditRuns, setAuditRuns] = useState<AuditRunRow[]>([]);

@@ -44,7 +44,18 @@ export function buildAuditReportJson(opts: {
     coverageByCategory: opts.coverageByCategory,
     readiness: opts.readiness,
     diagnostics: opts.diagnostics ?? null,
-    findings: opts.findings,
+    // Optional fields are absent (not null) in storage; the export keeps
+    // its documented shape with explicit nulls.
+    findings: opts.findings.map((f) => ({
+      ...f,
+      requirementId: f.requirementId ?? null,
+      lineNumber: f.lineNumber ?? null,
+      sourceSnippet: f.sourceSnippet ?? null,
+      ignoredReason: f.ignoredReason ?? null,
+      recommendation: f.recommendation ?? null,
+      sourceReference: f.sourceReference ?? null,
+      sourceUrl: f.sourceUrl ?? null,
+    })),
     generatedAt: new Date().toISOString(),
   };
 }

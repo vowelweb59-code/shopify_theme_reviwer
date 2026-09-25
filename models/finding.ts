@@ -37,32 +37,40 @@ export const FINDING_HISTORICAL_STATES = ["first_seen", "persistent", "reintrodu
 
 const findingSchema = new Schema(
   {
-    auditRunId: { type: Schema.Types.ObjectId, required: true, ref: "AuditRun", index: true },
-    ruleId: { type: String, required: true, index: true },
-    requirementId: { type: String, default: null, index: true },
+    auditRunId: { type: Schema.Types.ObjectId, required: true, ref: "AuditRun" },
+    ruleId: { type: String, required: true },
+    requirementId: { type: String },
     filePath: { type: String, required: true },
-    lineNumber: { type: Number, default: null },
-    category: { type: String, required: true, enum: FINDING_CATEGORIES, index: true },
-    severity: { type: String, required: true, enum: FINDING_SEVERITIES, index: true },
+    lineNumber: { type: Number },
+    category: { type: String, required: true, enum: FINDING_CATEGORIES },
+    severity: { type: String, required: true, enum: FINDING_SEVERITIES },
     layer: { type: String, required: true, enum: FINDING_LAYERS, default: "static" },
     // Which preset (of possibly several live demo URLs on this run) this
     // finding came from — see lib/audit/liveCheck.ts's runLiveChecksForPresets.
     // null for every static finding, for live findings from a single-URL
     // run, and for the cross-preset comparison findings themselves (those
     // are about the relationship between presets, not one of them).
-    presetLabel: { type: String, default: null, index: true },
+    presetLabel: { type: String },
     finding: { type: String, required: true },
-    recommendation: { type: String, default: null },
-    sourceReference: { type: String, default: null },
-    sourceUrl: { type: String, default: null },
-    sourceSnippet: { type: String, default: null },
-    status: { type: String, required: true, enum: FINDING_STATUSES, default: "open", index: true },
-    ignoredReason: { type: String, default: null },
-    statusUpdatedAt: { type: Date, default: null },
-    historicalState: { type: String, enum: FINDING_HISTORICAL_STATES, default: "first_seen", index: true },
+    recommendation: { type: String },
+    sourceReference: { type: String },
+    sourceUrl: { type: String },
+    sourceSnippet: { type: String },
+    status: { type: String, required: true, enum: FINDING_STATUSES, default: "open" },
+    ignoredReason: { type: String },
+    statusUpdatedAt: { type: Date },
+    historicalState: { type: String, enum: FINDING_HISTORICAL_STATES, default: "first_seen" },
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: false } }
+  // No __v: findings are never updated with optimistic concurrency.
+  { timestamps: { createdAt: "createdAt", updatedAt: false }, versionKey: false }
 );
+
+// Every Finding query filters by auditRunId (plus, for page-speed's count,
+// category + status), so that's the only index. The per-field indexes that
+// used to be here (ruleId, category, severity, status, ...) served no query
+// and were ~70% of the collection's index size. Optional fields are left
+// out rather than stored as null (see executeAuditRun.ts's toFindingDocs).
+findingSchema.index({ auditRunId: 1, category: 1, status: 1 });
 
 export type FindingDoc = InferSchemaType<typeof findingSchema>;
 

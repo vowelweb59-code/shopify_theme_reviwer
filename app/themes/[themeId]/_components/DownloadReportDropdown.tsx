@@ -12,7 +12,7 @@ const FORMAT_LABELS: Record<Format, string> = {
   xlsx: "XLSX",
   json: "JSON",
   html: "HTML",
-  pdf: "PDF",
+  pdf: "PDF (print)",
   "google-sheet": "Google Sheet",
 };
 
@@ -78,6 +78,8 @@ export function DownloadReportDropdown({ auditRunId, hasExistingSheet }: { audit
           // pattern the old Report tab's export buttons already used.
           <a
             href={`/api/reports/${auditRunId}/export?format=${format}`}
+            // PDF opens a print-ready page in a new tab (Save as PDF from there).
+            {...(format === "pdf" ? { target: "_blank", rel: "noreferrer" } : {})}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
             <Download className="h-3.5 w-3.5" aria-hidden />

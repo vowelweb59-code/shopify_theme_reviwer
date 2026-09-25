@@ -32,6 +32,7 @@ import {
 import type { CoverageResult } from "@/lib/audit/coverage";
 import { computeReadiness, DEFAULT_READINESS_CONFIG, type ReadinessConfig } from "@/lib/audit/readiness";
 import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
+import { formatDateTime as formatDate } from "@/app/_components/formatDate";
 
 type AuditRunDetail = {
   _id: string;
@@ -63,15 +64,6 @@ type AuditRunListItem = {
   startedAt: string;
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 /**
  * The full audit report — status/exports card, readiness, summaries,
@@ -199,7 +191,7 @@ export function ReportContent({
   useEffect(() => {
     if (!auditRun?.themeId) return;
     let active = true;
-    fetch("/api/reports")
+    fetch(`/api/reports?themeId=${auditRun.themeId._id}`)
       .then((res) => res.json())
       .then((data) => {
         if (active) setSiblingRuns(data.auditRuns ?? []);
@@ -276,6 +268,7 @@ export function ReportContent({
                 <a
                   key={format}
                   href={`/api/reports/${auditRunId}/export?format=${format}`}
+                  {...(format === "pdf" ? { target: "_blank", rel: "noreferrer", title: "Opens a print-ready page — use Save as PDF" } : {})}
                   className="rounded-full border border-black/[.12] px-3 py-1.5 uppercase text-zinc-700 hover:text-zinc-950 dark:border-white/[.15] dark:text-zinc-300 dark:hover:text-zinc-50"
                 >
                   {format}

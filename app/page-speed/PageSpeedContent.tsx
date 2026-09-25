@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
+import { formatDateTime as formatDate } from "@/app/_components/formatDate";
 
 type ThemePageSpeedRow = {
   themeId: string;
@@ -13,15 +14,6 @@ type ThemePageSpeedRow = {
   openPerformanceFindingCount: number;
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 function formatScore(metrics: PageSpeedMetric[]): string {
   const scored = metrics.filter((m) => typeof m.performanceScore === "number");

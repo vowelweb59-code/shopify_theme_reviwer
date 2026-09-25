@@ -1,5 +1,7 @@
-import { google } from "googleapis";
+import { oauth2 as oauth2Api } from "@googleapis/oauth2";
+import { OAuth2Client } from "google-auth-library";
 import { GoogleAuth } from "@/models/google-auth";
+import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 
 // Only what's needed to create/write a spreadsheet and know which account
 // is connected — never full Drive access.
@@ -16,7 +18,7 @@ function requireEnv(name: string): string {
 }
 
 export function createOAuthClient() {
-  return new google.auth.OAuth2(
+  return new OAuth2Client(
     requireEnv("GOOGLE_CLIENT_ID"),
     requireEnv("GOOGLE_CLIENT_SECRET"),
     requireEnv("GOOGLE_REDIRECT_URI")
@@ -40,7 +42,7 @@ export async function exchangeCodeForTokens(code: string) {
   }
   client.setCredentials(tokens);
 
-  const oauth2 = google.oauth2({ auth: client, version: "v2" });
+  const oauth2 = oauth2Api({ auth: client, version: "v2", timeout: GOOGLE_API_TIMEOUT_MS });
   const { data } = await oauth2.userinfo.get();
 
   return {

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { EventEmitter } from "node:events";
 import mongoose from "mongoose";
-import type { Auth } from "googleapis";
+import type { OAuth2Client } from "google-auth-library";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoogleConnection } from "@/models/google-connection";
 import { decryptSecret } from "./crypto";
@@ -45,7 +45,7 @@ function fakeClientFactory(behaviour: { refreshTo?: string; fail?: Error }) {
         return { token: behaviour.refreshTo };
       },
     });
-    return client as unknown as Auth.OAuth2Client;
+    return client as unknown as OAuth2Client;
   };
 }
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { google, type Auth } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
 
 // GA4 analytics OAuth: its own consent flow, separate from the Sheets
 // export's (lib/google/oauth.ts) but on the same Google Cloud OAuth client
@@ -42,14 +42,14 @@ export function getGa4RedirectUri(env: Env = process.env): string {
   throw new Ga4OAuthError("not_configured", "Set APP_URL (or GA4_OAUTH_REDIRECT_URI) — see .env.example for GA4 analytics setup.");
 }
 
-export function createGa4OAuthClient(env: Env = process.env): Auth.OAuth2Client {
+export function createGa4OAuthClient(env: Env = process.env): OAuth2Client {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     throw new Ga4OAuthError("not_configured", "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set — see .env.example.");
   }
-  return new google.auth.OAuth2(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, getGa4RedirectUri(env));
+  return new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, getGa4RedirectUri(env));
 }
 
-export function buildGa4AuthUrl({ state, loginHint }: { state: string; loginHint?: string }, client: Auth.OAuth2Client = createGa4OAuthClient()): string {
+export function buildGa4AuthUrl({ state, loginHint }: { state: string; loginHint?: string }, client: OAuth2Client = createGa4OAuthClient()): string {
   return client.generateAuthUrl({
     access_type: "offline", // needed for a refresh_token
     // select_account: always show the account chooser, or Google silently
@@ -73,7 +73,7 @@ export type Ga4OAuthResult = {
   scopes: string[];
 };
 
-export async function exchangeGa4Code(code: string, client: Auth.OAuth2Client = createGa4OAuthClient()): Promise<Ga4OAuthResult> {
+export async function exchangeGa4Code(code: string, client: OAuth2Client = createGa4OAuthClient()): Promise<Ga4OAuthResult> {
   let tokens;
   try {
     ({ tokens } = await client.getToken(code));

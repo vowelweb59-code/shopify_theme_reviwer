@@ -6,7 +6,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // compareVersions.ts) without discarding the exact string the README used.
 const themeVersionSchema = new Schema(
   {
-    themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme", index: true },
+    themeId: { type: Schema.Types.ObjectId, required: true, ref: "Theme" }, // indexed via the unique {themeId, version} below
     version: { type: String, required: true },
     versionParts: { type: [Number], default: () => [] },
     isSemver: { type: Boolean, required: true, default: false },

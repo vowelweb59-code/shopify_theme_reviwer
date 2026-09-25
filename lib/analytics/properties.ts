@@ -1,6 +1,8 @@
 import "server-only";
-import { google, type Auth, type analyticsadmin_v1beta } from "googleapis";
+import { analyticsadmin, type analyticsadmin_v1beta } from "@googleapis/analyticsadmin";
+import type { OAuth2Client } from "google-auth-library";
 import { googleErrorCode } from "./googleOAuth";
+import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 
 // GA4 Admin API: which properties a connected Google account can see, and
 // the details of one property. Read-only (analytics.readonly scope). The
@@ -26,8 +28,8 @@ export type AdminApi = {
   properties: Pick<analyticsadmin_v1beta.Resource$Properties, "get">;
 };
 
-export function createAdminApi(auth: Auth.OAuth2Client): AdminApi {
-  return google.analyticsadmin({ version: "v1beta", auth });
+export function createAdminApi(auth: OAuth2Client): AdminApi {
+  return analyticsadmin({ version: "v1beta", auth, timeout: GOOGLE_API_TIMEOUT_MS });
 }
 
 export class Ga4PropertyError extends Error {

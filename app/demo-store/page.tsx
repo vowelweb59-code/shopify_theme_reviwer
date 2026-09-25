@@ -8,6 +8,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore/liveWindow";
+import { formatDateTime } from "@/app/_components/formatDate";
 
 const DEMO_STORE_URL = "https://theme-store-ops-admin.myshopify.com/";
 
@@ -186,15 +187,6 @@ function TrendBadge({ gain }: { gain: number | null }) {
   );
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 // A switch time is only known to within the window between two checks
 // (lib/demoStore/liveWindow.ts). Within the hourly-check slack it shows as

@@ -1,6 +1,8 @@
 import "server-only";
-import { google, type Auth, type analyticsdata_v1beta } from "googleapis";
+import { analyticsdata, type analyticsdata_v1beta } from "@googleapis/analyticsdata";
+import type { OAuth2Client } from "google-auth-library";
 import { googleErrorCode } from "../googleOAuth";
+import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 
 // GA4 Data API access for the sync pipeline: one report request, fully
 // paginated, with short in-request retries for momentary failures. Longer
@@ -11,8 +13,8 @@ export type DataApi = { properties: Pick<analyticsdata_v1beta.Resource$Propertie
 export type ReportRequest = analyticsdata_v1beta.Schema$RunReportRequest;
 export type ReportRow = { dimensions: string[]; metrics: number[] };
 
-export function createDataApi(auth: Auth.OAuth2Client): DataApi {
-  return google.analyticsdata({ version: "v1beta", auth });
+export function createDataApi(auth: OAuth2Client): DataApi {
+  return analyticsdata({ version: "v1beta", auth, timeout: GOOGLE_API_TIMEOUT_MS });
 }
 
 export type Ga4DataErrorCode =
