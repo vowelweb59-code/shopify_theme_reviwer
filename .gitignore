@@ -53,3 +53,6 @@ next-env.d.ts
 
 # one-off research harvest cache (raw Theme Store release notes, ~50MB)
 .scratch/
+
+# database dumps (scripts/backup-database.ts)
+/backups
