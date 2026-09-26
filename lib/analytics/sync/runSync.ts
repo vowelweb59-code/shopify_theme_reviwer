@@ -7,7 +7,7 @@ import { Ga4ConnectionError, getAuthorizedClient, markConnectionRevoked } from "
 import { createAdminApi, getPropertyDetails, Ga4PropertyError, type AdminApi } from "../properties";
 import { GA4_EARLIEST_DATE, addDays, chunkDateRange, dateInTimeZone, maxDate, todayInTimeZone } from "./dates";
 import { Ga4DataError, classifyDataApiError, createDataApi, runFullReport, type DataApi } from "./ga4Client";
-import { buildReportSpecs, toAggregateRows } from "./reports";
+import { buildReportSpecs, estimateInstallRows, installEstimateRequest, toAggregateRows, type AggregateRow } from "./reports";
 
 // GA4 → MongoDB sync jobs. One job = one theme's property over a date
 // range, worked through in CHUNK_DAYS chunks, oldest first. Callers must
@@ -135,6 +135,7 @@ type ThemeForSync = {
   googleConnectionId?: { toString(): string } | null;
   ga4PropertyId?: string | null;
   ga4PropertyTimeZone?: string | null;
+  pagePathPrefix?: string | null;
   connectionStatus: string;
   historyStartDate?: string | null;
   syncedThroughDate?: string | null;
@@ -272,37 +273,52 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     }
     const api = await deps.dataApiFor(theme.googleConnectionId.toString());
     const warnings = new Set(job.warnings ?? []);
+    const pagePathPrefix = theme.pagePathPrefix ?? null;
+
+    const upsertRows = async (rows: AggregateRow[], fetched: number) => {
+      let written = 0;
+      for (let i = 0; i < rows.length; i += UPSERT_BATCH) {
+        const ops: UpsertOp[] = rows.slice(i, i + UPSERT_BATCH).map((r) => ({
+          updateOne: {
+            filter: { analyticsThemeId: job.analyticsThemeId, date: r.date, breakdown: r.breakdown, eventName: r.eventName, dimsKey: r.dimsKey },
+            update: { $set: { ga4PropertyId: job.ga4PropertyId, dims: r.dims, metrics: r.metrics, syncId: job._id } },
+            upsert: true,
+          },
+        }));
+        const res = await AnalyticsAggregate.bulkWrite(ops, { ordered: false });
+        written += res.upsertedCount + res.matchedCount;
+      }
+      // Also a heartbeat: keeps updatedAt fresh so a long chunk isn't mistaken for a dead job.
+      await AnalyticsSync.updateOne({ _id: syncId }, { $inc: { rowsFetched: fetched, rowsUpserted: written } });
+    };
+    const noteMetadata = (result: { subjectToThresholding: boolean; dataLossFromOtherRow: boolean }) => {
+      if (result.subjectToThresholding) warnings.add("GA4 withheld some small counts (data thresholding).");
+      if (result.dataLossFromOtherRow) warnings.add('GA4 grouped some rare values into "(other)".');
+    };
 
     for (const chunk of chunkDateRange(job.cursorDate ?? job.rangeStart, job.rangeEnd, CHUNK_DAYS)) {
-      // The theme can be remapped or unmapped mid-sync (Settings); stop
-      // writing rows for a property it no longer uses.
-      if (!(await AnalyticsTheme.exists({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId }))) {
+      // The theme can be remapped, unmapped or given another page filter
+      // mid-sync (Settings); stop writing rows that no longer describe it.
+      if (!(await AnalyticsTheme.exists({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }))) {
         await AnalyticsSync.updateOne(
           { _id: syncId },
-          { $set: { status: "cancelled", completedAt: deps.now(), error: { message: "The theme's GA4 property changed during the sync.", code: "cancelled" } }, $unset: { isActive: "" } }
+          { $set: { status: "cancelled", completedAt: deps.now(), error: { message: "The theme's GA4 property or page filter changed during the sync.", code: "cancelled" } }, $unset: { isActive: "" } }
         );
         return;
       }
-      for (const spec of buildReportSpecs(chunk)) {
+      const themeTotals: AggregateRow[] = [];
+      for (const spec of buildReportSpecs(chunk, pagePathPrefix)) {
         const result = await runFullReport(api, job.ga4PropertyId, spec.request, { sleep: deps.sleep });
-        if (result.subjectToThresholding) warnings.add("GA4 withheld some small counts (data thresholding).");
-        if (result.dataLossFromOtherRow) warnings.add('GA4 grouped some rare values into "(other)".');
-
+        noteMetadata(result);
         const rows = toAggregateRows(spec, result.rows);
-        let written = 0;
-        for (let i = 0; i < rows.length; i += UPSERT_BATCH) {
-          const ops: UpsertOp[] = rows.slice(i, i + UPSERT_BATCH).map((r) => ({
-            updateOne: {
-              filter: { analyticsThemeId: job.analyticsThemeId, date: r.date, breakdown: r.breakdown, eventName: r.eventName, dimsKey: r.dimsKey },
-              update: { $set: { ga4PropertyId: job.ga4PropertyId, dims: r.dims, metrics: r.metrics, syncId: job._id } },
-              upsert: true,
-            },
-          }));
-          const res = await AnalyticsAggregate.bulkWrite(ops, { ordered: false });
-          written += res.upsertedCount + res.matchedCount;
-        }
-        // Also a heartbeat: keeps updatedAt fresh so a long chunk isn't mistaken for a dead job.
-        await AnalyticsSync.updateOne({ _id: syncId }, { $inc: { rowsFetched: result.rows.length, rowsUpserted: written } });
+        if (spec.breakdown === "total" && spec.kind === "events") themeTotals.push(...rows);
+        await upsertRows(rows, result.rows.length);
+      }
+      if (pagePathPrefix) {
+        // Installs have no page, so the page filter drops them all; estimate this theme's share instead.
+        const result = await runFullReport(api, job.ga4PropertyId, installEstimateRequest(chunk), { sleep: deps.sleep });
+        noteMetadata(result);
+        await upsertRows(estimateInstallRows(themeTotals, result.rows), result.rows.length);
       }
 
       // The chunk is complete: anything for these dates this sync didn't write is gone from GA4.

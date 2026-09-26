@@ -28,8 +28,12 @@ export type DailyPoint = {
   newUsers: number;
 };
 
-/** Range-level unique users for one theme (and one group, for breakdowns), from GA4. */
-export type UniqueUsers = { users: number; eventUsers: Record<string, number> };
+/**
+ * Range-level unique users for one theme (and one group, for breakdowns), from GA4.
+ * `estimated`: events GA4 wasn't asked about because their stored figures
+ * are estimates (a shared property's installs); those keep the stored users.
+ */
+export type UniqueUsers = { users: number; eventUsers: Record<string, number>; estimated?: readonly string[] };
 
 /**
  * "unique": users are GA4's de-duplicated count for the whole range.
@@ -124,7 +128,9 @@ export function computeKpis(points: readonly DailyPoint[], events: readonly stri
 
   if (unique) {
     users = unique.users;
-    for (const name of names) stats[name].users = unique.eventUsers[name] ?? 0;
+    for (const name of names) {
+      if (!unique.estimated?.includes(name)) stats[name].users = unique.eventUsers[name] ?? 0;
+    }
   }
   return assemble(users, sessions, newUsers, stats, unique ? "unique" : "daily_sum");
 }

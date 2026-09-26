@@ -60,12 +60,18 @@ const ALL_THEMES_USERS_NOTE =
 
 // ---- Theme context ----
 
+function installsEstimatedWarning(names: string[]): string {
+  const list = names.join(", ");
+  return `Installs for ${list} are estimated. ${names.length === 1 ? "Its" : "Their"} GA4 property also tracks another theme, and install events carry no page, so each day's installs are split by that day's share of Try Theme clicks. Breakdowns (country, device, …) can't include these installs.`;
+}
+
 type ThemeLean = {
   _id: Types.ObjectId;
   name: string;
   slug: string;
   ga4PropertyId?: string | null;
   ga4PropertyTimeZone?: string | null;
+  pagePathPrefix?: string | null;
   googleConnectionId?: Types.ObjectId | null;
   syncedThroughDate?: string | null;
   lastSuccessfulSyncAt?: Date | null;
@@ -77,6 +83,8 @@ export type ThemeContext = {
   slug: string;
   propertyId: string;
   timeZone: string | null;
+  /** Set when the theme shares its GA4 property: only its pages count, and its installs are estimated. */
+  pagePathPrefix: string | null;
   connectionId: string | null;
   connectionActive: boolean;
   syncedThroughDate: string | null;
@@ -89,7 +97,15 @@ export type PublicThemeRef = { id: string; name: string; slug: string };
 export type MetricsMeta = {
   scope: "all" | "theme";
   theme: PublicThemeRef | null;
-  themes: (PublicThemeRef & { timeZone: string | null; syncedThroughDate: string | null; lastSuccessfulSyncAt: string | null; current: DateRange; previous: DateRange | null })[];
+  themes: (PublicThemeRef & {
+    timeZone: string | null;
+    syncedThroughDate: string | null;
+    lastSuccessfulSyncAt: string | null;
+    /** Installs are an estimate (the theme shares its GA4 property; installs carry no page). */
+    installsEstimated: boolean;
+    current: DateRange;
+    previous: DateRange | null;
+  })[];
   range: { preset: string; label: string; current: DateRange; previous: DateRange | null; timeZone: string | null };
   /** Themes in different time zones resolve presets like "Today" to different dates. */
   mixedTimeZones: boolean;
@@ -110,7 +126,7 @@ type Context = {
 };
 
 async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Context> {
-  const fields = "name slug ga4PropertyId ga4PropertyTimeZone googleConnectionId syncedThroughDate lastSuccessfulSyncAt";
+  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix googleConnectionId syncedThroughDate lastSuccessfulSyncAt";
   let docs: ThemeLean[];
   let selected: PublicThemeRef | null = null;
   const warnings: string[] = [];
@@ -141,6 +157,7 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
       slug: d.slug,
       propertyId: d.ga4PropertyId as string,
       timeZone: d.ga4PropertyTimeZone ?? null,
+      pagePathPrefix: d.pagePathPrefix ?? null,
       connectionId: d.googleConnectionId?.toString() ?? null,
       connectionActive: Boolean(d.googleConnectionId && active.has(d.googleConnectionId.toString())),
       syncedThroughDate: d.syncedThroughDate ?? null,
@@ -155,6 +172,8 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
 
   const unsynced = themes.filter((t) => !t.syncedThroughDate).map((t) => t.name);
   if (unsynced.length) warnings.push(`${unsynced.join(", ")} ${unsynced.length === 1 ? "hasn't" : "haven't"} finished a first GA4 sync, so data may be missing.`);
+  const estimated = themes.filter((t) => t.pagePathPrefix).map((t) => t.name);
+  if (estimated.length) warnings.push(installsEstimatedWarning(estimated));
   return { query, scope: query.theme === "all" ? "all" : "theme", selected, themes, warnings };
 }
 
@@ -174,6 +193,7 @@ function buildMeta(ctx: Context, breakdown: AggregateBreakdown, usersBasis: User
       timeZone: t.timeZone,
       syncedThroughDate: t.syncedThroughDate,
       lastSuccessfulSyncAt: t.lastSuccessfulSyncAt,
+      installsEstimated: Boolean(t.pagePathPrefix),
       current: t.period.current,
       previous: t.period.previous,
     })),
@@ -350,10 +370,27 @@ async function loadUniqueUsers(
     })
   );
   await mapLimit(jobs, UNIQUE_USERS_CONCURRENCY, async (job) => {
+    // A page-filtered theme's installs are stored estimates; GA4 can't count
+    // their users (installs have no page), so they keep the estimated figure.
+    const asked = job.theme.pagePathPrefix ? events.filter((e) => e !== PRIMARY_EVENTS.themeInstall) : events;
     const res = await withGa4Slot(() => getUniqueUsers(
-      { themeId: job.theme.id, propertyId: job.theme.propertyId, connectionId: job.connectionId, timeZone: job.theme.timeZone, range: job.range, groupDims, filters: ctx.query.filters, events },
+      {
+        themeId: job.theme.id,
+        propertyId: job.theme.propertyId,
+        connectionId: job.connectionId,
+        timeZone: job.theme.timeZone,
+        range: job.range,
+        groupDims,
+        filters: ctx.query.filters,
+        pagePathPrefix: job.theme.pagePathPrefix,
+        events: asked,
+      },
       deps
     ));
+    if (res && asked.length < events.length) {
+      const estimated = events.filter((e) => !asked.includes(e));
+      for (const group of res.groups.values()) group.estimated = estimated;
+    }
     result.get(job.theme.id)![job.which] = res;
     if (res) warnings.push(...res.warnings);
   });

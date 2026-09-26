@@ -163,6 +163,38 @@ describe.skipIf(!uri)("GA4 themes (MongoDB)", () => {
     ]);
   });
 
+  it("lets themes share a property only with non-overlapping page filters", async () => {
+    const adorn = await createTheme({ name: "Adorn", googleConnectionId: accountA, ga4PropertyId: "111111111" }, resolver());
+    const mapFlaunt = (pagePathPrefix?: string) => createTheme({ name: "Flaunt", googleConnectionId: accountA, ga4PropertyId: "111111111", pagePathPrefix }, resolver());
+
+    // Adorn has no filter yet, so its property can't be shared.
+    await expect(mapFlaunt("/themes/flaunt/")).rejects.toMatchObject({ status: 409, message: expect.stringContaining("page path filter") });
+
+    await AnalyticsTheme.updateOne({ _id: adorn.id }, { syncedThroughDate: "2026-09-20", historyStartDate: "2024-01-01" });
+    const filtered = await updateTheme(adorn.id, { pagePathPrefix: " /themes/adorn/ " }, resolver());
+    expect(filtered.pagePathPrefix).toBe("/themes/adorn/");
+    // A new filter means a new history.
+    expect(await AnalyticsTheme.findById(adorn.id).lean<{ syncedThroughDate: string | null }>()).toMatchObject({ syncedThroughDate: null });
+
+    await expect(mapFlaunt()).rejects.toMatchObject({ status: 409 });
+    await expect(mapFlaunt("/THEMES/ADORN/presets")).rejects.toMatchObject({ status: 409, message: expect.stringContaining("overlaps") });
+    await expect(mapFlaunt("/themes/flaunt/")).resolves.toMatchObject({ ga4PropertyId: "111111111", pagePathPrefix: "/themes/flaunt/" });
+
+    // Removing Adorn's filter would make it swallow Flaunt's pages.
+    await expect(updateTheme(adorn.id, { pagePathPrefix: "" }, resolver())).rejects.toMatchObject({ status: 409 });
+
+    const [shared] = await discoverProperties(accountA, resolver());
+    expect(shared.mappedThemes.map((t) => [t.name, t.pagePathPrefix])).toEqual([
+      ["Adorn", "/themes/adorn/"],
+      ["Flaunt", "/themes/flaunt/"],
+    ]);
+  });
+
+  it("rejects a malformed page filter", async () => {
+    await expect(createTheme({ name: "Adorn", pagePathPrefix: "themes/adorn" }, resolver())).rejects.toMatchObject({ status: 400 });
+    await expect(createTheme({ name: "Adorn", pagePathPrefix: "/themes/ adorn" }, resolver())).rejects.toMatchObject({ status: 400 });
+  });
+
   it("returns 404 for unknown themes and accounts", async () => {
     const missing = new mongoose.Types.ObjectId().toString();
     await expect(updateTheme(missing, { name: "X" }, resolver())).rejects.toMatchObject({ status: 404 });

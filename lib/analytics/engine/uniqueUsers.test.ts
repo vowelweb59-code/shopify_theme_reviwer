@@ -39,6 +39,15 @@ describe("buildUniqueUsersRequests", () => {
     expect(events.dimensions!.map((d) => d.name)).toEqual(["eventName", "country", "city"]);
     expect(events.dimensionFilter!.andGroup!.expressions).toHaveLength(2);
   });
+
+  it("limits a shared property's theme to its own pages, and caches it separately", () => {
+    const pageFilter = { filter: { fieldName: "pagePath", stringFilter: { matchType: "BEGINS_WITH", value: "/themes/adorn/", caseSensitive: false } } };
+    const { totals, events } = buildUniqueUsersRequests({ ...base, pagePathPrefix: "/themes/adorn/" });
+    expect(totals.dimensionFilter).toEqual(pageFilter);
+    expect(events.dimensionFilter!.andGroup!.expressions).toContainEqual(pageFilter);
+    expect(cacheKeyFor({ ...base, pagePathPrefix: "/themes/adorn/" })).not.toBe(cacheKeyFor(base));
+    expect(cacheKeyFor({ ...base, pagePathPrefix: null })).toBe(cacheKeyFor(base));
+  });
 });
 
 describe("fetchUniqueUsers", () => {

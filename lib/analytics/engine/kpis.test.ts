@@ -85,6 +85,11 @@ describe("computeKpis", () => {
   it("treats an event missing from the unique counts as zero users", () => {
     expect(computeKpis(points, [], { users: 10, eventUsers: {} }).installs).toEqual({ count: 5, users: 0 });
   });
+
+  it("keeps the stored users for events whose figures are estimates", () => {
+    const installs = computeKpis(points, [], { users: 10, eventUsers: {}, estimated: ["shopify_theme_install"] }).installs;
+    expect(installs).toEqual(computeKpis(points, []).installs);
+  });
 });
 
 describe("withFunnelEvents", () => {

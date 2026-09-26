@@ -20,7 +20,16 @@ function Cell({ value, change, unit }: { value: string; change?: Change; unit?: 
  * column (sorting the rows the engine already computed — no maths here).
  * Clicking a theme narrows the whole dashboard to it.
  */
-export function ThemeComparison({ rows, onSelect }: { rows: ThemeKpiRow[]; onSelect: (slug: string) => void }) {
+export function ThemeComparison({
+  rows,
+  estimatedInstalls = new Set(),
+  onSelect,
+}: {
+  rows: ThemeKpiRow[];
+  /** Theme ids whose installs are estimates (shared GA4 property); shown with "≈". */
+  estimatedInstalls?: ReadonlySet<string>;
+  onSelect: (slug: string) => void;
+}) {
   const num = "text-right";
   const columns: TableColumn<ThemeKpiRow>[] = [
     {
@@ -54,7 +63,7 @@ export function ThemeComparison({ rows, onSelect }: { rows: ThemeKpiRow[]; onSel
       key: "installs",
       header: "Installs",
       className: num,
-      render: (r) => <Cell value={formatCount(r.current.installs.users)} change={r.comparison?.installs.users} />,
+      render: (r) => <Cell value={`${estimatedInstalls.has(r.theme.id) ? "≈" : ""}${formatCount(r.current.installs.users)}`} change={r.comparison?.installs.users} />,
       sortValue: (r) => r.current.installs.users,
     },
     {

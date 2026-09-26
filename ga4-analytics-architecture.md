@@ -91,7 +91,8 @@ The five new collections (four from Phase 1, plus `AnalyticsRangeUsers` from Pha
 | `name`, `slug` | `slug` is unique, lowercase and kebab-case |
 | `themeId` → `Theme` | Optional link to the audited theme of the same name |
 | `googleConnectionId` → `GoogleConnection` | Which account can read the property |
-| `ga4PropertyId` | Numeric id only (`123456789`). Unique across themes (partial index, so any number of unmapped themes can have `null`) |
+| `ga4PropertyId` | Numeric id only (`123456789`). Unique per `(ga4PropertyId, pagePathPrefix)` (partial index, so any number of unmapped themes can have `null`) |
+| `pagePathPrefix` | Only for a property that tracks several themes' pages (see §5g), e.g. `/themes/adorn/`. Themes may share a property only if every one of them has a prefix and no two prefixes overlap (checked case-insensitively in `lib/analytics/themes.ts`). Changing it resets the sync bookkeeping, like a new property |
 | `ga4PropertyDisplayName`, `ga4PropertyTimeZone` | The time zone is needed because GA4 dates are property-local (§4) |
 | `connectionStatus` | `unmapped` / `connected` / `error`. A mapping is validated *before* it's saved, so there's no pending state. The API reports the Google account's own status next to it |
 | `isActive` | Hides a theme without deleting its history |
@@ -306,6 +307,15 @@ Common query: `theme=all|<id or slug>`, `range=today|yesterday|last7|last30|last
 - **Journey** (`GET /api/analytics/metrics/journey`, engine `journeySteps`): Session (`session_start`) → Page View → Theme View → Try Theme → Theme Install. Each step is the users who fired that event, with the ratio to the previous and first step and the previous-period change. The "not a sequence" caveat is the API's first note and is shown at the top of the page, not in small print.
 - **Sync change:** the new `channel` family adds 2 reports per sync chunk. Rows synced before it have no channel rows. The first real sync hasn't run yet, so nothing needs backfilling.
 - **Measured locally** against about 280k synthetic rows (3 themes × 120 days × every family): warm breakdown requests took 0.1–1 s, and a 25-row page is about 70–85 KB of JSON. Both are Phase 8 performance-review items.
+
+## 5g. Shared properties: page filters and estimated installs (2026-09-26)
+
+Found during the live verification: the "Adorn Main" property (498162774) also receives Flaunt's Theme Store pages (since 2026-02-12), so Adorn's figures included Flaunt's traffic.
+
+- **Page filter.** A theme with `pagePathPrefix` has every sync report and every range-level unique-users request filtered to `pagePath` BEGINS_WITH the prefix, case-insensitively (`lib/analytics/sync/reports.ts`'s `pagePathFilter`). Views, Try Theme, sessions and users are then exact for that theme's pages, in every breakdown.
+- **Installs are estimated.** `shopify_theme_install` is sent server-side with no page, host, source or custom parameters, so no filter can attribute it. For a filtered theme, each chunk also runs one unfiltered date × event report (`installEstimateRequest`), and `estimateInstallRows` gives the theme `property installs × (theme Try Theme ÷ property Try Theme)` for each day. It falls back to the chunk's Try Theme share on a day with no Try Theme at all, then the Theme View share. The estimates are fractional `total` rows only, so breakdowns (country, device, …) show no installs for such a theme. Their users are the estimated figure too: the engine doesn't ask GA4 for them (`UniqueUsers.estimated`). The dashboard shows a warning, and "≈" in the theme comparison (`meta.themes[].installsEstimated`).
+- **Setup.** Give the theme already on the property its prefix first, then map the second theme to the same property with its own prefix.
+- **Deploying.** The unique index changed from `ga4PropertyId_1` to `ga4PropertyId_pagePathPrefix_unique`. Run `npm run db:compact` (it syncs indexes) against each database once, or mapping a second theme to a shared property fails with a duplicate-key 409.
 
 ## 6. Integration points by phase
 

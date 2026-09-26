@@ -31,6 +31,11 @@ const analyticsThemeSchema = new Schema(
     // GA4 buckets every event into dates in the *property's* time zone, so
     // "Today"/"This week" must be computed in it too, not the server's.
     ga4PropertyTimeZone: { type: String, default: null },
+    // Only for a property that tracks several themes' pages (e.g. Adorn's
+    // property also receiving Flaunt's): the page path this theme's pages
+    // start with, e.g. "/themes/adorn/". Every GA4 report for the theme is
+    // filtered to it; installs, which have no page, are estimated.
+    pagePathPrefix: { type: String, default: null, trim: true },
     connectionStatus: { type: String, enum: ANALYTICS_THEME_CONNECTION_STATUSES, required: true, default: "unmapped" },
     isActive: { type: Boolean, required: true, default: true },
     lastValidatedAt: { type: Date, default: null },
@@ -46,11 +51,13 @@ const analyticsThemeSchema = new Schema(
 );
 
 analyticsThemeSchema.index({ slug: 1 }, { unique: true });
-// One property tracks one theme. Partial so any number of unmapped themes
-// (null property) can coexist.
+// One property tracks one theme, or several themes with different page
+// filters (lib/analytics/themes.ts also rejects overlapping filters, and a
+// filterless theme sharing its property). Partial so any number of
+// unmapped themes (null property) can coexist.
 analyticsThemeSchema.index(
-  { ga4PropertyId: 1 },
-  { unique: true, partialFilterExpression: { ga4PropertyId: { $type: "string" } } }
+  { ga4PropertyId: 1, pagePathPrefix: 1 },
+  { unique: true, partialFilterExpression: { ga4PropertyId: { $type: "string" } }, name: "ga4PropertyId_pagePathPrefix_unique" }
 );
 analyticsThemeSchema.index({ googleConnectionId: 1 });
 analyticsThemeSchema.index({ isActive: 1, name: 1 });

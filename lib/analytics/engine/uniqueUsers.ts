@@ -4,6 +4,7 @@ import type { AggregateDimension } from "../constants";
 import { Ga4ConnectionError } from "../googleConnections";
 import { addDays, todayInTimeZone } from "../sync/dates";
 import { classifyDataApiError, type DataApi, type ReportRequest } from "../sync/ga4Client";
+import { pagePathFilter } from "../sync/reports";
 import { REFETCH_DAYS } from "../sync/runSync";
 import type { DateRange } from "./dateRanges";
 import { filtersKey, type DimensionFilters } from "./filters";
@@ -34,6 +35,8 @@ export type UniqueUsersRequest = {
   /** Dimensions to group by ([] = one overall figure). */
   groupDims: readonly AggregateDimension[];
   filters: DimensionFilters;
+  /** The theme's page filter, for a property shared with other themes. */
+  pagePathPrefix?: string | null;
   events: readonly string[];
 };
 
@@ -56,8 +59,11 @@ export function groupKey(groupDims: readonly AggregateDimension[], values: Parti
   return groupDims.map((d) => `${d}=${values[d] ?? ""}`).join("|");
 }
 
-export function cacheKeyFor(req: Pick<UniqueUsersRequest, "range" | "groupDims" | "filters" | "events">): string {
-  return [`${req.range.start}..${req.range.end}`, `g=${req.groupDims.join(",")}`, `f=${filtersKey(req.filters)}`, `e=${[...req.events].sort().join(",")}`].join("|");
+export function cacheKeyFor(req: Pick<UniqueUsersRequest, "range" | "groupDims" | "filters" | "events" | "pagePathPrefix">): string {
+  const parts = [`${req.range.start}..${req.range.end}`, `g=${req.groupDims.join(",")}`, `f=${filtersKey(req.filters)}`, `e=${[...req.events].sort().join(",")}`];
+  // Only when set, so existing cache entries for unfiltered themes stay valid.
+  if (req.pagePathPrefix) parts.push(`p=${req.pagePathPrefix}`);
+  return parts.join("|");
 }
 
 /** A range is settled once its last day is older than the days GA4 still revises. */
@@ -65,16 +71,17 @@ export function isSettled(range: DateRange, timeZone: string | null, now: Date):
   return range.end < addDays(todayInTimeZone(timeZone, now), -REFETCH_DAYS);
 }
 
-function filterExpression(filters: DimensionFilters, events: readonly string[] | null): ReportRequest["dimensionFilter"] {
+function filterExpression(filters: DimensionFilters, pagePathPrefix: string | null | undefined, events: readonly string[] | null): ReportRequest["dimensionFilter"] {
   const expressions: NonNullable<ReportRequest["dimensionFilter"]>[] = Object.entries(filters).map(([fieldName, value]) => ({
     filter: { fieldName, stringFilter: { matchType: "EXACT", value: value as string } },
   }));
+  if (pagePathPrefix) expressions.push(pagePathFilter(pagePathPrefix));
   if (events) expressions.push({ filter: { fieldName: "eventName", inListFilter: { values: [...events] } } });
   if (expressions.length === 0) return undefined;
   return expressions.length === 1 ? expressions[0] : { andGroup: { expressions } };
 }
 
-export function buildUniqueUsersRequests(req: Pick<UniqueUsersRequest, "range" | "groupDims" | "filters" | "events">): { totals: ReportRequest; events: ReportRequest } {
+export function buildUniqueUsersRequests(req: Pick<UniqueUsersRequest, "range" | "groupDims" | "filters" | "events" | "pagePathPrefix">): { totals: ReportRequest; events: ReportRequest } {
   const dateRanges = [{ startDate: req.range.start, endDate: req.range.end }];
   const metrics = [{ name: "totalUsers" }];
   const orderBys = [{ metric: { metricName: "totalUsers" }, desc: true }];
@@ -84,7 +91,7 @@ export function buildUniqueUsersRequests(req: Pick<UniqueUsersRequest, "range" |
       dateRanges,
       metrics,
       dimensions: groupDimensions,
-      dimensionFilter: filterExpression(req.filters, null),
+      dimensionFilter: filterExpression(req.filters, req.pagePathPrefix, null),
       orderBys,
       limit: String(GROUP_ROW_LIMIT),
     },
@@ -92,7 +99,7 @@ export function buildUniqueUsersRequests(req: Pick<UniqueUsersRequest, "range" |
       dateRanges,
       metrics,
       dimensions: [{ name: "eventName" }, ...groupDimensions],
-      dimensionFilter: filterExpression(req.filters, req.events),
+      dimensionFilter: filterExpression(req.filters, req.pagePathPrefix, req.events),
       orderBys,
       limit: String(GROUP_ROW_LIMIT * req.events.length),
     },

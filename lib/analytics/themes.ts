@@ -36,6 +36,7 @@ export type PublicAnalyticsTheme = {
   ga4PropertyId: string | null;
   ga4PropertyDisplayName: string | null;
   ga4PropertyTimeZone: string | null;
+  pagePathPrefix: string | null;
   connectionStatus: string;
   isActive: boolean;
   lastValidatedAt: string | null;
@@ -54,6 +55,7 @@ type ThemeLean = {
   ga4PropertyId?: string | null;
   ga4PropertyDisplayName?: string | null;
   ga4PropertyTimeZone?: string | null;
+  pagePathPrefix?: string | null;
   connectionStatus: string;
   isActive: boolean;
   lastValidatedAt?: Date | null;
@@ -76,6 +78,7 @@ function toPublicTheme(doc: ThemeLean, accounts: Map<string, AccountLean>): Publ
     ga4PropertyId: doc.ga4PropertyId ?? null,
     ga4PropertyDisplayName: doc.ga4PropertyDisplayName ?? null,
     ga4PropertyTimeZone: doc.ga4PropertyTimeZone ?? null,
+    pagePathPrefix: doc.pagePathPrefix ?? null,
     connectionStatus: doc.connectionStatus,
     isActive: doc.isActive,
     lastValidatedAt: doc.lastValidatedAt ? new Date(doc.lastValidatedAt).toISOString() : null,
@@ -112,7 +115,7 @@ export function normalizePropertyId(input: unknown): string | null {
   return GA4_PROPERTY_ID_PATTERN.test(id) ? id : null;
 }
 
-export type ThemeInput = { name?: unknown; googleConnectionId?: unknown; ga4PropertyId?: unknown };
+export type ThemeInput = { name?: unknown; googleConnectionId?: unknown; ga4PropertyId?: unknown; pagePathPrefix?: unknown };
 type ParsedMapping = { googleConnectionId: string; ga4PropertyId: string } | null;
 
 function parseName(raw: unknown): string {
@@ -120,6 +123,45 @@ function parseName(raw: unknown): string {
   if (!name || name.length > 80) throw new ThemeRequestError(400, "Theme name is required (up to 80 characters).");
   if (!slugify(name)) throw new ThemeRequestError(400, "Theme name needs at least one letter or number.");
   return name;
+}
+
+const MAX_PREFIX_LENGTH = 200;
+
+/** undefined = not being changed; null = no page filter. */
+function parsePagePathPrefix(raw: unknown): string | null | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === null) return null;
+  if (typeof raw !== "string") throw new ThemeRequestError(400, "Page path filter must be text.");
+  const prefix = raw.trim();
+  if (!prefix) return null;
+  if (!prefix.startsWith("/") || /\s/.test(prefix) || prefix.length > MAX_PREFIX_LENGTH) {
+    throw new ThemeRequestError(400, `Page path filter must start with "/" and have no spaces (up to ${MAX_PREFIX_LENGTH} characters), e.g. /themes/adorn/.`);
+  }
+  return prefix;
+}
+
+// GA4 matches the filter case-insensitively, so overlap is checked the same way.
+const overlaps = (a: string, b: string) => a.toLowerCase().startsWith(b.toLowerCase()) || b.toLowerCase().startsWith(a.toLowerCase());
+
+/**
+ * Several themes can share a property only if each has a page filter and
+ * no two filters overlap; otherwise one theme's events would count for both.
+ */
+async function checkPropertySharing(ga4PropertyId: string, prefix: string | null, excludeThemeId?: string): Promise<void> {
+  const others = await AnalyticsTheme.find({ ga4PropertyId, ...(excludeThemeId ? { _id: { $ne: excludeThemeId } } : {}) })
+    .select("name pagePathPrefix")
+    .lean<{ name: string; pagePathPrefix?: string | null }[]>();
+  for (const other of others) {
+    if (!prefix || !other.pagePathPrefix) {
+      throw new ThemeRequestError(
+        409,
+        `GA4 property ${ga4PropertyId} is already mapped to ${other.name}. Two themes can share a property only when both have a page path filter (e.g. /themes/${slugify(other.name)}/).`
+      );
+    }
+    if (overlaps(prefix, other.pagePathPrefix)) {
+      throw new ThemeRequestError(409, `The page path filter ${prefix} overlaps ${other.name}'s (${other.pagePathPrefix}) on the same GA4 property.`);
+    }
+  }
 }
 
 /** Both fields or neither: a property can only be read through a specific account. */
@@ -143,14 +185,11 @@ const PROPERTY_ERROR_STATUS: Record<Ga4PropertyError["code"], ThemeRequestError[
 };
 
 /**
- * Proves `googleConnectionId` can read `ga4PropertyId` and that no other
- * theme already uses it. Returns the property's details to store.
+ * Proves `googleConnectionId` can read `ga4PropertyId` and that sharing it
+ * with any other theme is allowed. Returns the property's details to store.
  */
-async function checkMapping(mapping: NonNullable<ParsedMapping>, resolveAdmin: AdminResolver, excludeThemeId?: string): Promise<Ga4PropertyDetails> {
-  const taken = await AnalyticsTheme.findOne({ ga4PropertyId: mapping.ga4PropertyId, ...(excludeThemeId ? { _id: { $ne: excludeThemeId } } : {}) })
-    .select("name")
-    .lean<{ name: string }>();
-  if (taken) throw new ThemeRequestError(409, `GA4 property ${mapping.ga4PropertyId} is already mapped to ${taken.name}.`);
+async function checkMapping(mapping: NonNullable<ParsedMapping>, prefix: string | null, resolveAdmin: AdminResolver, excludeThemeId?: string): Promise<Ga4PropertyDetails> {
+  await checkPropertySharing(mapping.ga4PropertyId, prefix, excludeThemeId);
 
   const connection = await GoogleConnection.findById(mapping.googleConnectionId).select("email status").lean<AccountLean>();
   if (!connection) throw new ThemeRequestError(422, "That Google account isn't connected.");
@@ -180,8 +219,8 @@ function mappedFields(mapping: NonNullable<ParsedMapping>, details: Ga4PropertyD
   };
 }
 
-// Sync bookkeeping belongs to one property; a different (or no) property
-// means Phase 4 must start that theme's history over.
+// Sync bookkeeping belongs to one property and page filter; a different
+// (or no) property or filter means Phase 4 must start that theme's history over.
 const RESET_SYNC_STATE = { historyStartDate: null, syncedThroughDate: null, lastSuccessfulSyncAt: null };
 
 const isDuplicateKey = (err: unknown) => (err as { code?: number })?.code === 11000;
@@ -196,16 +235,18 @@ export async function createTheme(input: ThemeInput, resolveAdmin: AdminResolver
   const name = parseName(input.name);
   const slug = slugify(name);
   const mapping = parseMapping(input);
+  const pagePathPrefix = parsePagePathPrefix(input.pagePathPrefix) ?? null;
 
   const existing = await AnalyticsTheme.findOne({ slug }).select("name").lean<{ name: string }>();
   if (existing) throw new ThemeRequestError(409, `A theme called ${existing.name} already exists.`);
 
-  const details = mapping ? await checkMapping(mapping, resolveAdmin) : null;
+  const details = mapping ? await checkMapping(mapping, pagePathPrefix, resolveAdmin) : null;
   try {
     const doc = await AnalyticsTheme.create({
       name,
       slug,
       themeId: await findAuditThemeId(name),
+      pagePathPrefix,
       ...(mapping && details ? mappedFields(mapping, details) : {}),
     });
     return getPublicTheme(doc._id.toString());
@@ -217,16 +258,22 @@ export async function createTheme(input: ThemeInput, resolveAdmin: AdminResolver
 
 /** Rename and/or (re)map. The slug never changes, so it stays a stable identifier. */
 export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: AdminResolver = defaultResolver): Promise<PublicAnalyticsTheme> {
-  const current = await AnalyticsTheme.findById(id).select("ga4PropertyId").lean<{ ga4PropertyId?: string | null }>();
+  const current = await AnalyticsTheme.findById(id).select("ga4PropertyId pagePathPrefix").lean<{ ga4PropertyId?: string | null; pagePathPrefix?: string | null }>();
   if (!current) throw new ThemeRequestError(404, "Theme not found.");
 
   const set: Record<string, unknown> = {};
   if (input.name !== undefined) set.name = parseName(input.name);
   const mapping = parseMapping(input);
+  const parsedPrefix = parsePagePathPrefix(input.pagePathPrefix);
+  const prefix = parsedPrefix === undefined ? (current.pagePathPrefix ?? null) : parsedPrefix;
+  const prefixChanged = prefix !== (current.pagePathPrefix ?? null);
   if (mapping) {
-    Object.assign(set, mappedFields(mapping, await checkMapping(mapping, resolveAdmin, id)));
+    Object.assign(set, mappedFields(mapping, await checkMapping(mapping, prefix, resolveAdmin, id)));
     if (mapping.ga4PropertyId !== current.ga4PropertyId) Object.assign(set, RESET_SYNC_STATE);
+  } else if (prefixChanged && current.ga4PropertyId) {
+    await checkPropertySharing(current.ga4PropertyId, prefix, id);
   }
+  if (prefixChanged) Object.assign(set, { pagePathPrefix: prefix }, RESET_SYNC_STATE);
   if (Object.keys(set).length === 0) throw new ThemeRequestError(400, "Nothing to update.");
 
   try {
@@ -243,13 +290,13 @@ export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: A
  * a transient one (Google unreachable) only records lastError.
  */
 export async function validateTheme(id: string, resolveAdmin: AdminResolver = defaultResolver): Promise<{ ok: boolean; theme: PublicAnalyticsTheme }> {
-  const doc = await AnalyticsTheme.findById(id).select("googleConnectionId ga4PropertyId").lean<ThemeLean>();
+  const doc = await AnalyticsTheme.findById(id).select("googleConnectionId ga4PropertyId pagePathPrefix").lean<ThemeLean>();
   if (!doc) throw new ThemeRequestError(404, "Theme not found.");
   if (!doc.googleConnectionId || !doc.ga4PropertyId) throw new ThemeRequestError(400, "This theme has no GA4 property to validate.");
 
   const mapping = { googleConnectionId: doc.googleConnectionId.toString(), ga4PropertyId: doc.ga4PropertyId };
   try {
-    const details = await checkMapping(mapping, resolveAdmin, id);
+    const details = await checkMapping(mapping, doc.pagePathPrefix ?? null, resolveAdmin, id);
     await AnalyticsTheme.updateOne({ _id: id }, { $set: mappedFields(mapping, details) });
     return { ok: true, theme: await getPublicTheme(id) };
   } catch (err) {
@@ -273,6 +320,7 @@ export async function disconnectTheme(id: string): Promise<PublicAnalyticsTheme>
         ga4PropertyId: null,
         ga4PropertyDisplayName: null,
         ga4PropertyTimeZone: null,
+        pagePathPrefix: null,
         connectionStatus: "unmapped",
         lastValidatedAt: null,
         lastError: null,
@@ -284,9 +332,10 @@ export async function disconnectTheme(id: string): Promise<PublicAnalyticsTheme>
   return getPublicTheme(id);
 }
 
-export type DiscoveredProperty = Ga4PropertySummary & { mappedToTheme: { id: string; name: string } | null };
+export type MappedThemeRef = { id: string; name: string; pagePathPrefix: string | null };
+export type DiscoveredProperty = Ga4PropertySummary & { mappedToTheme: MappedThemeRef | null; mappedThemes: MappedThemeRef[] };
 
-/** Properties a connected account can see, each flagged if a theme already uses it. */
+/** Properties a connected account can see, each flagged with the themes already using it. */
 export async function discoverProperties(connectionId: string, resolveAdmin: AdminResolver = defaultResolver): Promise<DiscoveredProperty[]> {
   const connection = await GoogleConnection.findById(connectionId).select("email status").lean<AccountLean>();
   if (!connection) throw new ThemeRequestError(404, "Google account not found.");
@@ -305,8 +354,17 @@ export async function discoverProperties(connectionId: string, resolveAdmin: Adm
   }
 
   const mapped = await AnalyticsTheme.find({ ga4PropertyId: { $in: properties.map((p) => p.propertyId) } })
-    .select("name ga4PropertyId")
-    .lean<{ _id: { toString(): string }; name: string; ga4PropertyId: string }[]>();
-  const byProperty = new Map(mapped.map((t) => [t.ga4PropertyId, { id: t._id.toString(), name: t.name }]));
-  return properties.map((p) => ({ ...p, mappedToTheme: byProperty.get(p.propertyId) ?? null }));
+    .select("name ga4PropertyId pagePathPrefix")
+    .sort({ name: 1 })
+    .lean<{ _id: { toString(): string }; name: string; ga4PropertyId: string; pagePathPrefix?: string | null }[]>();
+  const byProperty = new Map<string, MappedThemeRef[]>();
+  for (const t of mapped) {
+    const list = byProperty.get(t.ga4PropertyId) ?? [];
+    list.push({ id: t._id.toString(), name: t.name, pagePathPrefix: t.pagePathPrefix ?? null });
+    byProperty.set(t.ga4PropertyId, list);
+  }
+  return properties.map((p) => {
+    const mappedThemes = byProperty.get(p.propertyId) ?? [];
+    return { ...p, mappedToTheme: mappedThemes[0] ?? null, mappedThemes };
+  });
 }

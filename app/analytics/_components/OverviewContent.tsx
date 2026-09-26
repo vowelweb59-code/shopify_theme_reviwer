@@ -100,7 +100,11 @@ export function OverviewContent() {
       {!single && (
         <Card>
           <CardHeader title="Theme comparison" description="Users per step, by theme. Select a theme to see only its analytics." />
-          {comparison.data ? <ThemeComparison rows={comparison.data.themes} onSelect={(slug) => setParams({ theme: slug })} /> : <Skeleton className="h-48" />}
+          {comparison.data ? <ThemeComparison
+              rows={comparison.data.themes}
+              estimatedInstalls={new Set(comparison.data.meta.themes.filter((t) => t.installsEstimated).map((t) => t.id))}
+              onSelect={(slug) => setParams({ theme: slug })}
+            /> : <Skeleton className="h-48" />}
         </Card>
       )}
 

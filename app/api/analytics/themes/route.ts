@@ -10,7 +10,7 @@ export async function GET() {
   return NextResponse.json({ themes: await listThemes() });
 }
 
-// POST /api/analytics/themes — { name, googleConnectionId?, ga4PropertyId? }.
+// POST /api/analytics/themes — { name, googleConnectionId?, ga4PropertyId?, pagePathPrefix? }.
 // With a mapping, the account must prove it can read the property first;
 // nothing is saved if that check fails. A mapped theme's first sync
 // (its full GA4 history) starts in the background straight away.

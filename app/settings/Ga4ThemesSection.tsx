@@ -15,6 +15,7 @@ type AnalyticsTheme = {
   ga4PropertyId: string | null;
   ga4PropertyDisplayName: string | null;
   ga4PropertyTimeZone: string | null;
+  pagePathPrefix: string | null;
   connectionStatus: "unmapped" | "connected" | "error";
   lastValidatedAt: string | null;
   lastError: string | null;
@@ -35,11 +36,13 @@ type SyncJob = {
   warnings: string[];
 };
 
+type MappedThemeRef = { id: string; name: string; pagePathPrefix: string | null };
+
 type DiscoveredProperty = {
   propertyId: string;
   displayName: string;
   accountDisplayName: string;
-  mappedToTheme: { id: string; name: string } | null;
+  mappedThemes: MappedThemeRef[];
 };
 
 type Banner = { kind: "success" | "error" | "info"; message: string };
@@ -129,6 +132,7 @@ function ThemeForm({
   const [name, setName] = useState(theme?.name ?? "");
   const [accountId, setAccountId] = useState(theme?.account?.status === "active" ? theme.account.id : "");
   const [propertyId, setPropertyId] = useState(theme?.account?.status === "active" ? (theme.ga4PropertyId ?? "") : "");
+  const [pagePathPrefix, setPagePathPrefix] = useState(theme?.pagePathPrefix ?? "");
   // Keyed by account so a stale response for a previously chosen account is ignored.
   const [discovery, setDiscovery] = useState<{ accountId: string; properties?: DiscoveredProperty[]; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -153,6 +157,7 @@ function ThemeForm({
   const loadingProperties = Boolean(accountId) && !current;
   const mappingChanged = accountId !== (theme?.account?.id ?? "") || propertyId !== (theme?.ga4PropertyId ?? "");
   const willValidate = Boolean(accountId && propertyId) && mappingChanged;
+  const prefixChanged = pagePathPrefix.trim() !== (theme?.pagePathPrefix ?? "");
 
   const accounts = [...new Set((current?.properties ?? []).map((p) => p.accountDisplayName))];
 
@@ -164,6 +169,7 @@ function ThemeForm({
     const body: Record<string, string> = {};
     if (!theme || name.trim() !== theme.name) body.name = name;
     if (willValidate) Object.assign(body, { googleConnectionId: accountId, ga4PropertyId: propertyId });
+    if (prefixChanged) body.pagePathPrefix = pagePathPrefix.trim();
     try {
       if (theme && Object.keys(body).length === 0) return onCancel();
       const data = theme ? await postJson(`/api/analytics/themes/${theme.id}`, "PATCH", body) : await postJson("/api/analytics/themes", "POST", body);
@@ -221,10 +227,13 @@ function ThemeForm({
                   {current?.properties
                     ?.filter((p) => p.accountDisplayName === account)
                     .map((p) => {
-                      const usedElsewhere = p.mappedToTheme && p.mappedToTheme.id !== theme?.id;
+                      // A property can be shared only by themes that all have page filters.
+                      const others = p.mappedThemes.filter((t) => t.id !== theme?.id);
+                      const blocked = others.some((t) => !t.pagePathPrefix);
+                      const label = others.length === 0 ? "" : blocked ? ` — used by ${others.map((t) => t.name).join(", ")}` : ` — shared with ${others.map((t) => `${t.name} (${t.pagePathPrefix})`).join(", ")}`;
                       return (
-                        <option key={p.propertyId} value={p.propertyId} disabled={Boolean(usedElsewhere)}>
-                          {p.displayName} ({p.propertyId}){usedElsewhere ? ` — used by ${p.mappedToTheme!.name}` : ""}
+                        <option key={p.propertyId} value={p.propertyId} disabled={blocked}>
+                          {p.displayName} ({p.propertyId}){label}
                         </option>
                       );
                     })}
@@ -234,6 +243,21 @@ function ThemeForm({
           )}
         </label>
       )}
+
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-zinc-800 dark:text-zinc-200">Page path filter (optional)</span>
+        <input
+          value={pagePathPrefix}
+          onChange={(e) => setPagePathPrefix(e.target.value)}
+          maxLength={200}
+          className={INPUT_CLASSES}
+          placeholder="e.g. /themes/adorn/"
+          spellCheck={false}
+        />
+        <span className="text-xs text-zinc-500">
+          Only for a GA4 property that also tracks other themes: counts just the pages starting with this path. Installs have no page, so they&apos;re estimated from this theme&apos;s share of Try Theme clicks. Changing it re-syncs the theme&apos;s history.
+        </span>
+      </label>
 
       {error && <p className="text-sm text-red-700 dark:text-red-300">{error}</p>}
 
@@ -389,6 +413,7 @@ export function Ga4ThemesSection({ connections, configured }: { connections: Con
                           {t.ga4PropertyId}
                           {t.ga4PropertyTimeZone ? ` · ${t.ga4PropertyTimeZone}` : ""}
                         </div>
+                        {t.pagePathPrefix && <div className="text-xs text-zinc-500">Pages {t.pagePathPrefix}* · installs estimated</div>}
                       </>
                     ) : (
                       <span className="text-zinc-500">—</span>
