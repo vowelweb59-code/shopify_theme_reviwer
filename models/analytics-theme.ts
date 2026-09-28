@@ -36,6 +36,14 @@ const analyticsThemeSchema = new Schema(
     // start with, e.g. "/themes/adorn/". Every GA4 report for the theme is
     // filtered to it; installs, which have no page, are estimated.
     pagePathPrefix: { type: String, default: null, trim: true },
+    // Optional earlier history: a theme that used to be tracked in another
+    // theme's property (e.g. Flaunt inside "Adorn Main" until it got its own
+    // property) reads every date up to earlierUntil from earlierPropertyId,
+    // filtered to earlierPagePathPrefix, through the same Google account.
+    // Dates after earlierUntil come from ga4PropertyId as usual.
+    earlierPropertyId: { type: String, default: null, match: GA4_PROPERTY_ID_PATTERN },
+    earlierPagePathPrefix: { type: String, default: null, trim: true },
+    earlierUntil: { type: String, default: null, match: GA4_DATE_PATTERN },
     connectionStatus: { type: String, enum: ANALYTICS_THEME_CONNECTION_STATUSES, required: true, default: "unmapped" },
     isActive: { type: Boolean, required: true, default: true },
     lastValidatedAt: { type: Date, default: null },

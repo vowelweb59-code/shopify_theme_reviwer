@@ -16,6 +16,7 @@ type AnalyticsTheme = {
   ga4PropertyDisplayName: string | null;
   ga4PropertyTimeZone: string | null;
   pagePathPrefix: string | null;
+  earlierSource: { ga4PropertyId: string; pagePathPrefix: string | null; until: string } | null;
   connectionStatus: "unmapped" | "connected" | "error";
   lastValidatedAt: string | null;
   lastError: string | null;
@@ -133,6 +134,9 @@ function ThemeForm({
   const [accountId, setAccountId] = useState(theme?.account?.status === "active" ? theme.account.id : "");
   const [propertyId, setPropertyId] = useState(theme?.account?.status === "active" ? (theme.ga4PropertyId ?? "") : "");
   const [pagePathPrefix, setPagePathPrefix] = useState(theme?.pagePathPrefix ?? "");
+  const [earlierPropertyId, setEarlierPropertyId] = useState(theme?.earlierSource?.ga4PropertyId ?? "");
+  const [earlierPrefix, setEarlierPrefix] = useState(theme?.earlierSource?.pagePathPrefix ?? "");
+  const [earlierUntil, setEarlierUntil] = useState(theme?.earlierSource?.until ?? "");
   // Keyed by account so a stale response for a previously chosen account is ignored.
   const [discovery, setDiscovery] = useState<{ accountId: string; properties?: DiscoveredProperty[]; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -158,18 +162,22 @@ function ThemeForm({
   const mappingChanged = accountId !== (theme?.account?.id ?? "") || propertyId !== (theme?.ga4PropertyId ?? "");
   const willValidate = Boolean(accountId && propertyId) && mappingChanged;
   const prefixChanged = pagePathPrefix.trim() !== (theme?.pagePathPrefix ?? "");
+  const earlier = earlierPropertyId ? { ga4PropertyId: earlierPropertyId, pagePathPrefix: earlierPrefix.trim() || null, until: earlierUntil } : null;
+  const earlierChanged = JSON.stringify(earlier) !== JSON.stringify(theme?.earlierSource ?? null);
 
   const accounts = [...new Set((current?.properties ?? []).map((p) => p.accountDisplayName))];
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (accountId && !propertyId) return setError("Choose a GA4 property, or set the account back to “Map later”.");
+    if (earlier && !earlier.until) return setError("Choose the last day to read from the earlier property.");
     setSaving(true);
     setError(null);
-    const body: Record<string, string> = {};
+    const body: Record<string, unknown> = {};
     if (!theme || name.trim() !== theme.name) body.name = name;
     if (willValidate) Object.assign(body, { googleConnectionId: accountId, ga4PropertyId: propertyId });
     if (prefixChanged) body.pagePathPrefix = pagePathPrefix.trim();
+    if (theme && earlierChanged) body.earlierSource = earlier;
     try {
       if (theme && Object.keys(body).length === 0) return onCancel();
       const data = theme ? await postJson(`/api/analytics/themes/${theme.id}`, "PATCH", body) : await postJson("/api/analytics/themes", "POST", body);
@@ -258,6 +266,41 @@ function ThemeForm({
           Only for a GA4 property that also tracks other themes: counts just the pages starting with this path. Installs have no page, so they&apos;re estimated from this theme&apos;s share of Try Theme clicks. Changing it re-syncs the theme&apos;s history.
         </span>
       </label>
+
+      {theme?.ga4PropertyId && accountId && current?.properties && (
+        <fieldset className="flex flex-col gap-3 rounded-md border border-border-subtle p-3">
+          <legend className="px-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">Earlier history (optional)</legend>
+          <span className="text-xs text-zinc-500">
+            For a theme that used to be tracked in another theme&apos;s property: dates up to the last day below are read from that property (only
+            this theme&apos;s pages, with the filter), later dates from its own. Changing it re-syncs the theme&apos;s history.
+          </span>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Earlier GA4 property</span>
+            <select value={earlierPropertyId} onChange={(e) => setEarlierPropertyId(e.target.value)} className={INPUT_CLASSES}>
+              <option value="">None</option>
+              {current.properties
+                .filter((p) => p.propertyId !== propertyId)
+                .map((p) => (
+                  <option key={p.propertyId} value={p.propertyId}>
+                    {p.displayName} ({p.propertyId})
+                  </option>
+                ))}
+            </select>
+          </label>
+          {earlierPropertyId && (
+            <>
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">This theme&apos;s pages in it</span>
+                <input value={earlierPrefix} onChange={(e) => setEarlierPrefix(e.target.value)} maxLength={200} className={INPUT_CLASSES} placeholder="e.g. /themes/flaunt/" spellCheck={false} />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">Last day to read from it</span>
+                <input type="date" value={earlierUntil} onChange={(e) => setEarlierUntil(e.target.value)} className={INPUT_CLASSES} required />
+              </label>
+            </>
+          )}
+        </fieldset>
+      )}
 
       {error && <p className="text-sm text-red-700 dark:text-red-300">{error}</p>}
 
@@ -420,6 +463,12 @@ export function Ga4ThemesSection({ connections, configured }: { connections: Con
                           {t.ga4PropertyTimeZone ? ` · ${t.ga4PropertyTimeZone}` : ""}
                         </div>
                         {t.pagePathPrefix && <div className="text-xs text-zinc-500">Pages {t.pagePathPrefix}* · installs estimated</div>}
+                        {t.earlierSource && (
+                          <div className="text-xs text-zinc-500">
+                            Through {t.earlierSource.until}: {t.earlierSource.ga4PropertyId}
+                            {t.earlierSource.pagePathPrefix ? `, pages ${t.earlierSource.pagePathPrefix}*` : ""}
+                          </div>
+                        )}
                       </>
                     ) : (
                       <span className="text-zinc-500">—</span>

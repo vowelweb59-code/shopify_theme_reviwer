@@ -16,6 +16,10 @@ const analyticsSyncSchema = new Schema(
     // Same for the page filter (a shared property): a job planned for one
     // filter mustn't write rows or progress under another.
     pagePathPrefix: { type: String, default: null },
+    // Snapshot of the theme's earlier-history source (see AnalyticsTheme), if any.
+    earlierPropertyId: { type: String, default: null },
+    earlierPagePathPrefix: { type: String, default: null },
+    earlierUntil: { type: String, default: null },
     syncType: { type: String, enum: ANALYTICS_SYNC_TYPES, required: true },
     status: { type: String, enum: ANALYTICS_SYNC_STATUSES, required: true, default: "queued" },
     // true while queued/running, unset once finished. The partial unique

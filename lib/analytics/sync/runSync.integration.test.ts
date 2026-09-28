@@ -31,12 +31,13 @@ type FakeGa4 = {
   events: string[];
   installCount: number;
   calls: number;
+  requests: { property: string; start: string; end: string; pageFiltered: boolean }[];
   failures: { atCall: number; error: Error; times: number }[];
   onCall?: (call: number) => Promise<void>;
 };
 
 function fakeGa4(): FakeGa4 {
-  return { dims: { country: "India" }, events: ["add_to_cart", "shopify_theme_install"], installCount: 2, calls: 0, failures: [] };
+  return { dims: { country: "India" }, events: ["add_to_cart", "shopify_theme_install"], installCount: 2, calls: 0, requests: [], failures: [] };
 }
 
 function datesBetween(start: string, end: string) {
@@ -48,8 +49,10 @@ function datesBetween(start: string, end: string) {
 function makeDataApi(ga4: FakeGa4): DataApi {
   return {
     properties: {
-      runReport: (async ({ requestBody }: { requestBody: ReportRequest }) => {
+      runReport: (async ({ property, requestBody }: { property: string; requestBody: ReportRequest }) => {
         ga4.calls++;
+        const [r] = requestBody.dateRanges!;
+        ga4.requests.push({ property, start: r.startDate!, end: r.endDate!, pageFiltered: JSON.stringify(requestBody.dimensionFilter ?? {}).includes("pagePath") });
         await ga4.onCall?.(ga4.calls);
         const failure = ga4.failures.find((f) => ga4.calls >= f.atCall && f.times > 0);
         if (failure) {
@@ -351,6 +354,29 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     // Full history again, not an incremental sync from the old job's progress.
     expect(next).toMatchObject({ status: "succeeded", pagePathPrefix: "/themes/adorn/", syncType: "initial", rangeStart: "2026-07-01" });
     expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, historyStartDate: "2026-07-01" });
+  });
+
+  it("reads dates up to the cut-off from the earlier-history property (filtered), and later dates from the theme's own", async () => {
+    await AnalyticsTheme.updateOne({ _id: themeId }, { earlierPropertyId: "444444444", earlierPagePathPrefix: "/themes/flaunt/", earlierUntil: "2026-07-20" });
+    const { sync, done } = await startSync(themeId, "mapped", deps);
+    expect(sync).toMatchObject({ syncType: "initial", rangeStart: "2026-07-01" });
+    await done;
+
+    const earlier = ga4.requests.filter((r) => r.property === "properties/444444444");
+    const own = ga4.requests.filter((r) => r.property === `properties/${PROPERTY}`);
+    expect(earlier.length).toBeGreaterThan(0);
+    expect(earlier.every((r) => r.start >= "2026-07-01" && r.end <= "2026-07-20")).toBe(true);
+    // Every earlier report is page-filtered, except the property-wide install estimate.
+    expect(earlier.filter((r) => !r.pageFiltered)).toHaveLength(1);
+    expect(own.every((r) => r.start >= "2026-07-21" && !r.pageFiltered)).toBe(true);
+
+    const earlierDates = await AnalyticsAggregate.distinct("date", { ga4PropertyId: "444444444" });
+    expect(earlierDates.sort().at(-1)).toBe("2026-07-20");
+    expect((await AnalyticsAggregate.distinct("date", { ga4PropertyId: PROPERTY })).sort()[0]).toBe("2026-07-21");
+    // Installs on the earlier dates are estimated (this theme had all of that day's Try Theme clicks).
+    const install = await AnalyticsAggregate.findOne({ ga4PropertyId: "444444444", date: "2026-07-10", breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: { eventCount: number } }>();
+    expect(install?.metrics.eventCount).toBe(2);
+    expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, connectionStatus: "connected" });
   });
 
   it("a queued job left over from an old mapping is cancelled and replaced, without marking the theme as broken", async () => {

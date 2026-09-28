@@ -36,6 +36,9 @@ type ThemeLean = {
   ga4PropertyId?: string | null;
   ga4PropertyTimeZone?: string | null;
   pagePathPrefix?: string | null;
+  earlierPropertyId?: string | null;
+  earlierPagePathPrefix?: string | null;
+  earlierUntil?: string | null;
   syncedThroughDate?: string | null;
   lastSuccessfulSyncAt?: Date | null;
 };
@@ -48,6 +51,8 @@ export type ThemeContext = {
   timeZone: string | null;
   /** Set when the theme shares its GA4 property: only its pages count, and its installs are estimated. */
   pagePathPrefix: string | null;
+  /** Dates up to `until` come from this other property (the theme's earlier history). */
+  earlier: { propertyId: string; pagePathPrefix: string | null; until: string } | null;
   syncedThroughDate: string | null;
   lastSuccessfulSyncAt: string | null;
   period: ResolvedPeriod;
@@ -85,7 +90,7 @@ type Context = {
 };
 
 async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Context> {
-  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix syncedThroughDate lastSuccessfulSyncAt";
+  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil syncedThroughDate lastSuccessfulSyncAt";
   let docs: ThemeLean[];
   let selected: PublicThemeRef | null = null;
   const warnings: string[] = [];
@@ -112,6 +117,7 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
       propertyId: d.ga4PropertyId as string,
       timeZone: d.ga4PropertyTimeZone ?? null,
       pagePathPrefix: d.pagePathPrefix ?? null,
+      earlier: d.earlierPropertyId && d.earlierUntil ? { propertyId: d.earlierPropertyId, pagePathPrefix: d.earlierPagePathPrefix ?? null, until: d.earlierUntil } : null,
       syncedThroughDate: d.syncedThroughDate ?? null,
       lastSuccessfulSyncAt: d.lastSuccessfulSyncAt ? new Date(d.lastSuccessfulSyncAt).toISOString() : null,
       period: resolvePeriod(query.range, d.ga4PropertyTimeZone, query.compare, now),
@@ -124,7 +130,7 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
 
   const unsynced = themes.filter((t) => !t.syncedThroughDate).map((t) => t.name);
   if (unsynced.length) warnings.push(`${unsynced.join(", ")} ${unsynced.length === 1 ? "hasn't" : "haven't"} finished a first GA4 sync, so data may be missing.`);
-  const estimated = themes.filter((t) => t.pagePathPrefix).map((t) => t.name);
+  const estimated = themes.filter((t) => t.pagePathPrefix || t.earlier?.pagePathPrefix).map((t) => t.name);
   if (estimated.length) warnings.push(installsEstimatedWarning(estimated));
   return { query, scope: query.theme === "all" ? "all" : "theme", selected, themes, warnings };
 }
@@ -142,7 +148,7 @@ function buildMeta(ctx: Context, breakdown: AggregateBreakdown, now: Date): Metr
       timeZone: t.timeZone,
       syncedThroughDate: t.syncedThroughDate,
       lastSuccessfulSyncAt: t.lastSuccessfulSyncAt,
-      installsEstimated: Boolean(t.pagePathPrefix),
+      installsEstimated: Boolean(t.pagePathPrefix || t.earlier?.pagePathPrefix),
       current: t.period.current,
       previous: t.period.previous,
     })),
@@ -195,13 +201,19 @@ async function loadPoints(
     breakdown,
     eventName: { $in: [...TRACKED_EVENTS] },
     ...filterMatch(filters),
-    // Also pinned to the theme's *current* property: a remapped theme's old
-    // rows are purged by its next sync, but must never mix in before that.
-    $or: themes.map((t) => ({
-      analyticsThemeId: new Types.ObjectId(t.id),
-      ga4PropertyId: t.propertyId,
-      date: { $gte: (t.period.previous ?? t.period.current).start, $lte: t.period.current.end },
-    })),
+    // Also pinned to the theme's *current* property (and, up to its cut-off,
+    // its earlier-history one): a remapped theme's old rows are purged by
+    // its next sync, but must never mix in before that.
+    $or: themes.flatMap((t) => {
+      const theme = new Types.ObjectId(t.id);
+      const start = (t.period.previous ?? t.period.current).start;
+      const end = t.period.current.end;
+      if (!t.earlier) return [{ analyticsThemeId: theme, ga4PropertyId: t.propertyId, date: { $gte: start, $lte: end } }];
+      return [
+        { analyticsThemeId: theme, ga4PropertyId: t.earlier.propertyId, date: { $gte: start, $lte: end < t.earlier.until ? end : t.earlier.until } },
+        { analyticsThemeId: theme, ga4PropertyId: t.propertyId, date: { $gt: t.earlier.until, $gte: start, $lte: end } },
+      ];
+    }),
   };
   // A row is in its theme's current range if its date is ≥ that range's
   // start (the $match already bounds both ends); otherwise it's previous.

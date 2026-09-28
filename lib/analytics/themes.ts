@@ -3,7 +3,7 @@ import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
 import { Theme } from "@/models/theme";
 import { isValidObjectId } from "@/lib/api/validation";
-import { GA4_PROPERTY_ID_PATTERN } from "./constants";
+import { GA4_DATE_PATTERN, GA4_PROPERTY_ID_PATTERN } from "./constants";
 import { slugify } from "./slug";
 import { Ga4ConnectionError, getAuthorizedClient, markConnectionRevoked } from "./googleConnections";
 import { Ga4PropertyError, createAdminApi, getPropertyDetails, listAccessibleProperties, type AdminApi, type Ga4PropertyDetails, type Ga4PropertySummary } from "./properties";
@@ -37,6 +37,8 @@ export type PublicAnalyticsTheme = {
   ga4PropertyDisplayName: string | null;
   ga4PropertyTimeZone: string | null;
   pagePathPrefix: string | null;
+  /** Earlier history read from another property (see models/analytics-theme.ts). */
+  earlierSource: EarlierSource | null;
   connectionStatus: string;
   isActive: boolean;
   lastValidatedAt: string | null;
@@ -45,6 +47,8 @@ export type PublicAnalyticsTheme = {
   syncedThroughDate: string | null;
   lastSuccessfulSyncAt: string | null;
 };
+
+export type EarlierSource = { ga4PropertyId: string; pagePathPrefix: string | null; until: string };
 
 type ThemeLean = {
   _id: { toString(): string };
@@ -56,6 +60,9 @@ type ThemeLean = {
   ga4PropertyDisplayName?: string | null;
   ga4PropertyTimeZone?: string | null;
   pagePathPrefix?: string | null;
+  earlierPropertyId?: string | null;
+  earlierPagePathPrefix?: string | null;
+  earlierUntil?: string | null;
   connectionStatus: string;
   isActive: boolean;
   lastValidatedAt?: Date | null;
@@ -79,6 +86,8 @@ function toPublicTheme(doc: ThemeLean, accounts: Map<string, AccountLean>): Publ
     ga4PropertyDisplayName: doc.ga4PropertyDisplayName ?? null,
     ga4PropertyTimeZone: doc.ga4PropertyTimeZone ?? null,
     pagePathPrefix: doc.pagePathPrefix ?? null,
+    earlierSource:
+      doc.earlierPropertyId && doc.earlierUntil ? { ga4PropertyId: doc.earlierPropertyId, pagePathPrefix: doc.earlierPagePathPrefix ?? null, until: doc.earlierUntil } : null,
     connectionStatus: doc.connectionStatus,
     isActive: doc.isActive,
     lastValidatedAt: doc.lastValidatedAt ? new Date(doc.lastValidatedAt).toISOString() : null,
@@ -115,7 +124,7 @@ export function normalizePropertyId(input: unknown): string | null {
   return GA4_PROPERTY_ID_PATTERN.test(id) ? id : null;
 }
 
-export type ThemeInput = { name?: unknown; googleConnectionId?: unknown; ga4PropertyId?: unknown; pagePathPrefix?: unknown };
+export type ThemeInput = { name?: unknown; googleConnectionId?: unknown; ga4PropertyId?: unknown; pagePathPrefix?: unknown; earlierSource?: unknown };
 type ParsedMapping = { googleConnectionId: string; ga4PropertyId: string } | null;
 
 function parseName(raw: unknown): string {
@@ -138,6 +147,34 @@ function parsePagePathPrefix(raw: unknown): string | null | undefined {
     throw new ThemeRequestError(400, `Page path filter must start with "/" and have no spaces (up to ${MAX_PREFIX_LENGTH} characters), e.g. /themes/adorn/.`);
   }
   return prefix;
+}
+
+/** undefined = not being changed; null = none. */
+function parseEarlierSource(raw: unknown): EarlierSource | null | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === null) return null;
+  if (typeof raw !== "object") throw new ThemeRequestError(400, "Earlier history must be an object or null.");
+  const r = raw as Record<string, unknown>;
+  const ga4PropertyId = normalizePropertyId(r.ga4PropertyId);
+  if (!ga4PropertyId) throw new ThemeRequestError(400, "Earlier history needs a GA4 property id, e.g. 123456789.");
+  if (typeof r.until !== "string" || !GA4_DATE_PATTERN.test(r.until)) throw new ThemeRequestError(400, "Earlier history needs a last date (YYYY-MM-DD).");
+  return { ga4PropertyId, pagePathPrefix: parsePagePathPrefix(r.pagePathPrefix ?? null) ?? null, until: r.until };
+}
+
+const earlierFields = (s: EarlierSource | null) => ({ earlierPropertyId: s?.ga4PropertyId ?? null, earlierPagePathPrefix: s?.pagePathPrefix ?? null, earlierUntil: s?.until ?? null });
+const sameEarlier = (a: EarlierSource | null, b: EarlierSource | null) => JSON.stringify(a) === JSON.stringify(b);
+
+/** The theme's account must be able to read the earlier property too. */
+async function checkEarlierSource(source: EarlierSource, connectionId: string | null, mainPropertyId: string | null, resolveAdmin: AdminResolver): Promise<void> {
+  if (!connectionId || !mainPropertyId) throw new ThemeRequestError(400, "Map the theme's own GA4 property before adding earlier history.");
+  if (source.ga4PropertyId === mainPropertyId) throw new ThemeRequestError(400, "Earlier history must come from a different GA4 property than the theme's own.");
+  try {
+    await getPropertyDetails(await resolveAdmin(connectionId), source.ga4PropertyId);
+  } catch (err) {
+    if (err instanceof Ga4ConnectionError) throw new ThemeRequestError(422, err.message);
+    if (err instanceof Ga4PropertyError) throw new ThemeRequestError(PROPERTY_ERROR_STATUS[err.code], `Earlier history: ${err.message}`);
+    throw err;
+  }
 }
 
 // GA4 matches the filter case-insensitively, so overlap is checked the same way.
@@ -258,7 +295,7 @@ export async function createTheme(input: ThemeInput, resolveAdmin: AdminResolver
 
 /** Rename and/or (re)map. The slug never changes, so it stays a stable identifier. */
 export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: AdminResolver = defaultResolver): Promise<PublicAnalyticsTheme> {
-  const current = await AnalyticsTheme.findById(id).select("ga4PropertyId pagePathPrefix").lean<{ ga4PropertyId?: string | null; pagePathPrefix?: string | null }>();
+  const current = await AnalyticsTheme.findById(id).select("googleConnectionId ga4PropertyId pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil").lean<ThemeLean>();
   if (!current) throw new ThemeRequestError(404, "Theme not found.");
 
   const set: Record<string, unknown> = {};
@@ -274,6 +311,13 @@ export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: A
     await checkPropertySharing(current.ga4PropertyId, prefix, id);
   }
   if (prefixChanged) Object.assign(set, { pagePathPrefix: prefix }, RESET_SYNC_STATE);
+
+  const currentEarlier = toPublicTheme(current, new Map()).earlierSource;
+  const earlier = parseEarlierSource(input.earlierSource);
+  if (earlier !== undefined && !sameEarlier(earlier, currentEarlier)) {
+    if (earlier) await checkEarlierSource(earlier, mapping?.googleConnectionId ?? current.googleConnectionId?.toString() ?? null, mapping?.ga4PropertyId ?? current.ga4PropertyId ?? null, resolveAdmin);
+    Object.assign(set, earlierFields(earlier), RESET_SYNC_STATE);
+  }
   if (Object.keys(set).length === 0) throw new ThemeRequestError(400, "Nothing to update.");
 
   try {
@@ -321,6 +365,7 @@ export async function disconnectTheme(id: string): Promise<PublicAnalyticsTheme>
         ga4PropertyDisplayName: null,
         ga4PropertyTimeZone: null,
         pagePathPrefix: null,
+        ...earlierFields(null),
         connectionStatus: "unmapped",
         lastValidatedAt: null,
         lastError: null,

@@ -97,6 +97,9 @@ type SyncLean = {
   analyticsThemeId: { toString(): string };
   ga4PropertyId: string;
   pagePathPrefix?: string | null;
+  earlierPropertyId?: string | null;
+  earlierPagePathPrefix?: string | null;
+  earlierUntil?: string | null;
   syncType: string;
   status: string;
   rangeStart: string;
@@ -149,10 +152,35 @@ type ThemeForSync = {
   ga4PropertyId?: string | null;
   ga4PropertyTimeZone?: string | null;
   pagePathPrefix?: string | null;
+  earlierPropertyId?: string | null;
+  earlierPagePathPrefix?: string | null;
+  earlierUntil?: string | null;
   connectionStatus: string;
   historyStartDate?: string | null;
   syncedThroughDate?: string | null;
 };
+
+/** Where one date range's rows come from: the theme's own property, or its earlier-history one. */
+type Source = { propertyId: string; pagePathPrefix: string | null };
+
+/**
+ * Splits a chunk at the theme's earlier-history cut-off: dates up to
+ * `earlier.until` are read from the earlier property, the rest from the
+ * theme's own.
+ */
+export function sourcesFor(
+  chunk: { start: string; end: string },
+  main: Source,
+  earlier: (Source & { until: string }) | null
+): { range: { start: string; end: string }; source: Source }[] {
+  if (!earlier || earlier.until < chunk.start) return [{ range: chunk, source: main }];
+  const earlierSource = { propertyId: earlier.propertyId, pagePathPrefix: earlier.pagePathPrefix };
+  if (earlier.until >= chunk.end) return [{ range: chunk, source: earlierSource }];
+  return [
+    { range: { start: chunk.start, end: earlier.until }, source: earlierSource },
+    { range: { start: addDays(earlier.until, 1), end: chunk.end }, source: main },
+  ];
+}
 
 /** Optional floor on history (e.g. to bound storage), from ANALYTICS_HISTORY_START_DATE. */
 function configuredHistoryFloor(): string {
@@ -168,13 +196,21 @@ export async function planSync(theme: ThemeForSync, trigger: SyncTrigger, deps: 
 
   if (!theme.syncedThroughDate) {
     // Everything GA4 still has for this property: back to its creation date.
+    // With earlier history, the earliest of the two properties' creation dates.
     let created = GA4_EARLIEST_DATE;
     try {
-      const details = await getPropertyDetails(await deps.adminFor(theme.googleConnectionId!.toString()), theme.ga4PropertyId!);
-      if (details.createTime) created = dateInTimeZone(details.createTime, theme.ga4PropertyTimeZone);
+      const admin = await deps.adminFor(theme.googleConnectionId!.toString());
+      const created_: string[] = [];
+      for (const propertyId of [theme.ga4PropertyId!, ...(theme.earlierPropertyId && theme.earlierUntil ? [theme.earlierPropertyId] : [])]) {
+        const details = await getPropertyDetails(admin, propertyId);
+        if (!details.createTime) throw new Ga4PropertyError("unavailable", "No creation time.");
+        created_.push(dateInTimeZone(details.createTime, theme.ga4PropertyTimeZone));
+      }
+      created = created_.sort()[0];
     } catch (err) {
       if (err instanceof Ga4PropertyError && err.code !== "unavailable") throw err;
       // Couldn't read createTime right now: fall back to GA4's earliest date — just a few extra empty requests.
+      created = GA4_EARLIEST_DATE;
     }
     const rangeStart = maxDate(created, configuredHistoryFloor());
     return { syncType: "initial" as const, rangeStart: rangeStart > today ? today : rangeStart, rangeEnd: today };
@@ -293,6 +329,9 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
       analyticsThemeId: theme._id,
       ga4PropertyId: theme.ga4PropertyId,
       pagePathPrefix: theme.pagePathPrefix ?? null,
+      earlierPropertyId: theme.earlierPropertyId ?? null,
+      earlierPagePathPrefix: theme.earlierPagePathPrefix ?? null,
+      earlierUntil: theme.earlierUntil ?? null,
       syncType: plan.syncType,
       status: "queued",
       isActive: true,
@@ -321,7 +360,7 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
 
   if (plan.syncType === "initial") {
     // Rows from a property this theme used to be mapped to don't belong to it any more.
-    await AnalyticsAggregate.deleteMany({ analyticsThemeId: theme._id, ga4PropertyId: { $ne: theme.ga4PropertyId } });
+    await AnalyticsAggregate.deleteMany({ analyticsThemeId: theme._id, ga4PropertyId: { $nin: [theme.ga4PropertyId, ...(theme.earlierPropertyId ? [theme.earlierPropertyId] : [])] } });
     await AnalyticsTheme.updateOne({ _id: theme._id }, { $set: { historyStartDate: plan.rangeStart } });
   }
 
@@ -348,6 +387,16 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
 
   const theme = await AnalyticsTheme.findById(job.analyticsThemeId).lean<ThemeForSync>();
   const pagePathPrefix = job.pagePathPrefix ?? null;
+  const main: Source = { propertyId: job.ga4PropertyId, pagePathPrefix };
+  const earlier = job.earlierPropertyId && job.earlierUntil ? { propertyId: job.earlierPropertyId, pagePathPrefix: job.earlierPagePathPrefix ?? null, until: job.earlierUntil } : null;
+  const mappingMatch = {
+    _id: job.analyticsThemeId,
+    ga4PropertyId: job.ga4PropertyId,
+    pagePathPrefix,
+    earlierPropertyId: job.earlierPropertyId ?? null,
+    earlierPagePathPrefix: job.earlierPagePathPrefix ?? null,
+    earlierUntil: job.earlierUntil ?? null,
+  };
   // The theme was remapped, unmapped or given another page filter after
   // this job was planned (Settings): its rows would describe the old
   // mapping. Stop, and queue a fresh sync for the current one.
@@ -362,7 +411,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
       if (!(err instanceof SyncRequestError)) console.error("[ga4-sync] couldn't queue a sync after a mapping change:", err instanceof Error ? err.message : err);
     });
   };
-  const stillMapped = async () => Boolean(await AnalyticsTheme.exists({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }));
+  const stillMapped = async () => Boolean(await AnalyticsTheme.exists(mappingMatch));
   try {
     if (!theme?.googleConnectionId || !(await stillMapped())) {
       await cancelStale();
@@ -371,13 +420,13 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     const api = await deps.dataApiFor(theme.googleConnectionId.toString());
     const warnings = new Set(job.warnings ?? []);
 
-    const upsertRows = async (rows: AggregateRow[], fetched: number) => {
+    const upsertRows = async (rows: AggregateRow[], fetched: number, propertyId: string) => {
       let written = 0;
       for (let i = 0; i < rows.length; i += UPSERT_BATCH) {
         const ops: UpsertOp[] = rows.slice(i, i + UPSERT_BATCH).map((r) => ({
           updateOne: {
             filter: { analyticsThemeId: job.analyticsThemeId, date: r.date, breakdown: r.breakdown, eventName: r.eventName, dimsKey: r.dimsKey },
-            update: { $set: { ga4PropertyId: job.ga4PropertyId, dims: r.dims, metrics: r.metrics, syncId: job._id } },
+            update: { $set: { ga4PropertyId: propertyId, dims: r.dims, metrics: r.metrics, syncId: job._id } },
             upsert: true,
           },
         }));
@@ -398,26 +447,28 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
         await cancelStale();
         return;
       }
-      const themeTotals: AggregateRow[] = [];
-      for (const spec of buildReportSpecs(chunk, pagePathPrefix)) {
-        const result = await runFullReport(api, job.ga4PropertyId, spec.request, { sleep: deps.sleep });
-        noteMetadata(result);
-        const rows = toAggregateRows(spec, result.rows);
-        if (spec.breakdown === "total") themeTotals.push(...rows);
-        await upsertRows(rows, result.rows.length);
-      }
-      if (pagePathPrefix) {
-        // Installs have no page, so the page filter drops them all; estimate this theme's share instead.
-        const result = await runFullReport(api, job.ga4PropertyId, installEstimateRequest(chunk), { sleep: deps.sleep });
-        noteMetadata(result);
-        await upsertRows(estimateInstallRows(themeTotals, result.rows), result.rows.length);
+      for (const { range, source } of sourcesFor(chunk, main, earlier)) {
+        const themeTotals: AggregateRow[] = [];
+        for (const spec of buildReportSpecs(range, source.pagePathPrefix)) {
+          const result = await runFullReport(api, source.propertyId, spec.request, { sleep: deps.sleep });
+          noteMetadata(result);
+          const rows = toAggregateRows(spec, result.rows);
+          if (spec.breakdown === "total") themeTotals.push(...rows);
+          await upsertRows(rows, result.rows.length, source.propertyId);
+        }
+        if (source.pagePathPrefix) {
+          // Installs have no page, so the page filter drops them all; estimate this theme's share instead.
+          const result = await runFullReport(api, source.propertyId, installEstimateRequest(range), { sleep: deps.sleep });
+          noteMetadata(result);
+          await upsertRows(estimateInstallRows(themeTotals, result.rows), result.rows.length, source.propertyId);
+        }
       }
 
       // The chunk is complete: anything for these dates this sync didn't write is gone from GA4.
       await AnalyticsAggregate.deleteMany({ analyticsThemeId: job.analyticsThemeId, date: { $gte: chunk.start, $lte: chunk.end }, syncId: { $ne: job._id } });
       await AnalyticsSync.updateOne({ _id: syncId }, { $set: { cursorDate: addDays(chunk.end, 1), warnings: [...warnings] }, $inc: { chunksDone: 1 } });
       await AnalyticsTheme.updateOne(
-        { _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix, $or: [{ syncedThroughDate: null }, { syncedThroughDate: { $lt: chunk.end } }] },
+        { ...mappingMatch, $or: [{ syncedThroughDate: null }, { syncedThroughDate: { $lt: chunk.end } }] },
         { $set: { syncedThroughDate: chunk.end } }
       );
       await (deps.sleep ?? realSleep)(PAUSE_BETWEEN_CHUNKS_MS);
@@ -425,7 +476,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
 
     const now = deps.now();
     await AnalyticsSync.updateOne({ _id: syncId }, { $set: { status: "succeeded", completedAt: now, error: { message: null, code: null } }, $unset: { isActive: "" } });
-    await AnalyticsTheme.updateOne({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }, { $set: { lastSuccessfulSyncAt: now, lastError: null } });
+    await AnalyticsTheme.updateOne(mappingMatch, { $set: { lastSuccessfulSyncAt: now, lastError: null } });
   } catch (raw) {
     await handleFailure(job, theme, raw, deps);
   }

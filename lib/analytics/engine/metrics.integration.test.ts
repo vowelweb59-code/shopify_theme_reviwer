@@ -123,6 +123,39 @@ describe.skipIf(!uri)("GA4 analytics engine (MongoDB)", () => {
     expect(res.meta.warnings).toContain("Flaunt isn't mapped to a GA4 property yet.");
   });
 
+  it("reads a theme's earlier history from its earlier property up to the cut-off, and its own property after", async () => {
+    const flaunt = await AnalyticsTheme.create({
+      name: "Flaunt2",
+      slug: "flaunt2",
+      ga4PropertyId: "555555555",
+      ga4PropertyTimeZone: "UTC",
+      connectionStatus: "connected",
+      syncedThroughDate: "2026-09-24",
+      earlierPropertyId: ADORN_PROPERTY,
+      earlierPagePathPrefix: "/themes/flaunt/",
+      earlierUntil: "2026-09-20",
+    });
+    const row = (property: string, date: string, eventCount: number) => ({
+      analyticsThemeId: flaunt._id,
+      ga4PropertyId: property,
+      date,
+      breakdown: "total",
+      eventName: "add_to_cart",
+      dims: {},
+      dimsKey: `${property}`, // distinct per property so both can exist for one date
+      metrics: { eventCount },
+    });
+    await AnalyticsAggregate.insertMany([
+      row(ADORN_PROPERTY, "2026-09-19", 5), // earlier source, before the cut-off: counts
+      row(ADORN_PROPERTY, "2026-09-22", 100), // earlier source after the cut-off: ignored
+      row("555555555", "2026-09-18", 100), // own property before the cut-off: ignored
+      row("555555555", "2026-09-23", 7), // own property after the cut-off: counts
+    ]);
+    const res = await getOverview(q("theme=flaunt2&range=last7&compare=none"), deps);
+    expect(res.current.tryTheme).toBe(12);
+    expect(res.meta.themes[0].installsEstimated).toBe(true);
+  });
+
   it("breaks KPIs down by a dimension, sorted by installs and paginated", async () => {
     const res = await getBreakdown(bq("theme=adorn&range=last7&dimension=country&limit=1"), deps);
     expect(res.sort).toBe("installs");
