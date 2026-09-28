@@ -53,27 +53,19 @@ export function KpiCardSkeleton() {
   return <div className="h-[108px] animate-pulse rounded-lg border border-border-subtle bg-surface-muted" aria-hidden />;
 }
 
-/** The five headline cards. Installs and Try Theme lead visually: they're the business events. */
-export function KpiCards({ current, comparison, usersLabel }: { current: KpiSet; comparison: KpiComparison | null; usersLabel: string }) {
+/** The three headline cards: Try Theme clicks, installs, and installs per Try Theme click. */
+export function KpiCards({ current, comparison, installsEstimated = false }: { current: KpiSet; comparison: KpiComparison | null; installsEstimated?: boolean }) {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-      <KpiCard label="Users" value={formatCount(current.users)} detail={usersLabel} change={comparison?.users} />
-      <KpiCard label="Theme Views" value={formatCount(current.themeViews.users)} detail={`${formatCount(current.themeViews.count)} views`} change={comparison?.themeViews.users} />
-      <KpiCard
-        label="Try Theme"
-        value={formatCount(current.tryTheme.users)}
-        detail={`${formatCount(current.tryTheme.count)} clicks`}
-        change={comparison?.tryTheme.users}
-        emphasis
-      />
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <KpiCard label="Try Theme" value={formatCount(current.tryTheme)} detail="clicks" change={comparison?.tryTheme} emphasis />
       <KpiCard
         label="Theme Installs"
-        value={formatCount(current.installs.users)}
-        detail={`${formatCount(current.installs.count)} events`}
-        change={comparison?.installs.users}
+        value={`${installsEstimated ? "≈" : ""}${formatCount(current.installs)}`}
+        detail={installsEstimated ? "includes estimates" : "installs"}
+        change={comparison?.installs}
         emphasis
       />
-      <KpiCard label="Install Rate" value={formatPercent(current.rates.installRate, 2)} detail="Install users ÷ users" change={comparison?.rates.installRate} changeUnit="points" emphasis />
+      <KpiCard label="Install Rate" value={formatPercent(current.installRate, 2)} detail="installs ÷ Try Theme clicks" change={comparison?.installRate} changeUnit="points" emphasis />
     </div>
   );
 }

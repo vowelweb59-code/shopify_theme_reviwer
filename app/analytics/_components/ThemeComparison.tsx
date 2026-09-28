@@ -16,9 +16,9 @@ function Cell({ value, change, unit }: { value: string; change?: Change; unit?: 
 }
 
 /**
- * Theme | Users | Views | Try Theme | Installs | Install Rate. Sortable per
- * column (sorting the rows the engine already computed — no maths here).
- * Clicking a theme narrows the whole dashboard to it.
+ * Theme | Try Theme | Installs | Install Rate. Sortable per column (sorting
+ * the rows the engine already computed — no maths here). Clicking a theme
+ * narrows the whole dashboard to it.
  */
 export function ThemeComparison({
   rows,
@@ -39,39 +39,25 @@ export function ThemeComparison({
       sortValue: (r) => r.theme.name,
     },
     {
-      key: "users",
-      header: "Users",
-      className: num,
-      render: (r) => <Cell value={formatCount(r.current.users)} change={r.comparison?.users} />,
-      sortValue: (r) => r.current.users,
-    },
-    {
-      key: "views",
-      header: "Views",
-      className: num,
-      render: (r) => <Cell value={formatCount(r.current.themeViews.users)} change={r.comparison?.themeViews.users} />,
-      sortValue: (r) => r.current.themeViews.users,
-    },
-    {
       key: "tryTheme",
       header: "Try Theme",
       className: num,
-      render: (r) => <Cell value={formatCount(r.current.tryTheme.users)} change={r.comparison?.tryTheme.users} />,
-      sortValue: (r) => r.current.tryTheme.users,
+      render: (r) => <Cell value={formatCount(r.current.tryTheme)} change={r.comparison?.tryTheme} />,
+      sortValue: (r) => r.current.tryTheme,
     },
     {
       key: "installs",
       header: "Installs",
       className: num,
-      render: (r) => <Cell value={`${estimatedInstalls.has(r.theme.id) ? "≈" : ""}${formatCount(r.current.installs.users)}`} change={r.comparison?.installs.users} />,
-      sortValue: (r) => r.current.installs.users,
+      render: (r) => <Cell value={`${estimatedInstalls.has(r.theme.id) ? "≈" : ""}${formatCount(r.current.installs)}`} change={r.comparison?.installs} />,
+      sortValue: (r) => r.current.installs,
     },
     {
       key: "installRate",
       header: "Install Rate",
       className: num,
-      render: (r) => <Cell value={formatPercent(r.current.rates.installRate, 2)} change={r.comparison?.rates.installRate} unit="points" />,
-      sortValue: (r) => r.current.rates.installRate ?? -1,
+      render: (r) => <Cell value={formatPercent(r.current.installRate, 2)} change={r.comparison?.installRate} unit="points" />,
+      sortValue: (r) => r.current.installRate ?? -1,
     },
   ];
 

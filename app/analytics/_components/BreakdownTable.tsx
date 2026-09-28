@@ -10,7 +10,7 @@ import type { Change } from "@/lib/analytics/engine/kpis";
 import type { BreakdownResponse, BreakdownRow } from "@/lib/analytics/engine/metrics";
 import { groupDimsFor, type BreakdownSort } from "@/lib/analytics/engine/params";
 import { ChangeBadge } from "./KpiCards";
-import { FILTER_LABELS, eventLabel, mergeFilters } from "./FilterBar";
+import { FILTER_LABELS, mergeFilters } from "./FilterBar";
 import { formatCount, formatPercent } from "./format";
 import { useApi } from "./useApi";
 import { useDashboardParams, type DashboardFilters } from "./useDashboardParams";
@@ -28,7 +28,6 @@ type Column = {
 };
 
 function rowLabel(row: BreakdownRow, dimension: FilterParam): string {
-  if (dimension === "city") return [row.values.city, row.values.country].filter(Boolean).join(", ") || "(not set)";
   return row.values[FILTER_PARAMS[dimension]] || "(not set)";
 }
 
@@ -81,7 +80,7 @@ function FilterAction({
  * the active filters come from another dimension family the API can't
  * answer, and the table says so instead of requesting.
  */
-export function BreakdownTable({ dimension, defaultSort = "users" }: { dimension: FilterParam; defaultSort?: BreakdownSort }) {
+export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimension: FilterParam; defaultSort?: BreakdownSort }) {
   const { params, setParams, apiQuery } = useDashboardParams();
   const [sort, setSort] = useState<{ key: BreakdownSort; order: "asc" | "desc" }>({ key: defaultSort, order: "desc" });
   // The page resets whenever the selection or sort changes (derived, not synced in an effect).
@@ -136,28 +135,17 @@ export function BreakdownTable({ dimension, defaultSort = "users" }: { dimension
   }
 
   const columns: Column[] = [
-    { key: "users", header: "Users", sort: "users", value: (r) => formatCount(r.current.users), change: (r) => r.comparison?.users },
-    { key: "views", header: "Theme Views", sort: "themeViews", value: (r) => formatCount(r.current.themeViews.users), change: (r) => r.comparison?.themeViews.users },
-    { key: "try", header: "Try Theme", sort: "tryTheme", value: (r) => formatCount(r.current.tryTheme.users), change: (r) => r.comparison?.tryTheme.users },
-    { key: "installs", header: "Installs", sort: "installs", value: (r) => formatCount(r.current.installs.users), change: (r) => r.comparison?.installs.users },
+    { key: "try", header: "Try Theme", sort: "tryTheme", value: (r) => formatCount(r.current.tryTheme), change: (r) => r.comparison?.tryTheme },
+    { key: "installs", header: "Installs", sort: "installs", value: (r) => formatCount(r.current.installs), change: (r) => r.comparison?.installs },
     {
       key: "installRate",
       header: "Install Rate",
       sort: "installRate",
-      value: (r) => formatPercent(r.current.rates.installRate, 2),
-      change: (r) => r.comparison?.rates.installRate,
+      value: (r) => formatPercent(r.current.installRate, 2),
+      change: (r) => r.comparison?.installRate,
       unit: "points",
     },
   ];
-  if (params.event) {
-    const e = params.event;
-    columns.push({
-      key: "event",
-      header: `${eventLabel(e)} users`,
-      value: (r) => formatCount(r.current.events[e]?.users ?? 0),
-      change: (r) => r.comparison?.events[e]?.users,
-    });
-  }
 
   const data = api.data;
   const rows = data?.rows ?? [];

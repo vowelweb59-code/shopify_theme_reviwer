@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ALL_EVENTS, AGGREGATE_BREAKDOWNS, PRIMARY_EVENTS } from "../constants";
+import { AGGREGATE_BREAKDOWNS, PRIMARY_EVENTS } from "../constants";
 import { classifyDataApiError, runFullReport, type DataApi } from "./ga4Client";
 import { buildReportSpecs, estimateInstallRows, toAggregateRows, type AggregateRow } from "./reports";
 
@@ -9,27 +9,20 @@ const noSleep = async () => {};
 describe("buildReportSpecs", () => {
   const specs = buildReportSpecs({ start: "2026-09-01", end: "2026-09-30" });
 
-  it("runs an events and a totals report for every breakdown", () => {
-    expect(specs).toHaveLength(Object.keys(AGGREGATE_BREAKDOWNS).length * 2);
+  it("runs one report per breakdown", () => {
+    expect(specs).toHaveLength(Object.keys(AGGREGATE_BREAKDOWNS).length);
   });
 
   it("stays within GA4's 9-dimension limit", () => {
     for (const spec of specs) expect(spec.request.dimensions!.length).toBeLessThanOrEqual(9);
   });
 
-  it("filters the events report to the tracked events, primary ones included", () => {
-    const events = specs.find((s) => s.breakdown === "acquisition" && s.kind === "events")!;
+  it("asks only for Try Theme and install event counts", () => {
+    const events = specs.find((s) => s.breakdown === "acquisition")!;
     expect(events.request.dimensions!.map((d) => d.name)).toEqual(["date", "eventName", "sessionSource", "sessionMedium", "sessionCampaignName"]);
-    const values = events.request.dimensionFilter!.filter!.inListFilter!.values!;
-    expect(values).toEqual(expect.arrayContaining([PRIMARY_EVENTS.themeInstall, PRIMARY_EVENTS.tryTheme, "view_item"]));
+    expect(events.request.dimensionFilter!.filter!.inListFilter!.values!.sort()).toEqual([PRIMARY_EVENTS.tryTheme, PRIMARY_EVENTS.themeInstall].sort());
+    expect(events.request.metrics).toEqual([{ name: "eventCount" }]);
     expect(events.request.dateRanges).toEqual([{ startDate: "2026-09-01", endDate: "2026-09-30" }]);
-  });
-
-  it("asks the totals report for the property-wide user and session metrics", () => {
-    const totals = specs.find((s) => s.breakdown === "total" && s.kind === "totals")!;
-    expect(totals.request.dimensions!.map((d) => d.name)).toEqual(["date"]);
-    expect(totals.request.metrics!.map((m) => m.name)).toEqual(["totalUsers", "activeUsers", "newUsers", "sessions", "eventCount"]);
-    expect(totals.request.dimensionFilter).toBeUndefined();
   });
 });
 
@@ -38,10 +31,9 @@ describe("buildReportSpecs with a page filter", () => {
   const pageFilter = { filter: { fieldName: "pagePath", stringFilter: { matchType: "BEGINS_WITH", value: "/themes/adorn/", caseSensitive: false } } };
 
   it("filters every report to the theme's pages, case-insensitively", () => {
-    const events = specs.find((s) => s.breakdown === "total" && s.kind === "events")!;
-    expect(events.request.dimensionFilter!.andGroup!.expressions).toEqual([expect.objectContaining({ filter: expect.objectContaining({ fieldName: "eventName" }) }), pageFilter]);
-    const totals = specs.find((s) => s.breakdown === "country" && s.kind === "totals")!;
-    expect(totals.request.dimensionFilter).toEqual(pageFilter);
+    for (const spec of specs) {
+      expect(spec.request.dimensionFilter!.andGroup!.expressions).toEqual([expect.objectContaining({ filter: expect.objectContaining({ fieldName: "eventName" }) }), pageFilter]);
+    }
   });
 });
 
@@ -52,18 +44,18 @@ describe("estimateInstallRows", () => {
     eventName,
     dims: {},
     dimsKey: "",
-    metrics: { eventCount, totalUsers: eventCount, activeUsers: 0, newUsers: 0, sessions: 0 },
+    metrics: { eventCount },
   });
-  const propertyRow = (date: string, eventName: string, eventCount: number, users = eventCount) => ({ dimensions: [date.replaceAll("-", ""), eventName], metrics: [eventCount, users] });
+  const propertyRow = (date: string, eventName: string, eventCount: number) => ({ dimensions: [date.replaceAll("-", ""), eventName], metrics: [eventCount] });
 
   it("splits each day's installs by that day's Try Theme share", () => {
     const rows = estimateInstallRows(
       [themeRow("2026-09-01", "add_to_cart", 30), themeRow("2026-09-02", "add_to_cart", 5)],
-      [propertyRow("2026-09-01", "add_to_cart", 40), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 4), propertyRow("2026-09-02", "add_to_cart", 5), propertyRow("2026-09-02", PRIMARY_EVENTS.themeInstall, 2, 1)]
+      [propertyRow("2026-09-01", "add_to_cart", 40), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 4), propertyRow("2026-09-02", "add_to_cart", 5), propertyRow("2026-09-02", PRIMARY_EVENTS.themeInstall, 2)]
     );
-    expect(rows.map((r) => [r.date, r.metrics.eventCount, r.metrics.totalUsers])).toEqual([
-      ["2026-09-01", 3, 3],
-      ["2026-09-02", 2, 1],
+    expect(rows.map((r) => [r.date, r.metrics.eventCount])).toEqual([
+      ["2026-09-01", 3],
+      ["2026-09-02", 2],
     ]);
     expect(rows[0]).toMatchObject({ breakdown: "total", eventName: PRIMARY_EVENTS.themeInstall, dimsKey: "" });
   });
@@ -81,28 +73,22 @@ describe("estimateInstallRows", () => {
     expect(rows.map((r) => [r.date, r.metrics.eventCount])).toEqual([["2026-09-03", 2]]);
   });
 
-  it("falls back to the Theme View share when nobody clicked Try Theme in the chunk", () => {
-    const rows = estimateInstallRows([themeRow("2026-09-01", "view_item", 30)], [propertyRow("2026-09-01", "view_item", 100), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 10)]);
-    expect(rows.map((r) => r.metrics.eventCount)).toEqual([3]);
+  it("estimates no installs when nobody clicked Try Theme in the chunk", () => {
+    expect(estimateInstallRows([], [propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 10)])).toEqual([]);
   });
 });
 
 describe("toAggregateRows", () => {
-  it("maps an events row, keyed for idempotent upserts", () => {
-    const [row] = toAggregateRows({ breakdown: "city", kind: "events" }, [{ dimensions: ["20260923", "add_to_cart", "India", "Pune"], metrics: [14, 9] }]);
+  it("maps a row, keyed for idempotent upserts", () => {
+    const [row] = toAggregateRows({ breakdown: "acquisition" }, [{ dimensions: ["20260923", "add_to_cart", "google", "cpc", "launch"], metrics: [14] }]);
     expect(row).toEqual({
       date: "2026-09-23",
-      breakdown: "city",
+      breakdown: "acquisition",
       eventName: "add_to_cart",
-      dims: { country: "India", city: "Pune" },
-      dimsKey: "country=India|city=Pune",
-      metrics: { eventCount: 14, totalUsers: 9, activeUsers: 0, newUsers: 0, sessions: 0 },
+      dims: { sessionSource: "google", sessionMedium: "cpc", sessionCampaignName: "launch" },
+      dimsKey: "sessionSource=google|sessionMedium=cpc|sessionCampaignName=launch",
+      metrics: { eventCount: 14 },
     });
-  });
-
-  it("stores totals rows under ALL_EVENTS", () => {
-    const [row] = toAggregateRows({ breakdown: "total", kind: "totals" }, [{ dimensions: ["20260923"], metrics: [120, 110, 80, 150, 2400] }]);
-    expect(row).toMatchObject({ eventName: ALL_EVENTS, dimsKey: "", metrics: { totalUsers: 120, activeUsers: 110, newUsers: 80, sessions: 150, eventCount: 2400 } });
   });
 });
 

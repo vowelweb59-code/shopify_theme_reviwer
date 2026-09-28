@@ -1,4 +1,4 @@
-import { TRACKED_EVENTS, type AggregateDimension } from "../constants";
+import type { AggregateDimension } from "../constants";
 import { DATE_RANGE_PRESETS, DateRangeError, type DateRangePreset, type DateRangeSpec } from "./dateRanges";
 import { FILTER_PARAMS, FilterError, isFilterParam, parseFilters, type DimensionFilters, type FilterParam } from "./filters";
 
@@ -22,11 +22,9 @@ export type MetricsQuery = {
   range: DateRangeSpec;
   compare: boolean;
   filters: DimensionFilters;
-  /** Extra tracked events to report alongside the funnel events. */
-  events: string[];
 };
 
-export const BREAKDOWN_SORTS = ["users", "sessions", "themeViews", "tryTheme", "installs", "tryThemeRate", "installRate"] as const;
+export const BREAKDOWN_SORTS = ["tryTheme", "installs", "installRate"] as const;
 export type BreakdownSort = (typeof BREAKDOWN_SORTS)[number];
 
 export type BreakdownQuery = MetricsQuery & {
@@ -39,7 +37,6 @@ export type BreakdownQuery = MetricsQuery & {
 };
 
 export const MAX_BREAKDOWN_LIMIT = 100;
-const TRACKED = new Set<string>(TRACKED_EVENTS);
 
 function oneOf<T extends string>(value: string | null, allowed: readonly T[], fallback: T, name: string): T {
   if (value === null || value === "") return fallback;
@@ -68,25 +65,18 @@ export function parseMetricsQuery(params: URLSearchParams): MetricsQuery {
   }
   const compare = compareParam === null || compareParam === "" || compareParam === "previous" || compareParam === "true";
 
-  const events = (params.get("events") ?? "")
-    .split(",")
-    .map((e) => e.trim())
-    .filter(Boolean);
-  const unknown = events.filter((e) => !TRACKED.has(e));
-  if (unknown.length) throw new MetricsRequestError(400, `Untracked event(s): ${unknown.join(", ")}. Tracked events: ${TRACKED_EVENTS.join(", ")}.`);
-
   let filters: DimensionFilters;
   try {
     filters = parseFilters(params);
   } catch (err) {
     throw err instanceof FilterError ? new MetricsRequestError(400, err.message) : err;
   }
-  return { theme, range, compare, filters, events: [...new Set(events)] };
+  return { theme, range, compare, filters };
 }
 
-/** Grouping dims for a breakdown table: city rows are keyed by country + city (same-named cities in different countries stay apart). */
+/** Grouping dims for a breakdown table. */
 export function groupDimsFor(dimension: FilterParam): AggregateDimension[] {
-  return dimension === "city" ? ["country", "city"] : [FILTER_PARAMS[dimension]];
+  return [FILTER_PARAMS[dimension]];
 }
 
 export function parseBreakdownQuery(params: URLSearchParams): BreakdownQuery {
@@ -99,7 +89,7 @@ export function parseBreakdownQuery(params: URLSearchParams): BreakdownQuery {
     ...base,
     dimension,
     groupDims: groupDimsFor(dimension),
-    sort: oneOf(params.get("sort"), BREAKDOWN_SORTS, "users", "sort"),
+    sort: oneOf(params.get("sort"), BREAKDOWN_SORTS, "installs", "sort"),
     order: oneOf(params.get("order"), ["asc", "desc"] as const, "desc", "order"),
     limit: integer(params.get("limit"), 25, 1, MAX_BREAKDOWN_LIMIT, "limit"),
     offset: integer(params.get("offset"), 0, 0, 1_000_000, "offset"),

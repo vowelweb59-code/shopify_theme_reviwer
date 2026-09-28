@@ -379,7 +379,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
         const result = await runFullReport(api, job.ga4PropertyId, spec.request, { sleep: deps.sleep });
         noteMetadata(result);
         const rows = toAggregateRows(spec, result.rows);
-        if (spec.breakdown === "total" && spec.kind === "events") themeTotals.push(...rows);
+        if (spec.breakdown === "total") themeTotals.push(...rows);
         await upsertRows(rows, result.rows.length);
       }
       if (pagePathPrefix) {

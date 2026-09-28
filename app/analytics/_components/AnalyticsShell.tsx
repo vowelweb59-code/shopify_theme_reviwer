@@ -16,8 +16,6 @@ export const ANALYTICS_SECTIONS = [
   { href: "/analytics/geography", label: "Geography" },
   { href: "/analytics/acquisition", label: "Acquisition" },
   { href: "/analytics/pages", label: "Pages" },
-  { href: "/analytics/events", label: "Events" },
-  { href: "/analytics/journey", label: "Journey" },
 ] as const;
 
 /**
@@ -41,7 +39,7 @@ export function AnalyticsShell({ children }: { children: ReactNode }) {
       <div>
         <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Analytics</h1>
         <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-          Theme interest → Try Theme → Theme Installation, from each theme&apos;s GA4 property. Figures are read from the synced copy in this app, not
+          Try Theme clicks and theme installs, from each theme&apos;s GA4 property. Figures are read from the synced copy in this app, not
           live from GA4.
         </p>
       </div>

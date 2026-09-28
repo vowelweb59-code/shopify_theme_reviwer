@@ -1,6 +1,6 @@
 # GA4 Analytics — Architecture
 
-Status: **All 8 phases code-complete.** OAuth, theme mapping, the GA4 → MongoDB sync, the analytics engine and APIs, the dashboard, and the deep analytics pages are built and hardened (§9). **Not yet verified against real Google:** the live OAuth → GA4 flow is waiting on the Google Cloud Console setup (§8.1). Everything else is tested against fakes and synthetic data.
+Status: **All 8 phases code-complete.** **2026-09-28: reduced to installs and Try Theme only; see §5h, which overrides the earlier sections where they differ.** OAuth, theme mapping, the GA4 → MongoDB sync, the analytics engine and APIs, the dashboard, and the deep analytics pages are built and hardened (§9). **Not yet verified against real Google:** the live OAuth → GA4 flow is waiting on the Google Cloud Console setup (§8.1). Everything else is tested against fakes and synthetic data.
 
 ---
 
@@ -317,6 +317,17 @@ Found during the live verification: the "Adorn Main" property (498162774) also r
 - **Installs are estimated.** `shopify_theme_install` is sent server-side with no page, host, source or custom parameters, so no filter can attribute it. For a filtered theme, each chunk also runs one unfiltered date × event report (`installEstimateRequest`), and `estimateInstallRows` gives the theme `property installs × (theme Try Theme ÷ property Try Theme)` for each day. It falls back to the chunk's Try Theme share on a day with no Try Theme at all, then the Theme View share. The estimates are fractional `total` rows only, so breakdowns (country, device, …) show no installs for such a theme. Their users are the estimated figure too: the engine doesn't ask GA4 for them (`UniqueUsers.estimated`). The dashboard shows a warning, and "≈" in the theme comparison (`meta.themes[].installsEstimated`).
 - **Setup.** Give the theme already on the property its prefix first, then map the second theme to the same property with its own prefix.
 - **Deploying.** The unique index changed from `ga4PropertyId_1` to `ga4PropertyId_pagePathPrefix_unique`. Run `npm run db:compact` (it syncs indexes) against each database once, or mapping a second theme to a shared property fails with a duplicate-key 409.
+
+## 5h. Installs and Try Theme only (2026-09-28)
+
+**Supersedes the users, sessions, views and supporting-event parts of §3.4, §4, §5c, §5d and §5f.** Production's first full sync wrote about 510,000 rows in minutes and the syncs froze with every database write failing; the user decided the app needs only installs and Try Theme. Now:
+
+- **Synced:** `shopify_theme_install` and `add_to_cart` (Try Theme) event counts only. One GA4 report per breakdown per 30-day chunk: `total`, `country`, `device`, `acquisition` (source/medium/campaign), `channel`, `landingPage`, `page`. City, browser, OS, the all-events totals report (users, sessions, new users) and every supporting event (`view_item`, `page_view`, …) are gone.
+- **Stored:** each `AnalyticsAggregate` row keeps `metrics.eventCount` and only its own breakdown's dimensions (no null placeholders). A local database went from 1.23M rows / 672 MB to 18k rows / 9 MB.
+- **Engine:** `KpiSet` is `{ tryTheme, installs, installRate }`: counts, which add up across days, dimension values and themes; install rate = installs ÷ Try Theme clicks. The GA4 range-level unique-users lookup (`uniqueUsers.ts`, `AnalyticsRangeUsers`) is removed: the dashboard never calls GA4. Breakdown sorts: `tryTheme`, `installs` (default), `installRate`.
+- **Dashboard:** Overview (3 cards, 2 trend charts, theme comparison), Geography (country), Acquisition, Pages. The Funnel, Events and Journey pages and the "Extra event" filter are removed; so are `/api/analytics/metrics/events` and `/journey`.
+- **Shared properties (§5g):** installs are still estimated by daily Try Theme share; the Theme View fallback is gone (no Try Theme clicks in a chunk means no estimated installs).
+- **Existing databases:** `npm run db:compact` deletes the other events' and dropped breakdowns' rows (deletes work even on a database over its storage quota, so this runs first), slims the rest, rebuilds the analytics indexes after a big delete, and drops the `analyticsrangeusers` cache.
 
 ## 6. Integration points by phase
 

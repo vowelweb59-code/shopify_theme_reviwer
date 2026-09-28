@@ -4,7 +4,7 @@ import { AnalyticsAggregate } from "@/models/analytics-aggregate";
 import { AnalyticsSync } from "@/models/analytics-sync";
 import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
-import { AGGREGATE_BREAKDOWNS, ALL_EVENTS } from "../constants";
+import { AGGREGATE_BREAKDOWNS } from "../constants";
 import type { AdminApi } from "../properties";
 import { addDays } from "./dates";
 import type { DataApi, ReportRequest } from "./ga4Client";
@@ -58,16 +58,13 @@ function makeDataApi(ga4: FakeGa4): DataApi {
         }
         const names = requestBody.dimensions!.map((d) => d.name!);
         const [range] = requestBody.dateRanges!;
-        const byEvent = names[1] === "eventName";
-        const rest = names.slice(byEvent ? 2 : 1).map((n) => ga4.dims[n] ?? "X");
+        const rest = names.slice(2).map((n) => ga4.dims[n] ?? "X"); // after date, eventName
         const rows = datesBetween(range.startDate!, range.endDate!).flatMap((date) => {
           const d = date.replaceAll("-", "");
-          return byEvent
-            ? ga4.events.map((ev) => ({
-                dimensionValues: [d, ev, ...rest].map((value) => ({ value })),
-                metricValues: [ev === "shopify_theme_install" ? ga4.installCount : 10, 3].map((n) => ({ value: String(n) })),
-              }))
-            : [{ dimensionValues: [d, ...rest].map((value) => ({ value })), metricValues: [50, 45, 20, 60, 400].map((n) => ({ value: String(n) })) }];
+          return ga4.events.map((ev) => ({
+            dimensionValues: [d, ev, ...rest].map((value) => ({ value })),
+            metricValues: [{ value: String(ev === "shopify_theme_install" ? ga4.installCount : 10) }],
+          }));
         });
         return { data: { rows, rowCount: rows.length } };
       }) as unknown as DataApi["properties"]["runReport"],
@@ -134,13 +131,11 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect((await job(sync.id))?.isActive).toBeUndefined(); // lock released
     expect(await theme()).toMatchObject({ historyStartDate: "2026-07-01", syncedThroughDate: TODAY, lastSuccessfulSyncAt: NOW });
 
-    // Per breakdown per day: 2 tracked-event rows + 1 all-events row.
-    expect(await AnalyticsAggregate.countDocuments()).toBe(days * BREAKDOWNS * 3);
-    const install = await AnalyticsAggregate.findOne({ date: "2026-08-15", breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: { eventCount: number; totalUsers: number } }>();
-    expect(install?.metrics).toMatchObject({ eventCount: 2, totalUsers: 3 });
-    const totals = await AnalyticsAggregate.findOne({ date: "2026-08-15", breakdown: "total", eventName: ALL_EVENTS }).lean<{ metrics: { sessions: number } }>();
-    expect(totals?.metrics.sessions).toBe(60);
-    expect(ga4.calls).toBe(3 * BREAKDOWNS * 2);
+    // Per breakdown per day: one row each for Try Theme and installs.
+    expect(await AnalyticsAggregate.countDocuments()).toBe(days * BREAKDOWNS * 2);
+    const install = await AnalyticsAggregate.findOne({ date: "2026-08-15", breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: Record<string, number> }>();
+    expect(install?.metrics).toEqual({ eventCount: 2 });
+    expect(ga4.calls).toBe(3 * BREAKDOWNS);
   });
 
   it("incremental sync re-fetches only the trailing window, without duplicating rows", async () => {
@@ -152,7 +147,7 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(sync).toMatchObject({ syncType: "manual", rangeStart: addDays(TODAY, -3), rangeEnd: TODAY, chunksTotal: 1 });
     await done;
     expect(await AnalyticsAggregate.countDocuments()).toBe(before);
-    expect(ga4.calls).toBe(BREAKDOWNS * 2);
+    expect(ga4.calls).toBe(BREAKDOWNS);
   });
 
   it("applies GA4 revisions and drops rows GA4 no longer returns, only inside the re-fetched window", async () => {
@@ -182,7 +177,7 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
 
   it("an outage mid-sync queues a retry that resumes from the last finished chunk", async () => {
     // Chunk 1 is 18 calls; fail the first call of chunk 2 past the in-request retries.
-    ga4.failures.push({ atCall: BREAKDOWNS * 2 + 1, error: httpError(503), times: 3 });
+    ga4.failures.push({ atCall: BREAKDOWNS + 1, error: httpError(503), times: 3 });
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done;
 
@@ -196,7 +191,7 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     ga4.calls = 0;
     await executeSync(sync.id, deps);
     expect(await job(sync.id)).toMatchObject({ status: "succeeded", chunksDone: 3, attempt: 2 });
-    expect(ga4.calls).toBe(2 * BREAKDOWNS * 2); // only the two remaining chunks
+    expect(ga4.calls).toBe(2 * BREAKDOWNS); // only the two remaining chunks
   });
 
   it("gives up after maxAttempts outages and releases the lock", async () => {
@@ -252,7 +247,7 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     const result = await runSchedulerTick(deps);
     expect(result.resumed).toBe(1);
     expect(await job(sync.id)).toMatchObject({ status: "succeeded", chunksDone: 3 });
-    expect(ga4.calls).toBe(BREAKDOWNS * 2);
+    expect(ga4.calls).toBe(BREAKDOWNS);
   });
 
   it("the scheduler starts due themes and skips recently synced or unusable ones", async () => {
@@ -331,7 +326,7 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
 
   it("stops if the theme is remapped mid-sync, and the new property's first sync purges the old rows", async () => {
     ga4.onCall = async (call) => {
-      if (call === BREAKDOWNS * 2) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null });
+      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null });
     };
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done;

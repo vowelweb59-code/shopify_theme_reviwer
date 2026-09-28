@@ -2,12 +2,11 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { TRACKED_EVENTS } from "@/lib/analytics/constants";
 import { DATE_RANGE_PRESETS, type DateRangePreset } from "@/lib/analytics/engine/dateRanges";
 import { FILTER_PARAM_NAMES, type FilterParam } from "@/lib/analytics/engine/filters";
 
 // The dashboard's global state lives in the URL (?theme=&range=&start=&end=
-// &compare=&event=&country=&device=...), so a view can be bookmarked or
+// &compare=&country=&device=...), so a view can be bookmarked or
 // shared, the back button undoes a change, and every analytics sub-page
 // sees the same selection. The names are exactly what
 // /api/analytics/metrics/* accepts, so the API query is built from them.
@@ -20,13 +19,10 @@ export type DashboardParams = {
   start: string | null;
   end: string | null;
   compare: boolean;
-  /** One extra tracked event to report alongside the funnel events (the "Event" filter). */
-  event: string | null;
   filters: DashboardFilters;
 };
 
 const DEFAULTS = { theme: "all", range: "last30" as DateRangePreset };
-const TRACKED = new Set<string>(TRACKED_EVENTS);
 
 export function paramsToQuery(p: DashboardParams): URLSearchParams {
   const qs = new URLSearchParams();
@@ -37,7 +33,6 @@ export function paramsToQuery(p: DashboardParams): URLSearchParams {
     qs.set("end", p.end);
   }
   if (!p.compare) qs.set("compare", "none");
-  if (p.event) qs.set("event", p.event);
   for (const name of FILTER_PARAM_NAMES) {
     const value = p.filters[name];
     if (value) qs.set(name, value);
@@ -52,7 +47,6 @@ export function useDashboardParams() {
 
   const params = useMemo<DashboardParams>(() => {
     const range = searchParams.get("range");
-    const event = searchParams.get("event");
     const filters: DashboardFilters = {};
     for (const name of FILTER_PARAM_NAMES) {
       const value = searchParams.get(name);
@@ -64,7 +58,6 @@ export function useDashboardParams() {
       start: searchParams.get("start"),
       end: searchParams.get("end"),
       compare: searchParams.get("compare") !== "none",
-      event: event && TRACKED.has(event) ? event : null,
       filters,
     };
   }, [searchParams]);
@@ -81,15 +74,13 @@ export function useDashboardParams() {
   // show the date pickers, and nothing is fetched until both are chosen.
   const ready = params.range !== "custom" || Boolean(params.start && params.end);
 
-  // What every metrics endpoint gets: theme, range, comparison, the extra
-  // event (as `events`) and the dimension filters.
+  // What every metrics endpoint gets: theme, range, comparison and the dimension filters.
   const apiQuery = useMemo(() => {
     const qs = new URLSearchParams({ theme: params.theme, range: params.range, compare: params.compare ? "previous" : "none" });
     if (params.range === "custom" && params.start && params.end) {
       qs.set("start", params.start);
       qs.set("end", params.end);
     }
-    if (params.event) qs.set("events", params.event);
     for (const [name, value] of Object.entries(params.filters)) qs.set(name, value as string);
     return qs.toString();
   }, [params]);

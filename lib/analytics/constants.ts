@@ -9,25 +9,11 @@ export const PRIMARY_EVENTS = {
   tryTheme: "add_to_cart", // the "Try Theme" button fires GA4's add_to_cart
 } as const;
 
-/** "Theme Views" in the funnel — a supporting event with a named role. */
-export const THEME_VIEW_EVENT = "view_item";
-
-/** Context events — shown, but never allowed to dominate the dashboard. */
-export const SUPPORTING_EVENTS = [
-  "user_engagement",
-  "session_start",
-  "first_visit",
-  "page_view",
-  "view_item",
-  "scroll",
-  "click",
-  "form_start",
-  "form_submit",
-  "view_search_results",
-] as const;
-
-/** Every event the sync pipeline will request per-event rows for. */
-export const TRACKED_EVENTS = [PRIMARY_EVENTS.themeInstall, PRIMARY_EVENTS.tryTheme, ...SUPPORTING_EVENTS] as const;
+/**
+ * The only events synced from GA4 (2026-09-28: the user asked for installs
+ * and Try Theme only). Views, sessions and users aren't stored.
+ */
+export const TRACKED_EVENTS = [PRIMARY_EVENTS.themeInstall, PRIMARY_EVENTS.tryTheme] as const;
 
 // GA4 caps a report at 9 dimensions and collapses high-cardinality
 // combinations into "(other)", so one row per full dimension combination
@@ -39,10 +25,7 @@ export const TRACKED_EVENTS = [PRIMARY_EVENTS.themeInstall, PRIMARY_EVENTS.tryTh
 export const AGGREGATE_BREAKDOWNS = {
   total: [],
   country: ["country"],
-  city: ["country", "city"],
   device: ["deviceCategory"],
-  browser: ["browser"],
-  os: ["operatingSystem"],
   acquisition: ["sessionSource", "sessionMedium", "sessionCampaignName"],
   // GA4's own traffic-channel grouping (Organic Search, Direct, Paid
   // Social, ...). Not derivable from source/medium without re-implementing
@@ -57,24 +40,13 @@ export type AggregateBreakdown = keyof typeof AGGREGATE_BREAKDOWNS;
 /** GA4 Data API dimension names, used verbatim as keys of AnalyticsAggregate.dims. */
 export type AggregateDimension =
   | "country"
-  | "city"
   | "deviceCategory"
-  | "browser"
-  | "operatingSystem"
   | "sessionSource"
   | "sessionMedium"
   | "sessionCampaignName"
   | "sessionDefaultChannelGroup"
   | "landingPage"
   | "pagePath";
-
-/**
- * Stored on rows that aggregate over every event (the per-property user and
- * session totals), so eventName is never null and stays part of the
- * unique key. Can't collide with a real GA4 event name, which can't
- * contain parentheses.
- */
-export const ALL_EVENTS = "(all)";
 
 /**
  * Deterministic key for a row's dimension values — part of

@@ -4,8 +4,7 @@ import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
 import { AnalyticsSync } from "@/models/analytics-sync";
 import { AnalyticsAggregate } from "@/models/analytics-aggregate";
-import { AnalyticsRangeUsers } from "@/models/analytics-range-users";
-import { AGGREGATE_BREAKDOWNS, ALL_EVENTS, PRIMARY_EVENTS, TRACKED_EVENTS, buildDimsKey } from "./constants";
+import { AGGREGATE_BREAKDOWNS, PRIMARY_EVENTS, TRACKED_EVENTS, buildDimsKey } from "./constants";
 
 // Schema-level checks (validate() + declared indexes) — no MongoDB
 // connection needed, so these run in CI and without Docker.
@@ -34,20 +33,11 @@ describe("buildDimsKey", () => {
   it("is empty for the total breakdown", () => {
     expect(buildDimsKey("total", { country: "India" })).toBe("");
   });
-
-  it("keys city rows by country too, so same-named cities stay distinct", () => {
-    expect(buildDimsKey("city", { country: "US", city: "Paris" })).not.toBe(buildDimsKey("city", { country: "France", city: "Paris" }));
-  });
 });
 
 describe("event constants", () => {
-  it("tracks both primary events exactly once", () => {
-    expect(TRACKED_EVENTS.filter((e) => e === PRIMARY_EVENTS.themeInstall)).toHaveLength(1);
-    expect(TRACKED_EVENTS.filter((e) => e === PRIMARY_EVENTS.tryTheme)).toHaveLength(1);
-  });
-
-  it("ALL_EVENTS can't collide with a real GA4 event name", () => {
-    expect(/^[A-Za-z][A-Za-z0-9_]*$/.test(ALL_EVENTS)).toBe(false);
+  it("tracks exactly the two primary events", () => {
+    expect([...TRACKED_EVENTS].sort()).toEqual([PRIMARY_EVENTS.tryTheme, PRIMARY_EVENTS.themeInstall].sort());
   });
 });
 
@@ -118,22 +108,15 @@ describe("AnalyticsAggregate", () => {
     expect(await invalidPaths(new AnalyticsAggregate({ ...base, breakdown: "weather", metrics: { eventCount: -1 } }))).toEqual(["breakdown", "metrics.eventCount"]);
   });
 
+  it("stores only the row's own dimensions, with no null placeholders", () => {
+    const doc = new AnalyticsAggregate({ ...base, breakdown: "country", dims: { country: "India" } });
+    expect(doc.toObject().dims).toEqual({ country: "India" });
+    expect(Object.keys(doc.toObject().metrics)).toEqual(["eventCount"]);
+  });
+
   it("makes re-synced rows upsert instead of duplicating", () => {
     const identity = indexKeys(AnalyticsAggregate).find(([, opts]) => opts.name === "aggregate_row_identity");
     expect(Object.keys(identity?.[0] ?? {})).toEqual(["analyticsThemeId", "date", "breakdown", "eventName", "dimsKey"]);
     expect(identity?.[1].unique).toBe(true);
-  });
-});
-
-describe("AnalyticsRangeUsers", () => {
-  it("is keyed per theme, property and query, and expires on its own", () => {
-    const indexes = indexKeys(AnalyticsRangeUsers);
-    expect(indexes).toContainEqual([{ analyticsThemeId: 1, ga4PropertyId: 1, cacheKey: 1 }, expect.objectContaining({ unique: true })]);
-    expect(indexes).toContainEqual([{ expiresAt: 1 }, expect.objectContaining({ expireAfterSeconds: 0 })]);
-  });
-
-  it("requires an expiry and rejects negative user counts", async () => {
-    const doc = new AnalyticsRangeUsers({ analyticsThemeId: new Types.ObjectId(), ga4PropertyId: "123456789", cacheKey: "k", groups: [{ key: "", users: -1 }] });
-    expect(await invalidPaths(doc)).toEqual(["expiresAt", "groups.0.users"]);
   });
 });

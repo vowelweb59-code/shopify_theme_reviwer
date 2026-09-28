@@ -1,16 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
-import { SUPPORTING_EVENTS, PRIMARY_EVENTS } from "@/lib/analytics/constants";
 import { FILTER_PARAMS, breakdownFor, type FilterParam } from "@/lib/analytics/engine/filters";
 import type { DashboardFilters, DashboardParams } from "./useDashboardParams";
 
 export const FILTER_LABELS: Record<FilterParam, string> = {
   country: "Country",
-  city: "City",
   device: "Device",
-  browser: "Browser",
-  os: "OS",
   source: "Source",
   medium: "Medium",
   campaign: "Campaign",
@@ -18,14 +14,6 @@ export const FILTER_LABELS: Record<FilterParam, string> = {
   landingPage: "Landing page",
   page: "Page",
 };
-
-export const EVENT_LABELS: Record<string, string> = {
-  [PRIMARY_EVENTS.themeInstall]: "Theme Install",
-  [PRIMARY_EVENTS.tryTheme]: "Try Theme",
-  view_item: "Theme View",
-};
-
-export const eventLabel = (name: string) => EVENT_LABELS[name] ?? name;
 
 const dimsOf = (filters: DashboardFilters) => (Object.keys(filters) as FilterParam[]).map((p) => FILTER_PARAMS[p]);
 
@@ -45,13 +33,9 @@ export function mergeFilters(current: DashboardFilters, added: DashboardFilters)
   }
 }
 
-const selectClass =
-  "rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-xs text-zinc-800 hover:border-border-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-zinc-200";
-
 /**
  * The active dimension filters as removable chips (they're added from any
- * breakdown table's "Filter" action), plus the Event filter: one supporting
- * event to report alongside the funnel events everywhere.
+ * breakdown table's "Filter" action).
  */
 export function FilterBar({ params, onChange }: { params: DashboardParams; onChange: (patch: Partial<DashboardParams>) => void }) {
   const active = Object.entries(params.filters) as [FilterParam, string][];
@@ -84,17 +68,6 @@ export function FilterBar({ params, onChange }: { params: DashboardParams; onCha
           Clear all
         </button>
       )}
-      <label className="ml-auto flex items-center gap-2 text-zinc-500">
-        Extra event
-        <select className={selectClass} value={params.event ?? ""} onChange={(e) => onChange({ event: e.target.value || null })}>
-          <option value="">None</option>
-          {SUPPORTING_EVENTS.filter((e) => e !== "view_item").map((e) => (
-            <option key={e} value={e}>
-              {e}
-            </option>
-          ))}
-        </select>
-      </label>
     </div>
   );
 }

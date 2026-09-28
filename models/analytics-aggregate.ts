@@ -3,39 +3,30 @@ import { AGGREGATE_BREAKDOWNS, GA4_DATE_PATTERN, GA4_PROPERTY_ID_PATTERN } from 
 
 // Cached GA4 report rows — what the dashboard reads instead of calling GA4
 // on every page load. One row = one theme x one property-timezone date x
-// one breakdown x one event (or ALL_EVENTS) x one set of that breakdown's
-// dimension values. Only aggregated metrics are kept, never raw events.
+// one breakdown x one tracked event (Try Theme or install) x one set of
+// that breakdown's dimension values. Only the event count is kept: it adds
+// up correctly across dates, dimension values and themes.
 //
-// Additivity, which later phases must respect:
-//   - eventCount and sessions sum correctly across dates and themes.
-//   - totalUsers / activeUsers / newUsers are unique *per row*. Summing
-//     them across dates or dimension values counts a returning user once
-//     per day, so a multi-day "users" figure can't come from summing daily
-//     rows. See ga4-analytics-architecture.md, "Unique users".
+// A row stores only its own breakdown's dimensions (no null placeholders
+// for the rest), to keep the collection small.
 const dimsSchema = new Schema(
   {
-    country: { type: String, default: null },
-    city: { type: String, default: null },
-    deviceCategory: { type: String, default: null },
-    browser: { type: String, default: null },
-    operatingSystem: { type: String, default: null },
-    sessionSource: { type: String, default: null },
-    sessionMedium: { type: String, default: null },
-    sessionCampaignName: { type: String, default: null },
-    sessionDefaultChannelGroup: { type: String, default: null },
-    landingPage: { type: String, default: null },
-    pagePath: { type: String, default: null },
+    country: String,
+    deviceCategory: String,
+    sessionSource: String,
+    sessionMedium: String,
+    sessionCampaignName: String,
+    sessionDefaultChannelGroup: String,
+    landingPage: String,
+    pagePath: String,
   },
   { _id: false }
 );
 
 const metricsSchema = new Schema(
   {
+    // Fractional for a shared property's estimated installs.
     eventCount: { type: Number, default: 0, min: 0 },
-    totalUsers: { type: Number, default: 0, min: 0 },
-    activeUsers: { type: Number, default: 0, min: 0 },
-    newUsers: { type: Number, default: 0, min: 0 },
-    sessions: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
