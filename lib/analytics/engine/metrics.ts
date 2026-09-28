@@ -334,7 +334,12 @@ export async function getTrends(query: MetricsQuery, deps: EngineDeps = defaultE
 
 // ---- Breakdown tables (country, device, source, page, ...) ----
 
-export type BreakdownRow = PeriodKpis & { key: string; values: Partial<Record<AggregateDimension, string | null>> };
+export type BreakdownRow = PeriodKpis & {
+  key: string;
+  values: Partial<Record<AggregateDimension, string | null>>;
+  /** Set with byTheme: the row is this theme's share of the value. */
+  theme: PublicThemeRef | null;
+};
 
 export type BreakdownResponse = {
   meta: MetricsMeta;
@@ -369,12 +374,15 @@ export async function getBreakdown(query: BreakdownQuery, deps: EngineDeps = def
   const breakdown = breakdownOrThrow([...(Object.keys(query.filters) as AggregateDimension[]), ...query.groupDims]);
   const points = await loadPoints(ctx.themes, breakdown, query.filters, query.groupDims);
 
-  const perGroup = new Map<string, { current: KpiSet[]; previous: KpiSet[] }>();
+  // With byTheme each theme keeps its own row per value; otherwise the themes are summed.
+  const perGroup = new Map<string, { group: string; theme: PublicThemeRef | null; current: KpiSet[]; previous: KpiSet[] }>();
   for (const t of ctx.themes) {
     const mine = points.filter((p) => p.themeId === t.id);
+    const ref = { id: t.id, name: t.name, slug: t.slug };
     for (const g of new Set(mine.map((p) => p.group))) {
-      const slot = perGroup.get(g) ?? { current: [], previous: [] };
-      perGroup.set(g, slot);
+      const rowKey = query.byTheme ? `${g}#${t.slug}` : g;
+      const slot = perGroup.get(rowKey) ?? { group: g, theme: query.byTheme ? ref : null, current: [], previous: [] };
+      perGroup.set(rowKey, slot);
       const pts = mine.filter((p) => p.group === g);
       slot.current.push(computeKpis(pts.filter(inRange(t.period.current))));
       if (t.period.previous) slot.previous.push(computeKpis(pts.filter(inRange(t.period.previous))));
@@ -384,7 +392,7 @@ export async function getBreakdown(query: BreakdownQuery, deps: EngineDeps = def
   const all: BreakdownRow[] = [...perGroup].map(([key, slot]) => {
     const current = sumKpis(slot.current);
     const previous = query.compare ? sumKpis(slot.previous) : null;
-    return { key, values: parseKey(key), current, previous, comparison: previous ? compareKpis(current, previous) : null };
+    return { key, values: parseKey(slot.group), theme: slot.theme, current, previous, comparison: previous ? compareKpis(current, previous) : null };
   });
   // Rows with no activity in the current range only matter for comparison; keep them, sorted last.
   const dir = query.order === "asc" ? 1 : -1;

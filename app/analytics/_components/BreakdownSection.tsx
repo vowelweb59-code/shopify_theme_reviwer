@@ -17,11 +17,14 @@ export function BreakdownSection({
   description,
   dimensions,
   defaultSort,
+  byTheme = false,
 }: {
   title: string;
   description: string;
   dimensions: FilterParam[];
   defaultSort?: BreakdownSort;
+  /** With All Themes selected, show one row per value and theme. */
+  byTheme?: boolean;
 }) {
   const [dimension, setDimension] = useState<FilterParam>(dimensions[0]);
   return (
@@ -48,7 +51,7 @@ export function BreakdownSection({
           )
         }
       />
-      <BreakdownTable key={dimension} dimension={dimension} defaultSort={defaultSort} />
+      <BreakdownTable key={dimension} dimension={dimension} defaultSort={defaultSort} byTheme={byTheme} />
     </Card>
   );
 }

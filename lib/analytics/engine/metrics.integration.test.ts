@@ -167,6 +167,19 @@ describe.skipIf(!uri)("GA4 analytics engine (MongoDB)", () => {
     expect(page2.rows[0]).toMatchObject({ key: "country=Brazil", current: { tryTheme: 28, installs: 0, installRate: 0 } });
   });
 
+  it("splits a breakdown by theme on request", async () => {
+    const res = await getBreakdown(bq("range=last7&dimension=country&byTheme=1&compare=none"), deps);
+    expect(res.totalRows).toBe(4); // India and Brazil, for Adorn and Dynamic
+    expect(res.rows.map((r) => [r.values.country, r.theme?.name, r.current.installs])).toEqual([
+      ["India", "Adorn", 14],
+      ["India", "Dynamic", 14],
+      ["Brazil", "Adorn", 0],
+      ["Brazil", "Dynamic", 0],
+    ]);
+    const summed = await getBreakdown(bq("range=last7&dimension=country&compare=none"), deps);
+    expect(summed.rows[0]).toMatchObject({ key: "country=India", theme: null, current: { installs: 28 } });
+  });
+
   it("sorts a breakdown by the chosen column", async () => {
     const res = await getBreakdown(bq("theme=adorn&range=last7&dimension=device&sort=tryTheme"), deps);
     expect(res.meta.breakdown).toBe("device");

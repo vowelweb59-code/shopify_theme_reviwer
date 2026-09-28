@@ -80,7 +80,7 @@ function FilterAction({
  * the active filters come from another dimension family the API can't
  * answer, and the table says so instead of requesting.
  */
-export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimension: FilterParam; defaultSort?: BreakdownSort }) {
+export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = false }: { dimension: FilterParam; defaultSort?: BreakdownSort; byTheme?: boolean }) {
   const { params, setParams, apiQuery } = useDashboardParams();
   const [sort, setSort] = useState<{ key: BreakdownSort; order: "asc" | "desc" }>({ key: defaultSort, order: "desc" });
   // The page resets whenever the selection or sort changes (derived, not synced in an effect).
@@ -103,6 +103,9 @@ export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimens
   qs.set("order", sort.order);
   qs.set("limit", String(PAGE_SIZE));
   qs.set("offset", String(offset));
+  // Split by theme only across themes; one theme's rows are already its own.
+  const splitByTheme = byTheme && params.theme === "all";
+  if (splitByTheme) qs.set("byTheme", "1");
   const api = useApi<BreakdownResponse>(incompatible ? null : `/api/analytics/metrics/breakdown?${qs}`);
 
   if (incompatible) {
@@ -168,6 +171,7 @@ export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimens
               <thead className="border-b border-border-subtle bg-primary-tint text-xs uppercase text-primary-tint-text">
                 <tr>
                   <th className="px-4 py-3 font-medium">{FILTER_LABELS[dimension]}</th>
+                  {splitByTheme && <th className="px-4 py-3 font-medium">Theme</th>}
                   {columns.map((c) => (
                     <th key={c.key} className="px-4 py-3 text-right font-medium" aria-sort={c.sort && sort.key === c.sort ? (sort.order === "asc" ? "ascending" : "descending") : undefined}>
                       {c.sort ? (
@@ -191,6 +195,13 @@ export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimens
                     <td className="max-w-[18rem] truncate px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100" title={rowLabel(r, dimension)}>
                       {rowLabel(r, dimension)}
                     </td>
+                    {splitByTheme && (
+                      <td className="px-4 py-3">
+                        <button type="button" onClick={() => r.theme && setParams({ theme: r.theme.slug })} className="font-medium text-primary hover:underline">
+                          {r.theme?.name}
+                        </button>
+                      </td>
+                    )}
                     {columns.map((c) => (
                       <td key={c.key} className="px-4 py-3 text-right">
                         <span className="inline-flex flex-col items-end gap-0.5">
@@ -212,7 +223,10 @@ export function BreakdownTable({ dimension, defaultSort = "installs" }: { dimens
             {rows.map((r) => (
               <div key={r.key} className="rounded-lg border border-border-subtle p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
-                  <span className="break-all font-medium text-zinc-900 dark:text-zinc-100">{rowLabel(r, dimension)}</span>
+                  <span className="break-all font-medium text-zinc-900 dark:text-zinc-100">
+                    {rowLabel(r, dimension)}
+                    {splitByTheme && r.theme && <span className="ml-1.5 font-normal text-primary">· {r.theme.name}</span>}
+                  </span>
                   <FilterAction row={r} dimension={dimension} groupDims={groupDims} filters={params.filters} onFilter={(filters) => setParams({ filters })} />
                 </div>
                 {columns.map((c) => (

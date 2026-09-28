@@ -6,6 +6,7 @@ export default function AnalyticsGeographyPage() {
       title="Geography"
       description="Try Theme clicks and installs by country."
       dimensions={["country"]}
+      byTheme
     />
   );
 }

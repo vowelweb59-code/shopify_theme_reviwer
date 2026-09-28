@@ -34,6 +34,8 @@ export type BreakdownQuery = MetricsQuery & {
   order: "asc" | "desc";
   limit: number;
   offset: number;
+  /** One row per value × theme instead of summing the themes together. */
+  byTheme: boolean;
 };
 
 export const MAX_BREAKDOWN_LIMIT = 100;
@@ -93,6 +95,7 @@ export function parseBreakdownQuery(params: URLSearchParams): BreakdownQuery {
     order: oneOf(params.get("order"), ["asc", "desc"] as const, "desc", "order"),
     limit: integer(params.get("limit"), 25, 1, MAX_BREAKDOWN_LIMIT, "limit"),
     offset: integer(params.get("offset"), 0, 0, 1_000_000, "offset"),
+    byTheme: params.get("byTheme") === "1" || params.get("byTheme") === "true",
   };
 }
 
