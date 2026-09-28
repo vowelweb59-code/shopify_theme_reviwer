@@ -8,7 +8,7 @@ import { AGGREGATE_BREAKDOWNS } from "../constants";
 import type { AdminApi } from "../properties";
 import { addDays } from "./dates";
 import type { DataApi, ReportRequest } from "./ga4Client";
-import { CHUNK_DAYS, executeSync, recoverInterruptedSyncs, startSync, type SyncDeps } from "./runSync";
+import { CHUNK_DAYS, drainSyncQueue, executeSync, recoverInterruptedSyncs, startSync, type SyncDeps } from "./runSync";
 import { runSchedulerTick } from "./scheduler";
 
 // The whole GA4 → MongoDB pipeline against a fake GA4 and a real MongoDB.
@@ -168,8 +168,9 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     let release!: () => void;
     ga4.onCall = (call) => (call === 1 ? new Promise<void>((r) => (release = r)) : Promise.resolve());
     const first = await startSync(themeId, "mapped", deps);
-    await expect(startSync(themeId, "manual", deps)).rejects.toMatchObject({ status: 409 });
+    // Wait until the worker has claimed it: a *queued* job may be retried now, a running one not.
     await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+    await expect(startSync(themeId, "manual", deps)).rejects.toMatchObject({ status: 409 });
     release();
     await first.done;
     expect(await AnalyticsSync.countDocuments()).toBe(1);
@@ -324,19 +325,39 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     for (const s of started) expect(await job(s.sync.id)).toMatchObject({ status: "succeeded", chunksDone: 3 });
   }, 30_000); // three full histories
 
-  it("stops if the theme is remapped mid-sync, and the new property's first sync purges the old rows", async () => {
+  it("a remap mid-sync cancels the old job and queues the new property's full sync, which purges the old rows", async () => {
     ga4.onCall = async (call) => {
-      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null });
+      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null, historyStartDate: null });
+    };
+    const { sync, done } = await startSync(themeId, "mapped", deps);
+    await done; // the worker also runs the job queued for the new property
+    expect(await job(sync.id)).toMatchObject({ status: "cancelled", chunksDone: 1 });
+    const next = await AnalyticsSync.findOne({ _id: { $ne: sync.id } }).lean<{ status: string; ga4PropertyId: string; syncType: string }>();
+    expect(next).toMatchObject({ status: "succeeded", ga4PropertyId: "987654321", syncType: "initial" });
+    expect(await AnalyticsAggregate.countDocuments({ ga4PropertyId: PROPERTY })).toBe(0);
+    expect(await AnalyticsAggregate.countDocuments({ ga4PropertyId: "987654321" })).toBeGreaterThan(0);
+    expect(await theme()).toMatchObject({ connectionStatus: "connected", syncedThroughDate: TODAY });
+  });
+
+  it("a page filter change mid-sync restarts the full history under the new filter; the old job never writes progress", async () => {
+    ga4.onCall = async (call) => {
+      // Mid-chunk (the chunk's last report): what Settings does when a filter is added.
+      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { pagePathPrefix: "/themes/adorn/", syncedThroughDate: null, historyStartDate: null });
     };
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done;
     expect(await job(sync.id)).toMatchObject({ status: "cancelled", chunksDone: 1 });
-    expect(await AnalyticsAggregate.countDocuments({ ga4PropertyId: PROPERTY })).toBeGreaterThan(0);
-    expect((await theme())?.syncedThroughDate).toBeNull(); // the old job didn't overwrite the reset
+    const next = await AnalyticsSync.findOne({ _id: { $ne: sync.id } }).lean<{ status: string; pagePathPrefix: string; syncType: string; rangeStart: string }>();
+    // Full history again, not an incremental sync from the old job's progress.
+    expect(next).toMatchObject({ status: "succeeded", pagePathPrefix: "/themes/adorn/", syncType: "initial", rangeStart: "2026-07-01" });
+    expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, historyStartDate: "2026-07-01" });
+  });
 
-    ga4.onCall = undefined;
-    await (await startSync(themeId, "mapped", deps)).done;
-    expect(await AnalyticsAggregate.countDocuments({ ga4PropertyId: PROPERTY })).toBe(0);
-    expect(await AnalyticsAggregate.countDocuments({ ga4PropertyId: "987654321" })).toBeGreaterThan(0);
+  it("a queued job left over from an old mapping is cancelled and replaced, without marking the theme as broken", async () => {
+    const stale = await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: "555555555", syncType: "scheduled", status: "queued", isActive: true, rangeStart: "2026-09-20", rangeEnd: TODAY, cursorDate: "2026-09-20", chunksTotal: 1 });
+    await drainSyncQueue(deps);
+    expect(await job(stale._id.toString())).toMatchObject({ status: "cancelled" });
+    expect(await AnalyticsSync.findOne({ _id: { $ne: stale._id } }).lean<{ status: string; ga4PropertyId: string }>()).toMatchObject({ status: "succeeded", ga4PropertyId: PROPERTY });
+    expect(await theme()).toMatchObject({ connectionStatus: "connected", syncedThroughDate: TODAY });
   });
 });

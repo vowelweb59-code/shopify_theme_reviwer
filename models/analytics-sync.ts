@@ -13,6 +13,9 @@ const analyticsSyncSchema = new Schema(
     // Snapshot of the property at job time — the theme's mapping can change
     // later, and the job's rows belong to the property it actually read.
     ga4PropertyId: { type: String, required: true, match: GA4_PROPERTY_ID_PATTERN },
+    // Same for the page filter (a shared property): a job planned for one
+    // filter mustn't write rows or progress under another.
+    pagePathPrefix: { type: String, default: null },
     syncType: { type: String, enum: ANALYTICS_SYNC_TYPES, required: true },
     status: { type: String, enum: ANALYTICS_SYNC_STATUSES, required: true, default: "queued" },
     // true while queued/running, unset once finished. The partial unique

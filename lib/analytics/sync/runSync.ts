@@ -35,7 +35,9 @@ const UPSERT_BATCH = 1000;
 // Breathing room between chunks and between jobs, so a long history sync
 // doesn't keep the (small) server busy back to back.
 export const PAUSE_BETWEEN_CHUNKS_MS = 1000;
-export const PAUSE_BETWEEN_JOBS_MS = 2000;
+// The user's rule (2026-09-28): one property's sync starts at least 15
+// minutes after the previous one finished.
+export const PAUSE_BETWEEN_JOBS_MS = 15 * 60 * 1000;
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export type SyncDeps = {
@@ -94,6 +96,7 @@ type SyncLean = {
   _id: { toString(): string };
   analyticsThemeId: { toString(): string };
   ga4PropertyId: string;
+  pagePathPrefix?: string | null;
   syncType: string;
   status: string;
   rangeStart: string;
@@ -227,12 +230,20 @@ export function drainSyncQueue(deps: SyncDeps = defaultSyncDeps): Promise<void> 
   }
   const sleep = deps.sleep ?? realSleep;
   queue.draining = (async () => {
+    const nextDue = () => AnalyticsSync.findOne(dueQueuedJobs(deps.now())).sort({ createdAt: 1 }).select("_id").lean<{ _id: { toString(): string } }>();
+    let ranOne = false;
     try {
       do {
         queue.again = false;
         for (;;) {
-          const next = await AnalyticsSync.findOne(dueQueuedJobs(deps.now())).sort({ createdAt: 1 }).select("_id").lean<{ _id: { toString(): string } }>();
+          let next = await nextDue();
           if (!next) break;
+          if (ranOne) {
+            // Gap between two jobs; look again afterwards, the queue may have changed.
+            await sleep(PAUSE_BETWEEN_JOBS_MS);
+            next = await nextDue();
+            if (!next) break;
+          }
           queue.currentJobId = next._id.toString();
           try {
             await executeSync(queue.currentJobId, deps);
@@ -242,7 +253,7 @@ export function drainSyncQueue(deps: SyncDeps = defaultSyncDeps): Promise<void> 
           } finally {
             queue.currentJobId = null;
           }
-          await sleep(PAUSE_BETWEEN_JOBS_MS);
+          ranOne = true;
         }
       } while (queue.again);
     } finally {
@@ -281,6 +292,7 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
     created = await AnalyticsSync.create({
       analyticsThemeId: theme._id,
       ga4PropertyId: theme.ga4PropertyId,
+      pagePathPrefix: theme.pagePathPrefix ?? null,
       syncType: plan.syncType,
       status: "queued",
       isActive: true,
@@ -335,13 +347,29 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
   if (!job.startedAt) await AnalyticsSync.updateOne({ _id: syncId }, { $set: { startedAt: deps.now() } });
 
   const theme = await AnalyticsTheme.findById(job.analyticsThemeId).lean<ThemeForSync>();
+  const pagePathPrefix = job.pagePathPrefix ?? null;
+  // The theme was remapped, unmapped or given another page filter after
+  // this job was planned (Settings): its rows would describe the old
+  // mapping. Stop, and queue a fresh sync for the current one.
+  const cancelStale = async () => {
+    await AnalyticsSync.updateOne(
+      { _id: syncId },
+      { $set: { status: "cancelled", completedAt: deps.now(), error: { message: "The theme's GA4 property or page filter changed; a new sync was queued.", code: "cancelled" } }, $unset: { isActive: "" } }
+    );
+    // Waits only for the new job to be queued (never for `done`: this runs
+    // inside the worker, which then picks the new job up itself).
+    await startSync(job.analyticsThemeId.toString(), "mapped", deps).catch((err) => {
+      if (!(err instanceof SyncRequestError)) console.error("[ga4-sync] couldn't queue a sync after a mapping change:", err instanceof Error ? err.message : err);
+    });
+  };
+  const stillMapped = async () => Boolean(await AnalyticsTheme.exists({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }));
   try {
-    if (!theme?.googleConnectionId || theme.ga4PropertyId !== job.ga4PropertyId) {
-      throw new Ga4DataError("not_found", "The theme was unmapped or moved to another property while syncing.");
+    if (!theme?.googleConnectionId || !(await stillMapped())) {
+      await cancelStale();
+      return;
     }
     const api = await deps.dataApiFor(theme.googleConnectionId.toString());
     const warnings = new Set(job.warnings ?? []);
-    const pagePathPrefix = theme.pagePathPrefix ?? null;
 
     const upsertRows = async (rows: AggregateRow[], fetched: number) => {
       let written = 0;
@@ -365,13 +393,9 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     };
 
     for (const chunk of chunkDateRange(job.cursorDate ?? job.rangeStart, job.rangeEnd, CHUNK_DAYS)) {
-      // The theme can be remapped, unmapped or given another page filter
-      // mid-sync (Settings); stop writing rows that no longer describe it.
-      if (!(await AnalyticsTheme.exists({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }))) {
-        await AnalyticsSync.updateOne(
-          { _id: syncId },
-          { $set: { status: "cancelled", completedAt: deps.now(), error: { message: "The theme's GA4 property or page filter changed during the sync.", code: "cancelled" } }, $unset: { isActive: "" } }
-        );
+      // The mapping can also change mid-sync; stop writing rows that no longer describe it.
+      if (!(await stillMapped())) {
+        await cancelStale();
         return;
       }
       const themeTotals: AggregateRow[] = [];
@@ -393,7 +417,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
       await AnalyticsAggregate.deleteMany({ analyticsThemeId: job.analyticsThemeId, date: { $gte: chunk.start, $lte: chunk.end }, syncId: { $ne: job._id } });
       await AnalyticsSync.updateOne({ _id: syncId }, { $set: { cursorDate: addDays(chunk.end, 1), warnings: [...warnings] }, $inc: { chunksDone: 1 } });
       await AnalyticsTheme.updateOne(
-        { _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, $or: [{ syncedThroughDate: null }, { syncedThroughDate: { $lt: chunk.end } }] },
+        { _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix, $or: [{ syncedThroughDate: null }, { syncedThroughDate: { $lt: chunk.end } }] },
         { $set: { syncedThroughDate: chunk.end } }
       );
       await (deps.sleep ?? realSleep)(PAUSE_BETWEEN_CHUNKS_MS);
@@ -401,7 +425,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
 
     const now = deps.now();
     await AnalyticsSync.updateOne({ _id: syncId }, { $set: { status: "succeeded", completedAt: now, error: { message: null, code: null } }, $unset: { isActive: "" } });
-    await AnalyticsTheme.updateOne({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId }, { $set: { lastSuccessfulSyncAt: now, lastError: null } });
+    await AnalyticsTheme.updateOne({ _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, pagePathPrefix }, { $set: { lastSuccessfulSyncAt: now, lastError: null } });
   } catch (raw) {
     await handleFailure(job, theme, raw, deps);
   }

@@ -19,8 +19,8 @@ import { SyncRequestError, countDueSyncs, defaultSyncDeps, drainSyncQueue, recov
 
 const TICK_MS = 15 * 60 * 1000;
 const FIRST_TICK_MS = 60 * 1000;
-/** A theme is due for a scheduled sync this long after its last attempt. */
-export const SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
+/** A theme is due for a scheduled sync this long after its last attempt (the user's rule, 2026-09-28: at most 2 hours). */
+export const SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000;
 
 const globalForScheduler = globalThis as typeof globalThis & {
   _ga4SyncScheduler?: { started: boolean; running: boolean };

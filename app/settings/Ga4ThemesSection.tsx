@@ -305,17 +305,23 @@ export function Ga4ThemesSection({ connections, configured }: { connections: Con
   }, []);
   useEffect(loadSyncs, [loadSyncs]);
 
-  // Poll while any job is running; when the last one finishes, refresh the
-  // themes too (their "synced through" date moved).
+  // Poll while any job is running or waiting in the queue, and refresh the
+  // themes whenever a job finishes (their "synced through" date moved).
   const anyRunning = Object.values(syncs).some((j) => j.status === "running");
+  const anyActive = Object.values(syncs).some((j) => j.status === "running" || j.status === "queued");
+  const finishedKey = Object.values(syncs)
+    .filter((j) => j.status !== "running" && j.status !== "queued")
+    .map((j) => j.id)
+    .sort()
+    .join(",");
   useEffect(() => {
-    if (!anyRunning) return;
-    const timer = setInterval(loadSyncs, 5000);
-    return () => {
-      clearInterval(timer);
-      load();
-    };
-  }, [anyRunning, loadSyncs, load]);
+    if (!anyActive) return;
+    const timer = setInterval(loadSyncs, anyRunning ? 5000 : 30_000);
+    return () => clearInterval(timer);
+  }, [anyActive, anyRunning, loadSyncs]);
+  useEffect(() => {
+    if (finishedKey) load();
+  }, [finishedKey, load]);
 
   async function syncNow(theme: AnalyticsTheme) {
     setStarting((s) => ({ ...s, [theme.id]: true }));
