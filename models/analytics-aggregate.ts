@@ -13,10 +13,6 @@ const dimsSchema = new Schema(
   {
     country: String,
     deviceCategory: String,
-    sessionSource: String,
-    sessionMedium: String,
-    sessionCampaignName: String,
-    sessionDefaultChannelGroup: String,
     landingPage: String,
     pagePath: String,
   },

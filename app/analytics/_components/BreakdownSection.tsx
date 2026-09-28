@@ -8,7 +8,7 @@ import { BreakdownTable } from "./BreakdownTable";
 import { FILTER_LABELS } from "./FilterBar";
 
 /**
- * One analytics section (Geography, Acquisition, ...): a card with a
+ * One analytics section (Geography, Pages): a card with a
  * dimension switcher and that dimension's breakdown table. One table at a
  * time, so a page load is one request, not one per dimension.
  */

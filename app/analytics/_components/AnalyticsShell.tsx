@@ -14,7 +14,6 @@ import { useDashboardParams } from "./useDashboardParams";
 export const ANALYTICS_SECTIONS = [
   { href: "/analytics", label: "Overview" },
   { href: "/analytics/geography", label: "Geography" },
-  { href: "/analytics/acquisition", label: "Acquisition" },
   { href: "/analytics/pages", label: "Pages" },
 ] as const;
 

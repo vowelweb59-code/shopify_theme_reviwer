@@ -37,7 +37,7 @@ describe("parseBreakdownQuery", () => {
   });
 
   it("no longer offers city, browser or OS", () => {
-    for (const dimension of ["city", "browser", "os"]) expect(() => parseBreakdownQuery(qs(`dimension=${dimension}`))).toThrow(/dimension is required/);
+    for (const dimension of ["city", "browser", "os", "source", "channel"]) expect(() => parseBreakdownQuery(qs(`dimension=${dimension}`))).toThrow(/dimension is required/);
   });
 
   it.each(["limit=0", "limit=101", "limit=2.5", "offset=-1", "sort=revenue", "sort=users", "order=up"])("rejects %s", (extra) => {
@@ -47,16 +47,14 @@ describe("parseBreakdownQuery", () => {
 
 describe("filters", () => {
   it("maps public names to GA4 dimensions and ignores empty values", () => {
-    expect(parseFilters(qs("device=mobile&os=iOS&source=google&page=&landingPage=/"))).toEqual({ deviceCategory: "mobile", sessionSource: "google", landingPage: "/" }); // os is no longer a filter
-    expect(parseFilters(qs("channel=Organic Search"))).toEqual({ sessionDefaultChannelGroup: "Organic Search" });
+    // os, source and channel are no longer filters
+    expect(parseFilters(qs("device=mobile&os=iOS&source=google&channel=Direct&page=&landingPage=/"))).toEqual({ deviceCategory: "mobile", landingPage: "/" });
   });
 
   it("picks the smallest breakdown that carries every dimension", () => {
     expect(breakdownFor([])).toBe("total");
     expect(breakdownFor(["country"])).toBe("country");
-    expect(breakdownFor(["sessionMedium", "sessionSource"])).toBe("acquisition");
     expect(breakdownFor(["pagePath"])).toBe("page");
-    expect(breakdownFor(["sessionDefaultChannelGroup"])).toBe("channel");
   });
 
   it("refuses combinations across dimension families", () => {

@@ -25,8 +25,8 @@ function indexKeys(model: { schema: { indexes(): [Record<string, unknown>, Recor
 
 describe("buildDimsKey", () => {
   it("uses only the breakdown's own dimensions, in fixed order", () => {
-    expect(buildDimsKey("acquisition", { sessionMedium: "cpc", sessionSource: "google", country: "India" })).toBe(
-      "sessionSource=google|sessionMedium=cpc|sessionCampaignName="
+    expect(buildDimsKey("country", { country: "India", deviceCategory: "mobile" })).toBe(
+      "country=India"
     );
   });
 

@@ -18,19 +18,14 @@ export const TRACKED_EVENTS = [PRIMARY_EVENTS.themeInstall, PRIMARY_EVENTS.tryTh
 // GA4 caps a report at 9 dimensions and collapses high-cardinality
 // combinations into "(other)", so one row per full dimension combination
 // isn't storable. Instead each breakdown is its own small report of
-// date x eventName x one dimension family. Filters *within* a family
-// (e.g. source + medium) combine exactly; filters *across* families
-// (e.g. country + device) can't be answered from these rows — see the
-// architecture doc's "Known limitations".
+// date x eventName x one dimension. Filters across breakdowns (e.g.
+// country + device) can't be answered from these rows — see the
+// architecture doc's "Known limitations". Traffic source/medium/campaign
+// and channel were dropped on 2026-09-28 (the user found them not useful).
 export const AGGREGATE_BREAKDOWNS = {
   total: [],
   country: ["country"],
   device: ["deviceCategory"],
-  acquisition: ["sessionSource", "sessionMedium", "sessionCampaignName"],
-  // GA4's own traffic-channel grouping (Organic Search, Direct, Paid
-  // Social, ...). Not derivable from source/medium without re-implementing
-  // GA4's channel rules, so it's asked for directly as its own family.
-  channel: ["sessionDefaultChannelGroup"],
   landingPage: ["landingPage"],
   page: ["pagePath"],
 } as const satisfies Record<string, readonly AggregateDimension[]>;
@@ -41,10 +36,6 @@ export type AggregateBreakdown = keyof typeof AGGREGATE_BREAKDOWNS;
 export type AggregateDimension =
   | "country"
   | "deviceCategory"
-  | "sessionSource"
-  | "sessionMedium"
-  | "sessionCampaignName"
-  | "sessionDefaultChannelGroup"
   | "landingPage"
   | "pagePath";
 

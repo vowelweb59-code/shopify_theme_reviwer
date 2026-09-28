@@ -31,9 +31,9 @@ function rowsFor(themeId: mongoose.Types.ObjectId, property: string, scale = 1) 
     add(date, "country", "add_to_cart", { country: "India" }, 8);
     add(date, "country", "shopify_theme_install", { country: "India" }, 2);
     add(date, "country", "add_to_cart", { country: "Brazil" }, 4);
-    add(date, "acquisition", "add_to_cart", { sessionSource: "google", sessionMedium: "organic", sessionCampaignName: "(organic)" }, 7);
-    add(date, "acquisition", "add_to_cart", { sessionSource: "google", sessionMedium: "cpc", sessionCampaignName: "launch" }, 5);
-    add(date, "acquisition", "shopify_theme_install", { sessionSource: "google", sessionMedium: "cpc", sessionCampaignName: "launch" }, 1);
+    add(date, "device", "add_to_cart", { deviceCategory: "desktop" }, 7);
+    add(date, "device", "add_to_cart", { deviceCategory: "mobile" }, 5);
+    add(date, "device", "shopify_theme_install", { deviceCategory: "mobile" }, 1);
   }
   return rows;
 }
@@ -167,11 +167,13 @@ describe.skipIf(!uri)("GA4 analytics engine (MongoDB)", () => {
     expect(page2.rows[0]).toMatchObject({ key: "country=Brazil", current: { tryTheme: 28, installs: 0, installRate: 0 } });
   });
 
-  it("sums a family's rows for a dimension within it", async () => {
-    const res = await getBreakdown(bq("theme=adorn&range=last7&dimension=source&sort=tryTheme"), deps);
-    expect(res.meta.breakdown).toBe("acquisition");
-    expect(res.rows).toHaveLength(1);
-    expect(res.rows[0]).toMatchObject({ key: "sessionSource=google", current: { tryTheme: 84, installs: 7 } });
+  it("sorts a breakdown by the chosen column", async () => {
+    const res = await getBreakdown(bq("theme=adorn&range=last7&dimension=device&sort=tryTheme"), deps);
+    expect(res.meta.breakdown).toBe("device");
+    expect(res.rows.map((r) => [r.key, r.current.tryTheme, r.current.installs])).toEqual([
+      ["deviceCategory=desktop", 49, 0],
+      ["deviceCategory=mobile", 35, 7],
+    ]);
   });
 
   it("returns aligned daily trends for the current and previous periods", async () => {

@@ -7,10 +7,6 @@ import type { DashboardFilters, DashboardParams } from "./useDashboardParams";
 export const FILTER_LABELS: Record<FilterParam, string> = {
   country: "Country",
   device: "Device",
-  source: "Source",
-  medium: "Medium",
-  campaign: "Campaign",
-  channel: "Channel",
   landingPage: "Landing page",
   page: "Page",
 };

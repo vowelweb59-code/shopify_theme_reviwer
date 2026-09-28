@@ -18,8 +18,8 @@ describe("buildReportSpecs", () => {
   });
 
   it("asks only for Try Theme and install event counts", () => {
-    const events = specs.find((s) => s.breakdown === "acquisition")!;
-    expect(events.request.dimensions!.map((d) => d.name)).toEqual(["date", "eventName", "sessionSource", "sessionMedium", "sessionCampaignName"]);
+    const events = specs.find((s) => s.breakdown === "landingPage")!;
+    expect(events.request.dimensions!.map((d) => d.name)).toEqual(["date", "eventName", "landingPage"]);
     expect(events.request.dimensionFilter!.filter!.inListFilter!.values!.sort()).toEqual([PRIMARY_EVENTS.tryTheme, PRIMARY_EVENTS.themeInstall].sort());
     expect(events.request.metrics).toEqual([{ name: "eventCount" }]);
     expect(events.request.dateRanges).toEqual([{ startDate: "2026-09-01", endDate: "2026-09-30" }]);
@@ -80,13 +80,13 @@ describe("estimateInstallRows", () => {
 
 describe("toAggregateRows", () => {
   it("maps a row, keyed for idempotent upserts", () => {
-    const [row] = toAggregateRows({ breakdown: "acquisition" }, [{ dimensions: ["20260923", "add_to_cart", "google", "cpc", "launch"], metrics: [14] }]);
+    const [row] = toAggregateRows({ breakdown: "page" }, [{ dimensions: ["20260923", "add_to_cart", "/themes/adorn"], metrics: [14] }]);
     expect(row).toEqual({
       date: "2026-09-23",
-      breakdown: "acquisition",
+      breakdown: "page",
       eventName: "add_to_cart",
-      dims: { sessionSource: "google", sessionMedium: "cpc", sessionCampaignName: "launch" },
-      dimsKey: "sessionSource=google|sessionMedium=cpc|sessionCampaignName=launch",
+      dims: { pagePath: "/themes/adorn" },
+      dimsKey: "pagePath=/themes/adorn",
       metrics: { eventCount: 14 },
     });
   });

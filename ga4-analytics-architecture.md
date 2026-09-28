@@ -296,7 +296,7 @@ Common query: `theme=all|<id or slug>`, `range=today|yesterday|last7|last30|last
 - **Pages** (`/analytics/*`, one shared layout):
   - **Overview** (§5e).
   - **Geography:** country, city.
-  - **Acquisition:** channel, source, medium, campaign; sorted by installs by default.
+  - **Acquisition:** removed 2026-09-28 (user: not useful); source/medium/campaign and channel are no longer synced.
   - **Technology:** removed 2026-09-28 (user: not needed); device/browser/OS are still synced and filterable.
   - **Pages:** landing page, page.
   - **Events.**
@@ -322,10 +322,10 @@ Found during the live verification: the "Adorn Main" property (498162774) also r
 
 **Supersedes the users, sessions, views and supporting-event parts of §3.4, §4, §5c, §5d and §5f.** Production's first full sync wrote about 510,000 rows in minutes and the syncs froze with every database write failing; the user decided the app needs only installs and Try Theme. Now:
 
-- **Synced:** `shopify_theme_install` and `add_to_cart` (Try Theme) event counts only. One GA4 report per breakdown per 30-day chunk: `total`, `country`, `device`, `acquisition` (source/medium/campaign), `channel`, `landingPage`, `page`. City, browser, OS, the all-events totals report (users, sessions, new users) and every supporting event (`view_item`, `page_view`, …) are gone.
+- **Synced:** `shopify_theme_install` and `add_to_cart` (Try Theme) event counts only. One GA4 report per breakdown per 30-day chunk: `total`, `country`, `device`, `landingPage`, `page` (acquisition and channel dropped the same day: not useful). City, browser, OS, the all-events totals report (users, sessions, new users) and every supporting event (`view_item`, `page_view`, …) are gone.
 - **Stored:** each `AnalyticsAggregate` row keeps `metrics.eventCount` and only its own breakdown's dimensions (no null placeholders). A local database went from 1.23M rows / 672 MB to 18k rows / 9 MB.
 - **Engine:** `KpiSet` is `{ tryTheme, installs, installRate }`: counts, which add up across days, dimension values and themes; install rate = installs ÷ Try Theme clicks. The GA4 range-level unique-users lookup (`uniqueUsers.ts`, `AnalyticsRangeUsers`) is removed: the dashboard never calls GA4. Breakdown sorts: `tryTheme`, `installs` (default), `installRate`.
-- **Dashboard:** Overview (3 cards, 2 trend charts, theme comparison), Geography (country), Acquisition, Pages. The Funnel, Events and Journey pages and the "Extra event" filter are removed; so are `/api/analytics/metrics/events` and `/journey`.
+- **Dashboard:** Overview (3 cards, 2 trend charts, theme comparison), Geography (country), Pages. The Funnel, Events and Journey pages and the "Extra event" filter are removed; so are `/api/analytics/metrics/events` and `/journey`.
 - **Shared properties (§5g):** installs are still estimated by daily Try Theme share; the Theme View fallback is gone (no Try Theme clicks in a chunk means no estimated installs).
 - **Schedule (user's rule):** every mapped theme syncs at least every 2 hours (`SYNC_INTERVAL_MS`), and the worker waits 15 minutes between one job and the next (`PAUSE_BETWEEN_JOBS_MS`). With 9 themes a full round takes about 2 h 15 min, so a theme's actual gap is slightly over 2 hours.
 - **Earlier history (2026-09-28):** a theme can have a second, older source: `earlierPropertyId` + `earlierPagePathPrefix` + `earlierUntil` on `AnalyticsTheme`, set in Settings, under the theme's Edit, in "Earlier history". Dates up to `earlierUntil` are synced from the earlier property (filtered to the theme's pages, installs estimated), and later dates from the theme's own property. The engine reads each date range from the matching property only. Used for Flaunt (Adorn Main, `/themes/flaunt/`, through 2026-09-21) and Renovate (Dynamic Shopify, `/themes/renovate/`, through 2026-09-21), which got their own properties on 2026-09-22. Dates are each property's local dates, so a split between properties in different time zones can be a few hours off.

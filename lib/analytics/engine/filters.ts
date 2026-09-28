@@ -3,18 +3,13 @@ import { AGGREGATE_BREAKDOWNS, type AggregateBreakdown, type AggregateDimension 
 // Dashboard filters and "group by" dimensions, and which stored breakdown
 // can answer them. Aggregate rows only exist per breakdown family (see
 // constants.ts), so a filter + grouping combination is answerable only if
-// every dimension it touches lives in one family: source + medium works
-// ("acquisition"), but country + device doesn't — no stored row carries both. Such requests are
+// every dimension it touches lives in one stored breakdown: country + device doesn't — no stored row carries both. Such requests are
 // rejected with a clear message rather than answered wrongly.
 
 /** Public (query-string) names for each GA4 dimension. */
 export const FILTER_PARAMS = {
   country: "country",
   device: "deviceCategory",
-  source: "sessionSource",
-  medium: "sessionMedium",
-  campaign: "sessionCampaignName",
-  channel: "sessionDefaultChannelGroup",
   landingPage: "landingPage",
   page: "pagePath",
 } as const satisfies Record<string, AggregateDimension>;
@@ -69,7 +64,7 @@ export function breakdownFor(dims: readonly AggregateDimension[]): AggregateBrea
   if (match) return match;
   const names = wanted.map(paramFor).join(" + ");
   throw new FilterError(
-    `${names} can't be combined: analytics are stored per dimension family (country, device, acquisition, channel, landing page, page), and these come from different families.`
+    `${names} can't be combined: analytics are stored per dimension family (country, device, landing page, page), and these come from different families.`
   );
 }
 
