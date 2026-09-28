@@ -14,6 +14,10 @@ import { buildReportSpecs, estimateInstallRows, installEstimateRequest, toAggreg
 // have run connectToDatabase() first.
 //
 // Guarantees:
+//   - One job runs at a time, server-wide: startSync only queues, and a
+//     single in-process worker (drainSyncQueue) works through the queue
+//     oldest first. Several themes mapped at once wait their turn instead
+//     of all hitting GA4 and holding report rows in memory together.
 //   - At most one active job per theme (AnalyticsSync's partial unique index).
 //   - Idempotent: rows are upserted on their natural key, and after each
 //     chunk any older row for those dates that GA4 no longer returns is
@@ -28,6 +32,11 @@ export const REFETCH_DAYS = 3;
 // dead (server restarted mid-sync) and is re-queued from its cursor.
 export const STALE_AFTER_MS = 30 * 60 * 1000;
 const UPSERT_BATCH = 1000;
+// Breathing room between chunks and between jobs, so a long history sync
+// doesn't keep the (small) server busy back to back.
+export const PAUSE_BETWEEN_CHUNKS_MS = 1000;
+export const PAUSE_BETWEEN_JOBS_MS = 2000;
+const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export type SyncDeps = {
   dataApiFor: (connectionId: string) => Promise<DataApi>;
@@ -42,8 +51,9 @@ export const defaultSyncDeps: SyncDeps = {
   dataApiFor: async (id) => createDataApi(await getAuthorizedClient(id)),
   adminFor: async (id) => createAdminApi(await getAuthorizedClient(id)),
   now: () => new Date(),
-  scheduleRetry: (syncId, delayMs) => {
-    const timer = setTimeout(() => void executeSync(syncId).catch((err) => console.error("[ga4-sync] retry failed:", err instanceof Error ? err.message : err)), delayMs);
+  // The job is already queued with its nextRetryAt; just wake the worker then.
+  scheduleRetry: (_syncId, delayMs) => {
+    const timer = setTimeout(() => void drainSyncQueue(), delayMs);
     timer.unref?.();
   },
 };
@@ -174,19 +184,78 @@ export async function planSync(theme: ThemeForSync, trigger: SyncTrigger, deps: 
 
 const isDuplicateKey = (err: unknown) => (err as { code?: number })?.code === 11000;
 
-/** Re-queues running jobs nobody has touched for STALE_AFTER_MS (or all running jobs, e.g. at server boot). */
+/**
+ * Re-queues running jobs nobody has touched for STALE_AFTER_MS (or all
+ * running jobs, e.g. at server boot). The job this process's worker is
+ * running right now is never touched.
+ */
 export async function recoverInterruptedSyncs(now: Date, { all = false }: { all?: boolean } = {}): Promise<number> {
   const result = await AnalyticsSync.updateMany(
-    { status: "running", ...(all ? {} : { updatedAt: { $lt: new Date(now.getTime() - STALE_AFTER_MS) } }) },
+    {
+      status: "running",
+      ...(queue.currentJobId ? { _id: { $ne: queue.currentJobId } } : {}),
+      ...(all ? {} : { updatedAt: { $lt: new Date(now.getTime() - STALE_AFTER_MS) } }),
+    },
     { $set: { status: "queued", nextRetryAt: now, "error.message": "Interrupted (the server restarted); resuming from the last completed chunk.", "error.code": "interrupted" } }
   );
   return result.modifiedCount;
 }
 
+// The worker's in-process state. On globalThis so dev hot reloads share it.
+const globalForQueue = globalThis as typeof globalThis & {
+  _ga4SyncQueue?: { draining: Promise<void> | null; again: boolean; currentJobId: string | null };
+};
+const queue = (globalForQueue._ga4SyncQueue ??= { draining: null, again: false, currentJobId: null });
+
+const dueQueuedJobs = (now: Date) => ({ status: "queued", isActive: true, $or: [{ nextRetryAt: null }, { nextRetryAt: { $lte: now } }] });
+
+/** How many queued jobs are ready to run now. */
+export async function countDueSyncs(now: Date): Promise<number> {
+  return AnalyticsSync.countDocuments(dueQueuedJobs(now));
+}
+
 /**
- * Creates a job for the theme and starts it in the background. `done`
- * resolves when this run of the job ends (succeeded, failed, or queued for
- * a retry). Throws SyncRequestError for an unmapped theme, an account that
+ * Runs every due queued job, one at a time, oldest first. Only one drain
+ * runs per process: calling it while one is running just makes that drain
+ * look again before it stops, and returns its promise. Resolves when the
+ * queue has no due job left (jobs waiting for a later retry stay queued).
+ */
+export function drainSyncQueue(deps: SyncDeps = defaultSyncDeps): Promise<void> {
+  if (queue.draining) {
+    queue.again = true;
+    return queue.draining;
+  }
+  const sleep = deps.sleep ?? realSleep;
+  queue.draining = (async () => {
+    try {
+      do {
+        queue.again = false;
+        for (;;) {
+          const next = await AnalyticsSync.findOne(dueQueuedJobs(deps.now())).sort({ createdAt: 1 }).select("_id").lean<{ _id: { toString(): string } }>();
+          if (!next) break;
+          queue.currentJobId = next._id.toString();
+          try {
+            await executeSync(queue.currentJobId, deps);
+          } catch (err) {
+            // executeSync records GA4 failures on the job itself; this is a database error or a bug.
+            console.error("[ga4-sync] job crashed:", err instanceof Error ? err.message : err);
+          } finally {
+            queue.currentJobId = null;
+          }
+          await sleep(PAUSE_BETWEEN_JOBS_MS);
+        }
+      } while (queue.again);
+    } finally {
+      queue.draining = null;
+    }
+  })();
+  return queue.draining;
+}
+
+/**
+ * Queues a job for the theme and wakes the worker. `done` resolves when
+ * the worker has run every due job, this one included (each ends
+ * succeeded, failed, or queued for a retry). Throws SyncRequestError for an unmapped theme, an account that
  * needs reconnecting, or a job that's already active.
  */
 export async function startSync(themeId: string, trigger: SyncTrigger, deps: SyncDeps = defaultSyncDeps): Promise<{ sync: PublicSync; done: Promise<void> }> {
@@ -231,9 +300,9 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
       throw new SyncRequestError(409, `${theme.name}'s sync is waiting for GA4's API quota to reset; it resumes on its own at ${new Date(active.nextRetryAt).toISOString()}.`);
     }
     if (active?.status === "queued" && trigger === "manual") {
+      // Due now: it runs when the worker reaches it.
       await AnalyticsSync.updateOne({ _id: active._id, status: "queued" }, { $set: { nextRetryAt: null } });
-      const done = executeSync(active._id.toString(), deps).catch((e) => console.error("[ga4-sync] job crashed:", e instanceof Error ? e.message : e));
-      return { sync: toPublicSync(active), done };
+      return { sync: toPublicSync(active), done: drainSyncQueue(deps) };
     }
     throw new SyncRequestError(409, `A sync for ${theme.name} is already ${active?.status === "queued" ? "waiting to retry" : "running"}.`);
   }
@@ -244,9 +313,7 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
     await AnalyticsTheme.updateOne({ _id: theme._id }, { $set: { historyStartDate: plan.rangeStart } });
   }
 
-  const syncId = created._id.toString();
-  const done = executeSync(syncId, deps).catch((err) => console.error("[ga4-sync] job crashed:", err instanceof Error ? err.message : err));
-  return { sync: toPublicSync(created.toObject()), done };
+  return { sync: toPublicSync(created.toObject()), done: drainSyncQueue(deps) };
 }
 
 type UpsertOp = {
@@ -254,8 +321,9 @@ type UpsertOp = {
 };
 
 /**
- * Runs (or resumes) a queued job. Safe to call concurrently for the same
- * job: only the caller that atomically flips it queued → running proceeds.
+ * Runs (or resumes) a queued job. Normally called by drainSyncQueue only.
+ * Safe to call concurrently for the same job: only the caller that
+ * atomically flips it queued → running proceeds.
  */
 export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDeps): Promise<void> {
   const job = await AnalyticsSync.findOneAndUpdate(
@@ -328,6 +396,7 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
         { _id: job.analyticsThemeId, ga4PropertyId: job.ga4PropertyId, $or: [{ syncedThroughDate: null }, { syncedThroughDate: { $lt: chunk.end } }] },
         { $set: { syncedThroughDate: chunk.end } }
       );
+      await (deps.sleep ?? realSleep)(PAUSE_BETWEEN_CHUNKS_MS);
     }
 
     const now = deps.now();

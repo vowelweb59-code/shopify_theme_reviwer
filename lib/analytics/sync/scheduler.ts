@@ -2,15 +2,15 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { AnalyticsSync } from "@/models/analytics-sync";
 import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
-import { SyncRequestError, defaultSyncDeps, executeSync, recoverInterruptedSyncs, startSync, type SyncDeps } from "./runSync";
+import { SyncRequestError, countDueSyncs, defaultSyncDeps, drainSyncQueue, recoverInterruptedSyncs, startSync, type SyncDeps } from "./runSync";
 
 // Background GA4 sync, started once per server process from
 // instrumentation.ts. A fixed tick rather than per-theme timers, so all
 // state lives in MongoDB and a restart loses nothing:
 //   1. re-queue jobs a crashed process left "running",
-//   2. run queued jobs whose retry time has come,
-//   3. start a scheduled sync for every mapped theme not synced recently.
-// Work within a tick runs one job at a time, to stay gentle on GA4 quota.
+//   2. queue a scheduled sync for every mapped theme not synced recently,
+//   3. let the sync worker (drainSyncQueue) run everything due, retries
+//      included, one job at a time — gentle on GA4 quota and on the server.
 // Set ANALYTICS_SYNC_DISABLED=1 to turn it off (e.g. local dev).
 //
 // Assumes a single server process (one Render instance). Two processes
@@ -32,15 +32,15 @@ export async function runSchedulerTick(deps: SyncDeps = defaultSyncDeps): Promis
   const now = deps.now();
   await recoverInterruptedSyncs(now);
 
-  const due = await AnalyticsSync.find({ status: "queued", isActive: true, $or: [{ nextRetryAt: null }, { nextRetryAt: { $lte: now } }] })
-    .select("_id")
-    .lean<{ _id: { toString(): string } }[]>();
-  for (const job of due) await executeSync(job._id.toString(), deps);
+  const resumed = await countDueSyncs(now);
 
   const activeAccounts = await GoogleConnection.find({ status: "active" }).select("_id").lean<{ _id: unknown }[]>();
   // Nothing connected yet (the normal state until GA4 is set up): skip the
   // per-theme queries entirely.
-  if (activeAccounts.length === 0) return { resumed: due.length, started: 0 };
+  if (activeAccounts.length === 0) {
+    await drainSyncQueue(deps);
+    return { resumed, started: 0 };
+  }
   const themes = await AnalyticsTheme.find({
     isActive: true,
     connectionStatus: "connected",
@@ -58,14 +58,14 @@ export async function runSchedulerTick(deps: SyncDeps = defaultSyncDeps): Promis
     const recent = await AnalyticsSync.exists({ analyticsThemeId: theme._id, $or: [{ isActive: true }, { createdAt: { $gt: cutoff } }] });
     if (recent) continue;
     try {
-      const { done } = await startSync(theme._id.toString(), "scheduled", deps);
+      await startSync(theme._id.toString(), "scheduled", deps); // queued; the worker runs it
       started++;
-      await done;
     } catch (err) {
       if (!(err instanceof SyncRequestError)) console.error("[ga4-sync] scheduled sync failed to start:", err instanceof Error ? err.message : err);
     }
   }
-  return { resumed: due.length, started };
+  await drainSyncQueue(deps);
+  return { resumed, started };
 }
 
 async function tick() {

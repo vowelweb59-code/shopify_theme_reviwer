@@ -286,6 +286,49 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(await tickAt(muchLater)).toEqual({ resumed: 0, started: 0 });
   }
 
+  it("themes mapped together are queued and synced one at a time, oldest first", async () => {
+    const others: { _id: { toString(): string } }[] = await AnalyticsTheme.create(
+      ["Dynamic", "Nexus"].map((name, i) => ({
+        name,
+        slug: name.toLowerCase(),
+        googleConnectionId: accountId,
+        ga4PropertyId: `12345678${i}`,
+        ga4PropertyTimeZone: "Asia/Kolkata",
+        connectionStatus: "connected",
+      }))
+    );
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const order: string[] = [];
+    const base = makeDataApi(ga4);
+    const tracked: SyncDeps = {
+      ...deps,
+      dataApiFor: async () => ({
+        properties: {
+          runReport: (async (args: { property: string }) => {
+            if (order.at(-1) !== args.property) order.push(args.property);
+            maxInFlight = Math.max(maxInFlight, ++inFlight);
+            await new Promise((r) => setTimeout(r, 1)); // let other jobs interleave, if they could
+            try {
+              return await (base.properties.runReport as unknown as (a: unknown) => Promise<unknown>)(args);
+            } finally {
+              inFlight--;
+            }
+          }) as unknown as DataApi["properties"]["runReport"],
+        },
+      }),
+    };
+
+    // Mapped back to back, like Settings does; the first job starts while the others are still being queued.
+    const started = [];
+    for (const id of [themeId, ...others.map((t) => t._id.toString())]) started.push(await startSync(id, "mapped", tracked));
+    await Promise.all(started.map((s) => s.done));
+
+    expect(maxInFlight).toBe(1);
+    expect(order).toEqual([`properties/${PROPERTY}`, "properties/123456780", "properties/123456781"]);
+    for (const s of started) expect(await job(s.sync.id)).toMatchObject({ status: "succeeded", chunksDone: 3 });
+  }, 30_000); // three full histories
+
   it("stops if the theme is remapped mid-sync, and the new property's first sync purges the old rows", async () => {
     ga4.onCall = async (call) => {
       if (call === BREAKDOWNS * 2) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null });

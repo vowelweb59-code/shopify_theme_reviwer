@@ -1,8 +1,9 @@
 import { SyncRequestError, startSync } from "./runSync";
 
 /**
- * Starts a theme's first (or catch-up) sync right after its GA4 property is
- * mapped, without making the request wait for it. Failures to start are
+ * Queues a theme's first (or catch-up) sync right after its GA4 property is
+ * mapped, without making the request wait for it. It runs when the sync
+ * worker reaches it, after any jobs queued before it. Failures to start are
  * fine to drop: the scheduler retries due themes on its next tick.
  */
 export function kickOffSyncAfterMapping(themeId: string): void {

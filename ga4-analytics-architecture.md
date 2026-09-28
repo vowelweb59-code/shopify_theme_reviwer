@@ -75,7 +75,7 @@ app/api/analytics/
   metrics/journey (GET) ← Phase 7 ✓
 app/analytics/page.tsx + _components/  main dashboard: controls, KPI cards, funnel, trends, theme comparison ← Phase 6 ✓
 app/analytics/layout.tsx  shared shell: controls, filter bar, section links ← Phase 7 ✓
-app/analytics/geography|acquisition|technology|pages|events|journey ← Phase 7 ✓
+app/analytics/geography|acquisition|pages|events|journey ← Phase 7 ✓
 ```
 
 ---
@@ -251,9 +251,10 @@ They're kept separate because users who fired *any* event can't be derived by ad
 6. **The first sync of a newly mapped property also purges** that theme's rows from any previous property.
 
 **Triggers:**
-- Mapping a property through the API starts its initial sync in the background.
+- Mapping a property through the API queues its initial sync.
+- **One job at a time, server-wide (2026-09-28).** `startSync` only queues a job; a single in-process worker (`drainSyncQueue` in `runSync.ts`) runs due queued jobs oldest first, pausing 1 s between chunks and 2 s between jobs. Mapping, *Sync now*, retries and the scheduler all go through it. Before this, mapping eight themes ran eight syncs at once on the small Render instance (each holding up to 100k report rows in memory), and they appeared stuck. Waiting jobs show as *Queued* in Settings. Stale-job recovery never re-queues the job the worker is running right now.
 - "Sync now" is `POST /api/analytics/themes/:id/sync`, which answers 202 while the UI polls `GET /api/analytics/sync`.
-- The scheduler ticks every 15 minutes. It runs due retries, then starts a `scheduled` sync for every mapped, connected theme with no attempt in the last 6 hours, one job at a time. `ANALYTICS_SYNC_DISABLED=1` turns it off.
+- The scheduler ticks every 15 minutes. It queues a `scheduled` sync for every mapped, connected theme with no attempt in the last 6 hours, then lets the worker run everything due (retries included), one job at a time. `ANALYTICS_SYNC_DISABLED=1` turns it off.
 
 ## 5d. Phase 5: the analytics engine
 
@@ -296,7 +297,7 @@ Common query: `theme=all|<id or slug>`, `range=today|yesterday|last7|last30|last
   - **Overview** (§5e).
   - **Geography:** country, city.
   - **Acquisition:** channel, source, medium, campaign; sorted by installs by default.
-  - **Technology:** device, browser, OS.
+  - **Technology:** removed 2026-09-28 (user: not needed); device/browser/OS are still synced and filterable.
   - **Pages:** landing page, page.
   - **Events.**
   - **Journey.**
