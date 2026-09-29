@@ -1,10 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { isCrossSiteMutation } from "./proxy";
+import { authMode, isCrossSiteMutation } from "./proxy";
 
 const req = (method: string, path: string, headers: Record<string, string> = {}) => ({
   method,
   headers: new Headers({ host: "shopify-theme-reviwer.onrender.com", ...headers }),
   nextUrl: new URL(`http://shopify-theme-reviwer.onrender.com${path}`),
+});
+
+describe("authMode", () => {
+  it("checks credentials whenever both are set", () => {
+    expect(authMode({ NODE_ENV: "production", BASIC_AUTH_USER: "u", BASIC_AUTH_PASSWORD: "p" })).toBe("check");
+    expect(authMode({ NODE_ENV: "development", BASIC_AUTH_USER: "u", BASIC_AUTH_PASSWORD: "p" })).toBe("check");
+  });
+
+  it("refuses access in production when a credential is missing", () => {
+    expect(authMode({ NODE_ENV: "production" })).toBe("misconfigured");
+    expect(authMode({ NODE_ENV: "production", BASIC_AUTH_USER: "u" })).toBe("misconfigured");
+  });
+
+  it("stays open in local dev, or in production only when disabled on purpose", () => {
+    expect(authMode({ NODE_ENV: "development" })).toBe("open");
+    expect(authMode({ NODE_ENV: "production", BASIC_AUTH_DISABLED: "1" })).toBe("open");
+  });
 });
 
 describe("isCrossSiteMutation", () => {

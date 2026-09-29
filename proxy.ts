@@ -51,10 +51,21 @@ const UNAUTHORIZED = () =>
   });
 
 /**
- * HTTP Basic Auth gate for this otherwise-unauthenticated internal tool.
- * Deliberately opt-in: unset BASIC_AUTH_USER/BASIC_AUTH_PASSWORD in local
- * dev (the default) and this is a no-op; set both once deployed to
- * actually password-protect it.
+ * What the login gate does for these settings. Fails closed in production
+ * (the user's decision, 2026-09-29): missing credentials there mean a
+ * broken deploy, not an open site. Local dev (NODE_ENV=development/test)
+ * stays open without credentials; BASIC_AUTH_DISABLED=1 opens a
+ * production build on purpose (e.g. running `next start` locally).
+ */
+export function authMode(env: Record<string, string | undefined>): "check" | "open" | "misconfigured" {
+  if (env.BASIC_AUTH_USER && env.BASIC_AUTH_PASSWORD) return "check";
+  if (env.NODE_ENV !== "production" || env.BASIC_AUTH_DISABLED === "1") return "open";
+  return "misconfigured";
+}
+
+/**
+ * HTTP Basic Auth gate for this otherwise-unauthenticated internal tool
+ * (see authMode for when it applies).
  *
  * Named `proxy` (not `middleware`) per Next.js 16's rename — see
  * node_modules/next/dist/docs/.../proxy.md's migration notes.
@@ -62,9 +73,13 @@ const UNAUTHORIZED = () =>
 export function proxy(request: NextRequest) {
   if (isCrossSiteMutation(request)) return new NextResponse("Cross-site request blocked.", { status: 403 });
 
-  const expectedUser = process.env.BASIC_AUTH_USER;
-  const expectedPassword = process.env.BASIC_AUTH_PASSWORD;
-  if (!expectedUser || !expectedPassword) return NextResponse.next();
+  const mode = authMode(process.env);
+  if (mode === "open") return NextResponse.next();
+  if (mode === "misconfigured") {
+    return new NextResponse("The site's login isn't configured (BASIC_AUTH_USER / BASIC_AUTH_PASSWORD), so access is refused.", { status: 503 });
+  }
+  const expectedUser = process.env.BASIC_AUTH_USER!;
+  const expectedPassword = process.env.BASIC_AUTH_PASSWORD!;
 
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Basic ")) return UNAUTHORIZED();
