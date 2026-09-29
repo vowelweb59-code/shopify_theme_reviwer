@@ -35,9 +35,9 @@ const UPSERT_BATCH = 1000;
 // Breathing room between chunks and between jobs, so a long history sync
 // doesn't keep the (small) server busy back to back.
 export const PAUSE_BETWEEN_CHUNKS_MS = 1000;
-// The user's rule (2026-09-28): one property's sync starts at least 15
+// The user's rule (2026-09-29): one property's sync starts at least 14
 // minutes after the previous one finished.
-export const PAUSE_BETWEEN_JOBS_MS = 15 * 60 * 1000;
+export const PAUSE_BETWEEN_JOBS_MS = 14 * 60 * 1000;
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export type SyncDeps = {

@@ -249,16 +249,14 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(await recoverInterruptedSyncs(NOW)).toBe(1);
     ga4.calls = 0;
     const result = await runSchedulerTick(deps);
-    expect(result.resumed).toBe(1);
+    expect(result).toMatchObject({ resumed: 1, started: 0 });
     expect(await job(sync.id)).toMatchObject({ status: "succeeded", chunksDone: 3 });
     expect(ga4.calls).toBe(BREAKDOWNS);
   });
 
-  it("the scheduler starts due themes and skips recently synced or unusable ones", async () => {
-    // Job createdAt timestamps come from the system clock, while the
-    // scheduler's cutoff comes from deps.now(). In production both are the
-    // real clock; pin the system clock to the test's NOW so they agree here
-    // too (otherwise this test breaks once the real date passes NOW).
+  it("the scheduler rotates through the themes one per step, oldest sync first, then starts over", async () => {
+    // Job createdAt timestamps come from the system clock; pin it and move
+    // it forward per step so "synced longest ago" is well defined.
     vi.useFakeTimers({ toFake: ["Date"], now: NOW });
     try {
       await schedulerScenario();
@@ -268,21 +266,26 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
   });
 
   async function schedulerScenario() {
-    // Each tick runs with the system clock at that tick's simulated time.
-    const tickAt = (d: SyncDeps) => {
-      vi.setSystemTime(d.now());
-      return runSchedulerTick(d);
+    const dynamic = await AnalyticsTheme.create({ name: "Dynamic", slug: "dynamic", googleConnectionId: accountId, ga4PropertyId: "222222222", ga4PropertyTimeZone: "Asia/Kolkata", connectionStatus: "connected" });
+    let step = 0;
+    const tick = () => {
+      const at = new Date(NOW.getTime() + step++ * 14 * 60 * 1000);
+      vi.setSystemTime(at);
+      return runSchedulerTick({ ...deps, now: () => at });
     };
-    expect(await tickAt(deps)).toEqual({ resumed: 0, started: 1 }); // never synced → initial
-    expect(await tickAt(deps)).toEqual({ resumed: 0, started: 0 }); // synced moments ago
+    // Never-synced themes first, in name order; then the one synced longest ago.
+    expect(await tick()).toEqual({ resumed: 0, started: 1, themeId });
+    expect(await tick()).toEqual({ resumed: 0, started: 1, themeId: dynamic._id.toString() });
+    expect(await tick()).toEqual({ resumed: 0, started: 1, themeId });
+    expect((await AnalyticsSync.findOne({ analyticsThemeId: themeId }).sort({ createdAt: -1 }).lean<{ syncType: string }>())?.syncType).toBe("scheduled");
+    expect(await tick()).toMatchObject({ started: 1, themeId: dynamic._id.toString() });
 
-    const later: SyncDeps = { ...deps, now: () => new Date(NOW.getTime() + 7 * 60 * 60 * 1000) };
-    expect(await tickAt(later)).toEqual({ resumed: 0, started: 1 });
-    expect((await AnalyticsSync.findOne().sort({ createdAt: -1 }).lean<{ syncType: string }>())?.syncType).toBe("scheduled");
+    // A job already waiting (e.g. "Sync now") runs first; the rotation waits a step.
+    await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: PROPERTY, syncType: "manual", status: "queued", isActive: true, rangeStart: TODAY, rangeEnd: TODAY, cursorDate: TODAY, chunksTotal: 1 });
+    expect(await tick()).toEqual({ resumed: 1, started: 0, themeId: null });
 
     await GoogleConnection.updateOne({ _id: accountId }, { status: "revoked" });
-    const muchLater: SyncDeps = { ...deps, now: () => new Date(NOW.getTime() + 20 * 60 * 60 * 1000) };
-    expect(await tickAt(muchLater)).toEqual({ resumed: 0, started: 0 });
+    expect(await tick()).toEqual({ resumed: 0, started: 0, themeId: null });
   }
 
   it("themes mapped together are queued and synced one at a time, oldest first", async () => {
