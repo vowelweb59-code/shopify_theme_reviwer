@@ -2,14 +2,44 @@ import { oauth2 as oauth2Api } from "@googleapis/oauth2";
 import { OAuth2Client } from "google-auth-library";
 import { GoogleAuth } from "@/models/google-auth";
 import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
+import { decryptSecret, encryptSecret } from "@/lib/analytics/crypto";
 
-// Only what's needed to create/write a spreadsheet and know which account
-// is connected — never full Drive access.
+// Sheets tokens are encrypted at rest with the same AES-256-GCM key as the
+// GA4 tokens (ANALYTICS_TOKEN_ENCRYPTION_KEY). Without the key (local dev
+// that never set up GA4) they're stored as before. Tokens saved before
+// 2026-09-29 are plaintext; they're read as-is and re-saved encrypted.
+function sealToken(token: string): string {
+  return process.env.ANALYTICS_TOKEN_ENCRYPTION_KEY ? encryptSecret(token) : token;
+}
+
+function isSealed(value: string): boolean {
+  return value.startsWith("v1.") && value.split(".").length === 4;
+}
+
+function openToken(value: string): string {
+  return isSealed(value) ? decryptSecret(value) : value;
+}
+
+export const SHEETS_OAUTH_STATE_COOKIE = "sheets_oauth_state";
+export const sheetsOAuthStateCookieOptions = {
+  httpOnly: true,
+  // "lax" (not "strict") so the cookie survives Google's top-level redirect back.
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/api/auth/google",
+  maxAge: 10 * 60,
+};
+
+// Only what's needed to create/write the app's own spreadsheets and know
+// which account is connected. drive.file covers the Sheets API for files
+// this app created (all of its export sheets); the broader `spreadsheets`
+// scope, which reaches every spreadsheet on the account, was dropped
+// 2026-09-29.
 const SHEETS_SCOPES = [
-  "https://www.googleapis.com/auth/spreadsheets",
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/userinfo.email",
 ];
+const BROAD_SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -25,9 +55,10 @@ export function createOAuthClient() {
   );
 }
 
-export function getGoogleAuthUrl(): string {
+export function getGoogleAuthUrl(state: string): string {
   const client = createOAuthClient();
   return client.generateAuthUrl({
+    state,
     access_type: "offline", // required to receive a refresh_token
     prompt: "consent", // forces the consent screen so a refresh_token is issued even on a reconnect
     scope: SHEETS_SCOPES,
@@ -61,13 +92,19 @@ export async function exchangeCodeForTokens(code: string) {
  * null if Google Sheets was never connected.
  */
 export async function getAuthorizedClient() {
-  const stored = await GoogleAuth.findOne();
+  const stored = await GoogleAuth.findOne().select("+accessToken +refreshToken");
   if (!stored) return null;
+
+  const accessToken = openToken(stored.accessToken);
+  const refreshToken = openToken(stored.refreshToken);
+  if (process.env.ANALYTICS_TOKEN_ENCRYPTION_KEY && (!isSealed(stored.accessToken) || !isSealed(stored.refreshToken))) {
+    await GoogleAuth.updateOne({}, { $set: { accessToken: sealToken(accessToken), refreshToken: sealToken(refreshToken) } });
+  }
 
   const client = createOAuthClient();
   client.setCredentials({
-    access_token: stored.accessToken,
-    refresh_token: stored.refreshToken,
+    access_token: accessToken,
+    refresh_token: refreshToken,
     expiry_date: stored.expiryDate,
   });
 
@@ -77,9 +114,9 @@ export async function getAuthorizedClient() {
       {},
       {
         $set: {
-          accessToken: tokens.access_token,
+          accessToken: sealToken(tokens.access_token),
           expiryDate: tokens.expiry_date ?? stored.expiryDate,
-          ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
+          ...(tokens.refresh_token ? { refreshToken: sealToken(tokens.refresh_token) } : {}),
         },
       }
     );
@@ -88,9 +125,25 @@ export async function getAuthorizedClient() {
   return client;
 }
 
-export async function getGoogleConnectionStatus(): Promise<{ connected: boolean; email?: string }> {
-  const stored = await GoogleAuth.findOne().select("googleEmail").lean();
-  return stored ? { connected: true, email: stored.googleEmail } : { connected: false };
+export async function getGoogleConnectionStatus(): Promise<{ connected: boolean; email?: string; broadScope?: boolean }> {
+  const stored = await GoogleAuth.findOne().select("googleEmail scope").lean<{ googleEmail: string; scope?: string }>();
+  if (!stored) return { connected: false };
+  // Connected before the scope was narrowed: still works, but holds access
+  // to every spreadsheet on the account until it's reconnected once.
+  const broadScope = (stored.scope ?? "").split(/\s+/).includes(BROAD_SHEETS_SCOPE);
+  return { connected: true, email: stored.googleEmail, broadScope };
+}
+
+/** Replaces whatever account was connected with this one (only one Google account at a time). */
+export async function saveGoogleConnection(t: Awaited<ReturnType<typeof exchangeCodeForTokens>>): Promise<void> {
+  await GoogleAuth.deleteMany({});
+  await GoogleAuth.create({
+    googleEmail: t.email,
+    accessToken: sealToken(t.accessToken),
+    refreshToken: sealToken(t.refreshToken),
+    expiryDate: t.expiryDate,
+    scope: t.scope,
+  });
 }
 
 export async function disconnectGoogle(): Promise<void> {

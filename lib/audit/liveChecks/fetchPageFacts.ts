@@ -1,5 +1,6 @@
 import { Parser } from "htmlparser2";
 import { extractLiteralJsonLdTypes } from "@/lib/theme-parser/liquidJson";
+import { fetchPublicText } from "@/lib/net/publicUrl";
 
 export type PageFacts = {
   url: string;
@@ -27,16 +28,10 @@ function isAbortError(err: unknown): boolean {
   return err instanceof Error && err.name === "AbortError";
 }
 
-async function fetchOnce(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal, redirect: "follow" });
-    if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timeout);
-  }
+// These URLs come from users (preset demo URLs) and from the fetched page
+// itself (its first product link), so they go through the SSRF guard.
+function fetchOnce(url: string): Promise<string> {
+  return fetchPublicText(url, { timeoutMs: FETCH_TIMEOUT_MS });
 }
 
 /**

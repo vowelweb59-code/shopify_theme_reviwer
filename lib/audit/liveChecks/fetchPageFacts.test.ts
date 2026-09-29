@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { extractPageFactsFromHtml, fetchHtml, fetchPageFacts } from "./fetchPageFacts";
 
+// The SSRF guard resolves each host; answer with a public address so these
+// tests never touch the network.
+vi.mock("node:dns/promises", () => ({ lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]) }));
+
 describe("extractPageFactsFromHtml", () => {
   it("collects @type values from every JSON-LD script block", () => {
     const html = `

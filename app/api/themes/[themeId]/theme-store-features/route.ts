@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeRankHistory } from "@/models/theme-rank-history";
@@ -16,6 +17,7 @@ import { fetchThemeStoreFeatureLabels } from "@/lib/themes/themeStoreFeatures";
 export async function POST(_request: Request, { params }: { params: Promise<{ themeId: string }> }) {
   await connectToDatabase();
   const { themeId } = await params;
+  if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
 
   const theme = await Theme.findById(themeId);
   if (!theme) {

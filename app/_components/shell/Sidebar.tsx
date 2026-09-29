@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./navItems";
+import { SignOutButton } from "./SignOutButton";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
+export function Sidebar({ authEnabled }: { authEnabled: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -39,7 +40,9 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-border-subtle px-4 py-3 text-xs text-zinc-500">Internal tool</div>
+      <div className="border-t border-border-subtle px-2 py-2">
+        {authEnabled ? <SignOutButton /> : <p className="px-2.5 py-1 text-xs text-zinc-500">Internal tool</p>}
+      </div>
     </aside>
   );
 }

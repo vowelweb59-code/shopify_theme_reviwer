@@ -9,8 +9,9 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 const googleAuthSchema = new Schema(
   {
     googleEmail: { type: String, required: true },
-    accessToken: { type: String, required: true },
-    refreshToken: { type: String, required: true },
+    // Encrypted at rest (see lib/google/oauth.ts) and never loaded unless asked for.
+    accessToken: { type: String, required: true, select: false },
+    refreshToken: { type: String, required: true, select: false },
     expiryDate: { type: Number, required: true },
     scope: { type: String, required: true },
   },

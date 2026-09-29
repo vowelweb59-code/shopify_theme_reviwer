@@ -16,7 +16,7 @@ function randomNextDelayMs(): number {
 // parallel scheduler with its own setTimeout — same reasoning as the
 // demo-store scheduler and lib/db/connect.ts's mongoose cache.
 const globalForScheduler = globalThis as typeof globalThis & {
-  _themeRankingScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean };
+  _themeRankingScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean; running?: Promise<void> | null };
 };
 const schedulerState = (globalForScheduler._themeRankingScheduler ??= { timer: null, started: false });
 
@@ -28,7 +28,17 @@ function scheduleTimer(nextAt: Date) {
   schedulerState.timer = timer;
 }
 
-async function runAndReschedule() {
+// One crawl at a time: a "Check Ranking" click (or the timer) while a
+// crawl is already running waits for that crawl instead of starting a
+// parallel one against themes.shopify.com.
+function runAndReschedule(): Promise<void> {
+  schedulerState.running ??= runOnce().finally(() => {
+    schedulerState.running = null;
+  });
+  return schedulerState.running;
+}
+
+async function runOnce() {
   try {
     await runThemeStoreRankingCheck();
   } catch (err) {

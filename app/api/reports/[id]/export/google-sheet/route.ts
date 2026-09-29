@@ -91,7 +91,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
         return NextResponse.json({ error: err.message }, { status: 409 });
       } else {
         return NextResponse.json(
-          { error: `Failed to reach the existing Google Sheet: ${err instanceof Error ? err.message : String(err)}` },
+          { error: sheetsErrorMessage("Failed to reach the existing Google Sheet", err) },
           { status: 502 }
         );
       }
@@ -147,8 +147,14 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
     return NextResponse.json(
-      { error: `Failed to update the Google Sheet: ${err instanceof Error ? err.message : String(err)}` },
+      { error: sheetsErrorMessage("Failed to update the Google Sheet", err) },
       { status: 502 }
     );
   }
+}
+
+// Google's raw error text stays in the server log; the browser gets a fixed message.
+function sheetsErrorMessage(summary: string, err: unknown): string {
+  console.error(`[google-sheets] ${summary}:`, err instanceof Error ? err.message : err);
+  return `${summary}. Try again, or reconnect Google in Settings.`;
 }

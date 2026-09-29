@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { NAV_ITEMS } from "./navItems";
+import { SignOutButton } from "./SignOutButton";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -13,7 +14,7 @@ function isActive(pathname: string, href: string) {
 }
 
 /** Top bar + slide-in drawer, shown only below md. Radix Dialog supplies the focus trap and Escape-to-close for the drawer. */
-export function MobileNav() {
+export function MobileNav({ authEnabled }: { authEnabled: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -59,6 +60,11 @@ export function MobileNav() {
                 );
               })}
             </nav>
+            {authEnabled && (
+              <div className="mt-auto border-t border-border-subtle px-2 py-2">
+                <SignOutButton />
+              </div>
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

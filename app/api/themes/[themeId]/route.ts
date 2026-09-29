@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
@@ -19,6 +20,7 @@ import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
 export async function GET(_request: Request, { params }: { params: Promise<{ themeId: string }> }) {
   await connectToDatabase();
   const { themeId } = await params;
+  if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
 
   const theme = await Theme.findById(themeId).lean();
   if (!theme) {
@@ -125,6 +127,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
 export async function PATCH(request: Request, { params }: { params: Promise<{ themeId: string }> }) {
   await connectToDatabase();
   const { themeId } = await params;
+  if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
 
   const body = await request.json().catch(() => null);
   const demoStorePresets = sanitizePresets((body as { demoStorePresets?: unknown } | null)?.demoStorePresets);

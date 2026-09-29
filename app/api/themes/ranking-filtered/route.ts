@@ -8,6 +8,7 @@ import { runFilteredRankingCheck } from "@/lib/themes/runFilteredRankingCheck";
 // Collection list in app/demo-store/page.tsx). Anything else is refused
 // rather than stored: every tracked filter is re-crawled daily.
 const INDUSTRY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const MAX_TRACKED_FILTERS = 100;
 
 function parseQuery(request: Request): { sortBy: "newest" | "relevance"; industry: string | null } | { error: string } {
   const { searchParams } = new URL(request.url);
@@ -57,6 +58,12 @@ export async function POST(request: Request) {
   await connectToDatabase();
   const { sortBy, industry } = parsed;
 
+  // Every tracked filter is re-crawled daily forever, so cap how many can
+  // exist (the Theme Store only has a few dozen collections × 2 sorts).
+  const existing = await ThemeRankingFilter.exists({ sortBy, industry });
+  if (!existing && (await ThemeRankingFilter.countDocuments()) >= MAX_TRACKED_FILTERS) {
+    return NextResponse.json({ ok: false, error: `At most ${MAX_TRACKED_FILTERS} Sort/Collection combinations can be tracked.` }, { status: 409 });
+  }
   const filter = await ThemeRankingFilter.findOneAndUpdate({ sortBy, industry }, {}, { upsert: true, new: true });
   const result = await runFilteredRankingCheck(filter);
   if (!result.ok) {

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const SEVERITIES = ["blocker", "high", "medium", "low"] as const;
 
 type ReadinessConfig = { blockerSeverities: string[]; minimumCoveragePercent: number };
-type GoogleStatus = { connected: boolean; email?: string };
+type GoogleStatus = { connected: boolean; email?: string; broadScope?: boolean };
 
 function readGoogleBannerFromLocation(): { kind: "connected" | "error"; message?: string } | null {
   if (typeof window === "undefined") return null;
@@ -89,7 +89,14 @@ function GoogleSheetsPanel() {
             {disconnecting ? "Disconnecting…" : "Disconnect"}
           </button>
         </div>
-      ) : (
+      ) : null}
+      {status?.connected && status.broadScope && (
+        <p className="text-xs text-status-warning-text">
+          This account was connected with access to all of its spreadsheets. Disconnect and connect again to limit the app
+          to the sheets it creates.
+        </p>
+      )}
+      {status && !status.connected && (
         <a
           href="/api/auth/google"
           className="w-fit rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"

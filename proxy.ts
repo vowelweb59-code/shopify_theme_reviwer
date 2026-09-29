@@ -1,30 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SESSION_COOKIE, authMode, isValidSessionToken } from "@/lib/auth/session";
+
+export { authMode };
 
 // Excludes /api/health so an uptime monitor / platform health check
-// doesn't need credentials, and static assets so a 401 doesn't break page
-// rendering before the browser even gets to send credentials.
+// doesn't need a session, and Next's static assets. The `$` anchors keep
+// the exclusion exact: without them /api/healthz or /api/health/x would
+// also skip the login check.
 export const config = {
-  matcher: ["/((?!api/health|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/health$|_next/static/|favicon\\.ico$).*)"],
 };
 
-// Plain-JS constant-time comparison — avoids node:crypto's timingSafeEqual
-// (not guaranteed available in the Edge runtime middleware runs under by
-// default) and Buffer (also not an Edge global); atob() below is a Web
-// Platform API and works the same in both runtimes.
-function timingSafeStringEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return mismatch === 0;
+// Reachable without a session: the login page and the sign-in/out endpoint.
+function isPublicPath(pathname: string): boolean {
+  return pathname === "/login" || pathname === "/api/session";
 }
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**
- * CSRF guard for state-changing API calls. Browsers send Basic Auth
- * credentials on cross-site requests too, so without this any page a
- * signed-in teammate visits could, say, auto-submit a form that
- * disconnects a Google account. Blocks a mutating /api request when the
+ * CSRF guard for state-changing API calls, on top of the session cookie's
+ * SameSite=Lax: without it, a page a signed-in teammate visits could, say,
+ * auto-submit a form that disconnects a Google account (or signs them in
+ * to an attacker's session). Blocks a mutating /api request when the
  * browser says it came from another site (Sec-Fetch-Site), or its Origin's
  * host isn't this app's. Requests with neither header (curl, scripts,
  * server-to-server) aren't browser-driven and pass. The scheme is ignored
@@ -44,60 +42,38 @@ export function isCrossSiteMutation(request: { method: string; headers: Headers;
   }
 }
 
-const UNAUTHORIZED = () =>
-  new NextResponse("Authentication required.", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Shopify Theme Auditor"' },
-  });
-
 /**
- * What the login gate does for these settings. Fails closed in production
- * (the user's decision, 2026-09-29): missing credentials there mean a
- * broken deploy, not an open site. Local dev (NODE_ENV=development/test)
- * stays open without credentials; BASIC_AUTH_DISABLED=1 opens a
- * production build on purpose (e.g. running `next start` locally).
- */
-export function authMode(env: Record<string, string | undefined>): "check" | "open" | "misconfigured" {
-  if (env.BASIC_AUTH_USER && env.BASIC_AUTH_PASSWORD) return "check";
-  if (env.NODE_ENV !== "production" || env.BASIC_AUTH_DISABLED === "1") return "open";
-  return "misconfigured";
-}
-
-/**
- * HTTP Basic Auth gate for this otherwise-unauthenticated internal tool
- * (see authMode for when it applies).
+ * Login gate (see lib/auth/session.ts). Signed-out page visits go to
+ * /login?next=<path>; signed-out API calls get a 401 JSON error, since a
+ * redirect to an HTML page is useless to fetch().
  *
  * Named `proxy` (not `middleware`) per Next.js 16's rename — see
- * node_modules/next/dist/docs/.../proxy.md's migration notes.
+ * node_modules/next/dist/docs/.../proxy.md's migration notes. Proxy runs on
+ * the Node.js runtime, so node:crypto is available.
  */
 export function proxy(request: NextRequest) {
   if (isCrossSiteMutation(request)) return new NextResponse("Cross-site request blocked.", { status: 403 });
 
   const mode = authMode(process.env);
-  if (mode === "open") return NextResponse.next();
+  const { pathname, search } = request.nextUrl;
+
+  if (mode === "open") {
+    return pathname === "/login" ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
+  }
   if (mode === "misconfigured") {
     return new NextResponse("The site's login isn't configured (BASIC_AUTH_USER / BASIC_AUTH_PASSWORD), so access is refused.", { status: 503 });
   }
-  const expectedUser = process.env.BASIC_AUTH_USER!;
-  const expectedPassword = process.env.BASIC_AUTH_PASSWORD!;
 
-  const header = request.headers.get("authorization");
-  if (!header?.startsWith("Basic ")) return UNAUTHORIZED();
-
-  let decoded: string;
-  try {
-    decoded = atob(header.slice("Basic ".length));
-  } catch {
-    return UNAUTHORIZED();
+  const signedIn = isValidSessionToken(request.cookies.get(SESSION_COOKIE)?.value, process.env);
+  if (signedIn) {
+    return pathname === "/login" ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
   }
+  if (isPublicPath(pathname)) return NextResponse.next();
 
-  const separatorIndex = decoded.indexOf(":");
-  if (separatorIndex === -1) return UNAUTHORIZED();
-  const suppliedUser = decoded.slice(0, separatorIndex);
-  const suppliedPassword = decoded.slice(separatorIndex + 1);
-
-  if (timingSafeStringEqual(suppliedUser, expectedUser) && timingSafeStringEqual(suppliedPassword, expectedPassword)) {
-    return NextResponse.next();
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
-  return UNAUTHORIZED();
+  const loginUrl = new URL("/login", request.url);
+  if (pathname !== "/") loginUrl.searchParams.set("next", pathname + search);
+  return NextResponse.redirect(loginUrl);
 }

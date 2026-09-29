@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { uploadThemeVersion } from "@/lib/themes/uploadThemeVersion";
@@ -13,6 +14,7 @@ import { uploadThemeVersion } from "@/lib/themes/uploadThemeVersion";
 export async function POST(request: Request, { params }: { params: Promise<{ themeId: string }> }) {
   await connectToDatabase();
   const { themeId } = await params;
+  if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
 
   const theme = await Theme.findById(themeId);
   if (!theme) {

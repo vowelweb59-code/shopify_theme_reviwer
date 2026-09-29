@@ -9,6 +9,8 @@ import {
 } from "@/models/enhancement-point";
 import { EnhancementSheet } from "@/models/enhancement-sheet";
 
+const MAX_NOTES_LENGTH = 5000;
+
 export async function GET(request: Request) {
   await connectToDatabase();
   const { searchParams } = new URL(request.url);
@@ -73,6 +75,9 @@ export async function PATCH(request: Request) {
   }
   if (status !== undefined && !ENHANCEMENT_STATUSES.includes(status as (typeof ENHANCEMENT_STATUSES)[number])) {
     return NextResponse.json({ error: `status must be one of: ${ENHANCEMENT_STATUSES.join(", ")}` }, { status: 400 });
+  }
+  if (notes !== undefined && notes !== null && (typeof notes !== "string" || notes.length > MAX_NOTES_LENGTH)) {
+    return NextResponse.json({ error: `notes must be text of at most ${MAX_NOTES_LENGTH} characters` }, { status: 400 });
   }
   if (status === undefined && notes === undefined) {
     return NextResponse.json({ error: "Provide status and/or notes" }, { status: 400 });

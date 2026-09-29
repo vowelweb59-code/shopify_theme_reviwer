@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import { withAuditSlot } from "./auditSlots";
 import { capSnippetLine } from "./snippet";
 import { pruneOldAuditRuns } from "./retention";
 import { withoutRuleCitation } from "./ruleCitations";
@@ -186,7 +187,11 @@ export type ExecuteAuditRunHooks = {
  * throws — a failure marks the AuditRun "failed" and returns { ok: false },
  * matching the original route's catch-all behavior.
  */
-export async function executeAuditRun(params: ExecuteAuditRunParams, hooks?: ExecuteAuditRunHooks): Promise<ExecuteAuditRunResult> {
+export function executeAuditRun(params: ExecuteAuditRunParams, hooks?: ExecuteAuditRunHooks): Promise<ExecuteAuditRunResult> {
+  return withAuditSlot(() => executeAuditRunNow(params, hooks));
+}
+
+async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: ExecuteAuditRunHooks): Promise<ExecuteAuditRunResult> {
   const { theme, buffer, demoStorePresets = [], themeVersionId = null, themeZipId = null } = params;
 
   const auditRun = await AuditRun.create({

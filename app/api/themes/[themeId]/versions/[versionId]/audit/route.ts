@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
@@ -28,6 +29,8 @@ export async function POST(
 ) {
   await connectToDatabase();
   const { themeId, versionId } = await params;
+  if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
+  if (!isValidObjectId(versionId)) return invalidIdResponse("versionId");
 
   const [theme, themeVersion] = await Promise.all([Theme.findById(themeId), ThemeVersion.findById(versionId)]);
   if (!theme) return NextResponse.json({ error: "Theme not found." }, { status: 404 });

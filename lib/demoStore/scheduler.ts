@@ -18,7 +18,7 @@ function randomNextDelayMs(): number {
 // cache) so a dev-server hot-reload doesn't start a second parallel
 // scheduler with its own setTimeout.
 const globalForScheduler = globalThis as typeof globalThis & {
-  _demoStoreScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean };
+  _demoStoreScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean; running?: Promise<void> | null };
 };
 const schedulerState = (globalForScheduler._demoStoreScheduler ??= { timer: null, started: false });
 
@@ -30,7 +30,16 @@ function scheduleTimer(nextAt: Date) {
   schedulerState.timer = timer;
 }
 
-async function runAndReschedule({ manual = false }: { manual?: boolean } = {}) {
+// One crawl at a time: a "Check now" click (or the timer) while a crawl is
+// already running waits for that crawl instead of starting a parallel one.
+function runAndReschedule(options: { manual?: boolean } = {}): Promise<void> {
+  schedulerState.running ??= runOnce(options).finally(() => {
+    schedulerState.running = null;
+  });
+  return schedulerState.running;
+}
+
+async function runOnce({ manual = false }: { manual?: boolean } = {}) {
   try {
     await runDemoStoreCheck({ manual });
   } catch (err) {
