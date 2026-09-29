@@ -1,19 +1,30 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { CheckCircle2, MinusCircle, Upload } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { useApi } from "@/app/analytics/_components/useApi";
 import { SectionTitle } from "./shared";
 
-type ImportResult = { inserted: number; duplicates: number; newStores: number; rowsRead: number; skipped: number };
+type TabResult = {
+  tab: string;
+  themeName: string | null;
+  inserted: number;
+  duplicates: number;
+  newStores: number;
+  rowsRead: number;
+  skipped: number;
+  error?: string;
+};
+
+const ALL_TABS = "";
 
 export function ImportTab({ onImported }: { onImported: () => void }) {
   const themes = useApi<{ themes: { id: string; name: string; presets: string[] }[] }>("/api/sales/themes");
-  const [themeId, setThemeId] = useState("");
+  const [themeId, setThemeId] = useState(ALL_TABS);
   const [file, setFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [results, setResults] = useState<TabResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -21,21 +32,21 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
 
   async function upload(event: FormEvent) {
     event.preventDefault();
-    if (!themeId || !file) {
-      setError("Choose the theme and the sheet file.");
+    if (!file) {
+      setError("Choose the sheet file.");
       return;
     }
     setPending(true);
     setError(null);
-    setResult(null);
+    setResults(null);
     try {
       const body = new FormData();
-      body.set("themeId", themeId);
+      if (themeId) body.set("themeId", themeId);
       body.set("file", file);
       const res = await fetch("/api/sales/import", { method: "POST", body });
-      const data = await res.json().catch(() => null);
+      const data = (await res.json().catch(() => null)) as { tabs?: TabResult[]; error?: string } | null;
+      if (data?.tabs) setResults(data.tabs);
       if (!res.ok) throw new Error(data?.error ?? "Upload failed.");
-      setResult(data as ImportResult);
       setFile(null);
       if (fileInput.current) fileInput.current.value = "";
       onImported();
@@ -56,21 +67,24 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
     const data = await res.json().catch(() => null);
     if (!res.ok) setError(data?.error ?? "Couldn't delete.");
     else {
-      setResult(null);
+      setResults(null);
       setError(null);
       onImported();
     }
   }
 
+  const imported = results?.filter((r) => !r.error) ?? [];
+  const newStores = imported.reduce((n, r) => n + r.newStores, 0);
+
   return (
     <section className="flex max-w-2xl flex-col gap-5">
       <SectionTitle
         title="Import sales"
-        description="Upload one theme's sales sheet (the Partner export with Date, Shop Name, Shop Domain, Preset, Country, Charge Type, Sale, Fee, Share). Download it from Google Sheets as .xlsx or .csv. Rows already imported are skipped, so re-upload the updated sheet anytime."
+        description="Upload your sales workbook as .xlsx (in Google Sheets: File → Download → Microsoft Excel). Each tab is imported for the theme it's named after, e.g. a tab called “Adorn” goes to Adorn. Rows already imported are skipped, so re-upload the updated workbook anytime."
       />
       <form onSubmit={upload} className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface p-5">
         <div>
-          <label htmlFor="sales-theme" className="mb-1.5 block text-sm font-medium">Theme</label>
+          <label htmlFor="sales-theme" className="mb-1.5 block text-sm font-medium">Import for</label>
           <select
             id="sales-theme"
             value={themeId}
@@ -80,43 +94,65 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
             }}
             className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm"
           >
-            <option value="">Choose the theme these sales are for…</option>
+            <option value={ALL_TABS}>Every tab, matched to themes by tab name (.xlsx)</option>
             {themes.data?.themes.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name}
+                Only {t.name}
               </option>
             ))}
           </select>
-          {selected && <p className="mt-1 text-xs text-zinc-500">Presets: {selected.presets.join(", ")}</p>}
+          <p className="mt-1 text-xs text-zinc-500">
+            {selected
+              ? `Uses the "${selected.name}" tab of a workbook (or a .csv of just that theme). Presets: ${selected.presets.join(", ")}.`
+              : `Tab names must match a theme: ${themes.data?.themes.map((t) => t.name).join(", ") ?? "…"}.`}
+          </p>
         </div>
         <div>
-          <label htmlFor="sales-file" className="mb-1.5 block text-sm font-medium">Sales sheet</label>
+          <label htmlFor="sales-file" className="mb-1.5 block text-sm font-medium">Sales workbook</label>
           <input
             ref={fileInput}
             id="sales-file"
             type="file"
-            accept=".xlsx,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            accept={selected ? ".xlsx,.csv,.tsv,.txt" : ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary-tint file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-primary-tint-text"
           />
         </div>
         {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
-        {result && (
-          <p role="status" className="rounded-lg bg-status-pass-bg px-3 py-2 text-sm text-status-pass-text">
-            Added {result.inserted} new sale{result.inserted === 1 ? "" : "s"}
-            {result.duplicates > 0 && `, skipped ${result.duplicates} already imported`}
-            {result.skipped > 0 && `, ignored ${result.skipped} row${result.skipped === 1 ? "" : "s"} without a date or domain`}.{" "}
-            {result.newStores > 0 ? `Checking ${result.newStores} new store${result.newStores === 1 ? "" : "s"} for their preset in the background.` : ""}
-          </p>
+        {results && (
+          <div role="status" className="flex flex-col gap-2 rounded-lg border border-border-subtle p-3 text-sm">
+            {results.map((r) => (
+              <div key={r.tab} className="flex items-start gap-2">
+                {r.error ? (
+                  <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+                ) : (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-pass-icon" aria-hidden />
+                )}
+                <p>
+                  <span className="font-medium">{r.tab}</span>
+                  {r.error ? (
+                    <span className="text-zinc-500"> — skipped: {r.error}</span>
+                  ) : (
+                    <span className="text-zinc-600 dark:text-zinc-400">
+                      {r.themeName && r.themeName !== r.tab ? ` → ${r.themeName}` : ""}: {r.inserted} new sale{r.inserted === 1 ? "" : "s"}
+                      {r.duplicates > 0 && `, ${r.duplicates} already imported`}
+                      {r.skipped > 0 && `, ${r.skipped} row${r.skipped === 1 ? "" : "s"} without a date or domain ignored`}
+                    </span>
+                  )}
+                </p>
+              </div>
+            ))}
+            {newStores > 0 && <p className="text-xs text-zinc-500">Checking {newStores} new store{newStores === 1 ? "" : "s"} for their preset in the background.</p>}
+          </div>
         )}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" loading={pending}>
             {!pending && <Upload className="h-4 w-4" aria-hidden />}
             {pending ? "Importing…" : "Import"}
           </Button>
-          {themeId && (
+          {selected && (
             <Button type="button" variant="destructive" size="sm" onClick={deleteThemeSales}>
-              {confirmDelete ? `Click again to delete all ${selected?.name ?? ""} sales` : "Delete this theme's sales"}
+              {confirmDelete ? `Click again to delete all ${selected.name} sales` : `Delete ${selected.name}'s sales`}
             </Button>
           )}
         </div>

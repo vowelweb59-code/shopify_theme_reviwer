@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { normalizeDomain, parseDelimited, parseSaleDate, parseSalesFile, salesFromRows } from "./parseSalesFile";
+import { matchThemeForTab, normalizeDomain, parseDelimited, parseSaleDate, parseSalesFile, readWorkbook, salesFromRows } from "./parseSalesFile";
 
 // Shaped like the user's real Adorn sheet: undated reference rows first,
 // a second preset-like column headed "Shop Email", a refund row.
@@ -44,6 +44,23 @@ describe("parseSalesFile", () => {
     expect(sales.map((s) => s.shopDomain)).toEqual(["elainesilverco.myshopify.com", "qkgnif-dk.myshopify.com", "p1wuv9-rg.myshopify.com"]);
   });
 
+  it("reads every tab of a one-tab-per-theme workbook, and picks a theme's own tab", async () => {
+    const wb = new ExcelJS.Workbook();
+    wb.addWorksheet("Summary").addRow(["Total", "1234"]);
+    for (const name of ["Adorn", "Noble"]) {
+      const ws = wb.addWorksheet(name);
+      for (const line of TSV.split("\n")) ws.addRow(line.split("\t"));
+    }
+    wb.getWorksheet("Noble")!.addRow(["2026-08-01 10:00:00 UTC", "Extra", "extra.myshopify.com", "Glide", "Glide", "US", "Theme sale", "300", "45", "246.3"]);
+    const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+
+    const sheets = await readWorkbook(buffer);
+    expect(sheets.map((s) => s.name)).toEqual(["Summary", "Adorn", "Noble"]);
+    // A theme's tab is found by name; the summary tab isn't mistaken for sales.
+    expect((await parseSalesFile(buffer, "all.xlsx", "Noble")).sales).toHaveLength(4);
+    expect((await parseSalesFile(buffer, "all.xlsx", "Adorn")).sales).toHaveLength(3);
+  });
+
   it("refuses a file with no recognizable header", () => {
     expect(() => salesFromRows([["a", "b"], ["1", "2"]])).toThrow("header row");
   });
@@ -64,5 +81,20 @@ describe("helpers", () => {
     expect(parseSaleDate("2026-02-07 02:27:04 UTC")?.toISOString()).toBe("2026-02-07T02:27:04.000Z");
     expect(parseSaleDate("2026-02-07")?.toISOString()).toBe("2026-02-07T00:00:00.000Z");
     expect(parseSaleDate("Feb 7")).toBeNull();
+  });
+});
+
+describe("matchThemeForTab", () => {
+  const themes = [{ name: "Adorn" }, { name: "Noble" }, { name: "Gravity" }];
+  it("matches tab names to themes loosely", () => {
+    expect(matchThemeForTab("Adorn", themes)?.name).toBe("Adorn");
+    expect(matchThemeForTab(" adorn ", themes)?.name).toBe("Adorn");
+    expect(matchThemeForTab("NOBLE", themes)?.name).toBe("Noble");
+    expect(matchThemeForTab("Gravity sales 2026", themes)?.name).toBe("Gravity");
+  });
+
+  it("gives up on unknown or ambiguous tabs", () => {
+    expect(matchThemeForTab("Summary", themes)).toBeNull();
+    expect(matchThemeForTab("Adorn vs Noble", themes)).toBeNull();
   });
 });

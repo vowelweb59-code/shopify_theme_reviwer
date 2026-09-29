@@ -76,22 +76,44 @@ export function parseDelimited(text: string): string[][] {
   return rows;
 }
 
-async function readXlsx(buffer: Buffer): Promise<string[][]> {
+export type WorkbookSheet = { name: string; rows: string[][] };
+
+/** Every tab of an .xlsx, in order, as rows of cell text. */
+export async function readWorkbook(buffer: Buffer): Promise<WorkbookSheet[]> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
-  const sheet = workbook.worksheets[0];
-  if (!sheet) throw new SalesFileError("The workbook has no sheets.");
-  const rows: string[][] = [];
-  sheet.eachRow({ includeEmpty: false }, (r) => {
-    const cells: string[] = [];
-    for (let c = 1; c <= r.cellCount; c++) {
-      const cell = r.getCell(c);
-      const v = cell.value;
-      cells.push(v instanceof Date ? v.toISOString() : cell.text ?? "");
-    }
-    rows.push(cells);
+  if (workbook.worksheets.length === 0) throw new SalesFileError("The workbook has no sheets.");
+  return workbook.worksheets.map((sheet) => {
+    const rows: string[][] = [];
+    sheet.eachRow({ includeEmpty: false }, (r) => {
+      const cells: string[] = [];
+      for (let c = 1; c <= r.cellCount; c++) {
+        const cell = r.getCell(c);
+        const v = cell.value;
+        cells.push(v instanceof Date ? v.toISOString() : cell.text ?? "");
+      }
+      rows.push(cells);
+    });
+    return { name: sheet.name, rows };
   });
-  return rows;
+}
+
+export function isXlsx(buffer: Buffer, fileName: string): boolean {
+  return /\.xlsx$/i.test(fileName) || (buffer[0] === 0x50 && buffer[1] === 0x4b); // "PK" zip header
+}
+
+/**
+ * The theme a tab belongs to, by its name: an exact match ignoring case,
+ * spaces and punctuation ("adorn", "ADORN "), else a theme name that
+ * appears as a whole word in the tab name ("Adorn sales 2026").
+ */
+export function matchThemeForTab<T extends { name: string }>(tabName: string, themes: T[]): T | null {
+  const squash = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  const exact = themes.find((t) => squash(t.name) === squash(tabName));
+  if (exact) return exact;
+  const words = tabName.toLowerCase().split(/[^\p{L}\p{N}]+/u);
+  const partial = themes.filter((t) => words.includes(t.name.toLowerCase()));
+  return partial.length === 1 ? partial[0] : null;
 }
 
 /** "https://www.Store.com/password" or "store.myshopify.com" -> "store.myshopify.com" / "www.store.com". */
@@ -171,8 +193,21 @@ export function salesFromRows(rows: string[][]): ParseResult {
   return { sales, skipped, headerRow };
 }
 
-export async function parseSalesFile(buffer: Buffer, fileName: string): Promise<ParseResult> {
-  const isXlsx = /\.xlsx$/i.test(fileName) || (buffer[0] === 0x50 && buffer[1] === 0x4b); // "PK" zip header
-  const rows = isXlsx ? await readXlsx(buffer) : parseDelimited(buffer.toString("utf8").replace(/^﻿/, ""));
-  return salesFromRows(rows);
+/**
+ * One theme's sales from a file. For a workbook with several tabs, the tab
+ * named after `themeName` is used, else the first tab that looks like a
+ * sales table.
+ */
+export async function parseSalesFile(buffer: Buffer, fileName: string, themeName?: string): Promise<ParseResult> {
+  if (!isXlsx(buffer, fileName)) return salesFromRows(parseDelimited(buffer.toString("utf8").replace(/^﻿/, "")));
+  const sheets = await readWorkbook(buffer);
+  const named = themeName ? matchThemeForTab(themeName, sheets.map((s) => ({ ...s, name: s.name }))) : null;
+  for (const sheet of named ? [named, ...sheets] : sheets) {
+    try {
+      return salesFromRows(sheet.rows);
+    } catch (err) {
+      if (!(err instanceof SalesFileError)) throw err;
+    }
+  }
+  return salesFromRows(sheets[0].rows); // throws the "no header" error
 }
