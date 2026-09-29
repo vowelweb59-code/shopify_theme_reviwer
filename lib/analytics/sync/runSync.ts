@@ -412,8 +412,12 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     });
   };
   const stillMapped = async () => Boolean(await AnalyticsTheme.exists(mappingMatch));
+  // A job planned as "recent days only" is stale if the theme's history was
+  // reset since (e.g. its filter changed and changed back): the theme needs
+  // a full history sync instead.
+  const historyReset = job.syncType !== "initial" && !theme?.syncedThroughDate && !job.startedAt;
   try {
-    if (!theme?.googleConnectionId || !(await stillMapped())) {
+    if (!theme?.googleConnectionId || historyReset || !(await stillMapped())) {
       await cancelStale();
       return;
     }

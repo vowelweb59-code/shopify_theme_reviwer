@@ -382,6 +382,19 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, connectionStatus: "connected" });
   });
 
+  it("a queued recent-days sync whose theme's history was reset meanwhile is replaced by a full history sync", async () => {
+    await (await startSync(themeId, "mapped", deps)).done;
+    // Queued while synced, then the history is reset with the mapping ending up the same
+    // (a filter changed and changed back): the snapshot matches, but the plan is stale.
+    const stale = await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: PROPERTY, syncType: "scheduled", status: "queued", isActive: true, rangeStart: "2026-09-21", rangeEnd: TODAY, cursorDate: "2026-09-21", chunksTotal: 1 });
+    await AnalyticsTheme.updateOne({ _id: themeId }, { syncedThroughDate: null, historyStartDate: null, lastSuccessfulSyncAt: null });
+    await drainSyncQueue(deps);
+    expect(await job(stale._id.toString())).toMatchObject({ status: "cancelled" });
+    const next = await AnalyticsSync.findOne({ syncType: "initial" }).sort({ createdAt: -1 }).lean<{ status: string; rangeStart: string }>();
+    expect(next).toMatchObject({ status: "succeeded", rangeStart: "2026-07-01" });
+    expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, historyStartDate: "2026-07-01" });
+  });
+
   it("a queued job left over from an old mapping is cancelled and replaced, without marking the theme as broken", async () => {
     const stale = await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: "555555555", syncType: "scheduled", status: "queued", isActive: true, rangeStart: "2026-09-20", rangeEnd: TODAY, cursorDate: "2026-09-20", chunksTotal: 1 });
     await drainSyncQueue(deps);
