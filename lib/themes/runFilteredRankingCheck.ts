@@ -85,11 +85,16 @@ export async function runFilteredRankingCheck(filter: HydratedDocument<ThemeRank
   }
 }
 
+const PAUSE_BETWEEN_FILTERS_MS = 20_000;
+
 /** Runs every tracked filter combination once — called by the daily scheduler after the default crawl. */
 export async function runAllTrackedFilteredRankingChecks(): Promise<void> {
   await connectToDatabase();
   const filters = await ThemeRankingFilter.find();
-  for (const filter of filters) {
+  for (const [i, filter] of filters.entries()) {
+    // themes.shopify.com answers 429 to back-to-back crawls (seen after ~9
+    // categories on 2026-09-29), so space the filters out.
+    if (i > 0) await new Promise((resolve) => setTimeout(resolve, PAUSE_BETWEEN_FILTERS_MS));
     try {
       await runFilteredRankingCheck(filter);
     } catch (err) {

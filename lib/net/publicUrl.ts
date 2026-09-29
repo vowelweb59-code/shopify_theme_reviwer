@@ -83,6 +83,14 @@ export async function assertPublicUrl(raw: string, resolve: Lookup = defaultLook
   return url;
 }
 
+/** A non-2xx answer; the message format is what live-check errors already show. */
+export class HttpStatusError extends Error {
+  constructor(readonly status: number) {
+    super(`Request failed with status ${status}`);
+    this.name = "HttpStatusError";
+  }
+}
+
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 export type PublicFetchOptions = {
@@ -117,6 +125,11 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
  * off at maxBytes so an endless response can't exhaust memory.
  */
 export async function fetchPublicText(raw: string, options: PublicFetchOptions): Promise<string> {
+  return (await fetchPublicPage(raw, options)).text;
+}
+
+/** Same as fetchPublicText, plus the final URL after redirects. */
+export async function fetchPublicPage(raw: string, options: PublicFetchOptions): Promise<{ url: string; text: string }> {
   const { timeoutMs, maxBytes = 5 * 1024 * 1024, maxRedirects = 5, resolve } = options;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -127,13 +140,13 @@ export async function fetchPublicText(raw: string, options: PublicFetchOptions):
       const res = await fetch(url, { signal: controller.signal, redirect: "manual" });
       if (REDIRECT_STATUSES.has(res.status)) {
         const location = res.headers?.get("location");
-        if (!location) throw new Error(`Request failed with status ${res.status}`);
+        if (!location) throw new HttpStatusError(res.status);
         if (hop >= maxRedirects) throw new Error("Too many redirects.");
         current = new URL(location, url).toString();
         continue;
       }
-      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-      return await readCapped(res, maxBytes);
+      if (!res.ok) throw new HttpStatusError(res.status);
+      return { url: url.toString(), text: await readCapped(res, maxBytes) };
     }
   } finally {
     clearTimeout(timeout);

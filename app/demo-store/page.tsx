@@ -9,6 +9,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore/liveWindow";
 import { formatDateTime } from "@/app/_components/formatDate";
+import { INDUSTRIES } from "@/lib/themes/industries";
 
 const DEMO_STORE_URL = "https://theme-store-ops-admin.myshopify.com/";
 
@@ -67,29 +68,6 @@ type RankingData = {
 // see lib/demoStore/themeStoreRanking.ts's buildListingUrl comment for
 // how (and why a "feature" filter isn't offered: it doesn't correspond
 // to any real catalog query param).
-const INDUSTRIES = [
-  { label: "Art", slug: "art" },
-  { label: "Auto", slug: "auto" },
-  { label: "Bags", slug: "bags" },
-  { label: "Beauty", slug: "beauty" },
-  { label: "Clothing", slug: "clothing" },
-  { label: "Electronics", slug: "electronics" },
-  { label: "Entertainment", slug: "entertainment" },
-  { label: "Food and drink", slug: "food-and-drink" },
-  { label: "Garden", slug: "garden" },
-  { label: "Hardware", slug: "hardware" },
-  { label: "Home", slug: "home" },
-  { label: "Jewelry and accessories", slug: "jewelry-and-accessories" },
-  { label: "Kids", slug: "kids" },
-  { label: "Office", slug: "office" },
-  { label: "Pets", slug: "pets" },
-  { label: "Services", slug: "services" },
-  { label: "Shoes", slug: "shoes" },
-  { label: "Sports", slug: "sports" },
-  { label: "Toys", slug: "toys" },
-  { label: "Wellness", slug: "wellness" },
-];
-
 type FilteredRankRow = {
   themeId: string;
   themeName: string;

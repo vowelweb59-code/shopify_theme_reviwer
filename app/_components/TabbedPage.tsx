@@ -65,13 +65,16 @@ export function TabbedPageClient({
 
   return (
     <div className="flex flex-1 flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>
-          {description && <p className="mt-1 max-w-3xl text-sm text-zinc-500">{description}</p>}
+      {/* No header at all when the page renders its own (e.g. Sales, whose filters sit between title and tabs). */}
+      {(title || description || titleAction) && (
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            {title && <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">{title}</h1>}
+            {description && <p className="mt-1 max-w-3xl text-sm text-zinc-500">{description}</p>}
+          </div>
+          {titleAction}
         </div>
-        {titleAction}
-      </div>
+      )}
 
       {orientation === "vertical" ? (
         <div className="flex flex-col gap-2">
