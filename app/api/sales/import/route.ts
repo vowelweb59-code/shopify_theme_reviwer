@@ -64,8 +64,12 @@ export async function POST(request: Request) {
           const result = await importSales(String(theme._id), parsed.sales);
           tabs.push({ ...base, ...result, rowsRead: parsed.sales.length, skipped: parsed.skipped });
         } catch (err) {
-          if (!(err instanceof SalesFileError)) throw err;
-          tabs.push({ ...base, error: "Not a sales table (no Date / Shop Domain header)." });
+          // One broken tab shouldn't sink the rest of the workbook.
+          if (err instanceof SalesFileError) tabs.push({ ...base, error: "Not a sales table (no Date / Shop Domain header)." });
+          else {
+            console.error(`[sales] importing tab "${sheet.name}" failed:`, err);
+            tabs.push({ ...base, error: "Couldn't import this tab." });
+          }
         }
       }
       if (!tabs.some((t) => !t.error)) {
@@ -77,6 +81,9 @@ export async function POST(request: Request) {
   } catch (err) {
     if (err instanceof SalesFileError) return NextResponse.json({ error: err.message }, { status: 400 });
     console.error("[sales] import failed:", err);
-    return NextResponse.json({ error: "Couldn't read that file. Upload the sheet as .xlsx or .csv." }, { status: 400 });
+    return NextResponse.json(
+      { error: `Couldn't read that file (${err instanceof Error ? err.message.slice(0, 120) : "unknown error"}). Upload the sheet as .xlsx or .csv.` },
+      { status: 400 }
+    );
   }
 }

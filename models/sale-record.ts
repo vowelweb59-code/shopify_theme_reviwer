@@ -19,9 +19,11 @@ const saleRecordSchema = new Schema(
     amount: { type: Number, default: 0 },
     fee: { type: Number, default: 0 },
     share: { type: Number, default: 0 },
-    /** The sheet's own preset columns, kept as a fallback when the live store can't tell us. */
-    sheetPreset: { type: String, default: "" },
-    sheetPresetAlt: { type: String, default: "" },
+    /** The sheet's own preset columns, best first — the fallback when the live store can't tell us. */
+    sheetPresets: { type: [String], default: [] },
+    /** Before 2026-09-29 imports kept just two preset columns; still read for old rows. */
+    sheetPreset: { type: String, default: undefined },
+    sheetPresetAlt: { type: String, default: undefined },
     /** Re-uploading the same sheet adds only rows not seen before (the user's choice). */
     dedupeKey: { type: String, required: true },
   },

@@ -20,12 +20,18 @@ export function detectionProgress() {
   return { running: state.running !== null, total: state.total, done: state.done, startedAt: state.startedAt, finishedAt: state.finishedAt };
 }
 
-/** The first real preset name the sheet gives for this store (Preset column, then the one after it). */
+/** The first real preset name the sheet gives for this store, checking its preset columns in priority order. */
 async function presetFromSheet(themeId: string, shopDomain: string, presetNames: string[]): Promise<string | null> {
-  const rows = await SaleRecord.find({ themeId, shopDomain }).select("sheetPreset sheetPresetAlt").sort({ soldAt: -1 }).lean<{ sheetPreset: string; sheetPresetAlt: string }[]>();
+  const rows = await SaleRecord.find({ themeId, shopDomain })
+    .select("sheetPresets sheetPreset sheetPresetAlt")
+    .sort({ soldAt: -1 })
+    .lean<{ sheetPresets?: string[]; sheetPreset?: string; sheetPresetAlt?: string }[]>();
   for (const r of rows) {
-    const name = sheetPresetName(r.sheetPreset, presetNames) ?? sheetPresetName(r.sheetPresetAlt, presetNames);
-    if (name) return name;
+    const values = r.sheetPresets?.length ? r.sheetPresets : [r.sheetPreset, r.sheetPresetAlt];
+    for (const v of values) {
+      const name = sheetPresetName(v, presetNames);
+      if (name) return name;
+    }
   }
   return null;
 }
