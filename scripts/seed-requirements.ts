@@ -1228,6 +1228,33 @@ const requirements: SeedRequirement[] = [
     notes:
       "Shopify's docs emphasize merchant customization via sections/blocks/settings broadly, without an explicit blanket 'never hardcode content' rule — this requirement applies that emphasis specifically to a theme's unique/signature sections, where hardcoded content is both a compliance risk and undermines the section's reusability. Whether a specific section's content is genuinely hardcoded vs. intentionally fixed (e.g. a structural wrapper) requires editorial judgment, not statically checkable from a simple settings-count heuristic.",
   },
+  // --- From real Theme Store review feedback (Aspire, ticket 69870720,
+  // 2026-09-28) — reviewer requests that aren't spelled out as separate
+  // items on the requirements page, but were given as rejection reasons.
+  {
+    requirementId: "SHOPIFY-ARTICLE-EXCERPT-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Article page should not repeat the article excerpt",
+    description:
+      "The article page already shows the full article, so an option that also prints article.excerpt under the title is non-essential. Reviewers asked for it to be deprecated and removed (Design/UX — Article page). Excerpts belong on the blog listing via article.excerpt_or_content.",
+    sourceName: "Shopify Theme Store review feedback",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+  },
+  {
+    requirementId: "SHOPIFY-SWATCH-STABLE-001",
+    sourceType: "shopify_theme_store",
+    category: "Theme Store Compliance",
+    title: "Option swatches must stay constant while the variant changes",
+    description:
+      "Option swatches must keep their assigned preview image or color through variant changes, instead of flickering or disappearing while the product form re-renders (Design/UX — Flickering swatches).",
+    sourceName: "Shopify Theme Store review feedback",
+    sourceUrl: THEME_STORE_REQUIREMENTS_URL,
+    severity: "medium",
+    notes:
+      "The static rule catches the Liquid cause (a swatch image taken only from value.variant, which is nil for option values that don't combine with the current selection). Flicker caused by JavaScript re-rendering needs a check on the live demo store.",
+  },
   {
     requirementId: "INTERNAL-DESIGN-SECTION-PURPOSE-001",
     sourceType: "internal_standard",

@@ -25,6 +25,8 @@ export const FIXTURE_THEMES: Record<string, Record<string, string>> = {
       '<!doctype html><html lang="{{ request.locale.iso_code }}"><head><link rel="canonical" href="{{ canonical_url }}"><meta name="description" content="A valid theme"></head><body>{{ content_for_layout }}</body></html>',
     "templates/index.json": JSON.stringify({ sections: { hero: { type: "hero" } }, order: ["hero"] }),
     "sections/hero.liquid": '{% schema %}{"name": "Hero", "settings": []}{% endschema %}<h1>{{ \'general.welcome\' | t }}</h1>',
+    "sections/custom-liquid.liquid":
+      '{{ section.settings.custom_liquid }}{% schema %}{"name": "Custom Liquid", "settings": [{"type": "liquid", "id": "custom_liquid", "label": "Custom Liquid"}], "presets": [{"name": "Custom Liquid"}]}{% endschema %}',
   },
 
   // Malformed JSON inside a {% schema %} tag — SCHEMA-JSON-VALID-001.

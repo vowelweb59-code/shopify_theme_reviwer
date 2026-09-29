@@ -1,6 +1,8 @@
 import type { Rule } from "@/lib/audit/rules";
 import { SHOPIFY_FEATURE_RULES } from "./features";
 import { SHOPIFY_SETTINGS_RULES } from "./settings";
+import { SHOPIFY_SECTION_RULES } from "./sections";
+import { SHOPIFY_STOREFRONT_RULES } from "./storefront";
 
 const THEME_STORE_REQUIREMENTS_URL = "https://shopify.dev/docs/storefronts/themes/store/requirements";
 
@@ -259,4 +261,6 @@ export const SHOPIFY_RULES: Rule[] = [
   hardcodedStorefrontTextRule,
   ...SHOPIFY_FEATURE_RULES,
   ...SHOPIFY_SETTINGS_RULES,
+  ...SHOPIFY_SECTION_RULES,
+  ...SHOPIFY_STOREFRONT_RULES,
 ];

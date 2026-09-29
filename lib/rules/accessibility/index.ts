@@ -1,6 +1,8 @@
 import type { Rule } from "@/lib/audit/rules";
 import { contrastRatio, parseColorToRgb } from "@/lib/audit/colorContrast";
 import { findSkippedHeadingLevels } from "@/lib/audit/headingChecks";
+import { collectCssRules } from "./cssSources";
+import { ACCESSIBILITY_INTERACTION_RULES } from "./interaction";
 
 const THEME_STORE_REQUIREMENTS_URL = "https://shopify.dev/docs/storefronts/themes/store/requirements";
 const ACCESSIBILITY_BEST_PRACTICES_URL = "https://shopify.dev/docs/storefronts/themes/best-practices/accessibility";
@@ -287,6 +289,36 @@ const outlineRemovalRule: Rule = {
         });
       }
     }
+
+    // Same check for CSS embedded in Liquid ({% stylesheet %}/<style>),
+    // which cssInfo never sees — most of a modern theme's component CSS.
+    const embeddedByFile = new Map<string, ReturnType<typeof collectCssRules>>();
+    for (const rule of collectCssRules(files.filter((f) => f.fileType === "liquid"))) {
+      const list = embeddedByFile.get(rule.filePath) ?? [];
+      list.push(rule);
+      embeddedByFile.set(rule.filePath, list);
+    }
+    for (const [filePath, rules] of embeddedByFile) {
+      const focusBases = new Set<string>();
+      for (const rule of rules) {
+        if (!/:focus/i.test(rule.selector)) continue;
+        for (const part of selectorParts(rule.selector)) focusBases.add(stripFocusPseudo(part));
+      }
+      for (const rule of rules) {
+        const removal = rule.declarations.find((d) => d.prop === "outline" && /\bnone\b|^0(\s|$)/.test(d.value.trim()));
+        if (!removal) continue;
+        if (selectorParts(rule.selector).map(stripFocusPseudo).some((base) => focusBases.has(base))) continue;
+        const displaySelector = formatSelectorForDisplay(rule.selector);
+        findings.push({
+          filePath,
+          lineNumber: removal.line,
+          category: "Accessibility" as const,
+          severity: "medium" as const,
+          finding: `Selector "${displaySelector}" removes the outline with no corresponding :focus/:focus-visible rule found in this file.`,
+          recommendation: `Add a :focus or :focus-visible style for "${displaySelector}" so keyboard users still see where focus is.`,
+        });
+      }
+    }
     return findings;
   },
 };
@@ -550,4 +582,5 @@ export const ACCESSIBILITY_RULES: Rule[] = [
   ariaExpandedRule,
   clickNoKeyboardRule,
   cssOrderRule,
+  ...ACCESSIBILITY_INTERACTION_RULES,
 ];
