@@ -32,7 +32,7 @@ describe("buildSummary", () => {
 
   it("puts installs and Try Theme next to each theme's monthly sales, newest month first", () => {
     expect(summary.themeMonths.map((r) => r.month)).toEqual(["2026-07", "2026-06", "2026-05"]);
-    expect(summary.themeMonths[0]).toMatchObject({ themeName: "Adorn", tryTheme: 120, installs: 40, sales: 2, netSales: 2, gross: 540, saleRate: 5 });
+    expect(summary.themeMonths[0]).toMatchObject({ themeName: "Adorn", tryTheme: 120, installs: 40, sales: 2, netSales: 2, gross: 540, installRate: 2000 });
     // A refund cancels a sale in that month.
     expect(summary.themeMonths[1]).toMatchObject({ sales: 1, refunds: 1, netSales: 0, gross: 70, installs: 0 });
     // A month with installs but no sales still shows.
@@ -58,7 +58,7 @@ describe("buildSummary", () => {
 
   it("leaves install columns empty for a theme with no GA4 data", () => {
     const s = buildSummary([sale({})], [], names, label);
-    expect(s.themeMonths[0]).toMatchObject({ installs: null, tryTheme: null, saleRate: null });
+    expect(s.themeMonths[0]).toMatchObject({ installs: null, tryTheme: null, installRate: null });
     expect(s.totals.installs).toBeNull();
   });
 });

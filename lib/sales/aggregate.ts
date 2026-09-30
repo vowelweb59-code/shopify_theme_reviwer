@@ -71,14 +71,14 @@ export type ThemeMonthRow = Metrics & {
   tryTheme: number | null;
   installs: number | null;
   /** Net sales ÷ installs, as a %; null without install data. */
-  saleRate: number | null;
+  installRate: number | null;
 };
 
 export type SalesSummary = {
   months: string[];
   totals: Metrics & { tryTheme: number | null; installs: number | null };
   themeMonths: ThemeMonthRow[];
-  themes: (Metrics & { themeId: string; themeName: string; tryTheme: number | null; installs: number | null; saleRate: number | null })[];
+  themes: (Metrics & { themeId: string; themeName: string; tryTheme: number | null; installs: number | null; installRate: number | null })[];
   presets: (Metrics & { themeId: string; themeName: string; preset: string; category: string | null; stores: number })[];
   presetMonths: MonthMatrixRow[];
   categories: (Metrics & { category: string | null; presets: string[] })[];
@@ -86,8 +86,9 @@ export type SalesSummary = {
   countries: (Metrics & { country: string })[];
 };
 
-function rate(netSales: number, installs: number | null): number | null {
-  return installs && installs > 0 ? Math.round((netSales / installs) * 1000) / 10 : null;
+/** GA4 installs as a percentage of net sales; null without installs or sales. */
+export function installRate(installs: number | null, netSales: number): number | null {
+  return installs != null && netSales > 0 ? Math.round((installs / netSales) * 1000) / 10 : null;
 }
 
 export function buildSummary(
@@ -118,7 +119,7 @@ export function buildSummary(
         month,
         tryTheme: hasGa.has(themeId) ? (g?.tryTheme ?? 0) : null,
         installs,
-        saleRate: rate(metrics.netSales, installs),
+        installRate: installRate(installs, metrics.netSales),
         ...metrics,
       });
     }
@@ -132,7 +133,7 @@ export function buildSummary(
       const gaRows = ga.filter((g) => g.themeId === themeId);
       const installs = hasGa.has(themeId) ? gaRows.reduce((n, g) => n + g.installs, 0) : null;
       const tryTheme = hasGa.has(themeId) ? gaRows.reduce((n, g) => n + g.tryTheme, 0) : null;
-      return { themeId, themeName: themeNames.get(themeId) ?? "Unknown theme", tryTheme, installs, saleRate: rate(m.netSales, installs), ...m };
+      return { themeId, themeName: themeNames.get(themeId) ?? "Unknown theme", tryTheme, installs, installRate: installRate(installs, m.netSales), ...m };
     })
     .sort((a, b) => b.netSales - a.netSales);
 

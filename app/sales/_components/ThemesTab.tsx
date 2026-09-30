@@ -13,7 +13,7 @@ const MONTH_COLUMNS: TableColumn<ThemeMonth>[] = [
   { key: "try", header: "Try Theme", render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>, sortValue: (r) => r.tryTheme ?? -1, className: "text-right" },
   { key: "installs", header: "Installs", render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>, sortValue: (r) => r.installs ?? -1, className: "text-right" },
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-  { key: "rate", header: "Sales / installs", render: (r) => <span className="tabular-nums">{formatRate(r.saleRate)}</span>, sortValue: (r) => r.saleRate ?? -1, className: "text-right" },
+  { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
   { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
   { key: "net", header: "Your share", render: (r) => <span className="tabular-nums">{formatMoney(r.net)}</span>, sortValue: (r) => r.net, className: "text-right" },
 ];
@@ -23,7 +23,7 @@ const TOTAL_COLUMNS: TableColumn<ThemeTotal>[] = [
   { key: "try", header: "Try Theme", render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>, sortValue: (r) => r.tryTheme ?? -1, className: "text-right" },
   { key: "installs", header: "Installs", render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>, sortValue: (r) => r.installs ?? -1, className: "text-right" },
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-  { key: "rate", header: "Sales / installs", render: (r) => <span className="tabular-nums">{formatRate(r.saleRate)}</span>, sortValue: (r) => r.saleRate ?? -1, className: "text-right" },
+  { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
   { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
   { key: "net", header: "Your share", render: (r) => <span className="tabular-nums">{formatMoney(r.net)}</span>, sortValue: (r) => r.net, className: "text-right" },
 ];

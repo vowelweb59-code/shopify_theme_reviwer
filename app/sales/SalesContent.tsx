@@ -112,8 +112,8 @@ export function SalesContent() {
           <Kpi label="Try Theme" value={formatCount(data.totals.tryTheme)} detail="GA4" />
           <Kpi label="Installs" value={formatCount(data.totals.installs)} detail="GA4" />
           <Kpi
-            label="Sales / installs"
-            value={formatRate(data.totals.installs ? Math.round((data.totals.netSales / data.totals.installs) * 1000) / 10 : null)}
+            label="Installs / sales"
+            value={formatRate(data.totals.netSales > 0 && data.totals.installs != null ? Math.round((data.totals.installs / data.totals.netSales) * 1000) / 10 : null)}
           />
         </div>
       )}

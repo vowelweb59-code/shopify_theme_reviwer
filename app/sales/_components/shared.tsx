@@ -8,8 +8,8 @@ export type MonthMatrixRow = { key: string; label: string; total: Metrics; byMon
 export type SalesSummary = {
   months: string[];
   totals: Metrics & { tryTheme: number | null; installs: number | null };
-  themeMonths: (Metrics & { themeId: string; themeName: string; month: string; tryTheme: number | null; installs: number | null; saleRate: number | null })[];
-  themes: (Metrics & { themeId: string; themeName: string; tryTheme: number | null; installs: number | null; saleRate: number | null })[];
+  themeMonths: (Metrics & { themeId: string; themeName: string; month: string; tryTheme: number | null; installs: number | null; installRate: number | null })[];
+  themes: (Metrics & { themeId: string; themeName: string; tryTheme: number | null; installs: number | null; installRate: number | null })[];
   presets: (Metrics & { themeId: string; themeName: string; preset: string; category: string | null; stores: number })[];
   presetMonths: MonthMatrixRow[];
   categories: (Metrics & { category: string | null; presets: string[] })[];
