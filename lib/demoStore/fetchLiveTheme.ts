@@ -1,4 +1,5 @@
-const DEMO_STORE_URL = "https://theme-store-ops-admin.myshopify.com/";
+import { demoStoreUrl } from "./stores";
+
 const FETCH_TIMEOUT_MS = 20_000;
 
 export type LiveThemeResult =
@@ -6,7 +7,7 @@ export type LiveThemeResult =
   | { ok: false; error: string };
 
 /**
- * Fetches the ops demo store's public storefront and reads which theme is
+ * Fetches an ops demo store's public storefront and reads which theme is
  * currently live. Every Shopify storefront inlines its published theme as
  * `Shopify.theme = {...};` in a <head> script — the only theme information
  * a page load can see anonymously, since the store's full theme library
@@ -15,11 +16,11 @@ export type LiveThemeResult =
  * choice). Never throws — a network failure or an unrecognized page layout
  * comes back as {ok: false, error} so the caller can record why.
  */
-export async function fetchLiveDemoStoreTheme(): Promise<LiveThemeResult> {
+export async function fetchLiveDemoStoreTheme(store: string): Promise<LiveThemeResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(DEMO_STORE_URL, { signal: controller.signal, redirect: "follow" });
+    const res = await fetch(demoStoreUrl(store), { signal: controller.signal, redirect: "follow" });
     if (!res.ok) {
       return { ok: false, error: `Demo store responded with status ${res.status}.` };
     }

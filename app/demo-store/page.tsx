@@ -11,8 +11,6 @@ import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore
 import { formatDateTime } from "@/app/_components/formatDate";
 import { INDUSTRIES } from "@/lib/themes/industries";
 
-const DEMO_STORE_URL = "https://theme-store-ops-admin.myshopify.com/";
-
 type DemoStoreRecord = {
   _id: string;
   shopifyThemeId: number;
@@ -29,10 +27,8 @@ type DemoStoreRecord = {
 };
 
 type DemoStoreData = {
-  records: DemoStoreRecord[];
-  lastCheckedAt: string | null;
   nextCheckAt: string | null;
-  lastError: string | null;
+  stores: { store: string; url: string; records: DemoStoreRecord[]; lastCheckedAt: string | null; lastError: string | null }[];
 };
 
 // The Themes-tab theme this ranking table is about — distinct from
@@ -194,6 +190,7 @@ export default function DemoStorePage() {
   const [data, setData] = useState<DemoStoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [activeStore, setActiveStore] = useState<string | null>(null);
 
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [rankingLoading, setRankingLoading] = useState(true);
@@ -268,7 +265,7 @@ export default function DemoStorePage() {
     }
   }
 
-  const columns: TableColumn<DemoStoreRecord>[] = [
+  const columnsFor = (storeUrl: string): TableColumn<DemoStoreRecord>[] => [
     {
       key: "theme",
       header: "Theme",
@@ -279,7 +276,7 @@ export default function DemoStorePage() {
             <>
               <span className="rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text">Current</span>
               <a
-                href={DEMO_STORE_URL}
+                href={storeUrl}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="View on the Shopify demo store"
@@ -485,17 +482,15 @@ export default function DemoStorePage() {
     },
   ];
 
+  const shownStore = data?.stores.find((st) => st.store === activeStore) ?? data?.stores[0];
+
   return (
     <PageContainer>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Shopify Demo Store</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-            Which theme has been live on{" "}
-            <a href={DEMO_STORE_URL} target="_blank" rel="noreferrer" className="underline hover:no-underline">
-              theme-store-ops-admin.myshopify.com
-            </a>
-            , and for how long. Checked automatically every hour by reading the storefront&apos;s publicly embedded theme info — only the
+            Which theme has been live on each Shopify ops demo store, and for how long. Checked automatically every hour by reading the storefront&apos;s publicly embedded theme info — only the
             currently published theme is visible this way, not the store&apos;s full theme library, and not the moment a theme was published. So
             each switch is pinned between two checks, accurate to about an hour. Once a day the check also looks for each of these themes on the
             public Shopify Theme Store, so if one goes live there later it gets flagged below.
@@ -510,23 +505,49 @@ export default function DemoStorePage() {
 
       {!loading && data && (
         <div className="flex flex-col gap-4">
-          <p className="text-xs text-zinc-500">
-            Last checked: {data.lastCheckedAt ? formatDateTime(data.lastCheckedAt) : "never"}
-            {" · "}
-            Next automatic check: {data.nextCheckAt ? formatDateTime(data.nextCheckAt) : "—"}
-            {data.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {data.lastError}</span>}
-          </p>
+          <div role="tablist" aria-label="Demo stores" className="flex flex-wrap gap-1 border-b border-border-subtle">
+            {data.stores.map((st) => (
+              <button
+                key={st.store}
+                type="button"
+                role="tab"
+                id={`store-tab-${st.store}`}
+                aria-selected={st.store === shownStore?.store}
+                aria-controls="store-panel"
+                onClick={() => setActiveStore(st.store)}
+                className={`-mb-px border-b-2 px-3 py-2 text-sm ${st.store === shownStore?.store ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+              >
+                {st.store.replace(/\.myshopify\.com$/, "")}
+              </button>
+            ))}
+          </div>
 
-          {data.records.length === 0 ? (
-            <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record the store's currently live theme." />
-          ) : (
-            <ResponsiveTable
-              columns={columns}
-              rows={data.records}
-              rowKey={(r) => r._id}
-              theadClassName="bg-primary-tint text-primary-tint-text"
-              pageSize={5}
-            />
+          {shownStore && (
+            <section role="tabpanel" id="store-panel" aria-labelledby={`store-tab-${shownStore.store}`} className="flex flex-col gap-3">
+              <p className="text-xs text-zinc-500">
+                <a href={shownStore.url} target="_blank" rel="noreferrer" className="font-medium underline hover:no-underline">
+                  {shownStore.store}
+                </a>
+                {" · "}
+                Last checked: {shownStore.lastCheckedAt ? formatDateTime(shownStore.lastCheckedAt) : "never"}
+                {" · "}
+                Next automatic check: {data.nextCheckAt ? formatDateTime(data.nextCheckAt) : "—"}
+                {shownStore.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {shownStore.lastError}</span>}
+              </p>
+
+              {shownStore.records.length === 0 ? (
+                <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record this store's currently live theme." />
+              ) : (
+                <ResponsiveTable
+                  key={shownStore.store}
+                  columns={columnsFor(shownStore.url)}
+                  rows={shownStore.records}
+                  rowKey={(r) => r._id}
+                  theadClassName="bg-primary-tint text-primary-tint-text"
+                  pageSize={5}
+                />
+              )}
+            </section>
           )}
         </div>
       )}

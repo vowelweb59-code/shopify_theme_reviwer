@@ -8,6 +8,13 @@ const demoStoreCheckStateSchema = new Schema(
     lastCheckedAt: { type: Date, default: null },
     lastError: { type: String, default: null },
     nextCheckAt: { type: Date, required: true },
+    // Per store (lib/demoStore/stores.ts); the top-level lastCheckedAt /
+    // lastError above hold the admin store's, from before multi-store tracking.
+    storeChecks: {
+      type: [{ store: String, lastCheckedAt: { type: Date, default: null }, lastError: { type: String, default: null } }],
+      default: [],
+      _id: false,
+    },
   },
   { timestamps: true }
 );

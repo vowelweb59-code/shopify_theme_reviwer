@@ -2,7 +2,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 
 // One row per continuous period a given theme (identified by its Shopify
 // theme id) was the live/published theme on the ops demo store
-// (theme-store-ops-admin.myshopify.com) — endedAt stays null while it's
+// (theme-store-ops-admin / theme-store-ops-breaking) — endedAt stays null while it's
 // still the current live theme. Populated by hourly polling (see
 // lib/demoStore/scheduler.ts) of the storefront's publicly embedded theme
 // info. The storefront never says when a theme was published, so each
@@ -11,6 +11,8 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 //   went off:  after lastSeenAt,   by endedAt   (first check that saw the next theme)
 const demoStoreThemeRecordSchema = new Schema(
   {
+    /** Which ops demo store (see lib/demoStore/stores.ts); older rows without it are the admin store's. */
+    store: { type: String, default: "theme-store-ops-admin.myshopify.com" },
     shopifyThemeId: { type: Number, required: true },
     themeName: { type: String, required: true },
     schemaName: { type: String, default: null },
