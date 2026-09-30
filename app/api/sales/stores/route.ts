@@ -47,6 +47,10 @@ export async function GET(request: Request) {
   const countFor = new Map(counts.map((c) => [`${c._id.t}|${c._id.d}`, c]));
   const themeById = new Map(themes.map((t) => [String(t._id), t]));
   return NextResponse.json({
+    /** Every theme's presets, so a store can be set to any of them by hand. */
+    themePresets: [...themes]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((t) => ({ themeId: String(t._id), themeName: t.name, presets: presetNamesFor(t) })),
     stores: stores.map((s) => {
       const c = countFor.get(`${s.themeId}|${s.shopDomain}`);
       const t = themeById.get(String(s.themeId));

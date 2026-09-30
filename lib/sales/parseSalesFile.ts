@@ -198,14 +198,17 @@ function isPresetValue(v: string): boolean {
  * "Theme sale"/"Theme refund" cell, then the next three numbers (Sale, Fee,
  * Share). Headers are only hints.
  */
-export function salesFromRows(rows: string[][]): ParseResult {
+export function salesFromRows(rows: string[][], { headerOptional = false } = {}): ParseResult {
   const headerRow = rows.findIndex((r) => {
     const cells = r.map(norm);
     return HEADER_ALIASES.date.some((a) => cells.includes(a)) && HEADER_ALIASES.shopDomain.some((a) => cells.includes(a));
   });
-  if (headerRow === -1) throw new SalesFileError('Couldn\'t find the header row — the sheet needs at least a "Date" and a "Shop Domain" column.');
+  if (headerRow === -1 && !headerOptional) throw new SalesFileError('Couldn\'t find the header row — the sheet needs at least a "Date" and a "Shop Domain" column.');
 
-  const headers = rows[headerRow].map(norm);
+  // Rows pasted without their header are read by content alone (date,
+  // domain, charge type, money, country); shop name and the sheet's
+  // preset columns need the header.
+  const headers = headerRow >= 0 ? rows[headerRow].map(norm) : [];
   const col = (field: string) => headers.findIndex((h) => HEADER_ALIASES[field].includes(h));
   const idx = Object.fromEntries(Object.keys(HEADER_ALIASES).map((f) => [f, col(f)])) as Record<string, number>;
   const presetIdx = presetColumns(headers);

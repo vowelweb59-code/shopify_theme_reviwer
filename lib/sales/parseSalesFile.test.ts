@@ -34,6 +34,16 @@ describe("parseSalesFile", () => {
     expect(sales[2]).toMatchObject({ chargeType: "refund", amount: -200, share: -170, month: "2025-12" });
   });
 
+  it("reads rows pasted without their header when asked to", () => {
+    const rows = parseDelimited(TSV.split("\n").slice(1).join("\n"));
+    expect(() => salesFromRows(rows)).toThrow(/header row/);
+    const { sales, skipped } = salesFromRows(rows, { headerOptional: true });
+    expect(skipped).toBe(1);
+    expect(sales).toHaveLength(3);
+    expect(sales[0]).toMatchObject({ shopDomain: "elainesilverco.myshopify.com", country: "US", chargeType: "sale", amount: 270, fee: 40.5, share: 221.67, month: "2026-07" });
+    expect(sales[2]).toMatchObject({ chargeType: "refund", amount: -200 });
+  });
+
   it("reads an .xlsx export the same way", async () => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Sales");

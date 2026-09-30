@@ -77,14 +77,18 @@ export async function listPresetCategories(themeIds?: string[]): Promise<PresetC
         const industry = industryByFilter.get(String(r.filterId));
         if (industry && (!listed.has(industry) || r.rank < listed.get(industry)!)) listed.set(industry, r.rank);
       }
+      const listedIn = [...listed].map(([industry, rank]) => ({ industry, rank })).sort((a, b) => a.rank - b.rank);
+      // The stored suggestion is only written after a full category crawl;
+      // until then the best listing from the ranking data is the suggestion.
+      const suggested = s?.suggested ?? listedIn[0]?.industry ?? null;
       rows.push({
         themeId: String(t._id),
         themeName: t.name,
         presetName,
-        listedIn: [...listed].map(([industry, rank]) => ({ industry, rank })).sort((a, b) => a.rank - b.rank),
-        suggested: s?.suggested ?? null,
+        listedIn,
+        suggested,
         manual: s?.manual ?? null,
-        category: s?.manual ?? s?.suggested ?? null,
+        category: s?.manual ?? suggested,
       });
     }
   }

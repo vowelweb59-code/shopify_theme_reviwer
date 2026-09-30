@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, MinusCircle, Upload } from "lucide-react";
+import { CheckCircle2, ClipboardPaste, MinusCircle, Upload } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { useApi } from "@/app/analytics/_components/useApi";
@@ -73,9 +73,6 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
     }
   }
 
-  const imported = results?.filter((r) => !r.error) ?? [];
-  const newStores = imported.reduce((n, r) => n + r.newStores, 0);
-
   return (
     <section className="flex max-w-2xl flex-col gap-5">
       <SectionTitle
@@ -119,32 +116,7 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
           />
         </div>
         {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
-        {results && (
-          <div role="status" className="flex flex-col gap-2 rounded-lg border border-border-subtle p-3 text-sm">
-            {results.map((r) => (
-              <div key={r.tab} className="flex items-start gap-2">
-                {r.error ? (
-                  <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
-                ) : (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-pass-icon" aria-hidden />
-                )}
-                <p>
-                  <span className="font-medium">{r.tab}</span>
-                  {r.error ? (
-                    <span className="text-zinc-500"> — skipped: {r.error}</span>
-                  ) : (
-                    <span className="text-zinc-600 dark:text-zinc-400">
-                      {r.themeName && r.themeName !== r.tab ? ` → ${r.themeName}` : ""}: {r.inserted} new sale{r.inserted === 1 ? "" : "s"}
-                      {r.duplicates > 0 && `, ${r.duplicates} already imported`}
-                      {r.skipped > 0 && `, ${r.skipped} row${r.skipped === 1 ? "" : "s"} without a date or domain ignored`}
-                    </span>
-                  )}
-                </p>
-              </div>
-            ))}
-            {newStores > 0 && <p className="text-xs text-zinc-500">Checking {newStores} new store{newStores === 1 ? "" : "s"} for their preset in the background.</p>}
-          </div>
-        )}
+        {results && <ImportResults results={results} />}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" loading={pending}>
             {!pending && <Upload className="h-4 w-4" aria-hidden />}
@@ -157,6 +129,121 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
           )}
         </div>
       </form>
+
+      <PasteForm themeNames={themes.data?.themes.map((t) => t.name) ?? []} onImported={onImported} />
     </section>
+  );
+}
+
+/** Paste rows copied from the sales sheet for one theme, named in the first field. */
+function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImported: () => void }) {
+  const [themeName, setThemeName] = useState("");
+  const [text, setText] = useState("");
+  const [pending, setPending] = useState(false);
+  const [results, setResults] = useState<TabResult[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!themeName.trim()) return setError("Enter the main theme name.");
+    if (!text.trim()) return setError("Paste the sales rows.");
+    setPending(true);
+    setError(null);
+    setResults(null);
+    try {
+      const res = await fetch("/api/sales/import/paste", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ themeName, text }),
+      });
+      const data = (await res.json().catch(() => null)) as { tabs?: TabResult[]; error?: string } | null;
+      if (!res.ok) throw new Error(data?.error ?? "Import failed.");
+      if (data?.tabs) setResults(data.tabs);
+      setText("");
+      onImported();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Import failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <>
+      <SectionTitle
+        title="Paste sales"
+        description="Copy the rows from the theme's tab in your sales sheet (with or without the header row) and paste them below. Rows already imported are skipped, so you can paste the whole tab again whenever it has new sales."
+      />
+      <form onSubmit={submit} className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface p-5">
+        <div>
+          <label htmlFor="paste-theme" className="mb-1.5 block text-sm font-medium">Main theme name</label>
+          <input
+            id="paste-theme"
+            list="paste-theme-names"
+            value={themeName}
+            onChange={(e) => setThemeName(e.target.value)}
+            placeholder="e.g. Adorn"
+            autoComplete="off"
+            className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm"
+          />
+          <datalist id="paste-theme-names">
+            {themeNames.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
+        </div>
+        <div>
+          <label htmlFor="paste-rows" className="mb-1.5 block text-sm font-medium">Sales data</label>
+          <textarea
+            id="paste-rows"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={10}
+            spellCheck={false}
+            placeholder={"Date\tShop Name\tShop Domain\tPreset\tCountry\tCharge Type\tSale\tFee\tShare\n2026-09-29 10:12:00 UTC\tMy Store\tmystore.myshopify.com\tPrecious\tUS\tTheme sale\t270\t40.5\t221.67"}
+            className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 font-mono text-xs"
+          />
+          <p className="mt-1 text-xs text-zinc-500">Without the header row, shop names and the sheet&apos;s preset columns aren&apos;t read. The preset still comes from the live store check.</p>
+        </div>
+        {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
+        {results && <ImportResults results={results} />}
+        <div>
+          <Button type="submit" loading={pending}>
+            {!pending && <ClipboardPaste className="h-4 w-4" aria-hidden />}
+            {pending ? "Importing…" : "Import pasted sales"}
+          </Button>
+        </div>
+      </form>
+    </>
+  );
+}
+
+function ImportResults({ results }: { results: TabResult[] }) {
+  const newStores = results.filter((r) => !r.error).reduce((n, r) => n + r.newStores, 0);
+  return (
+    <div role="status" className="flex flex-col gap-2 rounded-lg border border-border-subtle p-3 text-sm">
+      {results.map((r) => (
+        <div key={r.tab} className="flex items-start gap-2">
+          {r.error ? (
+            <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+          ) : (
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-pass-icon" aria-hidden />
+          )}
+          <p>
+            <span className="font-medium">{r.tab}</span>
+            {r.error ? (
+              <span className="text-zinc-500"> — skipped: {r.error}</span>
+            ) : (
+              <span className="text-zinc-600 dark:text-zinc-400">
+                {r.themeName && r.themeName !== r.tab ? ` → ${r.themeName}` : ""}: {r.inserted} new sale{r.inserted === 1 ? "" : "s"}
+                {r.duplicates > 0 && `, ${r.duplicates} already imported`}
+                {r.skipped > 0 && `, ${r.skipped} row${r.skipped === 1 ? "" : "s"} without a date or domain ignored`}
+              </span>
+            )}
+          </p>
+        </div>
+      ))}
+      {newStores > 0 && <p className="text-xs text-zinc-500">Checking {newStores} new store{newStores === 1 ? "" : "s"} for their preset in the background.</p>}
+    </div>
   );
 }

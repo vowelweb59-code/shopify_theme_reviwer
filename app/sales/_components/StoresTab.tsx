@@ -28,6 +28,7 @@ type Store = {
   checkedAt: string | null;
   error: string | null;
 };
+type ThemePresets = { themeId: string; themeName: string; presets: string[] };
 export type DetectionProgress = { running: boolean; total: number; done: number };
 
 const STATUS: Record<Store["status"], { label: string; cls: string }> = {
@@ -39,6 +40,10 @@ const STATUS: Record<Store["status"], { label: string; cls: string }> = {
   pending: { label: "Not checked yet", cls: "bg-status-not-tested-bg text-status-not-tested-text" },
 };
 
+/** Extra choices for a store whose preset can't be known, alongside the theme's presets. */
+const STATUS_PRESETS = ["Password", "Switched", "Closed"];
+const CUSTOM = "__custom__";
+
 const SOURCE: Record<Store["detectedSource"], string> = {
   theme_name: "from live theme name",
   sheet: "from the sheet",
@@ -47,10 +52,11 @@ const SOURCE: Record<Store["detectedSource"], string> = {
 };
 
 export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeId: string; detection: DetectionProgress | null; onChanged: () => void; onRecheck: () => void }) {
-  const { data, loading, reload } = useApi<{ stores: Store[] }>(`/api/sales/stores${themeId ? `?themeId=${themeId}` : ""}#${detection?.done ?? 0}`);
+  const { data, loading, reload } = useApi<{ stores: Store[]; themePresets?: ThemePresets[] }>(`/api/sales/stores${themeId ? `?themeId=${themeId}` : ""}#${detection?.done ?? 0}`);
   const [filter, setFilter] = useState<"all" | Store["status"] | "unknown">("all");
   const [error, setError] = useState<string | null>(null);
   const stores = data?.stores ?? [];
+  const themePresets = data?.themePresets ?? [];
   const shown = stores.filter((s) => (filter === "all" ? true : filter === "unknown" ? !s.preset : s.status === filter));
 
   async function setPreset(store: Store, value: string) {
@@ -105,20 +111,7 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       header: "Preset",
       render: (s) => (
         <div>
-          <label className="sr-only" htmlFor={`preset-${s.id}`}>Preset for {s.shopName || s.shopDomain}</label>
-          <select
-            id={`preset-${s.id}`}
-            value={s.manualPreset ?? ""}
-            onChange={(e) => setPreset(s, e.target.value)}
-            className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm"
-          >
-            <option value="">{s.detectedPreset ? `${s.detectedPreset} (auto)` : "Unknown"}</option>
-            {s.presetOptions.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
+          <PresetPicker store={s} themePresets={themePresets} onSave={(value) => setPreset(s, value)} />
           <p className="mt-0.5 text-xs text-zinc-500">{s.manualPreset ? SOURCE.manual : SOURCE[s.detectedSource]}</p>
         </div>
       ),
@@ -164,5 +157,90 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       {error && <p className="text-sm text-status-fail-text">{error}</p>}
       <ResponsiveTable columns={columns} rows={shown} rowKey={(s) => s.id} emptyMessage={loading ? "Loading…" : "No stores here."} pageSize={30} />
     </section>
+  );
+}
+
+/** Preset dropdown: the theme's presets, the status choices, or a name typed by hand. */
+function PresetPicker({ store, themePresets, onSave }: { store: Store; themePresets: ThemePresets[]; onSave: (value: string) => Promise<void> }) {
+  const otherThemes = themePresets.filter((t) => t.themeId !== store.themeId && t.presets.length > 0);
+  const known = [...store.presetOptions, ...otherThemes.flatMap((t) => t.presets), ...STATUS_PRESETS];
+  const isCustom = !!store.manualPreset && !known.some((p) => p.toLowerCase() === store.manualPreset!.toLowerCase());
+  const [typing, setTyping] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const label = store.shopName || store.shopDomain;
+
+  async function save(value: string) {
+    setSaving(true);
+    try {
+      await onSave(value);
+      setTyping(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (typing) {
+    return (
+      <form
+        className="flex items-center gap-1.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (draft.trim()) void save(draft.trim());
+        }}
+      >
+        <label className="sr-only" htmlFor={`preset-name-${store.id}`}>Preset name for {label}</label>
+        <input
+          id={`preset-name-${store.id}`}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          maxLength={100}
+          autoFocus
+          placeholder="Preset name"
+          className="w-32 rounded-md border border-border-strong bg-surface px-2 py-1 text-sm"
+        />
+        <Button type="submit" size="sm" loading={saving} disabled={!draft.trim()}>Save</Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => setTyping(false)}>Cancel</Button>
+      </form>
+    );
+  }
+
+  return (
+    <>
+      <label className="sr-only" htmlFor={`preset-${store.id}`}>Preset for {label}</label>
+      <select
+        id={`preset-${store.id}`}
+        value={store.manualPreset ?? ""}
+        disabled={saving}
+        onChange={(e) => {
+          if (e.target.value === CUSTOM) {
+            setDraft(isCustom ? store.manualPreset! : "");
+            setTyping(true);
+          } else void save(e.target.value);
+        }}
+        className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm"
+      >
+        <option value="">{store.detectedPreset ? `${store.detectedPreset} (auto)` : "Unknown"}</option>
+        {isCustom && <option value={store.manualPreset!}>{store.manualPreset}</option>}
+        <optgroup label={store.themeName ? `${store.themeName} presets` : "Presets"}>
+          {store.presetOptions.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </optgroup>
+        {otherThemes.map((t) => (
+          <optgroup key={t.themeId} label={`${t.themeName} presets`}>
+            {t.presets.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </optgroup>
+        ))}
+        <optgroup label="Store status">
+          {STATUS_PRESETS.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </optgroup>
+        <option value={CUSTOM}>Type a name…</option>
+      </select>
+    </>
   );
 }

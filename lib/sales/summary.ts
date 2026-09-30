@@ -76,11 +76,14 @@ export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary
     SalesStore.find({ themeId: { $in: scopeIds } }).select("themeId shopDomain detectedPreset manualPreset").lean<
       { themeId: unknown; shopDomain: string; detectedPreset: string | null; manualPreset: string | null }[]
     >(),
-    listPresetCategories(scopeIds),
+    listPresetCategories(),
   ]);
 
   const presetFor = new Map(stores.map((s) => [`${s.themeId}|${s.shopDomain}`, s.manualPreset ?? s.detectedPreset ?? "Unknown"]));
   const categoryFor = new Map(categories.map((c) => [`${c.themeId}|${c.presetName.toLowerCase()}`, c.category]));
+  // A store can be set by hand to another theme's preset; match it by name then.
+  const categoryByName = new Map<string, string>();
+  for (const c of categories) if (c.category && !categoryByName.has(c.presetName.toLowerCase())) categoryByName.set(c.presetName.toLowerCase(), c.category);
 
   const inputs: SaleInput[] = sales.map((s) => {
     const themeId = String(s.themeId);
@@ -94,7 +97,7 @@ export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary
       country: s.country,
       shopDomain: s.shopDomain,
       preset,
-      category: categoryFor.get(`${themeId}|${preset.toLowerCase()}`) ?? null,
+      category: categoryFor.get(`${themeId}|${preset.toLowerCase()}`) ?? categoryByName.get(preset.toLowerCase()) ?? null,
     };
   });
 
