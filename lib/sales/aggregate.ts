@@ -141,9 +141,12 @@ export function buildSummary(
   const byPreset = groupBy(sales, presetKey);
   const presets = [...byPreset].map(([key, m]) => {
     const [themeId, preset] = key.split("|");
-    const sample = sales.find((s) => presetKey(s) === key);
-    const stores = new Set(sales.filter((s) => presetKey(s) === key).map((s) => s.shopDomain)).size;
-    return { themeId, themeName: themeNames.get(themeId) ?? "Unknown theme", preset, category: sample?.category ?? null, stores, ...m };
+    const rows = sales.filter((s) => presetKey(s) === key);
+    const stores = new Set(rows.map((s) => s.shopDomain)).size;
+    // "Unknown" preset rows can land in several "Theme (store closed)"-style categories.
+    const cats = [...new Set(rows.map((s) => s.category ?? ""))];
+    const category = cats.length === 1 ? cats[0] || null : cats.filter(Boolean).map((c) => categoryLabel(c)).join(", ");
+    return { themeId, themeName: themeNames.get(themeId) ?? "Unknown theme", preset, category, stores, ...m };
   });
   presets.sort((a, b) => b.netSales - a.netSales || a.preset.localeCompare(b.preset));
 

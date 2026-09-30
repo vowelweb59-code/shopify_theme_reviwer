@@ -57,6 +57,26 @@ async function loadGaMonths(themes: { _id: unknown; name: string }[], from?: str
   return [...byKey.values()].map((g) => ({ ...g, installs: Math.round(g.installs), tryTheme: Math.round(g.tryTheme) }));
 }
 
+const STATUS_NOTE: Record<string, string> = {
+  unavailable: "store closed",
+  dropped: "switched",
+  password: "password page",
+  error: "couldn't check",
+  pending: "not checked yet",
+};
+const MANUAL_STATUS: Record<string, string> = { closed: "store closed", switched: "switched", password: "password page" };
+
+/**
+ * The category name for a sale whose preset has no Theme Store category:
+ * the theme plus why, e.g. "Soft (store closed)" or "Soft (switched)" —
+ * the user wants these split out rather than lumped as "Uncategorized".
+ */
+export function noCategoryLabel(themeName: string, preset: string, status: string | undefined): string {
+  const p = preset.toLowerCase();
+  const note = MANUAL_STATUS[p] ?? (status && STATUS_NOTE[status]) ?? (p === "unknown" ? "preset unknown" : preset);
+  return `${themeName} (${note})`;
+}
+
 export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary & { themesWithSales: { themeId: string; themeName: string }[] }> {
   await connectToDatabase();
   const from = query.from && MONTH_RE.test(query.from) ? query.from : null;
@@ -73,18 +93,20 @@ export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary
     SaleRecord.find(saleFilter).select("themeId month chargeType amount share country shopDomain").lean<
       { themeId: unknown; month: string; chargeType: string; amount: number; share: number; country: string; shopDomain: string }[]
     >(),
-    SalesStore.find({ themeId: { $in: scopeIds } }).select("themeId shopDomain detectedPreset manualPreset").lean<
-      { themeId: unknown; shopDomain: string; detectedPreset: string | null; manualPreset: string | null }[]
+    SalesStore.find({ themeId: { $in: scopeIds } }).select("themeId shopDomain status detectedPreset manualPreset").lean<
+      { themeId: unknown; shopDomain: string; status: string; detectedPreset: string | null; manualPreset: string | null }[]
     >(),
     listPresetCategories(),
   ]);
 
+  const statusFor = new Map(stores.map((s) => [`${s.themeId}|${s.shopDomain}`, s.status]));
   const presetFor = new Map(stores.map((s) => [`${s.themeId}|${s.shopDomain}`, s.manualPreset ?? s.detectedPreset ?? "Unknown"]));
   const categoryFor = new Map(categories.map((c) => [`${c.themeId}|${c.presetName.toLowerCase()}`, c.category]));
   // A store can be set by hand to another theme's preset; match it by name then.
   const categoryByName = new Map<string, string>();
   for (const c of categories) if (c.category && !categoryByName.has(c.presetName.toLowerCase())) categoryByName.set(c.presetName.toLowerCase(), c.category);
 
+  const themeNameById = new Map(themes.map((t) => [String(t._id), t.name]));
   const inputs: SaleInput[] = sales.map((s) => {
     const themeId = String(s.themeId);
     const preset = presetFor.get(`${themeId}|${s.shopDomain}`) ?? "Unknown";
@@ -97,7 +119,10 @@ export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary
       country: s.country,
       shopDomain: s.shopDomain,
       preset,
-      category: categoryFor.get(`${themeId}|${preset.toLowerCase()}`) ?? categoryByName.get(preset.toLowerCase()) ?? null,
+      category:
+        categoryFor.get(`${themeId}|${preset.toLowerCase()}`) ??
+        categoryByName.get(preset.toLowerCase()) ??
+        noCategoryLabel(themeNameById.get(themeId) ?? "Unknown theme", preset, statusFor.get(`${themeId}|${s.shopDomain}`)),
     };
   });
 
