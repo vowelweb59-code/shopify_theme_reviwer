@@ -92,6 +92,7 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       ),
       sortValue: (s) => (s.shopName || s.shopDomain).toLowerCase(),
     },
+    { key: "theme", header: "Theme", render: (s) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{s.themeName || "—"}</span>, sortValue: (s) => s.themeName.toLowerCase() },
     { key: "sales", header: "Sales", render: (s) => <span className="tabular-nums">{s.netSales}</span>, sortValue: (s) => s.netSales, className: "text-right" },
     {
       key: "status",
@@ -168,6 +169,11 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  // A choice from the dropdown waits here until Save is pressed, so a
+  // misclick doesn't overwrite the saved preset.
+  const [pending, setPending] = useState<string | null>(null);
+  const saved = store.manualPreset ?? "";
+  const dirty = pending !== null && pending !== saved;
   const label = store.shopName || store.shopDomain;
 
   async function save(value: string) {
@@ -175,6 +181,7 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
     try {
       await onSave(value);
       setTyping(false);
+      setPending(null);
     } finally {
       setSaving(false);
     }
@@ -206,17 +213,17 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
   }
 
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-1.5">
       <label className="sr-only" htmlFor={`preset-${store.id}`}>Preset for {label}</label>
       <select
         id={`preset-${store.id}`}
-        value={store.manualPreset ?? ""}
+        value={pending ?? saved}
         disabled={saving}
         onChange={(e) => {
           if (e.target.value === CUSTOM) {
             setDraft(isCustom ? store.manualPreset! : "");
             setTyping(true);
-          } else void save(e.target.value);
+          } else setPending(e.target.value);
         }}
         className="rounded-md border border-border-strong bg-surface px-2 py-1 text-sm"
       >
@@ -241,6 +248,12 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
         </optgroup>
         <option value={CUSTOM}>Type a name…</option>
       </select>
-    </>
+      {dirty && (
+        <>
+          <Button type="button" size="sm" loading={saving} onClick={() => void save(pending!)}>Save</Button>
+          <Button type="button" size="sm" variant="secondary" disabled={saving} onClick={() => setPending(null)}>Cancel</Button>
+        </>
+      )}
+    </div>
   );
 }

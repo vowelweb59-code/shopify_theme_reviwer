@@ -45,6 +45,20 @@ export function matchPresetName(text: string | null | undefined, presetNames: st
   return (nonBase.length > 0 ? nonBase : matches).sort((a, b) => b.length - a.length)[0];
 }
 
+/**
+ * The live theme name is the main signal. When the owner has renamed the
+ * theme to something with no preset in it, fall back to `schema_name` — but
+ * only for a named preset: `schema_name` normally is just the base theme's
+ * own name, which says nothing about which preset is installed, so a bare
+ * base-theme match there is ignored rather than guessed as the default.
+ */
+export function presetFromLiveNames(liveThemeName: string | null, liveSchemaName: string | null, presetNames: string[]): string | null {
+  const fromName = matchPresetName(liveThemeName, presetNames);
+  if (fromName) return fromName;
+  const fromSchema = matchPresetName(liveSchemaName, presetNames);
+  return fromSchema && fromSchema.toLowerCase() !== presetNames[0]?.toLowerCase() ? fromSchema : null;
+}
+
 /** A sheet Preset value that names a real preset ("Precious"), or null for "Store Unavailable" etc. */
 export function sheetPresetName(value: string | null | undefined, presetNames: string[]): string | null {
   if (!value || NON_PRESET_VALUES.has(value.trim().toLowerCase())) return null;
@@ -82,7 +96,7 @@ export function classifyStorefront(
     liveUrl: finalUrl,
     liveThemeName,
     liveSchemaName,
-    presetFromName: matchPresetName(liveThemeName, presetNames),
+    presetFromName: presetFromLiveNames(liveThemeName, liveSchemaName, presetNames),
     error: null,
   };
 }

@@ -186,11 +186,17 @@ function SwitchTime({ low, high }: { low: number | null; high: number }) {
   );
 }
 
+const VIEW_TABS = [
+  { key: "history", label: "Demo Store History" },
+  { key: "ranking", label: "Theme Store Ranking" },
+] as const;
+
 export default function DemoStorePage() {
   const [data, setData] = useState<DemoStoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [activeStore, setActiveStore] = useState<string | null>(null);
+  const [view, setView] = useState<(typeof VIEW_TABS)[number]["key"]>("history");
 
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [rankingLoading, setRankingLoading] = useState(true);
@@ -486,10 +492,30 @@ export default function DemoStorePage() {
 
   return (
     <PageContainer>
+      <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Shopify Demo Store</h1>
+
+      <div role="tablist" aria-label="Sections" className="flex flex-wrap gap-1 border-b border-border-subtle">
+        {VIEW_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            id={`view-tab-${t.key}`}
+            aria-selected={view === t.key}
+            aria-controls={`view-panel-${t.key}`}
+            onClick={() => setView(t.key)}
+            className={`-mb-px border-b-2 px-3 py-2 text-sm ${view === t.key ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {view === "history" && (
+      <div role="tabpanel" id="view-panel-history" aria-labelledby="view-tab-history" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Shopify Demo Store</h1>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-500">
+          <p className="max-w-2xl text-sm text-zinc-500">
             Which theme has been live on each Shopify ops demo store, and for how long. Checked automatically every hour by reading the storefront&apos;s publicly embedded theme info — only the
             currently published theme is visible this way, not the store&apos;s full theme library, and not the moment a theme was published. So
             each switch is pinned between two checks, accurate to about an hour. Once a day the check also looks for each of these themes on the
@@ -551,11 +577,14 @@ export default function DemoStorePage() {
           )}
         </div>
       )}
+      </div>
+      )}
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+      {view === "ranking" && (
+      <div role="tabpanel" id="view-panel-ranking" aria-labelledby="view-tab-ranking" className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Theme Store Ranking</h2>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-500">
+          <p className="max-w-2xl text-sm text-zinc-500">
             Where each theme in the{" "}
             <Link href="/themes" className="underline hover:no-underline">
               Themes
@@ -566,7 +595,7 @@ export default function DemoStorePage() {
             </a>{" "}
             catalog, once it&apos;s listed there — including each of its named style presets separately, since a preset gets its own ranked card
             too (they can land on completely different pages from the theme&apos;s own default listing). The badge next to a rank or review count
-            shows how much it moved since the last check. Checked automatically once a day at a randomized time, same as the demo store poll above;
+            shows how much it moved since the last check. Checked automatically once a day at a randomized time, separate from the hourly demo store poll;
             a full crawl can mean walking dozens of pages, so it&apos;s not tied to that same daily check.
           </p>
         </div>
@@ -664,6 +693,8 @@ export default function DemoStorePage() {
             </div>
           )}
         </>
+      )}
+      </div>
       )}
     </PageContainer>
   );
