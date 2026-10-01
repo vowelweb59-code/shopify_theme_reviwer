@@ -15,7 +15,6 @@ const MONTH_COLUMNS: TableColumn<ThemeMonth>[] = [
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
   { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
   { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
-  { key: "net", header: "Your share", render: (r) => <span className="tabular-nums">{formatMoney(r.net)}</span>, sortValue: (r) => r.net, className: "text-right" },
 ];
 
 const TOTAL_COLUMNS: TableColumn<ThemeTotal>[] = [
@@ -25,7 +24,6 @@ const TOTAL_COLUMNS: TableColumn<ThemeTotal>[] = [
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
   { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
   { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
-  { key: "net", header: "Your share", render: (r) => <span className="tabular-nums">{formatMoney(r.net)}</span>, sortValue: (r) => r.net, className: "text-right" },
 ];
 
 export function ThemesTab({ data }: { data: SalesSummary }) {

@@ -66,7 +66,6 @@ export function CategoriesTab({
     { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
     { key: "share", header: "Share of sales", render: (r) => <span className="tabular-nums">{shareOf(r.netSales, total)}</span>, sortValue: (r) => r.netSales, className: "text-right" },
     { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
-    { key: "net", header: "Your share", render: (r) => <span className="tabular-nums">{formatMoney(r.net)}</span>, sortValue: (r) => r.net, className: "text-right" },
   ];
 
   return (
