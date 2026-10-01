@@ -127,7 +127,11 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
     { id: "password", label: `Password (${counts.password ?? 0})` },
     { id: "dropped", label: `Switched (${counts.dropped ?? 0})` },
     { id: "unavailable", label: `Closed (${counts.unavailable ?? 0})` },
-    { id: "unknown", label: `No preset (${counts.unknown ?? 0})` },
+    // Not checked yet / couldn't check: without these chips the status counts don't add up to All.
+    ...((counts.pending ?? 0) > 0 ? [{ id: "pending" as const, label: `Not checked (${counts.pending})` }] : []),
+    ...((counts.error ?? 0) > 0 ? [{ id: "error" as const, label: `Couldn't check (${counts.error})` }] : []),
+    // Overlaps the status chips: any store, in any state, that has no preset yet.
+    { id: "unknown", label: `No preset, any status (${counts.unknown ?? 0})` },
   ];
 
   return (
