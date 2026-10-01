@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore/liveWindow";
 import { formatDateTime } from "@/app/_components/formatDate";
 import { INDUSTRIES } from "@/lib/themes/industries";
+import { ThemeCategoriesTab } from "./_components/ThemeCategoriesTab";
 
 type DemoStoreRecord = {
   _id: string;
@@ -189,6 +190,7 @@ function SwitchTime({ low, high }: { low: number | null; high: number }) {
 const VIEW_TABS = [
   { key: "history", label: "Demo Store History" },
   { key: "ranking", label: "Theme Store Ranking" },
+  { key: "categories", label: "Theme Categories" },
 ] as const;
 
 export default function DemoStorePage() {
@@ -695,6 +697,12 @@ export default function DemoStorePage() {
         </>
       )}
       </div>
+      )}
+
+      {view === "categories" && (
+        <div role="tabpanel" id="view-panel-categories" aria-labelledby="view-tab-categories">
+          <ThemeCategoriesTab />
+        </div>
       )}
     </PageContainer>
   );
