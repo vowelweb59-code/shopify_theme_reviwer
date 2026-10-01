@@ -11,6 +11,7 @@ import { PRECISE_ENOUGH_MS, describeDuration, liveWindow } from "@/lib/demoStore
 import { formatDateTime } from "@/app/_components/formatDate";
 import { INDUSTRIES } from "@/lib/themes/industries";
 import { ThemeCategoriesTab } from "./_components/ThemeCategoriesTab";
+import { PotentialAffiliatesTab } from "./_components/PotentialAffiliatesTab";
 
 type DemoStoreRecord = {
   _id: string;
@@ -191,6 +192,7 @@ const VIEW_TABS = [
   { key: "history", label: "Demo Store History" },
   { key: "ranking", label: "Theme Store Ranking" },
   { key: "categories", label: "Theme Categories" },
+  { key: "affiliates", label: "Potential Affiliates" },
 ] as const;
 
 export default function DemoStorePage() {
@@ -702,6 +704,12 @@ export default function DemoStorePage() {
       {view === "categories" && (
         <div role="tabpanel" id="view-panel-categories" aria-labelledby="view-tab-categories">
           <ThemeCategoriesTab />
+        </div>
+      )}
+
+      {view === "affiliates" && (
+        <div role="tabpanel" id="view-panel-affiliates" aria-labelledby="view-tab-affiliates">
+          <PotentialAffiliatesTab />
         </div>
       )}
     </PageContainer>
