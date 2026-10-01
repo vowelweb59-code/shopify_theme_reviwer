@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   if (!existing && (await ThemeRankingFilter.countDocuments()) >= MAX_TRACKED_FILTERS) {
     return NextResponse.json({ ok: false, error: `At most ${MAX_TRACKED_FILTERS} Sort/Collection combinations can be tracked.` }, { status: 409 });
   }
-  const filter = await ThemeRankingFilter.findOneAndUpdate({ sortBy, industry }, {}, { upsert: true, new: true });
+  const filter = await ThemeRankingFilter.findOneAndUpdate({ sortBy, industry }, {}, { upsert: true, returnDocument: "after" });
   const result = await runFilteredRankingCheck(filter);
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: 502 });

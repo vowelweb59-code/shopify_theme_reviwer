@@ -31,7 +31,7 @@ export async function PATCH(request: Request) {
   const config = await ReadinessConfigModel.findOneAndUpdate(
     {},
     { $set: { blockerSeverities, minimumCoveragePercent } },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   return NextResponse.json({ config });

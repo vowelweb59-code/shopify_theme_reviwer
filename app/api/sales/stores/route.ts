@@ -88,7 +88,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "manualPreset must be a preset name or null." }, { status: 400 });
   }
   await connectToDatabase();
-  const store = await SalesStore.findByIdAndUpdate(id, { $set: { manualPreset } }, { new: true }).lean();
+  const store = await SalesStore.findByIdAndUpdate(id, { $set: { manualPreset } }, { returnDocument: "after" }).lean();
   if (!store) return NextResponse.json({ error: "Store not found." }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

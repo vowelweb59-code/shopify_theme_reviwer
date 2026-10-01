@@ -28,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         statusUpdatedAt: new Date(),
       },
     },
-    { new: true }
+    { returnDocument: "after" }
   ).lean();
 
   if (!finding) return NextResponse.json({ error: "Finding not found." }, { status: 404 });

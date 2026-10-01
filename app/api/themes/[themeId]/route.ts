@@ -132,7 +132,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ th
   const body = await request.json().catch(() => null);
   const demoStorePresets = sanitizePresets((body as { demoStorePresets?: unknown } | null)?.demoStorePresets);
 
-  const theme = await Theme.findByIdAndUpdate(themeId, { demoStorePresets }, { new: true });
+  const theme = await Theme.findByIdAndUpdate(themeId, { demoStorePresets }, { returnDocument: "after" });
   if (!theme) {
     return NextResponse.json({ error: "Theme not found." }, { status: 404 });
   }
