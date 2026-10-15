@@ -289,7 +289,12 @@ function extractLatestRelease(html: string): LatestRelease | null {
 export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<ThemeStoreFeaturesResult> {
   const slug = deriveThemeStoreSlug(themeName);
   if (!slug) return { ok: false, slug, error: "Could not derive a Theme Store URL from this theme's name." };
+  const { html: _html, ...result } = (await fetchThemeStoreListingBySlug(slug)) as ThemeStoreFeaturesResult & { html?: string };
+  return result as ThemeStoreFeaturesResult;
+}
 
+/** Same as fetchThemeStoreFeatureLabels, for a Theme Store slug already known (e.g. read off the catalog). Also returns the page's HTML for further parsing. */
+export async function fetchThemeStoreListingBySlug(slug: string): Promise<ThemeStoreFeaturesResult & { html?: string }> {
   const url = `https://themes.shopify.com/themes/${slug}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), THEME_STORE_TIMEOUT_MS);
@@ -319,6 +324,7 @@ export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<T
       positivePercent: reviewSummary?.positivePercent ?? null,
       latestVersion: latestRelease?.version ?? null,
       latestVersionReleasedAt: latestRelease?.releasedAt ?? null,
+      html,
     };
   } catch (err) {
     return { ok: false, slug, error: err instanceof Error ? err.message : "Failed to reach the Shopify Theme Store." };

@@ -5,6 +5,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { useApi } from "@/app/analytics/_components/useApi";
 import { industryLabel } from "@/lib/themes/industries";
+import { ThemeStoreCatalogSection } from "./ThemeStoreCatalogSection";
 
 type PresetCategory = { themeId: string; themeName: string; presetName: string; category: string | null };
 type ThemeRow = { themeId: string; themeName: string; category: string | null };
@@ -48,26 +49,37 @@ export function ThemeCategoriesTab() {
     { key: "names", header: "Which themes", render: (r) => <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> },
   ];
 
-  if (loading && !data) return <p className="text-sm text-zinc-500">Loading…</p>;
-  if (error) return <p className="text-sm text-status-fail-text">{error}</p>;
-  if (themes.length === 0) return <EmptyState icon={Store} title="No themes yet" description="Add a theme in the Themes tab first." />;
-
   return (
     <div className="flex flex-col gap-8">
-      <p className="max-w-2xl text-sm text-zinc-500">
-        Each main theme and the Theme Store category it belongs to — the category its default preset ranks best in, or the one chosen by hand on the Sales page&apos;s Categories tab. Presets
-        aren&apos;t listed here.
-      </p>
+      <ThemeStoreCatalogSection />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Themes per category</h2>
-        <ResponsiveTable columns={categoryColumns} rows={categories} rowKey={(r) => r.category ?? "none"} theadClassName="bg-primary-tint text-primary-tint-text" />
-      </section>
+      <div className="flex flex-col gap-8">
+        <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Your themes by category</h2>
+        {loading && !data ? (
+          <p className="text-sm text-zinc-500">Loading…</p>
+        ) : error ? (
+          <p className="text-sm text-status-fail-text">{error}</p>
+        ) : themes.length === 0 ? (
+          <EmptyState icon={Store} title="No themes yet" description="Add a theme in the Themes tab first." />
+        ) : (
+          <>
+            <p className="max-w-2xl text-sm text-zinc-500">
+              Each main theme and the Theme Store category it belongs to — the category its default preset ranks best in, or the one chosen by hand on the Sales page&apos;s Categories tab.
+              Presets aren&apos;t listed here.
+            </p>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Themes</h2>
-        <ResponsiveTable columns={themeColumns} rows={themes} rowKey={(r) => r.themeId} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={30} />
-      </section>
+            <section className="flex flex-col gap-3">
+              <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes per category</h3>
+              <ResponsiveTable columns={categoryColumns} rows={categories} rowKey={(r) => r.category ?? "none"} theadClassName="bg-primary-tint text-primary-tint-text" />
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes</h3>
+              <ResponsiveTable columns={themeColumns} rows={themes} rowKey={(r) => r.themeId} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={30} />
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 }
