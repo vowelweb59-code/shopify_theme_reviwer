@@ -140,7 +140,7 @@ export function ThemeStoreCatalogSection() {
           themes.shopify.com
         </a>
         , whoever made it. A refresh reads the catalog, then each category, then each theme&apos;s own page (designer, reviews, version, features) with a short pause between requests, so it takes roughly 10–15 minutes. Theme pages already read in the last
-        week are skipped. The # is the theme&apos;s place in the store&apos;s default order.
+        week are skipped. The # is the theme&apos;s place among main themes in the store&apos;s default order; presets (style variants) are only counted, not listed.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">

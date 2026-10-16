@@ -71,7 +71,7 @@ async function crawlCatalog(): Promise<void> {
 
   const byTheme = new Map<string, { base: CatalogCard | null; first: CatalogCard; presets: { slug: string; name: string }[]; rank: number | null }>();
   cards.forEach((card, i) => {
-    const entry = byTheme.get(card.baseSlug) ?? { base: null, first: card, presets: [], rank: null };
+    const entry = byTheme.get(card.baseSlug) ?? { base: null, first: card, presets: [], rank: i + 1 };
     entry.presets.push({ slug: card.presetSlug, name: card.name });
     if (card.presetSlug === card.baseSlug) {
       entry.base = card;
@@ -131,7 +131,13 @@ async function crawlDetails(): Promise<void> {
   for (const { slug } of stale) {
     crawl.current = slug;
     await sleep(PAUSE_MS);
-    const result = await fetchThemeStoreListingBySlug(slug);
+    let result = await fetchThemeStoreListingBySlug(slug);
+    // The store's bot protection intermittently 403s a request that succeeds moments later.
+    for (const wait of [5_000, 20_000]) {
+      if (result.ok || !/\b(403|429)\b/.test(result.error)) break;
+      await sleep(wait);
+      result = await fetchThemeStoreListingBySlug(slug);
+    }
     if (result.ok) {
       failures = 0;
       await ThemeStoreTheme.updateOne(
@@ -151,7 +157,8 @@ async function crawlDetails(): Promise<void> {
       );
     } else {
       crawl.errors.push(`${slug}: ${result.error}`);
-      await ThemeStoreTheme.updateOne({ slug }, { $set: { detailAt: new Date(), detailError: result.error } });
+      // detailAt stays unset so the next refresh tries this theme again.
+      await ThemeStoreTheme.updateOne({ slug }, { $set: { detailError: result.error } });
       // A run of failures means the store is blocking us; stop and let a later run resume.
       if (++failures >= 5) throw new Error(`Stopped after repeated failures: ${result.error}`);
     }

@@ -27,7 +27,7 @@ export async function GET() {
   return NextResponse.json({
     detailsPending: rows.filter((r) => !r.detailAt).length,
     lastCrawledAt: rows.reduce<Date | null>((latest, r) => (!latest || r.lastSeenAt > latest ? r.lastSeenAt : latest), null),
-    themes: rows.map((r) => ({
+    themes: rows.map((r, i) => ({
       slug: r.slug,
       name: r.name,
       url: `https://themes.shopify.com/themes/${r.slug}`,
@@ -41,7 +41,8 @@ export async function GET() {
       latestVersion: r.latestVersion,
       latestVersionReleasedAt: r.latestVersionReleasedAt,
       features: r.features,
-      rank: r.rank,
+      // Position among main themes only; the stored rank counts every preset card too.
+      rank: i + 1,
     })),
   });
 }
