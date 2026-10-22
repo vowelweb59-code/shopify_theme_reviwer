@@ -37,6 +37,7 @@ type ProjectRow = {
   members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
 
+const NEW_THEME = "__new__";
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
 function NewProjectModal({
@@ -55,6 +56,7 @@ function NewProjectModal({
   const [portal, setPortal] = useState<Portal | "">(defaultPortal);
   const [type, setType] = useState<ProjectType>("theme_development");
   const [themeId, setThemeId] = useState("");
+  const [newThemeName, setNewThemeName] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [designDays, setDesignDays] = useState("");
@@ -70,7 +72,7 @@ function NewProjectModal({
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal, type, themeId, name, status, designDays, developmentDays }),
+        body: JSON.stringify({ portal, type, ...(themeId === NEW_THEME ? { newThemeName } : { themeId }), name, status, designDays, developmentDays }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -120,13 +122,14 @@ function NewProjectModal({
             onChange={(e) => {
               setThemeId(e.target.value);
               // Suggest "<theme> project" until the user types their own name.
-              if (!name) setName(`${themes.find((t) => t._id === e.target.value)?.name ?? ""} project`.trim());
+              if (!name && e.target.value !== NEW_THEME) setName(`${themes.find((t) => t._id === e.target.value)?.name ?? ""} project`.trim());
             }}
             className={INPUT}
           >
             <option value="" disabled>
               Choose a theme…
             </option>
+            <option value={NEW_THEME}>+ Create a new theme…</option>
             {themes.map((t) => (
               <option key={t._id} value={t._id}>
                 {t.name}
@@ -134,6 +137,23 @@ function NewProjectModal({
             ))}
           </select>
         </label>
+        {themeId === NEW_THEME && (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">New theme name</span>
+            <input
+              required
+              autoFocus
+              value={newThemeName}
+              onChange={(e) => {
+                setNewThemeName(e.target.value);
+                if (!name || name === `${newThemeName} project`.trim()) setName(`${e.target.value} project`.trim());
+              }}
+              className={INPUT}
+              placeholder="e.g. Aurora"
+            />
+            <span className="text-xs text-zinc-500">Creates the theme without a ZIP; upload one later from the Themes page. A theme with this name is reused if it already exists.</span>
+          </label>
+        )}
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Project name</span>
           <input required value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Adorn 5.0 update" />

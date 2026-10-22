@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
-import { typeHasStatus } from "@/lib/projects/constants";
+import { MAX_NAME, typeHasStatus } from "@/lib/projects/constants";
 import { parseProjectFields, parseProjectMembers, parseProjectType } from "@/lib/projects/sanitize";
 import { rejectionCount } from "@/lib/projects/rounds";
 import { resolveMembers, resolveRounds } from "@/lib/projects/resolveMembers";
@@ -46,7 +46,10 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ error: "A JSON body is required." }, { status: 400 });
-  if (!isValidObjectId(body.themeId)) return invalidIdResponse("themeId");
+  // Either an existing theme, or the name of a new one (created below, reusing a theme of that name if there is one).
+  const newThemeName = typeof body.newThemeName === "string" ? body.newThemeName.trim() : "";
+  if (newThemeName.length > MAX_NAME) return NextResponse.json({ error: `Theme name must be ${MAX_NAME} characters or fewer.` }, { status: 400 });
+  if (!newThemeName && !isValidObjectId(body.themeId)) return invalidIdResponse("themeId");
   const type = parseProjectType(body.type);
   if (!type.ok) return NextResponse.json({ error: type.error }, { status: 400 });
   const fields = parseProjectFields(body, false);
@@ -67,10 +70,17 @@ export async function POST(request: Request) {
   }
 
   await connectToDatabase();
-  if (!(await Theme.exists({ _id: body.themeId }))) return NextResponse.json({ error: "Theme not found." }, { status: 404 });
+  let themeId: unknown = body.themeId;
+  if (newThemeName) {
+    const escaped = newThemeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const found = await Theme.findOne({ name: new RegExp(`^${escaped}$`, "i") }).select("_id").lean();
+    themeId = found?._id ?? (await Theme.create({ name: newThemeName }))._id;
+  } else if (!(await Theme.exists({ _id: body.themeId }))) {
+    return NextResponse.json({ error: "Theme not found." }, { status: 404 });
+  }
   // Ignore ids of members deleted between the page load and this request.
   const existing = new Set((await TeamMember.find({ _id: { $in: members.map((m) => m.memberId) } }).select("_id").lean()).map((m) => String(m._id)));
 
-  const project = await Project.create({ ...fields.value, type: type.value, themeId: body.themeId, members: members.filter((m) => existing.has(m.memberId)) });
+  const project = await Project.create({ ...fields.value, type: type.value, themeId, members: members.filter((m) => existing.has(m.memberId)) });
   return NextResponse.json({ project }, { status: 201 });
 }

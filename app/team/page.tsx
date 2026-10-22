@@ -12,6 +12,13 @@ import { successRate } from "@/lib/projects/rounds";
 
 type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number; approvedCount: number };
 
+// Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
+const ROLE_TABS = [
+  { label: "Manager", match: (m: Member) => /manager/i.test(m.designation) },
+  { label: "Shopify Developer", match: (m: Member) => /shopify developer/i.test(m.designation) },
+  { label: "UI/UX Designer", match: (m: Member) => /ui\/ux/i.test(m.designation) },
+] as const;
+
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
 function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: () => void }) {
@@ -136,6 +143,9 @@ export default function TeamPage() {
     },
   ];
 
+  const [roleTab, setRoleTab] = useState<(typeof ROLE_TABS)[number]["label"]>(ROLE_TABS[0].label);
+  const activeTab = ROLE_TABS.find((t) => t.label === roleTab) ?? ROLE_TABS[0];
+  const successRows = members.filter((m) => activeTab.match(m) && m.approvedCount + m.rejectionCount > 0);
   const rate = (m: Member) => successRate({ approved: m.approvedCount, rejected: m.rejectionCount });
   const successColumns: TableColumn<Member>[] = [
     { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
@@ -158,6 +168,35 @@ export default function TeamPage() {
         </Button>
       </div>
 
+      {!loading && members.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
+            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren't counted.</p>
+          </div>
+          <div role="tablist" aria-label="Success rate by role" className="flex flex-wrap gap-1 border-b border-border-subtle">
+            {ROLE_TABS.map((tab) => {
+              const active = roleTab === tab.label;
+              return (
+                <button
+                  key={tab.label}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setRoleTab(tab.label)}
+                  className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
+                    active ? "border-primary font-medium text-zinc-950 dark:text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  {tab.label} ({members.filter(tab.match).length})
+                </button>
+              );
+            })}
+          </div>
+          <ResponsiveTable columns={successColumns} rows={successRows} rowKey={(m) => m._id} emptyMessage="No decided rounds yet." />
+        </section>
+      )}
+
       {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
 
       {loading ? (
@@ -166,16 +205,6 @@ export default function TeamPage() {
         <EmptyState icon={Users} title="No team members yet" description="Add the people who work on your themes, with their designation." />
       ) : (
         <ResponsiveTable columns={columns} rows={members} rowKey={(m) => m._id} />
-      )}
-
-      {!loading && members.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
-            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren't counted.</p>
-          </div>
-          <ResponsiveTable columns={successColumns} rows={members.filter((m) => m.approvedCount + m.rejectionCount > 0)} rowKey={(m) => m._id} emptyMessage="No decided rounds yet." />
-        </section>
       )}
 
       {/* key remounts the form so its fields re-seed from the member being edited */}
