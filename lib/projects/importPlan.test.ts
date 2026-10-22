@@ -22,7 +22,7 @@ const data: ImportData = {
     { portal: "P2", theme: "Beta", rejections: null, status: "Under Designing", developmentDays: null, designDays: null, designers: ["Cy"], developers: [] },
   ],
   assignments: [
-    { role: "designer", person: "Ann", projects: ["Alpha Version 1"] },
+    { role: "designer", person: "Ann", projects: ["Alpha 1"] },
     { role: "developer", person: "Bob", projects: ["Alpha"] },
     { role: "manager", person: "Ann", projects: ["Alpha Half", "Alpha 2", "Unlisted"] },
   ],
@@ -34,8 +34,8 @@ describe("buildPlan", () => {
     const plan = buildPlan(data, existing);
     const alpha = plan.creates.filter((c) => c.themeName === "Alpha");
     expect(alpha.map((c) => [c.name, c.status, c.developmentDays])).toEqual([
-      ["Alpha Version 1", "rejected", null],
-      ["Alpha Version 2", "live", 40],
+      ["Alpha 1", "rejected", null],
+      ["Alpha 2", "live", 40],
     ]);
   });
 
@@ -62,9 +62,9 @@ describe("buildPlan", () => {
       projects: [{ name: "alpha version 2", themeName: "Alpha", status: "under_development", designDays: null, developmentDays: 99, description: "", memberNames: ["Bob Ray"] }],
     };
     const plan = buildPlan(data, withExisting);
-    expect(plan.creates.map((c) => c.name)).toEqual(["Alpha Version 1", "Beta"]);
+    expect(plan.creates.map((c) => c.name)).toEqual(["Alpha 1", "Beta"]);
     expect(plan.updates).toHaveLength(1);
-    expect(plan.updates[0].set).toEqual({ designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
+    expect(plan.updates[0].set).toEqual({ name: "Alpha 2", designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
     expect(plan.updates[0].addMembers).toEqual(["Ann Lee"]);
     expect(plan.updates[0].notes.join()).toContain("status stays under_development");
     expect(plan.updates[0].notes.join()).toContain("developmentDays stays 99");

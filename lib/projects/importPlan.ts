@@ -5,9 +5,11 @@ import type { ProjectStatus } from "./constants";
 // it can be dry-run and unit-tested; scripts/import-projects.ts applies it.
 //
 // How the sheet becomes projects:
-//  - One project per version. A theme's versions are the numbered ones named
-//    anywhere in the Designers / Developers / Managers tables, plus any
-//    "<Theme> Version N" project already in the database. A theme with no
+//  - One project per version, named "<Theme> N" (e.g. "Voltix 2"). A theme's
+//    versions are the numbered ones named anywhere in the Designers /
+//    Developers / Managers tables, plus any "<Theme> N" or older
+//    "<Theme> Version N" project already in the database (the latter is
+//    renamed). A theme with no
 //    numbered version is a single project named after the theme.
 //  - A name without a number ("Aspire", "Zeal") means every version of it.
 //  - A newer version only exists because the one before it was rejected, so
@@ -63,7 +65,7 @@ export type PlannedProject = {
 };
 export type PlannedUpdate = {
   name: string;
-  set: { designDays?: number; developmentDays?: number; description?: string };
+  set: { name?: string; designDays?: number; developmentDays?: number; description?: string };
   addMembers: string[];
   notes: string[];
 };
@@ -118,9 +120,10 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
     const mine = resolved.filter((r) => r.theme === row);
     const versions = new Set<number>();
     for (const r of mine) if (r.version !== null) versions.add(r.version);
-    const versionName = (n: number) => `${row.theme} Version ${n}`;
+    const versionName = (n: number) => `${row.theme} ${n}`;
+    const legacyName = (n: number) => `${row.theme} Version ${n}`; // how these were first named; renamed on sight
     // Versions that already exist as projects count too (e.g. Adorn Version 1-3).
-    const own = new RegExp(`^${row.theme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} version (\\d+)$`, "i");
+    const own = new RegExp(`^${row.theme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?: version)? (\\d+)$`, "i");
     for (const p of existing.projects) {
       const m = own.exec(p.name);
       if (m) versions.add(Number(m[1]));
@@ -181,12 +184,13 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
         developmentDays: latest ? row.developmentDays : null,
       };
 
-      const found = existingByName.get(lower(name));
+      const found = existingByName.get(lower(name)) ?? (version !== null ? existingByName.get(lower(legacyName(version))) : undefined);
       if (!found) {
         plan.creates.push({ name, themeName: row.theme, description, memberNames: members, ...wanted });
         return;
       }
       const update: PlannedUpdate = { name: found.name, set: {}, addMembers: [], notes: [] };
+      if (lower(found.name) !== lower(name)) update.set.name = name;
       if (found.status && found.status !== wanted.status) update.notes.push(`status stays ${found.status} (sheet says ${wanted.status})`);
       for (const key of ["designDays", "developmentDays"] as const) {
         const value = wanted[key];
