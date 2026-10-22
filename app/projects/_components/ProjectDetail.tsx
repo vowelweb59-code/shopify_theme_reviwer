@@ -9,18 +9,18 @@ import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/projects/constants";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, typeHasStatus, type ProjectStatus, type ProjectType } from "@/lib/projects/constants";
+import { TimeLog } from "./TimeLog";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
 type Loaded = {
-  project: { _id: string; name: string; description: string; status: ProjectStatus; startDate: string | null; dueDate: string | null; members: ProjectMember[] };
+  project: { _id: string; name: string; description: string; type: ProjectType; status: ProjectStatus | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[] };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
-const toDateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
 
 export function ProjectDetail({ projectId }: { projectId: string }) {
   const router = useRouter();
@@ -30,8 +30,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
-  const [startDate, setStartDate] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [designDays, setDesignDays] = useState("");
+  const [developmentDays, setDevelopmentDays] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -41,9 +41,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     setData(loaded);
     setName(loaded.project.name);
     setDescription(loaded.project.description ?? "");
-    setStatus(loaded.project.status);
-    setStartDate(toDateInput(loaded.project.startDate));
-    setDueDate(toDateInput(loaded.project.dueDate));
+    setStatus(loaded.project.status ?? "planning");
+    setDesignDays(loaded.project.designDays?.toString() ?? "");
+    setDevelopmentDays(loaded.project.developmentDays?.toString() ?? "");
   }
 
   useEffect(() => {
@@ -75,8 +75,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
-    if (await patch({ name, description, status, startDate, dueDate })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, description, status, startDate: startDate || null, dueDate: dueDate || null } } : d));
+    const hasStatus = data ? typeHasStatus(data.project.type) : true;
+    if (await patch(hasStatus ? { name, description, status, designDays, developmentDays } : { name, description })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, description, ...(hasStatus ? { status, designDays: designDays === "" ? null : Number(designDays), developmentDays: developmentDays === "" ? null : Number(developmentDays) } : {}) } } : d));
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -113,6 +114,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   const { project, theme, team } = data;
   const assigned = new Set(project.members.map((m) => m.memberId));
+  const hasStatus = typeHasStatus(project.type);
   const available = team.filter((m) => !assigned.has(m._id));
 
   return (
@@ -121,7 +123,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         <Breadcrumbs items={[{ label: "Projects", href: "/projects" }, { label: project.name }]} />
         <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Theme:{" "}
+          {PROJECT_TYPE_LABELS[project.type]} · Theme:{" "}
           {theme ? (
             <Link href={`/themes/${theme._id}`} className="text-primary underline">
               {theme.name}
@@ -143,26 +145,28 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <span className="text-zinc-700 dark:text-zinc-300">Description</span>
             <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT} />
           </label>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">Status</span>
-              <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)} className={INPUT}>
-                {PROJECT_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {PROJECT_STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">Start date</span>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={INPUT} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">Due date</span>
-              <input type="date" value={dueDate} min={startDate || undefined} onChange={(e) => setDueDate(e.target.value)} className={INPUT} />
-            </label>
-          </div>
+          {hasStatus && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">Status</span>
+                <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)} className={INPUT}>
+                  {PROJECT_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {PROJECT_STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">Design duration (days)</span>
+                <input type="number" min={0} step={0.5} value={designDays} onChange={(e) => setDesignDays(e.target.value)} className={INPUT} />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">Development duration (days)</span>
+                <input type="number" min={0} step={0.5} value={developmentDays} onChange={(e) => setDevelopmentDays(e.target.value)} className={INPUT} />
+              </label>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-3">
             <Button type="button" variant="destructive" onClick={handleDelete}>
               Delete project
@@ -178,6 +182,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </p>
         )}
       </Card>
+
+      {!hasStatus && <TimeLog projectId={project._id} members={project.members} />}
 
       <Card>
         <CardHeader

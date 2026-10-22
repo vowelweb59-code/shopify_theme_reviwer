@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
-import { datesInOrder, parseProjectFields, parseProjectMembers } from "@/lib/projects/sanitize";
+import { typeHasStatus } from "@/lib/projects/constants";
+import { parseProjectFields, parseProjectMembers } from "@/lib/projects/sanitize";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TeamMember } from "@/models/team-member";
+import { TimeEntry } from "@/models/time-entry";
 
 /** One project with its theme, resolved members, and the full team directory for the "add member" picker. */
 export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
@@ -24,6 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   return NextResponse.json({
     project: {
       ...project,
+      type: project.type ?? "theme_development",
       members: project.members.flatMap((pm: { memberId: unknown; role: string | null }) => {
         const m = teamById.get(String(pm.memberId));
         return m ? [{ memberId: String(m._id), name: m.name, designation: m.designation, role: pm.role }] : [];
@@ -34,7 +37,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   });
 }
 
-/** Partial update: any of name/description/status/startDate/dueDate and/or the whole `members` list. The theme can't be changed. */
+/** Partial update: any of name/description/status/designDays/developmentDays and/or the whole `members` list. The theme can't be changed. */
 export async function PATCH(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   if (!isValidObjectId(projectId)) return invalidIdResponse("projectId");
@@ -49,9 +52,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   const project = await Project.findById(projectId);
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  const startDate = "startDate" in fields.value ? fields.value.startDate : project.startDate;
-  const dueDate = "dueDate" in fields.value ? fields.value.dueDate : project.dueDate;
-  if (!datesInOrder(startDate, dueDate)) return NextResponse.json({ error: "Due date can't be before the start date." }, { status: 400 });
+  // A Theme Update has no status or design/development phases (it tracks hours instead).
+  if (!typeHasStatus(project.type)) {
+    delete update.status;
+    delete update.designDays;
+    delete update.developmentDays;
+  }
 
   if ("members" in body) {
     const members = parseProjectMembers(body.members);
@@ -71,5 +77,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   await connectToDatabase();
   const project = await Project.findByIdAndDelete(projectId).lean();
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+  await TimeEntry.deleteMany({ projectId });
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
-import { MAX_DESCRIPTION, MAX_NAME, MAX_PROJECT_MEMBERS, MAX_TEXT, PROJECT_STATUSES, type ProjectStatus } from "./constants";
+import {
+  MAX_DESCRIPTION,
+  MAX_DURATION_DAYS,
+  MAX_HOURS_PER_ENTRY,
+  MAX_NAME,
+  MAX_NOTE,
+  MAX_PROJECT_MEMBERS,
+  MAX_TEXT,
+  PROJECT_STATUSES,
+  PROJECT_TYPES,
+  type ProjectStatus,
+  type ProjectType,
+} from "./constants";
 
 // Untrusted-payload normalizers for the team and project routes. Each returns
 // either the cleaned value or an error message, so a route can answer 400
@@ -40,6 +52,27 @@ export function parseStatus(raw: unknown): Result<ProjectStatus> {
   return PROJECT_STATUSES.includes(raw as ProjectStatus) ? { ok: true, value: raw as ProjectStatus } : { ok: false, error: "Status is not valid." };
 }
 
+/** A missing type means Theme Design & Development, matching rows saved before types existed. */
+export function parseProjectType(raw: unknown): Result<ProjectType> {
+  if (raw === undefined || raw === null || raw === "") return { ok: true, value: "theme_development" };
+  return PROJECT_TYPES.includes(raw as ProjectType) ? { ok: true, value: raw as ProjectType } : { ok: false, error: "Project type is not valid." };
+}
+
+export function parseTimeEntryInput(body: Record<string, unknown>): Result<{ memberId: string; date: Date; hours: number; note: string }> {
+  const memberId = String(body.memberId ?? "");
+  if (!mongoose.Types.ObjectId.isValid(memberId)) return { ok: false, error: "Choose a team member." };
+  const date = parseDateOnly(body.date, "Date");
+  if (!date.ok) return date;
+  if (!date.value) return { ok: false, error: "Date is required." };
+  const hours = typeof body.hours === "number" ? body.hours : Number(body.hours);
+  if (!Number.isFinite(hours) || hours <= 0 || hours > MAX_HOURS_PER_ENTRY) {
+    return { ok: false, error: `Hours must be more than 0 and at most ${MAX_HOURS_PER_ENTRY}.` };
+  }
+  const note = text(body.note, "Note", MAX_NOTE, false);
+  if (!note.ok) return note;
+  return { ok: true, value: { memberId, date: date.value, hours: Math.round(hours * 100) / 100, note: note.value } };
+}
+
 /** Drops malformed entries and duplicate members (first wins); an empty role becomes null. */
 export function parseProjectMembers(raw: unknown): Result<{ memberId: string; role: string | null }[]> {
   if (!Array.isArray(raw)) return { ok: false, error: "members must be an array." };
@@ -57,7 +90,17 @@ export function parseProjectMembers(raw: unknown): Result<{ memberId: string; ro
   return { ok: true, value: members };
 }
 
-type ProjectFields = { name?: string; description?: string; status?: ProjectStatus; startDate?: Date | null; dueDate?: Date | null };
+/** Blank/null -> null (not known); otherwise a number of days from 0 up to MAX_DURATION_DAYS, kept to 2 decimals. */
+export function parseDays(raw: unknown, label: string): Result<number | null> {
+  if (raw === null || raw === undefined || raw === "") return { ok: true, value: null };
+  const days = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(days) || days < 0 || days > MAX_DURATION_DAYS) {
+    return { ok: false, error: `${label} must be a number of days from 0 to ${MAX_DURATION_DAYS}.` };
+  }
+  return { ok: true, value: Math.round(days * 100) / 100 };
+}
+
+type ProjectFields = { name?: string; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
 
 /** `partial` (PATCH) validates only the keys present; otherwise (POST) a name is required. */
 export function parseProjectFields(body: Record<string, unknown>, partial: boolean): Result<ProjectFields> {
@@ -77,16 +120,11 @@ export function parseProjectFields(body: Record<string, unknown>, partial: boole
     if (!status.ok) return status;
     out.status = status.value;
   }
-  for (const key of ["startDate", "dueDate"] as const) {
+  for (const key of ["designDays", "developmentDays"] as const) {
     if (!(key in body)) continue;
-    const date = parseDateOnly(body[key], key === "startDate" ? "Start date" : "Due date");
-    if (!date.ok) return date;
-    out[key] = date.value;
+    const days = parseDays(body[key], key === "designDays" ? "Design duration" : "Development duration");
+    if (!days.ok) return days;
+    out[key] = days.value;
   }
   return { ok: true, value: out };
-}
-
-/** Cross-field check, run against the final values (a PATCH may change only one of the two dates). */
-export function datesInOrder(startDate: Date | null | undefined, dueDate: Date | null | undefined): boolean {
-  return !startDate || !dueDate || dueDate >= startDate;
 }

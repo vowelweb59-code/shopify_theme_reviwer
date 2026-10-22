@@ -1,5 +1,5 @@
 import { Schema, model, models, type InferSchemaType } from "mongoose";
-import { PROJECT_STATUSES } from "@/lib/projects/constants";
+import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/projects/constants";
 
 // Work on one theme (a new build, a version update, a fix round). A theme can
 // have several projects over time, so themeId is indexed but not unique.
@@ -19,9 +19,17 @@ const projectSchema = new Schema(
     themeId: { type: Schema.Types.ObjectId, ref: "Theme", required: true },
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
-    status: { type: String, enum: PROJECT_STATUSES, required: true, default: "planning" },
-    startDate: { type: Date, default: null },
-    dueDate: { type: Date, default: null },
+    // Rows from before project types existed have no `type`; they are all
+    // Theme Design & Development (lib/projects/constants.ts), which the API
+    // fills in when reading. Immutable after creation so a project's data
+    // (status vs. logged hours) never disagrees with its type.
+    type: { type: String, enum: PROJECT_TYPES, required: true, default: "theme_development", immutable: true },
+    // null for a Theme Update project, which has no status.
+    status: { type: String, enum: [...PROJECT_STATUSES, null], default: null },
+    // How long the design and the development phases took, in days. Entered
+    // by hand for now (themes built before this existed); null = not known.
+    designDays: { type: Number, default: null, min: 0 },
+    developmentDays: { type: Number, default: null, min: 0 },
     members: { type: [projectMemberSchema], default: () => [] },
   },
   { timestamps: true }

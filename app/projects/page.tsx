@@ -8,8 +8,15 @@ import { Button } from "@/app/_components/ui/Button";
 import { Modal } from "@/app/_components/ui/Modal";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
-import { formatDateOnly } from "@/app/_components/formatDate";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/projects/constants";
+import {
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABELS,
+  PROJECT_TYPES,
+  PROJECT_TYPE_LABELS,
+  typeHasStatus,
+  type ProjectStatus,
+  type ProjectType,
+} from "@/lib/projects/constants";
 import { ProjectStatusPill } from "./_components/ProjectStatusPill";
 
 type ProjectRow = {
@@ -17,20 +24,24 @@ type ProjectRow = {
   name: string;
   themeId: string;
   themeName: string | null;
-  status: ProjectStatus;
+  type: ProjectType;
+  status: ProjectStatus | null;
+  totalHours: number;
   description?: string;
-  dueDate: string | null;
+  designDays: number | null;
+  developmentDays: number | null;
   members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
 function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { _id: string; name: string }[]; open: boolean; onOpenChange: (o: boolean) => void; onCreated: (id: string) => void }) {
+  const [type, setType] = useState<ProjectType>("theme_development");
   const [themeId, setThemeId] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
-  const [startDate, setStartDate] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [designDays, setDesignDays] = useState("");
+  const [developmentDays, setDevelopmentDays] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +53,7 @@ function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { 
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ themeId, name, status, startDate, dueDate }),
+        body: JSON.stringify({ type, themeId, name, status, designDays, developmentDays }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -60,6 +71,17 @@ function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { 
   return (
     <Modal open={open} onOpenChange={onOpenChange} title="New project" description="Team members are added on the project page.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-700 dark:text-zinc-300">Project type</span>
+          <select value={type} onChange={(e) => setType(e.target.value as ProjectType)} className={INPUT}>
+            {PROJECT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {PROJECT_TYPE_LABELS[t]}
+              </option>
+            ))}
+          </select>
+          {!typeHasStatus(type) && <span className="text-xs text-zinc-500">Ongoing work with no status or due date. You log the hours spent on it instead.</span>}
+        </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Theme</span>
           <select
@@ -86,26 +108,30 @@ function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { 
           <span className="text-zinc-700 dark:text-zinc-300">Project name</span>
           <input required value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Adorn 5.0 update" />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">Status</span>
-          <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)} className={INPUT}>
-            {PROJECT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {PROJECT_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="grid grid-cols-2 gap-3">
+        {typeHasStatus(type) && (
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">Start date</span>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={INPUT} />
+            <span className="text-zinc-700 dark:text-zinc-300">Status</span>
+            <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)} className={INPUT}>
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {PROJECT_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">Due date</span>
-            <input type="date" value={dueDate} min={startDate || undefined} onChange={(e) => setDueDate(e.target.value)} className={INPUT} />
-          </label>
-        </div>
+        )}
+        {typeHasStatus(type) && (
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">Design duration (days)</span>
+              <input type="number" min={0} step={0.5} value={designDays} onChange={(e) => setDesignDays(e.target.value)} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">Development duration (days)</span>
+              <input type="number" min={0} step={0.5} value={developmentDays} onChange={(e) => setDevelopmentDays(e.target.value)} className={INPUT} />
+            </label>
+          </div>
+        )}
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
@@ -126,6 +152,7 @@ export default function ProjectsPage() {
   const [themes, setThemes] = useState<{ _id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,8 +166,9 @@ export default function ProjectsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Copies the theme, description and team; the status goes back to Planning
-  // and the dates are cleared, since a copy is a fresh run of the work.
+  // Copies the type, theme, description and team; the status goes back to
+  // Planning, and the durations and any logged hours are not carried over, since a
+  // copy is a fresh run of the work.
   async function handleDuplicate(p: ProjectRow) {
     setError(null);
     setDuplicating(p._id);
@@ -149,6 +177,7 @@ export default function ProjectsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          type: p.type,
           themeId: p.themeId,
           name: `${p.name} (copy)`,
           description: p.description ?? "",
@@ -171,8 +200,17 @@ export default function ProjectsPage() {
 
   const columns: TableColumn<ProjectRow>[] = [
     { key: "name", header: "Project", sortValue: (p) => p.name.toLowerCase(), render: (p) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</span> },
+    { key: "type", header: "Type", sortValue: (p) => PROJECT_TYPES.indexOf(p.type), render: (p) => PROJECT_TYPE_LABELS[p.type] },
     { key: "theme", header: "Theme", sortValue: (p) => (p.themeName ?? "").toLowerCase(), render: (p) => p.themeName ?? <span className="text-zinc-400">Deleted theme</span> },
-    { key: "status", header: "Status", sortValue: (p) => PROJECT_STATUSES.indexOf(p.status), render: (p) => <ProjectStatusPill status={p.status} /> },
+    { key: "status", header: "Status", sortValue: (p) => (p.status ? PROJECT_STATUSES.indexOf(p.status) : -1),
+      render: (p) => (p.status ? <ProjectStatusPill status={p.status} /> : <span className="text-zinc-500">Ongoing</span>),
+    },
+    {
+      key: "hours",
+      header: "Hours logged",
+      sortValue: (p) => p.totalHours,
+      render: (p) => (typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.totalHours} h`),
+    },
     {
       key: "team",
       header: "Team",
@@ -186,7 +224,18 @@ export default function ProjectsPage() {
           </span>
         ),
     },
-    { key: "due", header: "Due", sortValue: (p) => p.dueDate ?? "9999", render: (p) => (p.dueDate ? formatDateOnly(p.dueDate) : <span className="text-zinc-400">—</span>) },
+    {
+      key: "design",
+      header: "Design",
+      sortValue: (p) => p.designDays ?? -1,
+      render: (p) => (p.designDays === null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.designDays} d`),
+    },
+    {
+      key: "development",
+      header: "Development",
+      sortValue: (p) => p.developmentDays ?? -1,
+      render: (p) => (p.developmentDays === null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.developmentDays} d`),
+    },
     {
       key: "actions",
       header: "",
@@ -210,12 +259,15 @@ export default function ProjectsPage() {
     },
   ];
 
+  const visible = typeFilter === "all" ? projects : projects.filter((p) => p.type === typeFilter);
+  const countOf = (t: ProjectType) => projects.filter((p) => p.type === t).length;
+
   return (
     <PageContainer>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Projects</h1>
-          <p className="mt-1 text-sm text-zinc-500">One or more projects per theme, each with its own team.</p>
+          <p className="mt-1 text-sm text-zinc-500">Theme builds, theme updates and presets, each with its own team.</p>
         </div>
         <Button onClick={() => setModalOpen(true)} disabled={themes.length === 0}>
           <Plus className="h-4 w-4" aria-hidden />
@@ -224,6 +276,28 @@ export default function ProjectsPage() {
       </div>
 
       {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
+
+      {projects.length > 0 && (
+        <div role="tablist" aria-label="Project type" className="flex flex-wrap gap-2">
+          {(["all", ...PROJECT_TYPES] as const).map((t) => {
+            const active = typeFilter === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTypeFilter(t)}
+                className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                  active ? "border-transparent bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
+                }`}
+              >
+                {t === "all" ? "All" : PROJECT_TYPE_LABELS[t]} ({t === "all" ? projects.length : countOf(t)})
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-zinc-500">Loading…</p>
@@ -234,7 +308,7 @@ export default function ProjectsPage() {
           description={themes.length === 0 ? "Add a theme on the Themes page first, then start a project for it." : "Start a project for one of your themes, then assign team members to it."}
         />
       ) : (
-        <ResponsiveTable columns={columns} rows={projects} rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
+        <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects of this type yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
 
       {modalOpen && <NewProjectModal themes={themes} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}

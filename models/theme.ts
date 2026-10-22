@@ -115,7 +115,13 @@ async function cascadeDeleteRuns(themeId: unknown) {
   const { deleteZip } = await import("../lib/themes/zipStorage");
   const { Project } = await import("./project");
 
-  await Project.deleteMany({ themeId });
+  const { TimeEntry } = await import("./time-entry");
+
+  const projectIds = (await Project.find({ themeId }).select("_id").lean()).map((p) => p._id);
+  if (projectIds.length > 0) {
+    await TimeEntry.deleteMany({ projectId: { $in: projectIds } });
+    await Project.deleteMany({ _id: { $in: projectIds } });
+  }
 
   const runs = await AuditRun.find({ themeId }).select("_id");
   const runIds = runs.map((r) => r._id);
