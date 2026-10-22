@@ -232,15 +232,8 @@ export default function ProjectsPage() {
   const columns: TableColumn<ProjectRow>[] = [
     { key: "name", header: "Project", sortValue: (p) => p.name.toLowerCase(), render: (p) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</span> },
     { key: "type", header: "Type", sortValue: (p) => PROJECT_TYPES.indexOf(p.type), render: (p) => PROJECT_TYPE_LABELS[p.type] },
-    { key: "theme", header: "Theme", sortValue: (p) => (p.themeName ?? "").toLowerCase(), render: (p) => p.themeName ?? <span className="text-zinc-400">Deleted theme</span> },
     { key: "status", header: "Status", sortValue: (p) => (p.status ? PROJECT_STATUSES.indexOf(p.status) : -1),
       render: (p) => (p.status ? <ProjectStatusPill status={p.status} /> : <span className="text-zinc-500">Ongoing</span>),
-    },
-    {
-      key: "hours",
-      header: "Hours logged",
-      sortValue: (p) => p.totalHours,
-      render: (p) => (typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.totalHours} h`),
     },
     {
       key: "team",
