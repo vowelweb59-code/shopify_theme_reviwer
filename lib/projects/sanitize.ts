@@ -7,8 +7,10 @@ import {
   MAX_NOTE,
   MAX_PROJECT_MEMBERS,
   MAX_TEXT,
+  PORTALS,
   PROJECT_STATUSES,
   PROJECT_TYPES,
+  type Portal,
   type ProjectStatus,
   type ProjectType,
 } from "./constants";
@@ -50,6 +52,12 @@ export function parseDateOnly(raw: unknown, label: string): Result<Date | null> 
 
 export function parseStatus(raw: unknown): Result<ProjectStatus> {
   return PROJECT_STATUSES.includes(raw as ProjectStatus) ? { ok: true, value: raw as ProjectStatus } : { ok: false, error: "Status is not valid." };
+}
+
+/** Blank/null -> null (no portal yet); otherwise one of PORTALS. */
+export function parsePortal(raw: unknown): Result<Portal | null> {
+  if (raw === null || raw === undefined || raw === "") return { ok: true, value: null };
+  return PORTALS.includes(raw as Portal) ? { ok: true, value: raw as Portal } : { ok: false, error: "Portal is not valid." };
 }
 
 /** A missing type means Theme Design & Development, matching rows saved before types existed. */
@@ -100,7 +108,7 @@ export function parseDays(raw: unknown, label: string): Result<number | null> {
   return { ok: true, value: Math.round(days * 100) / 100 };
 }
 
-type ProjectFields = { name?: string; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
+type ProjectFields = { name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
 
 /** `partial` (PATCH) validates only the keys present; otherwise (POST) a name is required. */
 export function parseProjectFields(body: Record<string, unknown>, partial: boolean): Result<ProjectFields> {
@@ -114,6 +122,11 @@ export function parseProjectFields(body: Record<string, unknown>, partial: boole
     const description = text(body.description, "Description", MAX_DESCRIPTION, false);
     if (!description.ok) return description;
     out.description = description.value;
+  }
+  if ("portal" in body) {
+    const portal = parsePortal(body.portal);
+    if (!portal.ok) return portal;
+    out.portal = portal.value;
   }
   if ("status" in body) {
     const status = parseStatus(body.status);

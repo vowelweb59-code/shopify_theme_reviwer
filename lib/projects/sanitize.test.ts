@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDateOnly, parseDays, parseProjectFields, parseProjectMembers, parseProjectType, parseTeamMemberInput, parseTimeEntryInput } from "./sanitize";
+import { parseDateOnly, parseDays, parseProjectFields, parseProjectMembers, parsePortal, parseProjectType, parseTeamMemberInput, parseTimeEntryInput } from "./sanitize";
 
 const ID_A = "507f1f77bcf86cd799439011";
 const ID_B = "507f1f77bcf86cd799439012";
@@ -77,6 +77,14 @@ describe("parseDays", () => {
 
   it("rejects negative, huge and non-numeric values", () => {
     for (const raw of [-1, 99999, "abc"]) expect(parseDays(raw, "d").ok).toBe(false);
+  });
+});
+
+describe("parsePortal", () => {
+  it("accepts the five portals, treats blank as none and rejects others", () => {
+    expect(parsePortal("SAMS")).toEqual({ ok: true, value: "SAMS" });
+    expect(parsePortal("")).toEqual({ ok: true, value: null });
+    expect(parsePortal("Fresco").ok).toBe(false);
   });
 });
 

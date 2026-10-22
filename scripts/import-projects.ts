@@ -30,6 +30,7 @@ async function main() {
     members: members.map((m) => m.name),
     projects: projects.map((p) => ({
       name: p.name,
+      portal: p.portal ?? null,
       themeName: themeById.get(String(p.themeId)) ?? null,
       status: p.status ?? null,
       designDays: p.designDays ?? null,
@@ -76,7 +77,7 @@ async function main() {
   const creates = plan.creates.map((c) => {
     const themeId = themeIds.get(c.themeName.toLowerCase());
     if (!themeId) throw new Error(`No theme named "${c.themeName}".`);
-    return { themeId, name: c.name, description: c.description, type: "theme_development", status: c.status, designDays: c.designDays, developmentDays: c.developmentDays, members: memberRefs(c.memberNames) };
+    return { themeId, name: c.name, portal: c.portal, description: c.description, type: "theme_development", status: c.status, designDays: c.designDays, developmentDays: c.developmentDays, members: memberRefs(c.memberNames) };
   });
   const updates = plan.updates.map((u) => ({ u, refs: memberRefs(u.addMembers) }));
 

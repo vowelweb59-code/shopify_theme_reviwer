@@ -9,11 +9,13 @@ import { Modal } from "@/app/_components/ui/Modal";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import {
+  PORTALS,
   PROJECT_STATUSES,
   PROJECT_STATUS_LABELS,
   PROJECT_TYPES,
   PROJECT_TYPE_LABELS,
   typeHasStatus,
+  type Portal,
   type ProjectStatus,
   type ProjectType,
 } from "@/lib/projects/constants";
@@ -21,6 +23,7 @@ import { ProjectStatusPill } from "./_components/ProjectStatusPill";
 
 type ProjectRow = {
   _id: string;
+  portal: Portal | null;
   name: string;
   themeId: string;
   themeName: string | null;
@@ -35,7 +38,20 @@ type ProjectRow = {
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
-function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { _id: string; name: string }[]; open: boolean; onOpenChange: (o: boolean) => void; onCreated: (id: string) => void }) {
+function NewProjectModal({
+  themes,
+  defaultPortal,
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  themes: { _id: string; name: string }[];
+  defaultPortal: Portal | "";
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onCreated: (id: string) => void;
+}) {
+  const [portal, setPortal] = useState<Portal | "">(defaultPortal);
   const [type, setType] = useState<ProjectType>("theme_development");
   const [themeId, setThemeId] = useState("");
   const [name, setName] = useState("");
@@ -53,7 +69,7 @@ function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { 
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, themeId, name, status, designDays, developmentDays }),
+        body: JSON.stringify({ portal, type, themeId, name, status, designDays, developmentDays }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -71,6 +87,19 @@ function NewProjectModal({ themes, open, onOpenChange, onCreated }: { themes: { 
   return (
     <Modal open={open} onOpenChange={onOpenChange} title="New project" description="Team members are added on the project page.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-700 dark:text-zinc-300">Portal</span>
+          <select required value={portal} onChange={(e) => setPortal(e.target.value as Portal)} className={INPUT}>
+            <option value="" disabled>
+              Choose a portal…
+            </option>
+            {PORTALS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Project type</span>
           <select value={type} onChange={(e) => setType(e.target.value as ProjectType)} className={INPUT}>
@@ -152,6 +181,7 @@ export default function ProjectsPage() {
   const [themes, setThemes] = useState<{ _id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [portalTab, setPortalTab] = useState<Portal | "none">(PORTALS[0]);
   const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -177,6 +207,7 @@ export default function ProjectsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          portal: p.portal,
           type: p.type,
           themeId: p.themeId,
           name: `${p.name} (copy)`,
@@ -259,8 +290,12 @@ export default function ProjectsPage() {
     },
   ];
 
-  const visible = typeFilter === "all" ? projects : projects.filter((p) => p.type === typeFilter);
-  const countOf = (t: ProjectType) => projects.filter((p) => p.type === t).length;
+  // Projects with no portal yet (e.g. made before portals existed) get their own tab, shown only while there are any.
+  const unassigned = projects.filter((p) => !p.portal).length;
+  const inPortal = projects.filter((p) => (portalTab === "none" ? !p.portal : p.portal === portalTab));
+  const visible = typeFilter === "all" ? inPortal : inPortal.filter((p) => p.type === typeFilter);
+  const countOf = (t: ProjectType) => inPortal.filter((p) => p.type === t).length;
+  const portalCount = (p: Portal) => projects.filter((x) => x.portal === p).length;
 
   return (
     <PageContainer>
@@ -278,6 +313,28 @@ export default function ProjectsPage() {
       {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
 
       {projects.length > 0 && (
+        <div role="tablist" aria-label="Portal" className="flex flex-wrap gap-1 border-b border-border-subtle">
+          {([...PORTALS, ...(unassigned > 0 ? (["none"] as const) : [])] as const).map((p) => {
+            const active = portalTab === p;
+            return (
+              <button
+                key={p}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setPortalTab(p)}
+                className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
+                  active ? "border-primary font-medium text-zinc-950 dark:text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                }`}
+              >
+                {p === "none" ? "No portal" : p} ({p === "none" ? unassigned : portalCount(p)})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {projects.length > 0 && (
         <div role="tablist" aria-label="Project type" className="flex flex-wrap gap-2">
           {(["all", ...PROJECT_TYPES] as const).map((t) => {
             const active = typeFilter === t;
@@ -292,7 +349,7 @@ export default function ProjectsPage() {
                   active ? "border-transparent bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
                 }`}
               >
-                {t === "all" ? "All" : PROJECT_TYPE_LABELS[t]} ({t === "all" ? projects.length : countOf(t)})
+                {t === "all" ? "All" : PROJECT_TYPE_LABELS[t]} ({t === "all" ? inPortal.length : countOf(t)})
               </button>
             );
           })}
@@ -308,10 +365,10 @@ export default function ProjectsPage() {
           description={themes.length === 0 ? "Add a theme on the Themes page first, then start a project for it." : "Start a project for one of your themes, then assign team members to it."}
         />
       ) : (
-        <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects of this type yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
+        <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
 
-      {modalOpen && <NewProjectModal themes={themes} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}
+      {modalOpen && <NewProjectModal themes={themes} defaultPortal={portalTab === "none" ? "" : portalTab} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}
     </PageContainer>
   );
 }

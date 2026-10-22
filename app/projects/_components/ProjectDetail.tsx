@@ -9,13 +9,13 @@ import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, typeHasStatus, type ProjectStatus, type ProjectType } from "@/lib/projects/constants";
+import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType } from "@/lib/projects/constants";
 import { TimeLog } from "./TimeLog";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
 type Loaded = {
-  project: { _id: string; name: string; description: string; type: ProjectType; status: ProjectStatus | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[] };
+  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[] };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -29,6 +29,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [portal, setPortal] = useState<Portal | "">("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [designDays, setDesignDays] = useState("");
   const [developmentDays, setDevelopmentDays] = useState("");
@@ -41,6 +42,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     setData(loaded);
     setName(loaded.project.name);
     setDescription(loaded.project.description ?? "");
+    setPortal(loaded.project.portal ?? "");
     setStatus(loaded.project.status ?? "planning");
     setDesignDays(loaded.project.designDays?.toString() ?? "");
     setDevelopmentDays(loaded.project.developmentDays?.toString() ?? "");
@@ -76,8 +78,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     e.preventDefault();
     setSaving(true);
     const hasStatus = data ? typeHasStatus(data.project.type) : true;
-    if (await patch(hasStatus ? { name, description, status, designDays, developmentDays } : { name, description })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, description, ...(hasStatus ? { status, designDays: designDays === "" ? null : Number(designDays), developmentDays: developmentDays === "" ? null : Number(developmentDays) } : {}) } } : d));
+    if (await patch(hasStatus ? { name, portal, description, status, designDays, developmentDays } : { name, portal, description })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, designDays: designDays === "" ? null : Number(designDays), developmentDays: developmentDays === "" ? null : Number(developmentDays) } : {}) } } : d));
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -140,6 +142,17 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Project name</span>
             <input required value={name} onChange={(e) => setName(e.target.value)} className={INPUT} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm sm:max-w-xs">
+            <span className="text-zinc-700 dark:text-zinc-300">Portal</span>
+            <select value={portal} onChange={(e) => setPortal(e.target.value as Portal | "")} className={INPUT}>
+              <option value="">No portal</option>
+              {PORTALS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Description</span>

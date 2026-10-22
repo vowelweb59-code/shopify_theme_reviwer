@@ -59,12 +59,12 @@ describe("buildPlan", () => {
   it("only fills gaps in an existing project and never duplicates or overwrites", () => {
     const withExisting: ExistingState = {
       ...existing,
-      projects: [{ name: "alpha version 2", themeName: "Alpha", status: "under_development", designDays: null, developmentDays: 99, description: "", memberNames: ["Bob Ray"] }],
+      projects: [{ name: "alpha version 2", portal: null, themeName: "Alpha", status: "under_development", designDays: null, developmentDays: 99, description: "", memberNames: ["Bob Ray"] }],
     };
     const plan = buildPlan(data, withExisting);
     expect(plan.creates.map((c) => c.name)).toEqual(["Alpha 1", "Beta"]);
     expect(plan.updates).toHaveLength(1);
-    expect(plan.updates[0].set).toEqual({ name: "Alpha 2", designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
+    expect(plan.updates[0].set).toEqual({ name: "Alpha 2", portal: "P1", designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
     expect(plan.updates[0].addMembers).toEqual(["Ann Lee"]);
     expect(plan.updates[0].notes.join()).toContain("status stays under_development");
     expect(plan.updates[0].notes.join()).toContain("developmentDays stays 99");

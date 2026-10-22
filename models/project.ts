@@ -1,5 +1,5 @@
 import { Schema, model, models, type InferSchemaType } from "mongoose";
-import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/projects/constants";
+import { PORTALS, PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/projects/constants";
 
 // Work on one theme (a new build, a version update, a fix round). A theme can
 // have several projects over time, so themeId is indexed but not unique.
@@ -19,6 +19,8 @@ const projectSchema = new Schema(
     themeId: { type: Schema.Types.ObjectId, ref: "Theme", required: true },
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
+    // Which portal (Theme Store account) it belongs to; null until set.
+    portal: { type: String, enum: [...PORTALS, null], default: null },
     // Rows from before project types existed have no `type`; they are all
     // Theme Design & Development (lib/projects/constants.ts), which the API
     // fills in when reading. Immutable after creation so a project's data

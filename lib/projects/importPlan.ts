@@ -17,7 +17,7 @@ import type { ProjectStatus } from "./constants";
 //    from the main table, and the table's design/development days.
 //  - Matching is by name, case-insensitive, so re-running never duplicates.
 //    An existing project is only filled in (blank days/description, missing
-//    team members) — its status, days and team are never overwritten or removed.
+//    team members, portal) — its status, days and team are never overwritten or removed.
 //  - Team comes from the summary tables. The latest version also takes the main
 //    table's designers/developers for any role the summary tables leave empty
 //    for it (they often only name the earlier versions).
@@ -45,6 +45,7 @@ export type ImportData = {
 
 export type ExistingProject = {
   name: string;
+  portal: string | null;
   themeName: string | null;
   status: string | null;
   designDays: number | null;
@@ -56,6 +57,7 @@ export type ExistingState = { themes: string[]; members: string[]; projects: Exi
 
 export type PlannedProject = {
   name: string;
+  portal: string;
   themeName: string;
   status: ProjectStatus;
   designDays: number | null;
@@ -65,7 +67,7 @@ export type PlannedProject = {
 };
 export type PlannedUpdate = {
   name: string;
-  set: { name?: string; designDays?: number; developmentDays?: number; description?: string };
+  set: { name?: string; portal?: string; designDays?: number; developmentDays?: number; description?: string };
   addMembers: string[];
   notes: string[];
 };
@@ -186,11 +188,12 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
 
       const found = existingByName.get(lower(name)) ?? (version !== null ? existingByName.get(lower(legacyName(version))) : undefined);
       if (!found) {
-        plan.creates.push({ name, themeName: row.theme, description, memberNames: members, ...wanted });
+        plan.creates.push({ name, portal: row.portal, themeName: row.theme, description, memberNames: members, ...wanted });
         return;
       }
       const update: PlannedUpdate = { name: found.name, set: {}, addMembers: [], notes: [] };
       if (lower(found.name) !== lower(name)) update.set.name = name;
+      if (!found.portal) update.set.portal = row.portal;
       if (found.status && found.status !== wanted.status) update.notes.push(`status stays ${found.status} (sheet says ${wanted.status})`);
       for (const key of ["designDays", "developmentDays"] as const) {
         const value = wanted[key];

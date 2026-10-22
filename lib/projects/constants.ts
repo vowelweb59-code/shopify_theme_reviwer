@@ -15,6 +15,10 @@ export function typeHasStatus(type: ProjectType): boolean {
   return type !== "theme_update";
 }
 
+// The portals (Theme Store accounts) a project belongs to; the Projects page has one tab each.
+export const PORTALS = ["Vowel Web", "Themeshopy", "Fresco Solutions", "SAMS", "Flex"] as const;
+export type Portal = (typeof PORTALS)[number];
+
 export const PROJECT_STATUSES = [
   "planning",
   "under_designing",
