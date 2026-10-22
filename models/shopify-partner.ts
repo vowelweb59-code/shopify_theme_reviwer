@@ -16,6 +16,14 @@ const shopifyPartnerSchema = new Schema(
     countrySlugs: { type: [String], default: [] },
     /** Directory tier (platinum / plus / premier / select); null = untiered. */
     tier: { type: String, enum: [...PARTNER_TIERS, null], default: null },
+    /** From the profile page; null until the details step has read it (or the partner left it blank). */
+    website: { type: String, default: null },
+    email: { type: String, default: null },
+    phone: { type: String, default: null },
+    partnerSince: { type: String, default: null },
+    /** When the profile page was read; null = not yet. */
+    detailAt: { type: Date, default: null },
+    detailError: { type: String, default: null },
     startingPrice: { type: Number, default: null },
     services: { type: [String], default: [] },
     moreServices: { type: Number, default: 0 },

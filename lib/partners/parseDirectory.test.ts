@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { countryFromLocation, countryLabel, parseCards, parseCountrySlugs, parseTotal } from "./parseDirectory";
+import { countryFromLocation, countryLabel, parseCards, parseCountrySlugs, parseProfile, parseTotal } from "./parseDirectory";
 
 // A real directory page saved 2026-10-01 (United States, page 1).
 const page = readFileSync(join(__dirname, "__fixtures__", "us-page1.html"), "utf8");
@@ -26,5 +26,18 @@ describe("parseDirectory", () => {
     expect(countryLabel("united-kingdom")).toBe("United Kingdom");
     expect(countryFromLocation("Dover, United States")).toBe("United States");
     expect(countryFromLocation(null)).toBeNull();
+  });
+
+  it("reads a profile's contact block and ignores links after it", () => {
+    const html =
+      '<p>Partner since September 2015</p><p>Contact information</p><a href="https://itgeeks.com/?utm_source=sref" rel="nofollow">x</a>' +
+      '<a href="tel:3852402913">3852402913</a><a href="mailto:Sales@ItGeeks.com">m</a><p>Primary location</p><a href="https://crownbees.com/">store</a>';
+    expect(parseProfile(html)).toEqual({ website: "https://itgeeks.com", email: "sales@itgeeks.com", phone: "3852402913", partnerSince: "September 2015" });
+  });
+
+  it("leaves missing contact fields null", () => {
+    const html = '<p>Contact information</p><a href="https://adamshrum.com/">x</a><a href="mailto:hello@adamshrum.com">m</a><p>Primary location</p>';
+    expect(parseProfile(html)).toMatchObject({ website: "https://adamshrum.com", email: "hello@adamshrum.com", phone: null });
+    expect(parseProfile("<html></html>")).toEqual({ website: null, email: null, phone: null, partnerSince: null });
   });
 });

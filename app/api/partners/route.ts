@@ -11,6 +11,11 @@ type PartnerRow = {
   location: string | null;
   countrySlugs: string[];
   tier: string | null;
+  website: string | null;
+  email: string | null;
+  phone: string | null;
+  partnerSince: string | null;
+  detailAt: Date | null;
   startingPrice: number | null;
   services: string[];
   moreServices: number;
@@ -28,6 +33,7 @@ export async function GET() {
   ]);
   return NextResponse.json({
     countries: countries.map((c) => ({ slug: c._id, label: countryLabel(c._id), count: c.n })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
+    detailsPending: partners.filter((p) => !p.detailAt).length,
     lastCrawledAt: partners.reduce<Date | null>((latest, p) => (!latest || p.lastSeenAt > latest ? p.lastSeenAt : latest), null),
     partners: partners.map((p) => ({
       slug: p.slug,
@@ -38,6 +44,10 @@ export async function GET() {
       location: p.location,
       countrySlugs: p.countrySlugs,
       tier: p.tier ?? null,
+      website: p.website ?? null,
+      email: p.email ?? null,
+      phone: p.phone ?? null,
+      partnerSince: p.partnerSince ?? null,
       startingPrice: p.startingPrice,
       services: p.services,
       moreServices: p.moreServices,

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, RefreshCw, Star, Users } from "lucide-react";
+import { Download, ExternalLink, Mail, RefreshCw, Star, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
@@ -18,11 +18,15 @@ type Partner = {
   location: string | null;
   countrySlugs: string[];
   tier: string | null;
+  website: string | null;
+  email: string | null;
+  phone: string | null;
   startingPrice: number | null;
   services: string[];
   moreServices: number;
 };
-type PartnersData = { partners: Partner[]; countries: { slug: string; label: string; count: number }[]; lastCrawledAt: string | null };
+type PartnersData = { detailsPending: number; partners: Partner[]; countries: { slug: string; label: string; count: number }[]; lastCrawledAt: string | null };
+type DetailsProgress = { running: boolean; total: number; done: number; errors: number; lastError: string | null };
 type Progress = { running: boolean; total: number; done: number; current: string | null; partnersSeen: number; errors: string[]; finishedAt: string | null };
 
 const TIER_LABEL: Record<string, string> = { platinum: "Platinum", plus: "Plus", premier: "Premier", select: "Select" };
@@ -32,19 +36,24 @@ const TIER_ORDER = ["platinum", "plus", "premier", "select", ""];
 export function PotentialAffiliatesTab() {
   const { data, loading, error, reload } = useApi<PartnersData>("/api/partners");
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [details, setDetails] = useState<DetailsProgress | null>(null);
   const [country, setCountry] = useState("");
   const [tier, setTier] = useState("");
   const [query, setQuery] = useState("");
   const [startError, setStartError] = useState<string | null>(null);
 
   // Poll while a crawl runs (and once on mount, to pick up one already running).
-  const running = progress?.running ?? false;
+  const crawling = progress?.running ?? false;
+  const reading = details?.running ?? false;
+  const running = crawling || reading;
   useEffect(() => {
     let stop = false;
     async function poll() {
       try {
-        const res = await fetch("/api/partners/crawl");
-        if (res.ok && !stop) setProgress((await res.json()) as Progress);
+        const [a, b] = await Promise.all([fetch("/api/partners/crawl"), fetch("/api/partners/details")]);
+        if (stop) return;
+        if (a.ok) setProgress((await a.json()) as Progress);
+        if (b.ok) setDetails((await b.json()) as DetailsProgress);
       } catch {
         /* the next tick retries */
       }
@@ -68,6 +77,13 @@ export function PotentialAffiliatesTab() {
     setProgress((await res.json()) as Progress);
   }
 
+  async function startDetails() {
+    setStartError(null);
+    const res = await fetch("/api/partners/details", { method: "POST" });
+    if (!res.ok) return setStartError("Couldn't start reading contact details.");
+    setDetails((await res.json()) as DetailsProgress);
+  }
+
   const partners = useMemo(() => data?.partners ?? [], [data]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,9 +91,21 @@ export function PotentialAffiliatesTab() {
       (p) =>
         (!country || p.countrySlugs.includes(country)) &&
         (!tier || (tier === "none" ? !p.tier : p.tier === tier)) &&
-        (!q || p.name.toLowerCase().includes(q) || (p.location ?? "").toLowerCase().includes(q) || p.services.some((s) => s.toLowerCase().includes(q)))
+        (!q || p.name.toLowerCase().includes(q) || (p.location ?? "").toLowerCase().includes(q) || p.services.some((s) => s.toLowerCase().includes(q)) || (p.email ?? "").includes(q) || (p.website ?? "").toLowerCase().includes(q))
     );
   }, [partners, country, tier, query]);
+
+  function exportCsv() {
+    const cell = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const header = ["Partner", "Country", "Tier", "Location", "Rating", "Reviews", "Email", "Phone", "Website", "Profile"];
+    const lines = shown.map((p) => [p.name, countryFromLocation(p.location), p.tier ? TIER_LABEL[p.tier] : "", p.location, p.rating, p.reviewCount, p.email, p.phone, p.website, p.url].map(cell).join(","));
+    const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "shopify-partners.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const columns: TableColumn<Partner>[] = [
     {
@@ -102,6 +130,31 @@ export function PotentialAffiliatesTab() {
       header: "Tier",
       render: (p) => (p.tier ? <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">{TIER_LABEL[p.tier] ?? p.tier}</span> : <span className="text-zinc-400">—</span>),
       sortValue: (p) => TIER_ORDER.indexOf(p.tier ?? ""),
+    },
+    {
+      key: "email",
+      header: "Email",
+      render: (p) => (p.email ? <a href={`mailto:${p.email}`} className="text-xs hover:text-primary hover:underline">{p.email}</a> : <span className="text-zinc-400">—</span>),
+      sortValue: (p) => p.email ?? "~",
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      render: (p) => (p.phone ? <a href={`tel:${p.phone}`} className="text-xs tabular-nums hover:text-primary hover:underline">{p.phone}</a> : <span className="text-zinc-400">—</span>),
+      sortValue: (p) => p.phone ?? "~",
+    },
+    {
+      key: "website",
+      header: "Website",
+      render: (p) =>
+        p.website ? (
+          <a href={p.website} target="_blank" rel="noopener noreferrer" className="text-xs hover:text-primary hover:underline">
+            {p.website.replace(/^https?:\/\/(www\.)?/, "")}
+          </a>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
+      sortValue: (p) => p.website ?? "~",
     },
     { key: "location", header: "Location", render: (p) => <span className="text-zinc-600 dark:text-zinc-400">{p.location ?? "—"}</span>, sortValue: (p) => (p.location ?? "~").toLowerCase() },
     {
@@ -148,13 +201,21 @@ export function PotentialAffiliatesTab() {
         <a href="https://www.shopify.com/partners/directory" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           Partner Directory
         </a>
-        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with a short pause between them, so it takes roughly 15 minutes.
+        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with a short pause between them, so it takes roughly 15 minutes. Contact details (email, phone, website) are on each partner’s own profile page, so they are a separate step: about one request per partner, roughly two hours for everyone, and it picks up where it stopped.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={startCrawl} disabled={running}>
           <RefreshCw className={`mr-1.5 h-4 w-4 ${running ? "animate-spin" : ""}`} aria-hidden />
-          {running ? "Collecting…" : partners.length > 0 ? "Refresh partners" : "Collect partners"}
+          {crawling ? "Collecting…" : partners.length > 0 ? "Refresh partners" : "Collect partners"}
+        </Button>
+        <Button type="button" onClick={startDetails} disabled={running || (data?.detailsPending ?? 0) === 0}>
+          <Mail className={`mr-1.5 h-4 w-4 ${reading ? "animate-pulse" : ""}`} aria-hidden />
+          {reading ? "Reading contact details…" : `Collect contact details (${(data?.detailsPending ?? 0).toLocaleString()} left)`}
+        </Button>
+        <Button type="button" onClick={exportCsv} disabled={shown.length === 0}>
+          <Download className="mr-1.5 h-4 w-4" aria-hidden />
+          Export CSV
         </Button>
         <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Country" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
           <option value="">All countries ({partners.length})</option>
@@ -197,6 +258,13 @@ export function PotentialAffiliatesTab() {
           </p>
         </div>
       )}
+      {details?.running && (
+        <p className="text-xs text-zinc-500">
+          Reading profiles: {details.done.toLocaleString()} of {details.total.toLocaleString()} (about 1 per 1.5 s, highest-reviewed first; safe to leave and come back — it resumes where it stopped).
+          {details.errors > 0 ? ` ${details.errors} failed.` : ""}
+        </p>
+      )}
+      {details && !details.running && details.lastError && <p className="text-xs text-status-fail-text">Contact details stopped: {details.lastError}</p>}
       {progress && !progress.running && progress.errors.length > 0 && <p className="text-xs text-status-fail-text">Some countries failed: {progress.errors.join("; ")}</p>}
 
       {!loading && partners.length === 0 ? (

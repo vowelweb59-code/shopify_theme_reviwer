@@ -105,3 +105,36 @@ export function countryFromLocation(location: string | null): string | null {
   const last = location.split(",").pop()?.trim();
   return last || null;
 }
+
+export type PartnerProfile = { website: string | null; email: string | null; phone: string | null; partnerSince: string | null };
+
+/**
+ * A profile page's "Contact information" block: a website link, then a
+ * tel: and a mailto: link when the partner filled them in. Only that block
+ * is read — the rest of the page links to merchants' stores.
+ */
+export function parseProfile(html: string): PartnerProfile {
+  const start = html.indexOf("Contact information");
+  const end = start >= 0 ? html.indexOf("Primary location", start) : -1;
+  const block = start >= 0 ? html.slice(start, end > start ? end : start + 6000) : "";
+  const website = block.match(/href="(https?:\/\/[^"]+)"/)?.[1] ?? null;
+  const email = block.match(/href="mailto:([^"?]+)/)?.[1] ?? null;
+  const phone = block.match(/href="tel:([^"]+)"/)?.[1] ?? null;
+  const since = textParts(html).find((t) => /^Partner since /i.test(t))?.replace(/^Partner since /i, "") ?? null;
+  return {
+    website: website ? cleanUrl(decode(website)) : null,
+    email: email ? decode(email).trim().toLowerCase() : null,
+    phone: phone ? decode(phone).trim() : null,
+    partnerSince: since,
+  };
+}
+
+/** Drops the tracking query (?utm_source=sref) the directory adds to a partner's site. */
+function cleanUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.origin}${u.pathname === "/" ? "" : u.pathname}`;
+  } catch {
+    return url;
+  }
+}

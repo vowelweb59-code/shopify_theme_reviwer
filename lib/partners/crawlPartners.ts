@@ -1,8 +1,7 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
-import { ShopifyPartner } from "@/models/shopify-partner";
-import { PARTNER_TIERS } from "@/models/shopify-partner";
-import { PAGE_SIZE, parseCards, parseCountrySlugs, parseTotal, type DirectoryPartner } from "./parseDirectory";
+import { PARTNER_TIERS, ShopifyPartner } from "@/models/shopify-partner";
+import { PAGE_SIZE, parseCards, parseCountrySlugs, parseProfile, parseTotal, type DirectoryPartner } from "./parseDirectory";
 
 // Crawls the public Partner Directory one country at a time (~350 pages for
 // ~5,300 partners as of 2026-10-01, plus ~350 for the tier passes) with a pause between requests, in the
@@ -25,11 +24,11 @@ export function partnerCrawlProgress() {
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** GET a directory page. Returns null for a redirect (the directory's answer for an unknown country). */
+/** GET a directory page. Returns null for a redirect (an unknown country) or a 404 (a profile that was removed). */
 async function fetchPage(url: string): Promise<string | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const res = await fetch(url, { headers: HEADERS, redirect: "manual", signal: AbortSignal.timeout(30_000) });
-    if (res.status >= 300 && res.status < 400) return null;
+    if ((res.status >= 300 && res.status < 400) || res.status === 404) return null;
     if (res.status === 429 && attempt === 0) {
       await sleep(RATE_LIMIT_WAIT_MS);
       continue;
@@ -129,5 +128,59 @@ export function startPartnerCrawl(): void {
       crawl.current = null;
       crawl.finishedAt = new Date();
       crawl.running = null;
+    });
+}
+
+// --- Contact details ---------------------------------------------------------
+// The listing cards carry no website / email / phone; those are on each
+// partner's profile page. One request per partner (~5,300), so this is its own
+// resumable step: it only reads partners not read yet, best-reviewed first.
+
+const PROFILE_BASE = "https://www.shopify.com/partners/directory/partner";
+
+type DetailState = { running: Promise<void> | null; total: number; done: number; errors: number; lastError: string | null };
+const gd = globalThis as typeof globalThis & { _partnerDetails?: DetailState };
+const details = (gd._partnerDetails ??= { running: null, total: 0, done: 0, errors: 0, lastError: null });
+
+export function partnerDetailsProgress() {
+  return { running: details.running !== null, total: details.total, done: details.done, errors: details.errors, lastError: details.lastError };
+}
+
+export function startPartnerDetails(): void {
+  if (details.running || crawl.running) return;
+  details.done = 0;
+  details.total = 0;
+  details.errors = 0;
+  details.lastError = null;
+  details.running = (async () => {
+    await connectToDatabase();
+    const pending = await ShopifyPartner.find({ detailAt: null }).sort({ reviewCount: -1 }).select("slug").lean<{ slug: string }[]>();
+    details.total = pending.length;
+    let failures = 0;
+    for (const { slug } of pending) {
+      await sleep(PAUSE_MS);
+      try {
+        const html = await fetchPage(`${PROFILE_BASE}/${slug}`);
+        const profile = html ? parseProfile(html) : null;
+        await ShopifyPartner.updateOne(
+          { slug },
+          { $set: { ...(profile ?? {}), detailAt: new Date(), detailError: profile ? null : "Profile not found" } }
+        );
+        failures = 0;
+      } catch (err) {
+        details.errors++;
+        details.lastError = err instanceof Error ? err.message : String(err);
+        // A run of failures means the directory is blocking us; stop and let a later run resume.
+        if (++failures >= 5) throw new Error(`Stopped after repeated failures: ${details.lastError}`);
+      }
+      details.done++;
+    }
+  })()
+    .catch((err) => {
+      console.error("[partners] details crawl failed:", err);
+      details.lastError = err instanceof Error ? err.message : String(err);
+    })
+    .finally(() => {
+      details.running = null;
     });
 }
