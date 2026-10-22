@@ -14,11 +14,14 @@ const timeEntrySchema = new Schema(
     date: { type: Date, required: true },
     hours: { type: Number, required: true, min: 0.01 },
     note: { type: String, default: "", trim: true },
+    // Set when the entry came from a Chat time report (lib/chat/importReports.ts): the report's key, so a re-import never logs it twice.
+    chatReportKey: { type: String, default: undefined },
   },
   { timestamps: true }
 );
 
 timeEntrySchema.index({ projectId: 1, date: -1 });
+timeEntrySchema.index({ chatReportKey: 1 }, { unique: true, partialFilterExpression: { chatReportKey: { $type: "string" } } });
 
 export type TimeEntryDoc = InferSchemaType<typeof timeEntrySchema>;
 

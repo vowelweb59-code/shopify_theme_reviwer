@@ -40,6 +40,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
   const [pickId, setPickId] = useState("");
+  const [suggestion, setSuggestion] = useState<{ designDays: number | null; developmentDays: number | null; reportCount: number; from: string | null; to: string | null } | null>(null);
 
   function apply(loaded: Loaded) {
     setData(loaded);
@@ -60,6 +61,10 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         apply(body);
       })
       .catch((err: Error) => setLoadError(err.message));
+    fetch(`/api/projects/${projectId}/duration-suggestion`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then(setSuggestion)
+      .catch(() => setSuggestion(null));
   }, [projectId]);
 
   async function patch(body: Record<string, unknown>): Promise<boolean> {
@@ -180,6 +185,27 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <span className="text-zinc-700 dark:text-zinc-300">Description</span>
             <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT} />
           </label>
+          {hasStatus && suggestion && suggestion.reportCount > 0 && (suggestion.designDays !== null || suggestion.developmentDays !== null) && (
+            <div className="flex flex-wrap items-center gap-3 rounded-md border border-border-subtle px-3 py-2 text-sm">
+              <span className="text-zinc-600 dark:text-zinc-400">
+                Suggested from {suggestion.reportCount} time report{suggestion.reportCount === 1 ? "" : "s"} ({suggestion.from} to {suggestion.to}):
+                {suggestion.designDays !== null && <strong className="ml-2 font-medium text-zinc-900 dark:text-zinc-100">design {suggestion.designDays} d</strong>}
+                {suggestion.developmentDays !== null && <strong className="ml-2 font-medium text-zinc-900 dark:text-zinc-100">development {suggestion.developmentDays} d</strong>}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  if (suggestion.designDays !== null) setDesignDays(String(suggestion.designDays));
+                  if (suggestion.developmentDays !== null) setDevelopmentDays(String(suggestion.developmentDays));
+                }}
+              >
+                Use these
+              </Button>
+              <span className="text-xs text-zinc-500">Fills the boxes below; nothing is saved until you press Save changes.</span>
+            </div>
+          )}
           {hasStatus && (
             <div className="grid gap-3 sm:grid-cols-3">
               <label className="flex flex-col gap-1 text-sm">

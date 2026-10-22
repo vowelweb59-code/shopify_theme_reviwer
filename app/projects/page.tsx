@@ -19,6 +19,7 @@ import {
   type ProjectStatus,
   type ProjectType,
 } from "@/lib/projects/constants";
+import { ImportReportsModal } from "./_components/ImportReportsModal";
 import { ProjectStatusPill } from "./_components/ProjectStatusPill";
 
 type ProjectRow = {
@@ -202,6 +203,7 @@ export default function ProjectsPage() {
   const [themes, setThemes] = useState<{ _id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [portalTab, setPortalTab] = useState<Portal | "none">(PORTALS[0]);
   const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
   const [duplicating, setDuplicating] = useState<string | null>(null);
@@ -324,10 +326,15 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Projects</h1>
           <p className="mt-1 text-sm text-zinc-500">Theme builds, theme updates and presets, each with its own team.</p>
         </div>
-        <Button onClick={() => setModalOpen(true)} disabled={themes.length === 0}>
-          <Plus className="h-4 w-4" aria-hidden />
-          New project
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setImportOpen(true)}>
+            Import time reports
+          </Button>
+          <Button onClick={() => setModalOpen(true)} disabled={themes.length === 0}>
+            <Plus className="h-4 w-4" aria-hidden />
+            New project
+          </Button>
+        </div>
       </div>
 
       {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
@@ -388,6 +395,7 @@ export default function ProjectsPage() {
         <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
 
+      <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} />
       {modalOpen && <NewProjectModal themes={themes} defaultPortal={portalTab === "none" ? "" : portalTab} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}
     </PageContainer>
   );
