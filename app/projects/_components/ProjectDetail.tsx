@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { UserPlus, X } from "lucide-react";
+import { PageContainer } from "@/app/_components/shell/PageContainer";
+import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
+import { Button } from "@/app/_components/ui/Button";
+import { Card, CardHeader } from "@/app/_components/ui/Card";
+import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/projects/constants";
+
+type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
+type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
+type Loaded = {
+  project: { _id: string; name: string; description: string; status: ProjectStatus; startDate: string | null; dueDate: string | null; members: ProjectMember[] };
+  theme: { _id: string; name: string } | null;
+  team: TeamEntry[];
+};
+
+const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
+const toDateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
+
+export function ProjectDetail({ projectId }: { projectId: string }) {
+  const router = useRouter();
+  const [data, setData] = useState<Loaded | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<ProjectStatus>("planning");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+
+  const [pickId, setPickId] = useState("");
+
+  function apply(loaded: Loaded) {
+    setData(loaded);
+    setName(loaded.project.name);
+    setDescription(loaded.project.description ?? "");
+    setStatus(loaded.project.status);
+    setStartDate(toDateInput(loaded.project.startDate));
+    setDueDate(toDateInput(loaded.project.dueDate));
+  }
+
+  useEffect(() => {
+    fetch(`/api/projects/${projectId}`)
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error ?? "Failed to load the project.");
+        apply(body);
+      })
+      .catch((err: Error) => setLoadError(err.message));
+  }, [projectId]);
+
+  async function patch(body: Record<string, unknown>): Promise<boolean> {
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ tone: "error", text: result.error ?? "Failed to save." });
+        return false;
+      }
+      return true;
+    } catch {
+      setMessage({ tone: "error", text: "Lost connection to the server. Try again." });
+      return false;
+    }
+  }
+
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    if (await patch({ name, description, status, startDate, dueDate })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, description, status, startDate: startDate || null, dueDate: dueDate || null } } : d));
+      setMessage({ tone: "ok", text: "Saved." });
+    }
+    setSaving(false);
+  }
+
+  async function saveMembers(members: ProjectMember[]) {
+    if (!data) return;
+    if (await patch({ members: members.map((m) => ({ memberId: m.memberId, role: m.role })) })) {
+      setData({ ...data, project: { ...data.project, members } });
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("Delete this project? Its team assignments are removed too; the team members themselves are kept.")) return;
+    const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+    if (res.ok) router.push("/projects");
+    else setMessage({ tone: "error", text: (await res.json().catch(() => ({}))).error ?? "Failed to delete the project." });
+  }
+
+  if (loadError) {
+    return (
+      <PageContainer>
+        <ErrorState title="Couldn't load this project" description={loadError} action={<Link href="/projects" className="text-sm text-primary underline">Back to projects</Link>} />
+      </PageContainer>
+    );
+  }
+  if (!data) {
+    return (
+      <PageContainer>
+        <p className="text-sm text-zinc-500">Loading…</p>
+      </PageContainer>
+    );
+  }
+
+  const { project, theme, team } = data;
+  const assigned = new Set(project.members.map((m) => m.memberId));
+  const available = team.filter((m) => !assigned.has(m._id));
+
+  return (
+    <PageContainer>
+      <div>
+        <Breadcrumbs items={[{ label: "Projects", href: "/projects" }, { label: project.name }]} />
+        <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Theme:{" "}
+          {theme ? (
+            <Link href={`/themes/${theme._id}`} className="text-primary underline">
+              {theme.name}
+            </Link>
+          ) : (
+            "deleted"
+          )}
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader title="Details" />
+        <form onSubmit={handleSave} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Project name</span>
+            <input required value={name} onChange={(e) => setName(e.target.value)} className={INPUT} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Description</span>
+            <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT} />
+          </label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">Status</span>
+              <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)} className={INPUT}>
+                {PROJECT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {PROJECT_STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">Start date</span>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">Due date</span>
+              <input type="date" value={dueDate} min={startDate || undefined} onChange={(e) => setDueDate(e.target.value)} className={INPUT} />
+            </label>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Button type="button" variant="destructive" onClick={handleDelete}>
+              Delete project
+            </Button>
+            <Button type="submit" loading={saving}>
+              Save changes
+            </Button>
+          </div>
+        </form>
+        {message && (
+          <p role="status" className={`mt-3 text-sm ${message.tone === "ok" ? "text-status-pass-text" : "text-status-fail-text"}`}>
+            {message.text}
+          </p>
+        )}
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Team"
+          description="Each member's role on this project defaults to their designation; edit it if they do something different here."
+        />
+        {team.length === 0 ? (
+          <EmptyState
+            title="No team members in the system yet"
+            description="Add people on the Team page first."
+            action={
+              <Link href="/team" className="text-sm text-primary underline">
+                Go to Team
+              </Link>
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {project.members.length === 0 ? (
+              <p className="text-sm text-zinc-500">No one is assigned yet.</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                {project.members.map((m) => (
+                  <MemberRow
+                    key={m.memberId}
+                    member={m}
+                    onRoleSave={(role) => saveMembers(project.members.map((x) => (x.memberId === m.memberId ? { ...x, role } : x)))}
+                    onRemove={() => saveMembers(project.members.filter((x) => x.memberId !== m.memberId))}
+                  />
+                ))}
+              </ul>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <select value={pickId} onChange={(e) => setPickId(e.target.value)} className={`${INPUT} min-w-56`} aria-label="Team member to add">
+                <option value="">{available.length === 0 ? "Everyone is already assigned" : "Choose a team member…"}</option>
+                {available.map((m) => (
+                  <option key={m._id} value={m._id}>
+                    {m.name} — {m.designation}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="secondary"
+                disabled={!pickId}
+                onClick={() => {
+                  const picked = available.find((m) => m._id === pickId);
+                  if (!picked) return;
+                  setPickId("");
+                  saveMembers([...project.members, { memberId: picked._id, name: picked.name, designation: picked.designation, role: null }]);
+                }}
+              >
+                <UserPlus className="h-4 w-4" aria-hidden />
+                Add to project
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </PageContainer>
+  );
+}
+
+function MemberRow({ member, onRoleSave, onRemove }: { member: ProjectMember; onRoleSave: (role: string | null) => void; onRemove: () => void }) {
+  const current = member.role ?? member.designation;
+  const [role, setRole] = useState(current);
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 px-4 py-3">
+      <div className="min-w-40 flex-1">
+        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{member.name}</p>
+        <p className="text-xs text-zinc-500">{member.designation}</p>
+      </div>
+      <input
+        aria-label={`Role of ${member.name} on this project`}
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        onBlur={() => {
+          const next = role.trim();
+          // Blank falls back to the designation; only save a real change.
+          if (!next) setRole(member.designation);
+          if ((next || member.designation) !== current) onRoleSave(next && next !== member.designation ? next : null);
+        }}
+        className={`${INPUT} w-56 text-sm`}
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${member.name} from this project`}
+        className="rounded-md p-1.5 text-zinc-400 hover:bg-black/[.04] hover:text-zinc-700 dark:hover:bg-white/[.06] dark:hover:text-zinc-200"
+      >
+        <X className="h-4 w-4" aria-hidden />
+      </button>
+    </li>
+  );
+}
