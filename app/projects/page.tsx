@@ -259,13 +259,13 @@ export default function ProjectsPage() {
       key: "design",
       header: "Design",
       sortValue: (p) => p.designDays ?? -1,
-      render: (p) => (p.designDays === null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.designDays} d`),
+      render: (p) => (p.designDays == null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.designDays} d`),
     },
     {
       key: "development",
       header: "Development",
       sortValue: (p) => p.developmentDays ?? -1,
-      render: (p) => (p.developmentDays === null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.developmentDays} d`),
+      render: (p) => (p.developmentDays == null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.developmentDays} d`),
     },
     {
       key: "actions",
