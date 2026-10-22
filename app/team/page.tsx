@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, Users } from "lucide-react";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
 import { Button } from "@/app/_components/ui/Button";
@@ -8,9 +9,9 @@ import { Modal } from "@/app/_components/ui/Modal";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
-import { successRate } from "@/lib/projects/rounds";
+import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number; approvedCount: number };
+type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number; approvedCount: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -18,6 +19,15 @@ const ROLE_TABS = [
   { label: "Shopify Developer", match: (m: Member) => /shopify developer/i.test(m.designation) },
   { label: "UI/UX Designer", match: (m: Member) => /ui\/ux/i.test(m.designation) },
 ] as const;
+
+function OutcomeButton({ count, label, onClick }: { count: number; label: string; onClick: () => void }) {
+  if (count === 0) return <span className="text-zinc-400">0</span>;
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className="font-medium text-primary underline decoration-dotted underline-offset-2">
+      {count}
+    </button>
+  );
+}
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
@@ -143,6 +153,7 @@ export default function TeamPage() {
     },
   ];
 
+  const [outcomeView, setOutcomeView] = useState<{ title: string; entries: OutcomeEntry[] } | null>(null);
   const [roleTab, setRoleTab] = useState<(typeof ROLE_TABS)[number]["label"]>(ROLE_TABS[0].label);
   const activeTab = ROLE_TABS.find((t) => t.label === roleTab) ?? ROLE_TABS[0];
   const successRows = members.filter((m) => activeTab.match(m) && m.approvedCount + m.rejectionCount > 0);
@@ -150,8 +161,8 @@ export default function TeamPage() {
   const successColumns: TableColumn<Member>[] = [
     { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
-    { key: "approved", header: "Approved", sortValue: (m) => m.approvedCount, render: (m) => m.approvedCount },
-    { key: "rejected", header: "Rejected", sortValue: (m) => m.rejectionCount, render: (m) => m.rejectionCount },
+    { key: "approved", header: "Approved", sortValue: (m) => m.approvedCount, render: (m) => <OutcomeButton count={m.approvedCount} label={`Approved projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — approved`, entries: m.approvedIn })} /> },
+    { key: "rejected", header: "Rejected", sortValue: (m) => m.rejectionCount, render: (m) => <OutcomeButton count={m.rejectionCount} label={`Rejected projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — rejected`, entries: m.rejectedIn })} /> },
     { key: "rate", header: "Success rate", sortValue: (m) => rate(m) ?? -1, render: (m) => (rate(m) === null ? <span className="text-zinc-400">—</span> : `${rate(m)}%`) },
   ];
 
@@ -206,6 +217,19 @@ export default function TeamPage() {
       ) : (
         <ResponsiveTable columns={columns} rows={members} rowKey={(m) => m._id} />
       )}
+
+      <Modal open={outcomeView !== null} onOpenChange={(o) => !o && setOutcomeView(null)} title={outcomeView?.title ?? ""}>
+        <ul className="flex flex-col divide-y divide-border-subtle text-sm">
+          {(outcomeView?.entries ?? []).map((e, i) => (
+            <li key={`${e.projectId}-${e.round}-${i}`} className="py-2">
+              <Link href={`/projects/${e.projectId}`} className="text-primary underline">
+                {e.name}
+              </Link>
+              {e.round !== null && <span className="ml-2 text-xs text-zinc-500">round {e.round}</span>}
+            </li>
+          ))}
+        </ul>
+      </Modal>
 
       {/* key remounts the form so its fields re-seed from the member being edited */}
       <MemberModal key={editing?._id ?? "new"} member={editing} open={modalOpen} onOpenChange={setModalOpen} onSaved={load} />

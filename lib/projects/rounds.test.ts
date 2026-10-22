@@ -77,9 +77,16 @@ describe("countOutcomes / successRate", () => {
       { status: "live", members: [m("a"), m("b")], rounds: [{ status: "rejected", members: [m("a")] }] },
       { status: "under_review", members: [m("a")] },
     ]);
-    expect(Object.fromEntries(tally)).toEqual({ a: { approved: 1, rejected: 1 }, b: { approved: 1, rejected: 0 } });
+    expect(tally.get("a")).toMatchObject({ approved: 1, rejected: 1 });
+    expect(tally.get("b")).toMatchObject({ approved: 1, rejected: 0 });
     expect(successRate(tally.get("a"))).toBe(50);
     expect(successRate(tally.get("b"))).toBe(100);
     expect(successRate(undefined)).toBeNull();
+  });
+
+  it("names the project (and round, when it has several) for each decided round", () => {
+    const tally = countOutcomes([{ _id: "p1", name: "Gravity", status: "live", members: [m("a")], rounds: [{ status: "rejected", members: [m("a")] }] }]);
+    expect(tally.get("a")?.rejectedIn).toEqual([{ projectId: "p1", name: "Gravity", round: 1 }]);
+    expect(tally.get("a")?.approvedIn).toEqual([{ projectId: "p1", name: "Gravity", round: 2 }]);
   });
 });

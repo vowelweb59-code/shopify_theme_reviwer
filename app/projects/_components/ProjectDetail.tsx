@@ -235,7 +235,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 key={`${i}-${round.note}`}
                 index={i}
                 round={round}
+                team={team}
                 onNoteSave={(note) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, note } : r)))}
+                onMembersSave={(members) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, members } : r)))}
                 onDelete={() => {
                   if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`)) saveRounds(project.rounds.filter((_, j) => j !== i));
                 }}
@@ -342,8 +344,25 @@ function MemberRow({ member, onRoleSave, onRemove }: { member: ProjectMember; on
   );
 }
 
-function RoundRow({ index, round, onNoteSave, onDelete }: { index: number; round: RoundView; onNoteSave: (note: string) => void; onDelete: () => void }) {
+function RoundRow({
+  index,
+  round,
+  team,
+  onNoteSave,
+  onMembersSave,
+  onDelete,
+}: {
+  index: number;
+  round: RoundView;
+  team: TeamEntry[];
+  onNoteSave: (note: string) => void;
+  onMembersSave: (members: ProjectMember[]) => void;
+  onDelete: () => void;
+}) {
   const [note, setNote] = useState(round.note);
+  const [pickId, setPickId] = useState("");
+  const onRound = new Set(round.members.map((m) => m.memberId));
+  const available = team.filter((m) => !onRound.has(m._id));
   return (
     <li className="flex flex-col gap-2 px-4 py-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -356,7 +375,34 @@ function RoundRow({ index, round, onNoteSave, onDelete }: { index: number; round
           Delete round
         </button>
       </div>
-      <p className="text-xs text-zinc-500">{round.members.length === 0 ? "No team recorded" : round.members.map((m) => m.name).join(", ")}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        {round.members.length === 0 && <span className="text-xs text-zinc-500">No team recorded</span>}
+        {round.members.map((m) => (
+          <span key={m.memberId} className="inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-300">
+            {m.name} <span className="text-zinc-400">· {m.designation}</span>
+            <button type="button" aria-label={`Remove ${m.name} from round ${index + 1}`} onClick={() => onMembersSave(round.members.filter((x) => x.memberId !== m.memberId))} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+              <X className="h-3 w-3" aria-hidden />
+            </button>
+          </span>
+        ))}
+        <select
+          aria-label={`Add a team member to round ${index + 1}`}
+          value={pickId}
+          onChange={(e) => {
+            const picked = available.find((m) => m._id === e.target.value);
+            setPickId("");
+            if (picked) onMembersSave([...round.members, { memberId: picked._id, name: picked.name, designation: picked.designation, role: null }]);
+          }}
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-xs"
+        >
+          <option value="">+ Add member…</option>
+          {available.map((m) => (
+            <option key={m._id} value={m._id}>
+              {m.name} — {m.designation}
+            </option>
+          ))}
+        </select>
+      </div>
       <input
         aria-label={`Note for round ${index + 1}`}
         placeholder="Rejection reason or notes"

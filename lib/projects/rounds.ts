@@ -14,21 +14,32 @@ export type Round = {
   note: string;
 };
 
-type RoundsOf = { status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] };
+type RoundsOf = { _id?: unknown; name?: string; status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] };
+
+/** One decided round a member was on: which project, and which of its rounds when it has several. */
+export type OutcomeEntry = { projectId: string; name: string; round: number | null };
+export type Outcomes = { approved: number; rejected: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 /** Per member, the rounds that were decided: Live (approved) and Rejected. Rounds still in progress count for neither. */
-export function countOutcomes(projects: RoundsOf[]): Map<string, { approved: number; rejected: number }> {
-  const out = new Map<string, { approved: number; rejected: number }>();
+export function countOutcomes(projects: RoundsOf[]): Map<string, Outcomes> {
+  const out = new Map<string, Outcomes>();
   for (const project of projects) {
-    for (const round of [...(project.rounds ?? []), { status: project.status ?? "", members: project.members }]) {
-      if (round.status !== "live" && round.status !== "rejected") continue;
+    const earlier = project.rounds ?? [];
+    [...earlier, { status: project.status ?? "", members: project.members }].forEach((round, i) => {
+      if (round.status !== "live" && round.status !== "rejected") return;
+      const entry: OutcomeEntry = { projectId: String(project._id ?? ""), name: project.name ?? "", round: earlier.length > 0 ? i + 1 : null };
       for (const m of round.members) {
-        const tally = out.get(String(m.memberId)) ?? { approved: 0, rejected: 0 };
-        if (round.status === "live") tally.approved++;
-        else tally.rejected++;
+        const tally = out.get(String(m.memberId)) ?? { approved: 0, rejected: 0, approvedIn: [], rejectedIn: [] };
+        if (round.status === "live") {
+          tally.approved++;
+          tally.approvedIn.push(entry);
+        } else {
+          tally.rejected++;
+          tally.rejectedIn.push(entry);
+        }
         out.set(String(m.memberId), tally);
       }
-    }
+    });
   }
   return out;
 }
