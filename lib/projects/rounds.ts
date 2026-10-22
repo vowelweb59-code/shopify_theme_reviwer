@@ -14,6 +14,31 @@ export type Round = {
   note: string;
 };
 
+type RoundsOf = { status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] };
+
+/** Per member, the rounds that were decided: Live (approved) and Rejected. Rounds still in progress count for neither. */
+export function countOutcomes(projects: RoundsOf[]): Map<string, { approved: number; rejected: number }> {
+  const out = new Map<string, { approved: number; rejected: number }>();
+  for (const project of projects) {
+    for (const round of [...(project.rounds ?? []), { status: project.status ?? "", members: project.members }]) {
+      if (round.status !== "live" && round.status !== "rejected") continue;
+      for (const m of round.members) {
+        const tally = out.get(String(m.memberId)) ?? { approved: 0, rejected: 0 };
+        if (round.status === "live") tally.approved++;
+        else tally.rejected++;
+        out.set(String(m.memberId), tally);
+      }
+    }
+  }
+  return out;
+}
+
+/** Approved share of decided rounds as a whole percent; null until a member has any decided round. */
+export function successRate(tally: { approved: number; rejected: number } | undefined): number | null {
+  const decided = (tally?.approved ?? 0) + (tally?.rejected ?? 0);
+  return decided === 0 ? null : Math.round(((tally?.approved ?? 0) / decided) * 100);
+}
+
 /** Rejections per member: a round counts when its status is Rejected, for everyone on that round. */
 export function countRejections(projects: { status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] }[]): Map<string, number> {
   const counts = new Map<string, number>();

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { parseTeamMemberInput } from "@/lib/projects/sanitize";
-import { countRejections } from "@/lib/projects/rounds";
+import { countOutcomes, countRejections } from "@/lib/projects/rounds";
 import { TeamMember } from "@/models/team-member";
 import { Project } from "@/models/project";
 
@@ -14,8 +14,9 @@ export async function GET() {
   ]);
   const countById = new Map<string, number>(counts.map((c) => [String(c._id), c.projectCount]));
   const rejectionsById = countRejections(projects);
+  const outcomesById = countOutcomes(projects);
   return NextResponse.json({
-    members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0 })),
+    members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0, approvedCount: outcomesById.get(String(m._id))?.approved ?? 0 })),
   });
 }
 

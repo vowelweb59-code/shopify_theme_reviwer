@@ -8,8 +8,9 @@ import { Modal } from "@/app/_components/ui/Modal";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
+import { successRate } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number };
+type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number; approvedCount: number };
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
@@ -135,6 +136,15 @@ export default function TeamPage() {
     },
   ];
 
+  const rate = (m: Member) => successRate({ approved: m.approvedCount, rejected: m.rejectionCount });
+  const successColumns: TableColumn<Member>[] = [
+    { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
+    { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
+    { key: "approved", header: "Approved", sortValue: (m) => m.approvedCount, render: (m) => m.approvedCount },
+    { key: "rejected", header: "Rejected", sortValue: (m) => m.rejectionCount, render: (m) => m.rejectionCount },
+    { key: "rate", header: "Success rate", sortValue: (m) => rate(m) ?? -1, render: (m) => (rate(m) === null ? <span className="text-zinc-400">—</span> : `${rate(m)}%`) },
+  ];
+
   return (
     <PageContainer>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -156,6 +166,16 @@ export default function TeamPage() {
         <EmptyState icon={Users} title="No team members yet" description="Add the people who work on your themes, with their designation." />
       ) : (
         <ResponsiveTable columns={columns} rows={members} rowKey={(m) => m._id} />
+      )}
+
+      {!loading && members.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
+            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren't counted.</p>
+          </div>
+          <ResponsiveTable columns={successColumns} rows={members.filter((m) => m.approvedCount + m.rejectionCount > 0)} rowKey={(m) => m._id} emptyMessage="No decided rounds yet." />
+        </section>
       )}
 
       {/* key remounts the form so its fields re-seed from the member being edited */}

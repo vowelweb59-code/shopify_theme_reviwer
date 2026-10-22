@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countRejections, planMerge, rejectionCount, splitVersionName, type MergeInput } from "./rounds";
+import { countOutcomes, countRejections, successRate, planMerge, rejectionCount, splitVersionName, type MergeInput } from "./rounds";
 
 const m = (id: string) => ({ memberId: id, role: null });
 
@@ -68,5 +68,18 @@ describe("planMerge", () => {
   it("merges an unnumbered project with its numbered versions, newest last", () => {
     const plan = planMerge([project({ id: "a", name: "Voltix", createdAt: 1 }), project({ id: "b", name: "Voltix 2", createdAt: 2 })]);
     expect(plan[0]).toMatchObject({ keepId: "b", name: "Voltix", removeIds: ["a"] });
+  });
+});
+
+describe("countOutcomes / successRate", () => {
+  it("tallies Live and Rejected rounds per member and ignores rounds in progress", () => {
+    const tally = countOutcomes([
+      { status: "live", members: [m("a"), m("b")], rounds: [{ status: "rejected", members: [m("a")] }] },
+      { status: "under_review", members: [m("a")] },
+    ]);
+    expect(Object.fromEntries(tally)).toEqual({ a: { approved: 1, rejected: 1 }, b: { approved: 1, rejected: 0 } });
+    expect(successRate(tally.get("a"))).toBe(50);
+    expect(successRate(tally.get("b"))).toBe(100);
+    expect(successRate(undefined)).toBeNull();
   });
 });
