@@ -109,7 +109,8 @@ async function crawlCategories(): Promise<void> {
     await sleep(PAUSE_MS);
     try {
       const cards = await crawlListing(`industry[]=${slug}`);
-      const slugs = [...new Set(cards.map((c) => c.baseSlug))];
+      // Only the main theme's own card counts; a preset showing up in a category doesn't put the theme there.
+      const slugs = [...new Set(cards.filter((c) => c.presetSlug === c.baseSlug).map((c) => c.baseSlug))];
       await ThemeStoreTheme.updateMany({ slug: { $in: slugs } }, { $addToSet: { industries: slug } });
       await ThemeStoreTheme.updateMany({ slug: { $nin: slugs } }, { $pull: { industries: slug } });
     } catch (err) {
