@@ -14,6 +14,7 @@
     "seed:enhancements": "tsx --env-file-if-exists=.env.local scripts/seed-enhancement-points.ts",
     "seed:native-capabilities": "tsx --env-file-if-exists=.env.local scripts/seed-native-capabilities.ts",
     "seed:analytics-themes": "tsx --env-file-if-exists=.env.local scripts/seed-analytics-themes.ts",
+    "import:projects": "tsx --env-file-if-exists=.env.local scripts/import-projects.ts",
     "db:compact": "tsx --env-file-if-exists=.env.local scripts/compact-database.ts",
     "db:backup": "tsx --env-file-if-exists=.env.local scripts/backup-database.ts",
     "harvest:trends": "node scripts/research/harvest-release-notes.mjs && node scripts/research/aggregate-release-notes.mjs"

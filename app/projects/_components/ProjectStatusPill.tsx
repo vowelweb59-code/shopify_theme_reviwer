@@ -3,7 +3,11 @@ import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/projects/consta
 const TONE: Record<ProjectStatus, string> = {
   planning: "bg-status-not-tested-bg text-status-not-tested-text",
   under_designing: "bg-primary-tint text-primary-tint-text",
+  design_completed: "bg-primary-tint text-primary-tint-text",
   under_development: "bg-status-warning-bg text-status-warning-text",
+  theme_uploaded: "bg-status-warning-bg text-status-warning-text",
+  under_review: "bg-status-warning-bg text-status-warning-text",
+  error_given: "bg-status-fail-bg text-status-fail-text",
   live: "bg-status-pass-bg text-status-pass-text",
   rejected: "bg-status-fail-bg text-status-fail-text",
   active: "bg-status-pass-bg text-status-pass-text",

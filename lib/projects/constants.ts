@@ -15,13 +15,30 @@ export function typeHasStatus(type: ProjectType): boolean {
   return type !== "theme_update";
 }
 
-export const PROJECT_STATUSES = ["planning", "under_designing", "under_development", "live", "rejected", "active", "on_hold", "completed"] as const;
+export const PROJECT_STATUSES = [
+  "planning",
+  "under_designing",
+  "design_completed",
+  "under_development",
+  "theme_uploaded",
+  "under_review",
+  "error_given",
+  "live",
+  "rejected",
+  "active",
+  "on_hold",
+  "completed",
+] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   planning: "Planning",
   under_designing: "Under Designing",
+  design_completed: "Design Completed",
   under_development: "Under Development",
+  theme_uploaded: "Theme Uploaded",
+  under_review: "Under Review",
+  error_given: "Error Given",
   live: "Live",
   rejected: "Rejected",
   active: "Active",
