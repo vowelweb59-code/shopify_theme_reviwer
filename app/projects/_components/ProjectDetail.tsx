@@ -10,12 +10,14 @@ import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
 import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType } from "@/lib/projects/constants";
+import { ProjectStatusPill } from "./ProjectStatusPill";
 import { TimeLog } from "./TimeLog";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
+type RoundView = { status: ProjectStatus; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
 type Loaded = {
-  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[] };
+  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -89,6 +91,24 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     if (!data) return;
     if (await patch({ members: members.map((m) => ({ memberId: m.memberId, role: m.role })) })) {
       setData({ ...data, project: { ...data.project, members } });
+    }
+  }
+
+  async function resubmit() {
+    if (!data) return;
+    const note = window.prompt("Why was it rejected? (optional, kept with this round)") ;
+    if (note === null) return;
+    if (!(await patch({ startNewRound: true, rejectionNote: note }))) return;
+    const res = await fetch(`/api/projects/${projectId}`);
+    if (res.ok) apply(await res.json());
+  }
+
+  async function saveRounds(rounds: RoundView[]) {
+    if (!data) return;
+    const body = rounds.map((r) => ({ status: r.status, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
+    if (await patch({ rounds: body })) {
+      const rejections = rounds.filter((r) => r.status === "rejected").length + (data.project.status === "rejected" ? 1 : 0);
+      setData({ ...data, project: { ...data.project, rounds, rejections } });
     }
   }
 
@@ -180,13 +200,20 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
               </label>
             </div>
           )}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="destructive" onClick={handleDelete}>
               Delete project
             </Button>
-            <Button type="submit" loading={saving}>
-              Save changes
-            </Button>
+            <div className="flex gap-2">
+              {hasStatus && data.project.status === "rejected" && status === "rejected" && (
+                <Button type="button" variant="secondary" onClick={resubmit}>
+                  Resubmit (start a new round)
+                </Button>
+              )}
+              <Button type="submit" loading={saving}>
+                Save changes
+              </Button>
+            </div>
           </div>
         </form>
         {message && (
@@ -195,6 +222,28 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </p>
         )}
       </Card>
+
+      {hasStatus && project.rounds.length > 0 && (
+        <Card>
+          <CardHeader
+            title="Earlier rounds"
+            description={`Earlier submissions of this theme, kept so rejections stay on record. Rejected ${project.rejections} time${project.rejections === 1 ? "" : "s"} in total.`}
+          />
+          <ul className="flex flex-col divide-y divide-border-subtle rounded-lg border border-border-subtle">
+            {project.rounds.map((round, i) => (
+              <RoundRow
+                key={`${i}-${round.note}`}
+                index={i}
+                round={round}
+                onNoteSave={(note) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, note } : r)))}
+                onDelete={() => {
+                  if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`)) saveRounds(project.rounds.filter((_, j) => j !== i));
+                }}
+              />
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {!hasStatus && <TimeLog projectId={project._id} members={project.members} />}
 
@@ -289,6 +338,33 @@ function MemberRow({ member, onRoleSave, onRemove }: { member: ProjectMember; on
       >
         <X className="h-4 w-4" aria-hidden />
       </button>
+    </li>
+  );
+}
+
+function RoundRow({ index, round, onNoteSave, onDelete }: { index: number; round: RoundView; onNoteSave: (note: string) => void; onDelete: () => void }) {
+  const [note, setNote] = useState(round.note);
+  return (
+    <li className="flex flex-col gap-2 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Round {index + 1}</span>
+        <ProjectStatusPill status={round.status} />
+        <span className="text-xs text-zinc-500">
+          Design {round.designDays ?? "—"} d · Development {round.developmentDays ?? "—"} d
+        </span>
+        <button type="button" onClick={onDelete} className="ml-auto text-xs text-zinc-500 underline hover:text-zinc-800 dark:hover:text-zinc-200">
+          Delete round
+        </button>
+      </div>
+      <p className="text-xs text-zinc-500">{round.members.length === 0 ? "No team recorded" : round.members.map((m) => m.name).join(", ")}</p>
+      <input
+        aria-label={`Note for round ${index + 1}`}
+        placeholder="Rejection reason or notes"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        onBlur={() => note !== round.note && onNoteSave(note)}
+        className={`${INPUT} text-sm`}
+      />
     </li>
   );
 }

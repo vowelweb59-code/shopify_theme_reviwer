@@ -68,5 +68,6 @@ export const MAX_TEXT = 80;
 export const MAX_DESCRIPTION = 2000;
 export const MAX_PROJECT_MEMBERS = 50;
 export const MAX_NOTE = 300;
+export const MAX_ROUNDS = 50;
 export const MAX_DURATION_DAYS = 3650;
 export const MAX_HOURS_PER_ENTRY = 24;

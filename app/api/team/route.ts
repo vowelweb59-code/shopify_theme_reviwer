@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { parseTeamMemberInput } from "@/lib/projects/sanitize";
+import { countRejections } from "@/lib/projects/rounds";
 import { TeamMember } from "@/models/team-member";
 import { Project } from "@/models/project";
 
 export async function GET() {
   await connectToDatabase();
-  const [members, counts] = await Promise.all([
+  const [members, counts, projects] = await Promise.all([
     TeamMember.find().sort({ name: 1 }).lean(),
     Project.aggregate([{ $unwind: "$members" }, { $group: { _id: "$members.memberId", projectCount: { $sum: 1 } } }]),
+    Project.find().select("status members rounds").lean(),
   ]);
   const countById = new Map<string, number>(counts.map((c) => [String(c._id), c.projectCount]));
-  return NextResponse.json({ members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0 })) });
+  const rejectionsById = countRejections(projects);
+  return NextResponse.json({
+    members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0 })),
+  });
 }
 
 export async function POST(request: Request) {

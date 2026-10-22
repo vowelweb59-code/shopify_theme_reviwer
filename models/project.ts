@@ -14,6 +14,19 @@ const projectMemberSchema = new Schema(
   { _id: false }
 );
 
+// One earlier submission of the theme (see lib/projects/rounds.ts). The
+// project's own status / members / days are the current round.
+const roundSchema = new Schema(
+  {
+    status: { type: String, enum: PROJECT_STATUSES, default: "rejected" },
+    designDays: { type: Number, default: null, min: 0 },
+    developmentDays: { type: Number, default: null, min: 0 },
+    members: { type: [projectMemberSchema], default: () => [] },
+    note: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
 const projectSchema = new Schema(
   {
     themeId: { type: Schema.Types.ObjectId, ref: "Theme", required: true },
@@ -33,12 +46,15 @@ const projectSchema = new Schema(
     designDays: { type: Number, default: null, min: 0 },
     developmentDays: { type: Number, default: null, min: 0 },
     members: { type: [projectMemberSchema], default: () => [] },
+    // Earlier submissions, oldest first; kept so rejections stay countable per member.
+    rounds: { type: [roundSchema], default: () => [] },
   },
   { timestamps: true }
 );
 
 projectSchema.index({ themeId: 1, createdAt: -1 });
 projectSchema.index({ "members.memberId": 1 });
+projectSchema.index({ "rounds.members.memberId": 1 });
 
 export type ProjectDoc = InferSchemaType<typeof projectSchema>;
 

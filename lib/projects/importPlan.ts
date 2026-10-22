@@ -5,16 +5,17 @@ import type { ProjectStatus } from "./constants";
 // it can be dry-run and unit-tested; scripts/import-projects.ts applies it.
 //
 // How the sheet becomes projects:
-//  - One project per version, named "<Theme> N" (e.g. "Voltix 2"). A theme's
-//    versions are the numbered ones named anywhere in the Designers /
-//    Developers / Managers tables, plus any "<Theme> N" or older
-//    "<Theme> Version N" project already in the database (the latter is
-//    renamed). A theme with no
-//    numbered version is a single project named after the theme.
+//  - One project per theme, named after it (e.g. "Voltix"). A theme's versions
+//    are the numbered ones named anywhere in the Designers / Developers /
+//    Managers tables; each version but the latest becomes an earlier round of
+//    the project (lib/projects/rounds.ts), with that version's team.
 //  - A name without a number ("Aspire", "Zeal") means every version of it.
 //  - A newer version only exists because the one before it was rejected, so
-//    every version but the latest is Rejected; the latest takes the status
-//    from the main table, and the table's design/development days.
+//    every earlier round is Rejected; the project itself is the latest
+//    version and takes the status from the main table, and the table's
+//    design/development days.
+//  - Projects still saved one-per-version ("Voltix 2") are reported, not
+//    touched: run scripts/merge-project-rounds.ts first.
 //  - Matching is by name, case-insensitive, so re-running never duplicates.
 //    An existing project is only filled in (blank days/description, missing
 //    team members, portal) — its status, days and team are never overwritten or removed.
@@ -52,6 +53,7 @@ export type ExistingProject = {
   developmentDays: number | null;
   description: string;
   memberNames: string[];
+  roundCount: number;
 };
 export type ExistingState = { themes: string[]; members: string[]; projects: ExistingProject[] };
 
@@ -64,6 +66,8 @@ export type PlannedProject = {
   developmentDays: number | null;
   description: string;
   memberNames: string[];
+  /** Earlier submissions, oldest first; each was rejected. */
+  rounds: { memberNames: string[] }[];
 };
 export type PlannedUpdate = {
   name: string;
@@ -122,27 +126,26 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
     const mine = resolved.filter((r) => r.theme === row);
     const versions = new Set<number>();
     for (const r of mine) if (r.version !== null) versions.add(r.version);
-    const versionName = (n: number) => `${row.theme} ${n}`;
-    const legacyName = (n: number) => `${row.theme} Version ${n}`; // how these were first named; renamed on sight
-    // Versions that already exist as projects count too (e.g. Adorn Version 1-3).
+    // Projects still saved one per version ("Alpha 2", "Alpha Version 2") belong to scripts/merge-project-rounds.ts.
     const own = new RegExp(`^${row.theme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?: version)? (\\d+)$`, "i");
-    for (const p of existing.projects) {
-      const m = own.exec(p.name);
-      if (m) versions.add(Number(m[1]));
+    const legacy = existing.projects.filter((p) => own.test(p.name));
+    if (legacy.length > 0) {
+      plan.conflicts.push(`${row.theme}: ${legacy.length} project(s) are still saved one per version (${legacy.map((p) => p.name).join(", ")}); run scripts/merge-project-rounds.ts first.`);
+      continue;
     }
 
     const sorted = [...versions].sort((a, b) => a - b);
-    const names = sorted.length > 0 ? sorted.map(versionName) : [row.theme];
+    const total = Math.max(sorted.length, 1);
     const status = data.statusMap[row.status];
     if (!status) {
       plan.conflicts.push(`${row.theme}: status "${row.status}" has no mapping.`);
       continue;
     }
 
-    const earlier = Math.max(names.length - 1, 0);
+    const earlier = total - 1;
     // The table's count may or may not include a rejection that is the current status.
     if (row.rejections !== null && row.rejections !== earlier && row.rejections !== earlier + (status === "rejected" ? 1 : 0)) {
-      plan.conflicts.push(`${row.theme}: the table says ${row.rejections} rejection(s) but ${earlier} earlier version(s) are marked Rejected (versions found: ${names.length}).`);
+      plan.conflicts.push(`${row.theme}: the table says ${row.rejections} rejection(s) but ${earlier} earlier version(s) are marked Rejected (versions found: ${total}).`);
     }
 
     const tableFirsts = { designer: row.designers, developer: row.developers } as const;
@@ -156,8 +159,9 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
       }
     }
 
-    names.forEach((name, i) => {
-      const latest = i === names.length - 1;
+    // The team of each version, oldest first; the last one is the project's own team.
+    const teams = Array.from({ length: total }, (_, i) => {
+      const latest = i === total - 1;
       const version = sorted.length > 0 ? sorted[i] : null;
       const members: string[] = [];
       const roles = new Set<string>();
@@ -172,41 +176,33 @@ export function buildPlan(data: ImportData, existing: ExistingState): Plan {
           for (const first of tableFirsts[role]) if (!members.includes(fullName(first))) members.push(fullName(first));
         }
       }
-
-      const description = [
-        `Portal: ${row.portal}.`,
-        latest && row.rejections !== null ? `Rejections on this theme: ${row.rejections}.` : "",
-        latest && row.note ? row.note : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const wanted = {
-        status: latest ? status : ("rejected" as ProjectStatus),
-        designDays: latest ? row.designDays : null,
-        developmentDays: latest ? row.developmentDays : null,
-      };
-
-      const found = existingByName.get(lower(name)) ?? (version !== null ? existingByName.get(lower(legacyName(version))) : undefined);
-      if (!found) {
-        plan.creates.push({ name, portal: row.portal, themeName: row.theme, description, memberNames: members, ...wanted });
-        return;
-      }
-      const update: PlannedUpdate = { name: found.name, set: {}, addMembers: [], notes: [] };
-      if (lower(found.name) !== lower(name)) update.set.name = name;
-      if (!found.portal) update.set.portal = row.portal;
-      if (found.status && found.status !== wanted.status) update.notes.push(`status stays ${found.status} (sheet says ${wanted.status})`);
-      for (const key of ["designDays", "developmentDays"] as const) {
-        const value = wanted[key];
-        if (value === null) continue;
-        if (found[key] === null) update.set[key] = value;
-        else if (found[key] !== value) update.notes.push(`${key} stays ${found[key]} (sheet says ${value})`);
-      }
-      if (!found.description && description) update.set.description = description;
-      const have = new Set(found.memberNames.map(lower));
-      update.addMembers = members.filter((m) => !have.has(lower(m)));
-      if (found.themeName && lower(found.themeName) !== lower(row.theme)) update.notes.push(`stays under theme ${found.themeName}`);
-      plan.updates.push(update);
+      return members;
     });
+
+    const description = [`Portal: ${row.portal}.`, row.rejections !== null ? `Rejections on this theme: ${row.rejections}.` : "", row.note ?? ""].filter(Boolean).join(" ");
+    const wanted = { status, designDays: row.designDays, developmentDays: row.developmentDays };
+    const members = teams[total - 1];
+
+    const found = existingByName.get(lower(row.theme));
+    if (!found) {
+      plan.creates.push({ name: row.theme, portal: row.portal, themeName: row.theme, description, memberNames: members, rounds: teams.slice(0, -1).map((memberNames) => ({ memberNames })), ...wanted });
+      continue;
+    }
+    const update: PlannedUpdate = { name: found.name, set: {}, addMembers: [], notes: [] };
+    if (!found.portal) update.set.portal = row.portal;
+    if (found.status && found.status !== wanted.status) update.notes.push(`status stays ${found.status} (sheet says ${wanted.status})`);
+    for (const key of ["designDays", "developmentDays"] as const) {
+      const value = wanted[key];
+      if (value === null) continue;
+      if (found[key] === null) update.set[key] = value;
+      else if (found[key] !== value) update.notes.push(`${key} stays ${found[key]} (sheet says ${value})`);
+    }
+    if (!found.description && description) update.set.description = description;
+    const have = new Set(found.memberNames.map(lower));
+    update.addMembers = members.filter((m) => !have.has(lower(m)));
+    if (found.roundCount !== earlier) update.notes.push(`has ${found.roundCount} earlier round(s), sheet implies ${earlier}; rounds are left as they are`);
+    if (found.themeName && lower(found.themeName) !== lower(row.theme)) update.notes.push(`stays under theme ${found.themeName}`);
+    plan.updates.push(update);
   }
 
   return plan;

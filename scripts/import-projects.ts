@@ -36,6 +36,7 @@ async function main() {
       designDays: p.designDays ?? null,
       developmentDays: p.developmentDays ?? null,
       description: p.description ?? "",
+      roundCount: (p.rounds ?? []).length,
       memberNames: p.members.map((x: { memberId: unknown }) => memberById.get(String(x.memberId)) ?? "").filter(Boolean),
     })),
   });
@@ -44,7 +45,7 @@ async function main() {
   console.log(`New team members: ${plan.newMembers.map((m) => `${m.name} (${m.designation})`).join(", ") || "none"}\n`);
   console.log(`Projects to create (${plan.creates.length}):`);
   for (const c of plan.creates) {
-    console.log(`  + ${c.name} [${c.themeName}] ${c.status} design=${c.designDays ?? "-"}d dev=${c.developmentDays ?? "-"}d | ${c.memberNames.join(", ") || "(no team)"}`);
+    console.log(`  + ${c.name} [${c.themeName}] ${c.status} design=${c.designDays ?? "-"}d dev=${c.developmentDays ?? "-"}d | ${c.memberNames.join(", ") || "(no team)"}${c.rounds.length ? ` | ${c.rounds.length} earlier round(s)` : ""}`);
   }
   console.log(`\nExisting projects to update (${plan.updates.length}):`);
   for (const u of plan.updates) {
@@ -77,7 +78,7 @@ async function main() {
   const creates = plan.creates.map((c) => {
     const themeId = themeIds.get(c.themeName.toLowerCase());
     if (!themeId) throw new Error(`No theme named "${c.themeName}".`);
-    return { themeId, name: c.name, portal: c.portal, description: c.description, type: "theme_development", status: c.status, designDays: c.designDays, developmentDays: c.developmentDays, members: memberRefs(c.memberNames) };
+    return { themeId, name: c.name, portal: c.portal, description: c.description, type: "theme_development", status: c.status, designDays: c.designDays, developmentDays: c.developmentDays, members: memberRefs(c.memberNames), rounds: c.rounds.map((r) => ({ status: "rejected", designDays: null, developmentDays: null, note: "", members: memberRefs(r.memberNames) })) };
   });
   const updates = plan.updates.map((u) => ({ u, refs: memberRefs(u.addMembers) }));
 

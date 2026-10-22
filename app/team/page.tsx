@@ -9,7 +9,7 @@ import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number };
+type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number };
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
@@ -118,6 +118,7 @@ export default function TeamPage() {
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
     { key: "email", header: "Email", render: (m) => m.email ?? <span className="text-zinc-400">—</span> },
     { key: "projects", header: "Projects", sortValue: (m) => m.projectCount, render: (m) => m.projectCount },
+    { key: "rejections", header: "Rejections", sortValue: (m) => m.rejectionCount, render: (m) => m.rejectionCount },
     {
       key: "actions",
       header: "",

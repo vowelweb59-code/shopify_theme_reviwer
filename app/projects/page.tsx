@@ -33,6 +33,7 @@ type ProjectRow = {
   description?: string;
   designDays: number | null;
   developmentDays: number | null;
+  rejections: number;
   members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
 
@@ -247,6 +248,12 @@ export default function ProjectsPage() {
             {p.members.length} member{p.members.length === 1 ? "" : "s"}
           </span>
         ),
+    },
+    {
+      key: "rejections",
+      header: "Rejections",
+      sortValue: (p) => p.rejections,
+      render: (p) => (p.rejections > 0 ? p.rejections : <span className="text-zinc-400">—</span>),
     },
     {
       key: "design",

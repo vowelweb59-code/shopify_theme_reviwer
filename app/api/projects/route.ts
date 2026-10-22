@@ -3,6 +3,8 @@ import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { typeHasStatus } from "@/lib/projects/constants";
 import { parseProjectFields, parseProjectMembers, parseProjectType } from "@/lib/projects/sanitize";
+import { rejectionCount } from "@/lib/projects/rounds";
+import { resolveMembers, resolveRounds } from "@/lib/projects/resolveMembers";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TeamMember } from "@/models/team-member";
@@ -34,10 +36,9 @@ export async function GET() {
       type: p.type ?? "theme_development",
       themeName: themeName.get(String(p.themeId)) ?? null,
       totalHours: hoursById.get(String(p._id)) ?? 0,
-      members: p.members.flatMap((pm: { memberId: unknown; role: string | null }) => {
-        const m = memberById.get(String(pm.memberId));
-        return m ? [{ memberId: String(m._id), name: m.name, designation: m.designation, role: pm.role }] : [];
-      }),
+      members: resolveMembers(p.members, memberById),
+      rounds: resolveRounds(p.rounds, memberById),
+      rejections: rejectionCount(p),
     })),
   });
 }

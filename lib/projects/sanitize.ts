@@ -6,6 +6,7 @@ import {
   MAX_NAME,
   MAX_NOTE,
   MAX_PROJECT_MEMBERS,
+  MAX_ROUNDS,
   MAX_TEXT,
   PORTALS,
   PROJECT_STATUSES,
@@ -14,6 +15,7 @@ import {
   type ProjectStatus,
   type ProjectType,
 } from "./constants";
+import type { Round } from "./rounds";
 
 // Untrusted-payload normalizers for the team and project routes. Each returns
 // either the cleaned value or an error message, so a route can answer 400
@@ -96,6 +98,28 @@ export function parseProjectMembers(raw: unknown): Result<{ memberId: string; ro
   }
   if (members.length > MAX_PROJECT_MEMBERS) return { ok: false, error: `A project can have at most ${MAX_PROJECT_MEMBERS} members.` };
   return { ok: true, value: members };
+}
+
+/** The whole earlier-rounds list (status, days, team, note per round); a malformed round is an error rather than dropped, since each one is rejection history. */
+export function parseRounds(raw: unknown): Result<Round[]> {
+  if (!Array.isArray(raw)) return { ok: false, error: "rounds must be an array." };
+  if (raw.length > MAX_ROUNDS) return { ok: false, error: `A project can have at most ${MAX_ROUNDS} earlier rounds.` };
+  const rounds: Round[] = [];
+  for (const entry of raw) {
+    const r = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
+    const status = parseStatus(r.status);
+    if (!status.ok) return status;
+    const designDays = parseDays(r.designDays, "Design duration");
+    if (!designDays.ok) return designDays;
+    const developmentDays = parseDays(r.developmentDays, "Development duration");
+    if (!developmentDays.ok) return developmentDays;
+    const members = parseProjectMembers(r.members ?? []);
+    if (!members.ok) return members;
+    const note = text(r.note, "Note", MAX_DESCRIPTION, false);
+    if (!note.ok) return note;
+    rounds.push({ status: status.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
+  }
+  return { ok: true, value: rounds };
 }
 
 /** Blank/null -> null (not known); otherwise a number of days from 0 up to MAX_DURATION_DAYS, kept to 2 decimals. */

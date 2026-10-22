@@ -30,24 +30,21 @@ const data: ImportData = {
 const existing: ExistingState = { themes: ["Alpha"], members: ["Ann Lee", "Bob Ray"], projects: [] };
 
 describe("buildPlan", () => {
-  it("makes a project per version: earlier ones Rejected, the latest takes the table's status and days", () => {
+  it("makes one project per theme: the latest version is the project, earlier ones are Rejected rounds", () => {
     const plan = buildPlan(data, existing);
     const alpha = plan.creates.filter((c) => c.themeName === "Alpha");
-    expect(alpha.map((c) => [c.name, c.status, c.developmentDays])).toEqual([
-      ["Alpha 1", "rejected", null],
-      ["Alpha 2", "live", 40],
-    ]);
+    expect(alpha.map((c) => [c.name, c.status, c.developmentDays, c.rounds.length])).toEqual([["Alpha", "live", 40, 1]]);
   });
 
   it("applies a number-less name to every version and falls back to the table for an empty role on the latest", () => {
-    const [v1, v2] = buildPlan(data, existing).creates;
-    expect(v1.memberNames).toEqual(["Ann Lee", "Bob Ray"]); // designer list + bare developer + bare manager (same person)
-    expect(v2.memberNames).toEqual(["Bob Ray", "Ann Lee"]); // bare developer, then the bare manager; the table's designer (Ann) is already on it
+    const [alpha] = buildPlan(data, existing).creates;
+    expect(alpha.rounds[0].memberNames).toEqual(["Ann Lee", "Bob Ray"]); // designer list + bare developer + bare manager (same person)
+    expect(alpha.memberNames).toEqual(["Bob Ray", "Ann Lee"]); // bare developer, then the bare manager; the table's designer (Ann) is already on it
   });
 
   it("names a theme without versions after the theme, and creates missing themes and members", () => {
     const plan = buildPlan(data, existing);
-    expect(plan.creates.find((c) => c.themeName === "Beta")).toMatchObject({ name: "Beta", status: "under_designing", memberNames: ["Cy Dole"] });
+    expect(plan.creates.find((c) => c.themeName === "Beta")).toMatchObject({ name: "Beta", status: "under_designing", memberNames: ["Cy Dole"], rounds: [] });
     expect(plan.newThemes).toEqual(["Beta"]);
     expect(plan.newMembers).toEqual([{ name: "Cy Dole", designation: "UI/UX Designer" }]);
   });
@@ -59,14 +56,24 @@ describe("buildPlan", () => {
   it("only fills gaps in an existing project and never duplicates or overwrites", () => {
     const withExisting: ExistingState = {
       ...existing,
-      projects: [{ name: "alpha version 2", portal: null, themeName: "Alpha", status: "under_development", designDays: null, developmentDays: 99, description: "", memberNames: ["Bob Ray"] }],
+      projects: [{ name: "alpha", portal: null, themeName: "Alpha", status: "under_development", designDays: null, developmentDays: 99, description: "", memberNames: ["Bob Ray"], roundCount: 1 }],
     };
     const plan = buildPlan(data, withExisting);
-    expect(plan.creates.map((c) => c.name)).toEqual(["Alpha 1", "Beta"]);
+    expect(plan.creates.map((c) => c.name)).toEqual(["Beta"]);
     expect(plan.updates).toHaveLength(1);
-    expect(plan.updates[0].set).toEqual({ name: "Alpha 2", portal: "P1", designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
+    expect(plan.updates[0].set).toEqual({ portal: "P1", designDays: 10, description: "Portal: P1. Rejections on this theme: 1." });
     expect(plan.updates[0].addMembers).toEqual(["Ann Lee"]);
     expect(plan.updates[0].notes.join()).toContain("status stays under_development");
     expect(plan.updates[0].notes.join()).toContain("developmentDays stays 99");
+  });
+
+  it("leaves projects still saved one per version to the merge script", () => {
+    const legacy: ExistingState = {
+      ...existing,
+      projects: [{ name: "Alpha 2", portal: "P1", themeName: "Alpha", status: "live", designDays: null, developmentDays: null, description: "", memberNames: [], roundCount: 0 }],
+    };
+    const plan = buildPlan(data, legacy);
+    expect(plan.creates.map((c) => c.name)).toEqual(["Beta"]);
+    expect(plan.conflicts.join()).toContain("merge-project-rounds");
   });
 });

@@ -23,6 +23,7 @@ teamMemberSchema.pre("findOneAndDelete", async function () {
   if (!doc) return;
   const { Project } = await import("./project");
   await Project.updateMany({ "members.memberId": doc._id }, { $pull: { members: { memberId: doc._id } } });
+  await Project.updateMany({ "rounds.members.memberId": doc._id }, { $pull: { "rounds.$[].members": { memberId: doc._id } } });
 });
 
 export type TeamMemberDoc = InferSchemaType<typeof teamMemberSchema>;
