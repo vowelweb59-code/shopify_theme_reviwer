@@ -1,8 +1,12 @@
-export const PROJECT_STATUSES = ["planning", "active", "on_hold", "completed"] as const;
+export const PROJECT_STATUSES = ["planning", "under_designing", "under_development", "live", "rejected", "active", "on_hold", "completed"] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   planning: "Planning",
+  under_designing: "Under Designing",
+  under_development: "Under Development",
+  live: "Live",
+  rejected: "Rejected",
   active: "Active",
   on_hold: "On hold",
   completed: "Completed",

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FolderKanban, Plus } from "lucide-react";
+import { Copy, FolderKanban, Plus } from "lucide-react";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
 import { Button } from "@/app/_components/ui/Button";
 import { Modal } from "@/app/_components/ui/Modal";
@@ -18,8 +18,9 @@ type ProjectRow = {
   themeId: string;
   themeName: string | null;
   status: ProjectStatus;
+  description?: string;
   dueDate: string | null;
-  members: { memberId: string; name: string; designation: string }[];
+  members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
@@ -125,6 +126,8 @@ export default function ProjectsPage() {
   const [themes, setThemes] = useState<{ _id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [duplicating, setDuplicating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -135,6 +138,36 @@ export default function ProjectsPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Copies the theme, description and team; the status goes back to Planning
+  // and the dates are cleared, since a copy is a fresh run of the work.
+  async function handleDuplicate(p: ProjectRow) {
+    setError(null);
+    setDuplicating(p._id);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          themeId: p.themeId,
+          name: `${p.name} (copy)`,
+          description: p.description ?? "",
+          status: "planning",
+          members: p.members.map((m) => ({ memberId: m.memberId, role: m.role })),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Failed to duplicate the project.");
+        return;
+      }
+      router.push(`/projects/${data.project._id}`);
+    } catch {
+      setError("Lost connection to the server. Try again.");
+    } finally {
+      setDuplicating(null);
+    }
+  }
 
   const columns: TableColumn<ProjectRow>[] = [
     { key: "name", header: "Project", sortValue: (p) => p.name.toLowerCase(), render: (p) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</span> },
@@ -154,6 +187,27 @@ export default function ProjectsPage() {
         ),
     },
     { key: "due", header: "Due", sortValue: (p) => p.dueDate ?? "9999", render: (p) => (p.dueDate ? formatDateOnly(p.dueDate) : <span className="text-zinc-400">—</span>) },
+    {
+      key: "actions",
+      header: "",
+      render: (p) => (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={duplicating === p._id}
+            disabled={duplicating !== null || !p.themeName}
+            onClick={(e) => {
+              e.stopPropagation(); // the row itself navigates to the project
+              handleDuplicate(p);
+            }}
+          >
+            <Copy className="h-3.5 w-3.5" aria-hidden />
+            Duplicate
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -168,6 +222,8 @@ export default function ProjectsPage() {
           New project
         </Button>
       </div>
+
+      {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
 
       {loading ? (
         <p className="text-sm text-zinc-500">Loading…</p>
