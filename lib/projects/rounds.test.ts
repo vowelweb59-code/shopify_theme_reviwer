@@ -89,4 +89,12 @@ describe("countOutcomes / successRate", () => {
     expect(tally.get("a")?.rejectedIn).toEqual([{ projectId: "p1", name: "Gravity", round: 1 }]);
     expect(tally.get("a")?.approvedIn).toEqual([{ projectId: "p1", name: "Gravity", round: 2 }]);
   });
+
+  it("leaves developers out of a round rejected at the design stage", () => {
+    const designation = new Map([["dev", "Sr Shopify Developer"], ["pm", "Product Manager"], ["ui", "UI/UX Designer"]]);
+    const tally = countOutcomes([{ status: "live", members: [m("dev"), m("pm")], rounds: [{ status: "rejected", rejectionStage: "design", members: [m("dev"), m("pm"), m("ui")] }] }], designation);
+    expect(tally.get("dev")).toMatchObject({ approved: 1, rejected: 0 });
+    expect(tally.get("pm")).toMatchObject({ approved: 1, rejected: 1 });
+    expect(tally.get("ui")).toMatchObject({ approved: 0, rejected: 1 });
+  });
 });

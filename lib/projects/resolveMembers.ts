@@ -10,6 +10,6 @@ export function resolveMembers(refs: Ref[], byId: Map<string, Person>) {
 }
 
 /** A project's earlier rounds with each round's team resolved. */
-export function resolveRounds(rounds: { status: string; designDays: number | null; developmentDays: number | null; note: string; members: Ref[] }[] | undefined, byId: Map<string, Person>) {
-  return (rounds ?? []).map((r) => ({ status: r.status, designDays: r.designDays ?? null, developmentDays: r.developmentDays ?? null, note: r.note ?? "", members: resolveMembers(r.members ?? [], byId) }));
+export function resolveRounds(rounds: { status: string; rejectionStage?: string | null; designDays: number | null; developmentDays: number | null; note: string; members: Ref[] }[] | undefined, byId: Map<string, Person>) {
+  return (rounds ?? []).map((r) => ({ status: r.status, rejectionStage: r.rejectionStage ?? null, designDays: r.designDays ?? null, developmentDays: r.developmentDays ?? null, note: r.note ?? "", members: resolveMembers(r.members ?? [], byId) }));
 }

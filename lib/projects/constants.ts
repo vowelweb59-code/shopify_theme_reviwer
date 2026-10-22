@@ -15,6 +15,12 @@ export function typeHasStatus(type: ProjectType): boolean {
   return type !== "theme_update";
 }
 
+// Where a rejected round was turned down. A design-stage rejection is not the developers' doing,
+// so it is left out of their success rate (lib/projects/rounds.ts).
+export const REJECTION_STAGES = ["design", "development"] as const;
+export type RejectionStage = (typeof REJECTION_STAGES)[number];
+export const REJECTION_STAGE_LABELS: Record<RejectionStage, string> = { design: "Design", development: "Development" };
+
 // The portals (Theme Store accounts) a project belongs to; the Projects page has one tab each.
 export const PORTALS = ["Vowel Web", "Themeshopy", "Fresco Solutions", "SAMS", "Flex"] as const;
 export type Portal = (typeof PORTALS)[number];

@@ -10,13 +10,13 @@ export async function GET() {
   const [members, counts, projects] = await Promise.all([
     TeamMember.find().sort({ name: 1 }).lean(),
     Project.aggregate([{ $unwind: "$members" }, { $group: { _id: "$members.memberId", projectCount: { $sum: 1 } } }]),
-    Project.find().select("name status members rounds").lean(),
+    Project.find().select("name status rejectionStage members rounds").lean(),
   ]);
   const countById = new Map<string, number>(counts.map((c) => [String(c._id), c.projectCount]));
   const rejectionsById = countRejections(projects);
-  const outcomesById = countOutcomes(projects);
+  const outcomesById = countOutcomes(projects, new Map(members.map((m) => [String(m._id), m.designation as string])));
   return NextResponse.json({
-    members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0, approvedCount: outcomesById.get(String(m._id))?.approved ?? 0, approvedIn: outcomesById.get(String(m._id))?.approvedIn ?? [], rejectedIn: outcomesById.get(String(m._id))?.rejectedIn ?? [] })),
+    members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0, approvedCount: outcomesById.get(String(m._id))?.approved ?? 0, decidedRejectedCount: outcomesById.get(String(m._id))?.rejected ?? 0, approvedIn: outcomesById.get(String(m._id))?.approvedIn ?? [], rejectedIn: outcomesById.get(String(m._id))?.rejectedIn ?? [] })),
   });
 }
 

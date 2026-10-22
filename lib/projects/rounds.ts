@@ -1,4 +1,4 @@
-import type { ProjectStatus } from "./constants";
+import type { ProjectStatus, RejectionStage } from "./constants";
 
 // A theme is one project that can be submitted several times. The project's
 // own status / members / days describe the *current* round; every earlier
@@ -7,6 +7,8 @@ import type { ProjectStatus } from "./constants";
 export type RoundMember = { memberId: string; role: string | null };
 export type Round = {
   status: ProjectStatus;
+  /** Where a rejected round was turned down; null when not recorded. */
+  rejectionStage: RejectionStage | null;
   designDays: number | null;
   developmentDays: number | null;
   members: RoundMember[];
@@ -14,21 +16,29 @@ export type Round = {
   note: string;
 };
 
-type RoundsOf = { _id?: unknown; name?: string; status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] };
+type RoundOf = { status: string; rejectionStage?: string | null; members: { memberId: unknown }[] };
+type RoundsOf = { _id?: unknown; name?: string; status: string | null; rejectionStage?: string | null; members: { memberId: unknown }[]; rounds?: RoundOf[] };
+
+/** A round rejected at the design stage is not the developers' doing, so it is left out of their success rate. */
+export function isExcludedFromRound(round: { status: string; rejectionStage?: string | null }, designation: string | undefined): boolean {
+  return round.status === "rejected" && round.rejectionStage === "design" && /developer/i.test(designation ?? "");
+}
 
 /** One decided round a member was on: which project, and which of its rounds when it has several. */
 export type OutcomeEntry = { projectId: string; name: string; round: number | null };
 export type Outcomes = { approved: number; rejected: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 /** Per member, the rounds that were decided: Live (approved) and Rejected. Rounds still in progress count for neither. */
-export function countOutcomes(projects: RoundsOf[]): Map<string, Outcomes> {
+export function countOutcomes(projects: RoundsOf[], designationById: Map<string, string> = new Map()): Map<string, Outcomes> {
   const out = new Map<string, Outcomes>();
   for (const project of projects) {
     const earlier = project.rounds ?? [];
-    [...earlier, { status: project.status ?? "", members: project.members }].forEach((round, i) => {
+    const all: RoundOf[] = [...earlier, { status: project.status ?? "", rejectionStage: project.rejectionStage, members: project.members }];
+    all.forEach((round, i) => {
       if (round.status !== "live" && round.status !== "rejected") return;
       const entry: OutcomeEntry = { projectId: String(project._id ?? ""), name: project.name ?? "", round: earlier.length > 0 ? i + 1 : null };
       for (const m of round.members) {
+        if (isExcludedFromRound(round, designationById.get(String(m.memberId)))) continue;
         const tally = out.get(String(m.memberId)) ?? { approved: 0, rejected: 0, approvedIn: [], rejectedIn: [] };
         if (round.status === "live") {
           tally.approved++;
@@ -126,6 +136,7 @@ export function planMerge(projects: MergeInput[]): MergeGroup[] {
       name: latest.base,
       rounds: parsed.slice(0, -1).map(({ p }) => ({
         status: p.status ?? "rejected",
+        rejectionStage: null,
         designDays: p.designDays,
         developmentDays: p.developmentDays,
         members: p.members,

@@ -86,11 +86,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
       status: project.status,
       designDays: project.designDays ?? null,
       developmentDays: project.developmentDays ?? null,
+      rejectionStage: project.rejectionStage ?? null,
       members: project.members.map((m: { memberId: unknown; role: string | null }) => ({ memberId: m.memberId, role: m.role })),
       note,
     };
     update.rounds = [...((update.rounds as unknown[] | undefined) ?? project.rounds.map((r: { toObject: () => unknown }) => r.toObject())), closed];
     update.status = "under_development";
+    update.rejectionStage = null;
     update.designDays = null;
     update.developmentDays = null;
   }

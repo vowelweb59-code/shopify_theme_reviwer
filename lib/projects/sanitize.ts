@@ -11,7 +11,9 @@ import {
   PORTALS,
   PROJECT_STATUSES,
   PROJECT_TYPES,
+  REJECTION_STAGES,
   type Portal,
+  type RejectionStage,
   type ProjectStatus,
   type ProjectType,
 } from "./constants";
@@ -54,6 +56,12 @@ export function parseDateOnly(raw: unknown, label: string): Result<Date | null> 
 
 export function parseStatus(raw: unknown): Result<ProjectStatus> {
   return PROJECT_STATUSES.includes(raw as ProjectStatus) ? { ok: true, value: raw as ProjectStatus } : { ok: false, error: "Status is not valid." };
+}
+
+/** Blank/null -> null (not recorded); otherwise one of REJECTION_STAGES. */
+export function parseRejectionStage(raw: unknown): Result<RejectionStage | null> {
+  if (raw === null || raw === undefined || raw === "") return { ok: true, value: null };
+  return REJECTION_STAGES.includes(raw as RejectionStage) ? { ok: true, value: raw as RejectionStage } : { ok: false, error: "Rejection stage is not valid." };
 }
 
 /** Blank/null -> null (no portal yet); otherwise one of PORTALS. */
@@ -113,11 +121,13 @@ export function parseRounds(raw: unknown): Result<Round[]> {
     if (!designDays.ok) return designDays;
     const developmentDays = parseDays(r.developmentDays, "Development duration");
     if (!developmentDays.ok) return developmentDays;
+    const rejectionStage = parseRejectionStage(r.rejectionStage);
+    if (!rejectionStage.ok) return rejectionStage;
     const members = parseProjectMembers(r.members ?? []);
     if (!members.ok) return members;
     const note = text(r.note, "Note", MAX_DESCRIPTION, false);
     if (!note.ok) return note;
-    rounds.push({ status: status.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
+    rounds.push({ status: status.value, rejectionStage: rejectionStage.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
   }
   return { ok: true, value: rounds };
 }
@@ -132,7 +142,7 @@ export function parseDays(raw: unknown, label: string): Result<number | null> {
   return { ok: true, value: Math.round(days * 100) / 100 };
 }
 
-type ProjectFields = { name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
+type ProjectFields = { rejectionStage?: RejectionStage | null; name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
 
 /** `partial` (PATCH) validates only the keys present; otherwise (POST) a name is required. */
 export function parseProjectFields(body: Record<string, unknown>, partial: boolean): Result<ProjectFields> {
@@ -156,6 +166,11 @@ export function parseProjectFields(body: Record<string, unknown>, partial: boole
     const status = parseStatus(body.status);
     if (!status.ok) return status;
     out.status = status.value;
+  }
+  if ("rejectionStage" in body) {
+    const stage = parseRejectionStage(body.rejectionStage);
+    if (!stage.ok) return stage;
+    out.rejectionStage = stage.value;
   }
   for (const key of ["designDays", "developmentDays"] as const) {
     if (!(key in body)) continue;
