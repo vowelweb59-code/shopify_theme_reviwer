@@ -33,24 +33,6 @@ export function ThemeCategoriesTab() {
     }))
     .sort((a, b) => b.themes.length - a.themes.length || industryLabel(a.category).localeCompare(industryLabel(b.category)));
 
-  const themeColumns: TableColumn<ThemeRow>[] = [
-    { key: "theme", header: "Theme", render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.themeName}</span>, sortValue: (r) => r.themeName.toLowerCase() },
-    { key: "publisher", header: "Publisher", render: (r) => (r.publisher ? <span>{r.publisher}</span> : <span className="text-zinc-400">—</span>), sortValue: (r) => (r.publisher ?? "~").toLowerCase() },
-    {
-      key: "publisherThemes",
-      header: "Publisher's themes on the store",
-      render: (r) => (r.publisherThemes === null ? <span className="text-zinc-400">—</span> : <span className="tabular-nums">{r.publisherThemes}</span>),
-      sortValue: (r) => r.publisherThemes ?? -1,
-      className: "text-right",
-    },
-    {
-      key: "category",
-      header: "Category",
-      render: (r) => <span className={r.category ? undefined : "italic text-zinc-500"}>{industryLabel(r.category)}</span>,
-      sortValue: (r) => industryLabel(r.category),
-    },
-  ];
-
   const categoryColumns: TableColumn<CategoryRow>[] = [
     {
       key: "category",
@@ -98,11 +80,6 @@ export function ThemeCategoriesTab() {
             <section className="flex flex-col gap-3">
               <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes per category</h3>
               <ResponsiveTable columns={categoryColumns} rows={categories} rowKey={(r) => r.category ?? "none"} theadClassName="bg-primary-tint text-primary-tint-text" />
-            </section>
-
-            <section className="flex flex-col gap-3">
-              <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes</h3>
-              <ResponsiveTable columns={themeColumns} rows={themes} rowKey={(r) => r.themeId} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={30} />
             </section>
           </>
         )}
