@@ -300,7 +300,7 @@ export default function ProjectsPage() {
         ) : (
           <span title={p.durationEstimated ? "Split from the one total entered earlier, by the average design share" : undefined}>
             {p.durationEstimated ? "~" : ""}
-            {p.designTotalDays} d
+            {Math.round(p.designTotalDays)} d
           </span>
         ),
     },
@@ -314,16 +314,9 @@ export default function ProjectsPage() {
         ) : (
           <span title={p.durationEstimated ? "Split from the one total entered earlier, by the average design share" : undefined}>
             {p.durationEstimated ? "~" : ""}
-            {p.developmentTotalDays} d
+            {Math.round(p.developmentTotalDays)} d
           </span>
         ),
-    },
-    {
-      key: "totalHours",
-      header: "Total hours",
-      sortValue: (p) => p.totalHours,
-      // Fixed days entered by hand (8.5 h each) plus the hours reported in the Theme Status Group; a Theme Update shows its hours log.
-      render: (p) => (p.totalHours > 0 ? `${p.totalHours} h` : <span className="text-zinc-400">—</span>),
     },
     {
       key: "actions",

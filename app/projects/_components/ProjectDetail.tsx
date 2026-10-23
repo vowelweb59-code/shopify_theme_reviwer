@@ -206,13 +206,13 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <div className="rounded-md border border-border-subtle px-3 py-2 text-sm">
               <p className="mb-1 font-medium text-zinc-900 dark:text-zinc-100">Time taken</p>
               <p className="text-zinc-600 dark:text-zinc-400">
-                Design {project.totals.designDays ?? "—"} d · Development {project.totals.developmentDays ?? "—"} d · Total {project.totals.totalHours} h
+                Design {project.totals.designDays === null ? "—" : Math.round(project.totals.designDays)} d · Development {project.totals.developmentDays === null ? "—" : Math.round(project.totals.developmentDays)} d · Total {Math.round(project.totals.totalHours)} h
               </p>
               <p className="mt-1 text-xs text-zinc-500">
                 {project.totals.estimated
-                  ? `Only one total (${project.designDays ?? project.developmentDays} d) was entered earlier, so it is split into design ${project.totals.fixedDesignDays} d and development ${project.totals.fixedDevelopmentDays} d by the average design share of the other projects`
+                  ? `Only one total (${project.designDays ?? project.developmentDays} d) was entered earlier, so it is split into design ${Math.round(project.totals.fixedDesignDays ?? 0)} d and development ${Math.round(project.totals.fixedDevelopmentDays ?? 0)} d by the average design share of the other projects`
                   : `Fixed days entered earlier: design ${project.designDays ?? 0} d, development ${project.developmentDays ?? 0} d`}{" "}
-                ({project.totals.fixedHours} h, 8.5 h per day; these can no longer be edited). Plus {project.totals.spaceHours} h
+                ({Math.round(project.totals.fixedHours)} h, 8.5 h per day; these can no longer be edited). Plus {Math.round(project.totals.spaceHours)} h
                 reported in the Theme Status Group, recalculated from the reports each time. Product Managers&apos; hours are not counted.
               </p>
             </div>
