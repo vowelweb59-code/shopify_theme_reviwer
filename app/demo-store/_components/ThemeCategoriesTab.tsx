@@ -4,23 +4,34 @@ import { Store } from "lucide-react";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { useApi } from "@/app/analytics/_components/useApi";
-import { industryLabel } from "@/lib/themes/industries";
+import { INDUSTRIES, industryLabel } from "@/lib/themes/industries";
 import { ThemeStoreCatalogSection } from "./ThemeStoreCatalogSection";
 
-type ThemeRow = { themeId: string; themeName: string; category: string | null; publisher: string | null };
+type ThemeRow = { themeId: string; themeName: string; category: string | null; publisher: string | null; publisherThemes: number | null };
 type CategoryRow = { category: string | null; themes: string[] };
 
 export function ThemeCategoriesTab() {
   const { data, loading, error } = useApi<{ themes: ThemeRow[] }>("/api/theme-categories");
   const themes: ThemeRow[] = data?.themes ?? [];
 
-  const byCategory = new Map<string | null, string[]>();
+  // Every Theme Store category is listed, with 0 where you have no theme in it; "Uncategorized" only when some theme has none.
+  const byCategory = new Map<string | null, string[]>(INDUSTRIES.map((i) => [i.slug, []]));
   for (const t of themes) byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t.themeName]);
-  const categories: CategoryRow[] = [...byCategory].map(([category, names]) => ({ category, themes: names.sort((a, b) => a.localeCompare(b)) }));
+  const categories: CategoryRow[] = [...byCategory]
+    .filter(([category, names]) => category !== null || names.length > 0)
+    .map(([category, names]) => ({ category, themes: names.sort((a, b) => a.localeCompare(b)) }))
+    .sort((a, b) => b.themes.length - a.themes.length || industryLabel(a.category).localeCompare(industryLabel(b.category)));
 
   const themeColumns: TableColumn<ThemeRow>[] = [
     { key: "theme", header: "Theme", render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.themeName}</span>, sortValue: (r) => r.themeName.toLowerCase() },
     { key: "publisher", header: "Publisher", render: (r) => (r.publisher ? <span>{r.publisher}</span> : <span className="text-zinc-400">—</span>), sortValue: (r) => (r.publisher ?? "~").toLowerCase() },
+    {
+      key: "publisherThemes",
+      header: "Publisher's themes on the store",
+      render: (r) => (r.publisherThemes === null ? <span className="text-zinc-400">—</span> : <span className="tabular-nums">{r.publisherThemes}</span>),
+      sortValue: (r) => r.publisherThemes ?? -1,
+      className: "text-right",
+    },
     {
       key: "category",
       header: "Category",
@@ -37,7 +48,7 @@ export function ThemeCategoriesTab() {
       sortValue: (r) => industryLabel(r.category),
     },
     { key: "count", header: "Themes", render: (r) => <span className="tabular-nums">{r.themes.length}</span>, sortValue: (r) => r.themes.length, className: "text-right" },
-    { key: "names", header: "Which themes", render: (r) => <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> },
+    { key: "names", header: "Which themes", render: (r) => (r.themes.length ? <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> : <span className="text-zinc-400">—</span>) },
   ];
 
   return (

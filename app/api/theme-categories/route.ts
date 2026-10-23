@@ -25,17 +25,22 @@ export async function GET() {
   const mainCategory = new Map<string, string | null>();
   for (const r of presetRows) if (!mainCategory.has(r.themeId)) mainCategory.set(r.themeId, r.category);
   const store = new Map(storeThemes.map((s) => [s.name.trim().toLowerCase(), s]));
+  // How many themes each publisher has on the Theme Store (the whole catalog).
+  const publisherThemes = new Map<string, number>();
+  for (const s of storeThemes) if (s.designer) publisherThemes.set(s.designer.trim().toLowerCase(), (publisherThemes.get(s.designer.trim().toLowerCase()) ?? 0) + 1);
   const portal = new Map<string, string>();
   for (const p of projects) if (!portal.has(String(p.themeId))) portal.set(String(p.themeId), p.portal);
 
   return NextResponse.json({
     themes: themes.map((t) => {
       const listing = store.get(t.name.trim().toLowerCase());
+      const publisher = listing?.designer ?? portal.get(String(t._id)) ?? null;
       return {
         themeId: String(t._id),
         themeName: t.name,
         category: mainCategory.get(String(t._id)) ?? (listing && listing.industries.length === 1 ? listing.industries[0] : null),
-        publisher: listing?.designer ?? portal.get(String(t._id)) ?? null,
+        publisher,
+        publisherThemes: publisher ? (publisherThemes.get(publisher.trim().toLowerCase()) ?? 0) : null,
       };
     }),
   });

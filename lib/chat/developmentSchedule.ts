@@ -12,8 +12,8 @@ export const DEVELOPMENT_SCHEDULE: Record<string, DevelopmentEntry[]> = {
   "2026-09": SEPT_OCT,
   // The same list, plus Soft's Twinkle preset.
   "2026-08": [...SEPT_OCT, { theme: "Soft", presets: ["Twinkle"] }],
-  // Everything done on Soft counted as theme work.
-  "2026-07": [{ theme: "Soft" }],
+  // Everything done on Soft counted as theme work, and Voltix was new development from the start of the reports.
+  "2026-07": [{ theme: "Soft" }, { theme: "Voltix" }],
   "2026-06": [{ theme: "Soft" }],
 };
 
@@ -23,6 +23,10 @@ export const THEME_ALIASES: Record<string, string> = {
   // Free-form names that appeared in the existing reports.
   "bag shopify theme": "legacy",
   "transform theme to beauty": "zeal",
+  "nobal theme": "noble",
+  nobal: "noble",
+  "organic theme": "grocery",
+  organic: "grocery",
 };
 
 /** The month ("YYYY-MM") of an ISO date, and its development list, or null when that month isn't scheduled. */
