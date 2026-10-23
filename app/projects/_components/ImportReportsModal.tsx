@@ -9,7 +9,26 @@ type Summary = { created: number; alreadyImported: number; needsReview: { text: 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
 /** Paste daily time reports from the Theme Status Group space; durations are suggested from them on each project. */
-export function ImportReportsModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+type ChatStatus = { configured: boolean; connection: { email: string; status: "active" | "revoked"; lastSyncAt: string | null; lastError: string | null } | null };
+type SyncResult = Summary & { fetched: number; reports: number; connectedAs: string };
+
+export function ImportReportsModal({
+  open,
+  onOpenChange,
+  notice,
+  autoSync = false,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  notice?: { tone: "ok" | "error"; text: string } | null;
+  /** Start importing from Google Chat as soon as the dialog opens (when it is connected). */
+  autoSync?: boolean;
+}) {
+  const [chat, setChat] = useState<ChatStatus | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+
   const [team, setTeam] = useState<{ _id: string; name: string }[]>([]);
   const [memberId, setMemberId] = useState("");
   const [text, setText] = useState("");
@@ -23,7 +42,31 @@ export function ImportReportsModal({ open, onOpenChange }: { open: boolean; onOp
       .then((res) => res.json())
       .then((data) => setTeam(data.members ?? []))
       .catch(() => setError("Could not load the team."));
+    fetch("/api/chat/sync")
+      .then((res) => res.json())
+      .then((status: ChatStatus) => {
+        setChat(status);
+        if (autoSync && status.connection?.status === "active") void handleSync();
+      })
+      .catch(() => setChat(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncError(null);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/chat/sync", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setSyncError(data.error ?? "Syncing failed.");
+      else setSyncResult(data);
+    } catch {
+      setSyncError("Lost connection to the server. Try again.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,7 +90,62 @@ export function ImportReportsModal({ open, onOpenChange }: { open: boolean; onOp
   }
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} title="Import time reports" description="Paste reports from the Theme Status Group space. One person's reports at a time; a report starts at its Date line.">
+    <Modal open={open} onOpenChange={onOpenChange} title="Import from Google Chat" description="Reads the daily time reports in the Theme Status Group space. Reports already imported are skipped.">
+      {notice && (
+        <p role="status" className={`mb-3 text-sm ${notice.tone === "ok" ? "text-status-pass-text" : "text-status-fail-text"}`}>
+          {notice.text}
+        </p>
+      )}
+      <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-subtle p-3 text-sm">
+        <p className="font-medium text-zinc-900 dark:text-zinc-100">Automatic: Theme Status Group</p>
+        {chat === null ? (
+          <p className="text-xs text-zinc-500">Checking…</p>
+        ) : !chat.configured ? (
+          <p className="text-xs text-zinc-500">Google Chat isn&apos;t set up on this server yet.</p>
+        ) : chat.connection?.status === "active" ? (
+          <>
+            <p className="text-xs text-zinc-500">
+              Connected as {chat.connection.email}. {chat.connection.lastSyncAt ? `Last synced ${new Date(chat.connection.lastSyncAt).toLocaleString()}.` : "Not synced yet."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" onClick={handleSync} loading={syncing}>
+                Sync now
+              </Button>
+              <a href="/api/chat/google/connect" className="self-center text-xs text-primary underline">
+                Reconnect
+              </a>
+            </div>
+          </>
+        ) : (
+          <>
+            {chat.connection && <p className="text-xs text-status-fail-text">{chat.connection.lastError ?? "The connection was revoked."}</p>}
+            <a href="/api/chat/google/connect" className="self-start rounded-md border border-border-subtle px-3 py-1.5 text-xs font-medium hover:bg-black/[.04] dark:hover:bg-white/[.06]">
+              Connect Google Chat
+            </a>
+          </>
+        )}
+        {syncError && <p className="text-xs text-status-fail-text">{syncError}</p>}
+        {syncResult && (
+          <div role="status" className="text-xs">
+            <p className="text-status-pass-text">
+              Read {syncResult.fetched} message{syncResult.fetched === 1 ? "" : "s"}, found {syncResult.reports} report{syncResult.reports === 1 ? "" : "s"}: imported {syncResult.created}
+              {syncResult.alreadyImported > 0 ? `, ${syncResult.alreadyImported} already imported` : ""}.
+            </p>
+            {syncResult.needsReview.length > 0 && (
+              <ul className="mt-1 flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
+                {syncResult.needsReview.map((r, i) => (
+                  <li key={i}>
+                    Needs a look: {r.reason} <span className="text-zinc-400">— {r.text.split("\n").find((l) => /theme/i.test(l)) ?? r.text.slice(0, 60)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+      <details>
+        <summary className="mb-3 cursor-pointer text-xs text-zinc-500">Or paste reports by hand</summary>
+        <p className="mb-3 text-xs text-zinc-500">One person&apos;s reports at a time; a report starts at its Date line.</p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Posted by</span>
@@ -96,6 +194,7 @@ export function ImportReportsModal({ open, onOpenChange }: { open: boolean; onOp
           </Button>
         </div>
       </form>
+      </details>
     </Modal>
   );
 }

@@ -204,10 +204,30 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [autoSync, setAutoSync] = useState(false);
+  const [chatNotice, setChatNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [portalTab, setPortalTab] = useState<Portal | "none">(PORTALS[0]);
   const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Back from Google's consent screen: reopen the import dialog with the outcome.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const outcome = params.get("chat");
+    if (!outcome) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads the OAuth return URL once on mount; it can't be read during render without a hydration mismatch
+    setChatNotice(
+      outcome === "connected"
+        ? { tone: "ok", text: `Google Chat connected as ${params.get("chatAccount") ?? "your account"}.` }
+        : outcome === "cancelled"
+          ? { tone: "error", text: "Connecting Google Chat was cancelled." }
+          : { tone: "error", text: params.get("chatError") ?? "Connecting Google Chat failed." }
+    );
+    setAutoSync(outcome === "connected"); // freshly connected: import straight away
+    setImportOpen(true);
+    window.history.replaceState(null, "", "/projects");
+  }, []);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -327,8 +347,15 @@ export default function ProjectsPage() {
           <p className="mt-1 text-sm text-zinc-500">Theme builds, theme updates and presets, each with its own team.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setImportOpen(true)}>
-            Import time reports
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setChatNotice(null);
+              setAutoSync(true);
+              setImportOpen(true);
+            }}
+          >
+            Import from Google Chat
           </Button>
           <Button onClick={() => setModalOpen(true)} disabled={themes.length === 0}>
             <Plus className="h-4 w-4" aria-hidden />
@@ -395,7 +422,7 @@ export default function ProjectsPage() {
         <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
 
-      <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} />
+      <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} notice={chatNotice} autoSync={autoSync} />
       {modalOpen && <NewProjectModal themes={themes} defaultPortal={portalTab === "none" ? "" : portalTab} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}
     </PageContainer>
   );
