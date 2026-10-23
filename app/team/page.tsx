@@ -11,7 +11,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -35,6 +35,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
   const [name, setName] = useState(member?.name ?? "");
   const [email, setEmail] = useState(member?.email ?? "");
   const [designation, setDesignation] = useState(member?.designation ?? "");
+  const [updatesOnly, setUpdatesOnly] = useState(member?.updatesAndPresetsOnly ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
       const res = await fetch(member ? `/api/team/${member._id}` : "/api/team", {
         method: member ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, designation }),
+        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -81,6 +82,13 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Email (optional)</span>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={INPUT} />
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={updatesOnly} onChange={(e) => setUpdatesOnly(e.target.checked)} className="mt-1" />
+          <span className="text-zinc-700 dark:text-zinc-300">
+            Only works on theme updates and presets
+            <span className="block text-xs text-zinc-500">Never on a new theme. Their Google Chat time reports are then logged as preset work or Theme Update hours.</span>
+          </span>
         </label>
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
         <div className="flex justify-end gap-2">
@@ -183,7 +191,7 @@ export default function TeamPage() {
         <section className="flex flex-col gap-3">
           <div>
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
-            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren't counted.</p>
+            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren&apos;t counted.</p>
           </div>
           <div role="tablist" aria-label="Success rate by role" className="flex flex-wrap gap-1 border-b border-border-subtle">
             {ROLE_TABS.map((tab) => {

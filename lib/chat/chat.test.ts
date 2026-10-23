@@ -60,6 +60,15 @@ describe("resolveTheme / resolveMember", () => {
     expect(resolveTheme({ themeParts: ["Gravity", "Decor"], memo: "updated demo" }, withNoble)).toMatchObject({ kind: "preset" });
   });
 
+  it("for someone who never works on new themes, a report is preset or update work, and an unknown second part is flagged", () => {
+    const only = { updatesAndPresetsOnly: true };
+    expect(resolveTheme({ themeParts: ["Kombat"], memo: "Fixed footer" }, themes, only)).toMatchObject({ ok: true, kind: "update" });
+    expect(resolveTheme({ themeParts: ["Gravity", "Decor"], memo: "Fixed footer" }, themes, only)).toMatchObject({ ok: true, kind: "preset" });
+    expect(resolveTheme({ themeParts: ["Gravity", "Pearl"], memo: "Fixed footer" }, themes, only)).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Gravity", "Pearl"], memo: "Updating footer" }, themes, only)).toMatchObject({ ok: true, kind: "update" });
+    expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Product page" }, themes)).toMatchObject({ ok: true, kind: "theme" });
+  });
+
   it("matches a poster to one team member by name", () => {
     const members = [
       { id: "1", name: "Pranay Nimje" },

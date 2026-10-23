@@ -9,6 +9,8 @@ const teamMemberSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, default: null, lowercase: true, trim: true },
     designation: { type: String, required: true, trim: true },
+    // Never works on a new theme: their time reports (lib/chat/resolve.ts) are preset work or theme updates.
+    updatesAndPresetsOnly: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

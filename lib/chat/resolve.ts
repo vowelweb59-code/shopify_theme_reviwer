@@ -18,7 +18,13 @@ export function isUpdateMemo(memo: string): boolean {
   return /\bupdat(e|es|ed|ing)\b/i.test(memo);
 }
 
-export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[]): Resolved {
+/**
+ * `updatesAndPresetsOnly`: the poster never works on a new theme, so a report that
+ * isn't preset work is Theme Update work. A second part that isn't a known
+ * preset ("Gravity | Pearl | ...") is not guessed at: it may be a preset the
+ * app doesn't list yet, so it is flagged for review.
+ */
+export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
   const [name, second] = parsed.themeParts;
   const exact = themes.filter((t) => lower(t.name) === lower(name));
   const matches = exact.length > 0 ? exact : themes.filter((t) => nameKey(t.name) === nameKey(name));
@@ -26,7 +32,10 @@ export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?:
   if (matches.length > 1) return { ok: false, reason: `More than one theme is named "${name}".` };
   const theme = matches[0];
   const preset = second ? theme.presets.find((p) => lower(p) === lower(second)) : undefined;
-  const kind = preset ? "preset" : isUpdateMemo(parsed.memo ?? "") ? "update" : "theme";
+  if (!preset && !isUpdateMemo(parsed.memo ?? "") && options.updatesAndPresetsOnly && second) {
+    return { ok: false, reason: `"${second}" isn't a known preset of ${theme.name}, and this person only does preset or update work.` };
+  }
+  const kind = preset ? "preset" : isUpdateMemo(parsed.memo ?? "") || options.updatesAndPresetsOnly ? "update" : "theme";
   return { ok: true, themeId: theme.id, themeName: theme.name, kind, preset: preset ?? null };
 }
 

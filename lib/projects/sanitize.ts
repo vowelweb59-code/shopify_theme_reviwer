@@ -34,7 +34,7 @@ function text(raw: unknown, label: string, max: number, required: boolean): Resu
   return { ok: true, value };
 }
 
-export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string }> {
+export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean }> {
   const name = text(body.name, "Name", MAX_NAME, true);
   if (!name.ok) return name;
   const designation = text(body.designation, "Designation", MAX_TEXT, true);
@@ -42,7 +42,9 @@ export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ na
   const email = text(body.email, "Email", MAX_NAME * 2, false);
   if (!email.ok) return email;
   if (email.value && !EMAIL_RE.test(email.value)) return { ok: false, error: "Email is not a valid address." };
-  return { ok: true, value: { name: name.value, email: email.value ? email.value.toLowerCase() : null, designation: designation.value } };
+  // Only when sent, so an older client's save doesn't reset it.
+  const flag = typeof body.updatesAndPresetsOnly === "boolean" ? { updatesAndPresetsOnly: body.updatesAndPresetsOnly } : {};
+  return { ok: true, value: { name: name.value, email: email.value ? email.value.toLowerCase() : null, designation: designation.value, ...flag } };
 }
 
 /** "YYYY-MM-DD" (or empty -> null) to a UTC-midnight Date, so a date picked in any time zone round-trips unchanged. */
