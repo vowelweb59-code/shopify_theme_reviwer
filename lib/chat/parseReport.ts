@@ -21,12 +21,15 @@ export type ParsedReport = {
 type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 const DATE_RE = /date\W{0,5}(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/i;
+// The older layout: "Timer Report (02-07-2026)" with no "Date" line.
+const TIMER_REPORT_DATE_RE = /timer\s*report\W{0,3}(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/i;
 const THEME_RE = /theme\s*name\s*[:\-–—]*\s*(.+)/i;
 const MEMO_RE = /memo\s*[:\-–—]*\s*(.+)/i;
-const TIMER_RE = /timer\s*[:\-–—]*\s*(\d{1,2})(?:\s*[.:]\s*(\d{1,2}))?\s*(?:hrs?|hours?)?/i;
+// "08.30 hrs", "8:30", "6 hrs", "1:10:hr" (1 h 10 min), "45:min" (45 minutes), "04 hr".
+const TIMER_RE = /timer\s*[:\-–—]*\s*(\d{1,3})(?:\s*[.:]\s*(\d{1,2}))?(?:\s*[.:]?\s*(hrs?|hours?|mins?|minutes?))?/i;
 
 export function parseReport(text: string): Result<ParsedReport> {
-  const date = DATE_RE.exec(text);
+  const date = DATE_RE.exec(text) ?? TIMER_REPORT_DATE_RE.exec(text);
   if (!date) return { ok: false, error: "No date found." };
   const [day, month, year] = [Number(date[1]), Number(date[2]), Number(date[3])];
   const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -40,10 +43,11 @@ export function parseReport(text: string): Result<ParsedReport> {
 
   const timer = TIMER_RE.exec(text);
   if (!timer) return { ok: false, error: "No timer found." };
-  const hours = Number(timer[1]);
-  const mins = timer[2] === undefined ? 0 : Number(timer[2].length === 1 ? `${timer[2]}0` : timer[2]);
+  // A minutes unit ("45:min") means the number is minutes; otherwise it is hours, with optional minutes after it.
+  const inMinutes = /^min/i.test(timer[3] ?? "");
+  const mins = timer[2] === undefined || inMinutes ? 0 : Number(timer[2].length === 1 ? `${timer[2]}0` : timer[2]);
   if (mins >= 60) return { ok: false, error: `Timer "${timer[0].trim()}" has more than 59 minutes.` };
-  const minutes = hours * 60 + mins;
+  const minutes = inMinutes ? Number(timer[1]) : Number(timer[1]) * 60 + mins;
   if (minutes <= 0 || minutes > 24 * 60) return { ok: false, error: `Timer "${timer[0].trim()}" is not a plausible day.` };
 
   return { ok: true, value: { date: iso, themeParts, memo: (MEMO_RE.exec(text)?.[1] ?? "").trim(), minutes } };
@@ -51,7 +55,8 @@ export function parseReport(text: string): Result<ParsedReport> {
 
 /** Splits pasted text holding several reports: each one starts at a "Date" line. */
 export function splitReports(text: string): string[] {
-  const starts = [...text.matchAll(/^[ \t]*date\b/gim)].map((m) => m.index ?? 0);
+  // A report starts at a "Date" line or, in the older layout, a "Timer Report" line (often wrapped in ==== or ---- rules).
+  const starts = [...text.matchAll(/^[ \t=\-_*#]*(?:date|timer\s*report)\b/gim)].map((m) => m.index ?? 0);
   if (starts.length === 0) return text.trim() ? [text.trim()] : [];
   return starts.map((start, i) => text.slice(start, starts[i + 1] ?? text.length).trim());
 }

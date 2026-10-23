@@ -25,6 +25,7 @@ type StoreTheme = {
   features: string[];
   rank: number | null;
 };
+type PublisherRow = { publisher: string; count: number; themes: string[] };
 type StoreData = { detailsPending: number; lastCrawledAt: string | null; themes: StoreTheme[] };
 type Progress = { running: boolean; phase: "catalog" | "categories" | "details" | null; total: number; done: number; current: string | null; themesSeen: number; errors: string[]; finishedAt: string | null };
 
@@ -81,6 +82,21 @@ export function ThemeStoreCatalogSection() {
         (!q || t.name.toLowerCase().includes(q) || (t.designer ?? "").toLowerCase().includes(q) || t.features.some((f) => f.toLowerCase().includes(q)))
     );
   }, [themes, category, price, query]);
+
+  // How many main themes each publisher has on the store (the whole catalog, not just what the filters show).
+  const publishers = useMemo<PublisherRow[]>(() => {
+    const byPublisher = new Map<string, StoreTheme[]>();
+    for (const t of themes) byPublisher.set(t.designer ?? "Not read yet", [...(byPublisher.get(t.designer ?? "Not read yet") ?? []), t]);
+    return [...byPublisher]
+      .map(([publisher, list]) => ({ publisher, count: list.length, themes: list.sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)).map((t) => t.name) }))
+      .sort((a, b) => b.count - a.count || a.publisher.localeCompare(b.publisher));
+  }, [themes]);
+
+  const publisherColumns: TableColumn<PublisherRow>[] = [
+    { key: "publisher", header: "Publisher", render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.publisher}</span>, sortValue: (r) => r.publisher.toLowerCase() },
+    { key: "count", header: "Themes", render: (r) => <span className="tabular-nums">{r.count}</span>, sortValue: (r) => r.count, className: "text-right" },
+    { key: "themes", header: "Which themes", render: (r) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> },
+  ];
 
   function exportCsv() {
     const cell = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -207,6 +223,12 @@ export function ThemeStoreCatalogSection() {
             {(data?.detailsPending ?? 0) > 0 ? ` · ${data!.detailsPending} theme pages not read yet` : ""}
           </p>
           <ResponsiveTable columns={columns} rows={shown} rowKey={(t) => t.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={50} emptyMessage="No themes match." />
+
+          <section className="mt-6 flex flex-col gap-3">
+            <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes per publisher</h3>
+            <p className="max-w-2xl text-sm text-zinc-500">How many themes each publisher has on the Theme Store, most first. Publishers appear once their theme pages have been read.</p>
+            <ResponsiveTable columns={publisherColumns} rows={publishers} rowKey={(r) => r.publisher} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} />
+          </section>
         </>
       )}
     </section>

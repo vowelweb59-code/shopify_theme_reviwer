@@ -13,6 +13,7 @@ import { TimeEntry } from "@/models/time-entry";
 // ONE-TIME: sorts the time reports already imported from Google Chat into new development (theme / preset) and updates,
 // by the monthly development lists in lib/chat/developmentSchedule.ts, then locks them so a re-check or a sync never
 // changes them. Update work becomes hours on the theme's "<Theme> Update" project, with the poster added to its team.
+// Only reports that are not locked yet are touched (anything already classified, or moved by hand, stays as it is), so it can be re-run for newly imported ones.
 // Reports that can't be placed (unknown theme or poster, no Update project) are left unlocked and flagged, to fix and re-run.
 // A dry run by default; --apply writes, after saving the affected reports and hours to backups/.
 //   npx tsx --env-file=.env.production.local scripts/classify-existing-reports.ts          (dry run, live)
@@ -27,7 +28,7 @@ async function main() {
     Theme.find().select("name themeStorePresets demoStorePresets").lean(),
     TeamMember.find().select("name aliases updatesAndPresetsOnly").lean(),
     Project.find({ type: "theme_update" }).select("themeId members").lean(),
-    ChatReport.find().lean(),
+    ChatReport.find({ locked: { $ne: true } }).lean(),
   ]);
   const themeRefs = themes.map((t) => ({
     id: String(t._id),
@@ -106,7 +107,7 @@ async function main() {
   const dir = path.join(process.cwd(), "backups");
   mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `chat-reports-before-classify-${new Date().toISOString().replace(/[:.]/g, "-")}.json`);
-  const oldEntries = await TimeEntry.find({ chatReportKey: { $type: "string" } }).lean();
+  const oldEntries = await TimeEntry.find({ chatReportKey: { $in: reports.map((r) => r.key) } }).lean();
   writeFileSync(file, JSON.stringify({ reports, entries: oldEntries }, null, 2));
   console.log(`\nSaved the current reports and chat hours to ${file}`);
 
@@ -120,7 +121,7 @@ async function main() {
     );
   }
   // Hours made from chat reports come only from reports, so they are rebuilt from this classification.
-  await TimeEntry.deleteMany({ chatReportKey: { $type: "string" } });
+  await TimeEntry.deleteMany({ chatReportKey: { $in: reports.map((r) => r.key) } });
   if (entries.length > 0) await TimeEntry.insertMany(entries, { ordered: false });
   console.log(`Done: updated ${operations.length} reports, wrote ${entries.length} hours entries.`);
 }

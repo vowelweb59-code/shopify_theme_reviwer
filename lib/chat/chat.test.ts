@@ -23,6 +23,20 @@ describe("parseReport", () => {
     });
   });
 
+  it("reads the older Timer Report layout, with its own date and timer styles", () => {
+    const old = (timer: string) => `============\nTimer Report (02-07-2026)\nTheme Name: Soft theme\nMemo: Worked 'Soft' theme testing.\nOFF-Timer: ${timer}\n------------\nStore URL: x`;
+    expect(parseReport(old("1:10:hr"))).toMatchObject({ ok: true, value: { date: "2026-07-02", themeParts: ["Soft theme"], minutes: 70 } });
+    expect(parseReport(old("45:min"))).toMatchObject({ ok: true, value: { minutes: 45 } });
+    expect(parseReport(old("04 hr"))).toMatchObject({ ok: true, value: { minutes: 240 } });
+    expect(parseReport(old("4:00:hr"))).toMatchObject({ ok: true, value: { minutes: 240 } });
+    expect(parseReport(old("40"))).toMatchObject({ ok: false });
+    expect(parseReport("Date: 22-10-2026\nTheme Name: A\nTimer: 08.30 hrs")).toMatchObject({ ok: true, value: { minutes: 510 } });
+  });
+
+  it("splits several older-layout reports in one message", () => {
+    expect(splitReports("=====\nTimer Report (01-07-2026)\nTheme Name: A\nTimer: 1:00:hr\n=====\nTimer Report (02-07-2026)\nTheme Name: B\nTimer: 2:00:hr")).toHaveLength(2);
+  });
+
   it("reads whole hours and rejects bad input with a reason", () => {
     expect(parseReport("Date: 1-2-2026\nTheme Name: A\nTimer: 6 hrs")).toMatchObject({ ok: true, value: { date: "2026-02-01", minutes: 360 } });
     expect(parseReport("Theme Name: A\nTimer: 6 hrs")).toEqual({ ok: false, error: "No date found." });
