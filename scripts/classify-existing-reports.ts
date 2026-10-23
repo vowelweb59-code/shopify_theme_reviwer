@@ -53,7 +53,7 @@ async function main() {
 
   for (const r of reports) {
     const where = `${r.date.toISOString().slice(0, 10)} | ${r.sender || "?"} | ${r.rawText.split("\n").find((l: string) => /theme\s*name/i.test(l))?.trim() ?? r.themeName}`;
-    const parsed = parseReport(r.rawText);
+    const parsed = parseReport(r.rawText, r.date.toISOString().slice(0, 10));
     if (!parsed.ok) {
       flagged.push(`${where} -> ${parsed.error}`);
       continue;
