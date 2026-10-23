@@ -12,8 +12,8 @@ export const DEVELOPMENT_SCHEDULE: Record<string, DevelopmentEntry[]> = {
   "2026-09": SEPT_OCT,
   // The same list, plus Soft's Twinkle preset.
   "2026-08": [...SEPT_OCT, { theme: "Soft", presets: ["Twinkle"] }],
-  // Everything done on Soft counted as theme work, and Voltix was new development from the start of the reports.
-  "2026-07": [{ theme: "Soft" }, { theme: "Voltix" }],
+  // Everything done on Soft counted as theme work; Voltix and Grocery (reported as "Organic") were new development.
+  "2026-07": [{ theme: "Soft" }, { theme: "Voltix" }, { theme: "Grocery" }],
   "2026-06": [{ theme: "Soft" }],
 };
 
