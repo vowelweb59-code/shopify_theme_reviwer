@@ -84,7 +84,7 @@ export function ThemeStoreCatalogSection() {
 
   function exportCsv() {
     const cell = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const header = ["Rank", "Theme", "Designer", "Price", "Positive %", "Reviews", "Presets", "Categories", "Latest version", "Released", "Features", "Link"];
+    const header = ["Rank", "Theme", "Publisher", "Price", "Positive %", "Reviews", "Presets", "Categories", "Latest version", "Released", "Features", "Link"];
     const lines = shown.map((t) =>
       [t.rank, t.name, t.designer, t.price, t.positivePercent, t.reviewCount, t.presetCount, t.industries.map(industryLabel).join("; "), t.latestVersion, t.latestVersionReleasedAt, t.features.join("; "), t.url].map(cell).join(",")
     );
@@ -110,7 +110,7 @@ export function ThemeStoreCatalogSection() {
       ),
       sortValue: (t) => t.name.toLowerCase(),
     },
-    { key: "designer", header: "Designer", render: (t) => (t.designer ? <span>{t.designer}</span> : dash), sortValue: (t) => (t.designer ?? "~").toLowerCase() },
+    { key: "designer", header: "Publisher", render: (t) => (t.designer ? <span>{t.designer}</span> : dash), sortValue: (t) => (t.designer ?? "~").toLowerCase() },
     { key: "price", header: "Price", render: (t) => <span className="tabular-nums">{priceLabel(t.price)}</span>, sortValue: (t) => t.price ?? -1, className: "text-right" },
     { key: "positive", header: "Positive", render: (t) => <span className="tabular-nums">{t.positivePercent === null ? "—" : `${t.positivePercent}%`}</span>, sortValue: (t) => t.positivePercent ?? -1, className: "text-right" },
     { key: "reviews", header: "Reviews", render: (t) => <span className="tabular-nums">{t.reviewCount?.toLocaleString() ?? "—"}</span>, sortValue: (t) => t.reviewCount ?? -1, className: "text-right" },
@@ -139,7 +139,7 @@ export function ThemeStoreCatalogSection() {
         <a href="https://themes.shopify.com/themes" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           themes.shopify.com
         </a>
-        , whoever made it. A refresh reads the catalog, then each category, then each theme&apos;s own page (designer, reviews, version, features) with a short pause between requests, so it takes roughly 10–15 minutes. Theme pages already read in the last
+        , whoever made it. A refresh reads the catalog, then each category, then each theme&apos;s own page (publisher, reviews, version, features) with a short pause between requests, so it takes roughly 10–15 minutes. Theme pages already read in the last
         week are skipped. The # is the theme&apos;s place among main themes in the store&apos;s default order; presets (style variants) are only counted, not listed.
       </p>
 
@@ -170,7 +170,7 @@ export function ThemeStoreCatalogSection() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search theme, designer or feature"
+          placeholder="Search theme, publisher or feature"
           aria-label="Search themes"
           className="min-w-56 rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm"
         />

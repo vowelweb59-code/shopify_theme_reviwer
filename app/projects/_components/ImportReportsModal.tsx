@@ -11,6 +11,18 @@ const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 /** Paste daily time reports from the Theme Status Group space; durations are suggested from them on each project. */
 type ChatStatus = { configured: boolean; connection: { email: string; status: "active" | "revoked"; lastSyncAt: string | null; lastError: string | null } | null };
 type SyncResult = Summary & { fetched: number; reports: number; connectedAs: string };
+type VerifyResult = {
+  messagesInSpace: number;
+  firstMessage: string | null;
+  lastMessage: string | null;
+  reportMessages: number;
+  reportsInSpace: number;
+  otherMessages: number;
+  storedReports: number;
+  missing: { date: string; who: string; reason: string; text: string }[];
+  storedNotInSpace: number;
+  otherSamples: { date: string; who: string; text: string }[];
+};
 type RecheckResult = { checked: number; fixed: number; stillNeedsReview: { text: string; reason: string }[] };
 
 export function ImportReportsModal({
@@ -29,6 +41,9 @@ export function ImportReportsModal({
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verify, setVerify] = useState<VerifyResult | null>(null);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [rechecking, setRechecking] = useState(false);
   const [recheck, setRecheck] = useState<RecheckResult | null>(null);
   const [recheckError, setRecheckError] = useState<string | null>(null);
@@ -55,6 +70,22 @@ export function ImportReportsModal({
       .catch(() => setChat(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  async function handleVerify() {
+    setVerifying(true);
+    setVerifyError(null);
+    setVerify(null);
+    try {
+      const res = await fetch("/api/chat/verify", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setVerifyError(data.error ?? "The check failed.");
+      else setVerify(data);
+    } catch {
+      setVerifyError("Lost connection to the server. Try again.");
+    } finally {
+      setVerifying(false);
+    }
+  }
 
   async function handleRecheck() {
     setRechecking(true);
@@ -184,6 +215,48 @@ export function ImportReportsModal({
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-subtle p-3 text-sm">
+        <p className="text-xs text-zinc-500">Compares every message in the space with the stored reports, and lists anything that was not imported. Nothing is changed.</p>
+        <div>
+          <Button type="button" size="sm" variant="secondary" onClick={handleVerify} loading={verifying}>
+            Check that everything was imported
+          </Button>
+        </div>
+        {verifyError && <p className="text-xs text-status-fail-text">{verifyError}</p>}
+        {verify && (
+          <div role="status" className="flex flex-col gap-1 text-xs">
+            <p className="text-zinc-700 dark:text-zinc-300">
+              The space has {verify.messagesInSpace} messages ({verify.firstMessage} to {verify.lastMessage}): {verify.reportMessages} contain time reports, {verify.reportsInSpace} reports in all, and {verify.otherMessages} are other chat.
+              {" "}{verify.storedReports} reports are stored.
+            </p>
+            <p className={verify.missing.length === 0 ? "text-status-pass-text" : "text-status-fail-text"}>
+              {verify.missing.length === 0 ? "Every report in the space is stored." : `${verify.missing.length} in the space are not stored:`}
+            </p>
+            {verify.missing.length > 0 && (
+              <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto text-zinc-600 dark:text-zinc-400">
+                {verify.missing.map((m, i) => (
+                  <li key={i}>
+                    {m.date} · {m.who} · {m.reason} <span className="text-zinc-400">— {m.text}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {verify.storedNotInSpace > 0 && <p className="text-zinc-500">{verify.storedNotInSpace} stored reports are not in the space now (pasted by hand, or edited or deleted there).</p>}
+            {verify.otherSamples.length > 0 && (
+              <details>
+                <summary className="cursor-pointer text-zinc-500">Other messages in the space (not time reports)</summary>
+                <ul className="mt-1 flex max-h-32 flex-col gap-1 overflow-y-auto text-zinc-500">
+                  {verify.otherSamples.map((m, i) => (
+                    <li key={i}>
+                      {m.date} · {m.who} — {m.text}
+                    </li>
+                  ))}
+                </ul>
+              </details>
             )}
           </div>
         )}

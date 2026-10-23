@@ -9,6 +9,30 @@ export type SyncResult = ImportSummary & { fetched: number; reports: number; con
 
 const REFRESH_MARGIN_MS = 60_000;
 
+type ConnectionDoc = NonNullable<Awaited<ReturnType<typeof loadConnection>>>;
+
+async function loadConnection() {
+  return ChatConnection.findOne({ key: "chat" }).select("+encryptedAccessToken +encryptedRefreshToken");
+}
+
+/** A valid access token for the connected account, refreshed (and saved) when it is about to expire. */
+export async function chatAccessToken(connection: ConnectionDoc): Promise<string> {
+  let accessToken = connection.encryptedAccessToken ? decryptSecret(connection.encryptedAccessToken) : "";
+  const refreshToken = connection.encryptedRefreshToken ? decryptSecret(connection.encryptedRefreshToken) : null;
+  if (!accessToken || !connection.tokenExpiresAt || connection.tokenExpiresAt.getTime() - Date.now() < REFRESH_MARGIN_MS) {
+    if (!refreshToken) throw Object.assign(new Error("No refresh token."), { response: { data: { error: "invalid_grant" } } });
+    const client = createChatOAuthClient();
+    client.setCredentials({ refresh_token: refreshToken });
+    const { credentials } = await client.refreshAccessToken();
+    if (!credentials.access_token || !credentials.expiry_date) throw new Error("Google returned an incomplete token set.");
+    accessToken = credentials.access_token;
+    connection.encryptedAccessToken = encryptSecret(accessToken);
+    connection.tokenExpiresAt = new Date(credentials.expiry_date);
+    await connection.save();
+  }
+  return accessToken;
+}
+
 /** A message is a time report when it has a Theme Name line; other chatter in the space is ignored. */
 export function looksLikeReport(text: string): boolean {
   return /theme\s*name/i.test(text);
@@ -22,24 +46,11 @@ export function looksLikeReport(text: string): boolean {
  * route to show.
  */
 export async function syncSpace(): Promise<SyncResult> {
-  const connection = await ChatConnection.findOne({ key: "chat" }).select("+encryptedAccessToken +encryptedRefreshToken");
+  const connection = await loadConnection();
   if (!connection || connection.status !== "active") throw new Error("Google Chat isn't connected. Connect it first.");
 
-  let accessToken = connection.encryptedAccessToken ? decryptSecret(connection.encryptedAccessToken) : "";
-  const refreshToken = connection.encryptedRefreshToken ? decryptSecret(connection.encryptedRefreshToken) : null;
-
   try {
-    if (!accessToken || !connection.tokenExpiresAt || connection.tokenExpiresAt.getTime() - Date.now() < REFRESH_MARGIN_MS) {
-      if (!refreshToken) throw Object.assign(new Error("No refresh token."), { response: { data: { error: "invalid_grant" } } });
-      const client = createChatOAuthClient();
-      client.setCredentials({ refresh_token: refreshToken });
-      const { credentials } = await client.refreshAccessToken();
-      if (!credentials.access_token || !credentials.expiry_date) throw new Error("Google returned an incomplete token set.");
-      accessToken = credentials.access_token;
-      connection.encryptedAccessToken = encryptSecret(accessToken);
-      connection.tokenExpiresAt = new Date(credentials.expiry_date);
-      await connection.save();
-    }
+    const accessToken = await chatAccessToken(connection);
 
     const space = getChatSpace();
     // Names are a convenience (the sender usually carries one); without the memberships permission they are just empty.

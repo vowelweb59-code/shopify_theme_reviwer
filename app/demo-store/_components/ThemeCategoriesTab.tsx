@@ -7,22 +7,12 @@ import { useApi } from "@/app/analytics/_components/useApi";
 import { industryLabel } from "@/lib/themes/industries";
 import { ThemeStoreCatalogSection } from "./ThemeStoreCatalogSection";
 
-type PresetCategory = { themeId: string; themeName: string; presetName: string; category: string | null };
-type ThemeRow = { themeId: string; themeName: string; category: string | null };
+type ThemeRow = { themeId: string; themeName: string; category: string | null; publisher: string | null };
 type CategoryRow = { category: string | null; themes: string[] };
 
 export function ThemeCategoriesTab() {
-  const { data, loading, error } = useApi<{ presets: PresetCategory[] }>("/api/sales/categories");
-
-  // The API lists each theme's presets with the base theme's own preset first,
-  // so the first row per theme is the main theme — its category is the theme's.
-  const themes: ThemeRow[] = [];
-  const seen = new Set<string>();
-  for (const p of data?.presets ?? []) {
-    if (seen.has(p.themeId)) continue;
-    seen.add(p.themeId);
-    themes.push({ themeId: p.themeId, themeName: p.themeName, category: p.category });
-  }
+  const { data, loading, error } = useApi<{ themes: ThemeRow[] }>("/api/theme-categories");
+  const themes: ThemeRow[] = data?.themes ?? [];
 
   const byCategory = new Map<string | null, string[]>();
   for (const t of themes) byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t.themeName]);
@@ -30,6 +20,7 @@ export function ThemeCategoriesTab() {
 
   const themeColumns: TableColumn<ThemeRow>[] = [
     { key: "theme", header: "Theme", render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.themeName}</span>, sortValue: (r) => r.themeName.toLowerCase() },
+    { key: "publisher", header: "Publisher", render: (r) => (r.publisher ? <span>{r.publisher}</span> : <span className="text-zinc-400">—</span>), sortValue: (r) => (r.publisher ?? "~").toLowerCase() },
     {
       key: "category",
       header: "Category",
@@ -64,8 +55,8 @@ export function ThemeCategoriesTab() {
         ) : (
           <>
             <p className="max-w-2xl text-sm text-zinc-500">
-              Each main theme and the Theme Store category it belongs to — the category its default preset ranks best in, or the one chosen by hand on the Sales page&apos;s Categories tab.
-              Presets aren&apos;t listed here.
+              Each main theme with its publisher and the one Theme Store category its main preset belongs to — the one chosen by hand on the Sales page&apos;s Categories tab, or where the
+              store lists the theme&apos;s default preset. Presets aren&apos;t listed here.
             </p>
 
             <section className="flex flex-col gap-3">
