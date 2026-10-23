@@ -345,8 +345,8 @@ export default function ProjectsPage() {
   const unassigned = projects.filter((p) => !p.portal).length;
   const inPortal = projects.filter((p) => (portalTab === "none" ? !p.portal : p.portal === portalTab));
   const visible = inPortal.filter((p) => p.type === typeFilter);
-  const countOf = (t: ProjectType) => inPortal.filter((p) => p.type === t).length;
-  const portalCount = (p: Portal) => projects.filter((x) => x.portal === p).length;
+  // A Theme Update never goes through review, so its tab has no Rejections column.
+  const shownColumns = typeFilter === "theme_update" ? columns.filter((c) => c.key !== "rejections") : columns;
 
   return (
     <PageContainer>
@@ -390,7 +390,7 @@ export default function ProjectsPage() {
                   active ? "border-primary font-medium text-zinc-950 dark:text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                 }`}
               >
-                {p === "none" ? "No portal" : p} ({p === "none" ? unassigned : portalCount(p)})
+                {p === "none" ? "No portal" : p}
               </button>
             );
           })}
@@ -412,7 +412,7 @@ export default function ProjectsPage() {
                   active ? "border-transparent bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
                 }`}
               >
-                {PROJECT_TYPE_LABELS[t]} ({countOf(t)})
+                {PROJECT_TYPE_LABELS[t]}
               </button>
             );
           })}
@@ -428,7 +428,7 @@ export default function ProjectsPage() {
           description={themes.length === 0 ? "Add a theme on the Themes page first, then start a project for it." : "Start a project for one of your themes, then assign team members to it."}
         />
       ) : (
-        <ResponsiveTable columns={columns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
+        <ResponsiveTable columns={shownColumns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
 
       <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} notice={chatNotice} autoSync={autoSync} />
