@@ -12,10 +12,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   if (!isValidObjectId(projectId)) return invalidIdResponse("projectId");
   await connectToDatabase();
 
-  const project = await Project.findById(projectId).select("themeId").lean();
+  const project = await Project.findById(projectId).select("themeId type").lean();
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  const reports = await ChatReport.find({ themeId: project.themeId, status: "ok", memberId: { $ne: null } }).select("memberId minutes kind").lean();
+  // A preset project shows only the reports linked to it; any other project shows its whole theme.
+  const scope = project.type === "preset_development" ? { projectId } : { themeId: project.themeId };
+  const reports = await ChatReport.find({ ...scope, status: "ok", memberId: { $ne: null } }).select("memberId minutes kind").lean();
   const members = await TeamMember.find({ _id: { $in: reports.map((r) => r.memberId) } }).select("name designation").lean();
   const byId = new Map(members.map((m) => [String(m._id), m]));
 
