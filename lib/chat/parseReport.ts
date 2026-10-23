@@ -62,17 +62,20 @@ export function parseReport(text: string, postedOn?: string): Result<ParsedRepor
 }
 
 /**
- * Splits pasted text holding several reports: each one starts at a "Date" line, or "Timer Report" / "Theme Report" in the older
- * layouts. A report that lists several themes, each with its own timer, is split per theme; each part keeps the date line above the first.
+ * Splits pasted text holding several reports: each one starts at a "Date" line, or "Timer Report" / "Theme Report" in the older layouts.
  */
 export function splitReports(text: string): string[] {
   // A report starts at a "Date" line or, in the older layouts, a "Timer Report" / "Theme Report" line (often wrapped in ==== or ---- rules).
   const starts = [...text.matchAll(/^[ 	=\-_*#]*(?:date|(?:timer|theme)\s*report)/gim)].map((m) => m.index ?? 0);
-  if (starts.length === 0) return text.trim() ? splitThemes(text.trim()) : [];
-  return starts.flatMap((start, i) => splitThemes(text.slice(start, starts[i + 1] ?? text.length).trim()));
+  if (starts.length === 0) return text.trim() ? [text.trim()] : [];
+  return starts.map((start, i) => text.slice(start, starts[i + 1] ?? text.length).trim());
 }
 
-function splitThemes(report: string): string[] {
+/**
+ * A report that lists several themes, each with its own timer, as one report per theme; each part keeps the date line above the first.
+ * A report with one theme (or timers that don't match the themes) comes back whole.
+ */
+export function splitThemes(report: string): string[] {
   const themeStarts = [...report.matchAll(/^[ 	]*theme\s*name/gim)].map((m) => m.index ?? 0);
   if (themeStarts.length < 2) return [report];
   const header = report.slice(0, themeStarts[0]).trim();

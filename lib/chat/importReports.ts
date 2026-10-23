@@ -4,7 +4,7 @@ import { TeamMember } from "@/models/team-member";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TimeEntry } from "@/models/time-entry";
-import { parseReport, splitReports } from "./parseReport";
+import { parseReport, splitReports, splitThemes } from "./parseReport";
 import { resolveMember, resolveTheme, type ThemeRef } from "./resolve";
 
 export type ImportInput = {
@@ -152,9 +152,13 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     const given = input.memberId && memberIds.has(input.memberId) ? input.memberId : null;
     const memberId = given ?? (input.sender ? resolveMember(input.sender, ctx.memberRefs) : null);
     const sender = input.sender?.trim() || ctx.memberRefs.find((m) => m.id === memberId)?.name || "";
-    return splitReports(input.text).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, key: reportKey(memberId ?? sender, text) }));
+    // A message listing several themes is stored per theme, unless it was already stored whole (an earlier import): then it is left as it is.
+    return splitReports(input.text).flatMap((chunk) => {
+      const wholeKey = reportKey(memberId ?? sender, chunk);
+      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, key: reportKey(memberId ?? sender, text), wholeKey }));
+    });
   });
-  const stored = new Set((await ChatReport.find({ key: { $in: candidates.map((c) => c.key) } }).select("key").lean()).map((r) => r.key as string));
+  const stored = new Set((await ChatReport.find({ key: { $in: candidates.flatMap((c) => [c.key, c.wholeKey]) } }).select("key").lean()).map((r) => r.key as string));
 
   const summary: ImportSummary = { created: 0, alreadyImported: 0, needsReview: [] };
   const reports: Record<string, unknown>[] = [];
@@ -162,8 +166,8 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
   const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const seen = new Set<string>();
 
-  for (const { text, memberId, sender, key, postedOn } of candidates) {
-    if (stored.has(key) || seen.has(key)) {
+  for (const { text, memberId, sender, key, postedOn, wholeKey } of candidates) {
+    if (stored.has(key) || stored.has(wholeKey) || seen.has(key)) {
       summary.alreadyImported++;
       continue;
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { summarizeDays } from "./daysWorked";
 import { suggestDurations } from "./durations";
-import { parseReport, splitReports } from "./parseReport";
+import { parseReport, splitReports, splitThemes } from "./parseReport";
 import { isUpdateMemo, resolveMember, resolveTheme, type ThemeRef } from "./resolve";
 
 describe("parseReport", () => {
@@ -182,11 +182,18 @@ describe("parseReport: other layouts", () => {
     expect(ok("Theme Name:- Flaunt\nTimer:- 1:00 hrs")).toEqual({ ok: false, error: "No date found." });
   });
   it("splits a message with several themes that each have a timer", () => {
-    const parts = splitReports("Date:- (12-10-2026)\nTheme Name: Versatile (Zeal Preset)\nMemo: a\nTime: 3.00 Hour\nTheme Name: Breeze\nMemo: b\nTime: 2.00 Hour");
+    const parts = splitThemes("Date:- (12-10-2026)\nTheme Name: Versatile (Zeal Preset)\nMemo: a\nTime: 3.00 Hour\nTheme Name: Breeze\nMemo: b\nTime: 2.00 Hour");
     expect(parts).toHaveLength(2);
     expect(parts.map((p) => ok(p))).toEqual([
       { date: "2026-10-12", theme: "Versatile (Zeal Preset)", minutes: 180 },
       { date: "2026-10-12", theme: "Breeze", minutes: 120 },
     ]);
+  });
+});
+
+describe("splitReports keeps a message whole", () => {
+  it("only splitThemes divides it per theme", () => {
+    const text = "Date:- (12-10-2026)\nTheme Name: A\nMemo: a\nTime: 3.00 Hour\nTheme Name: B\nMemo: b\nTime: 2.00 Hour";
+    expect(splitReports(text)).toHaveLength(1);
   });
 });

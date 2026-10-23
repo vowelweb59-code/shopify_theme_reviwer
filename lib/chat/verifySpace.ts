@@ -2,7 +2,7 @@ import "server-only";
 import { ChatConnection } from "@/models/chat-connection";
 import { ChatReport } from "@/models/chat-report";
 import { getChatSpace, listSpaceMessages } from "./googleChat";
-import { parseReport, splitReports } from "./parseReport";
+import { parseReport, splitReports, splitThemes } from "./parseReport";
 import { chatAccessToken, looksLikeReport } from "./syncSpace";
 
 export type VerifyResult = {
@@ -37,9 +37,16 @@ export async function verifySpace(): Promise<VerifyResult> {
   const reportMessages = messages.filter((m) => looksLikeReport(m.text));
   const others = messages.filter((m) => !looksLikeReport(m.text));
 
-  const inSpace = reportMessages.flatMap((m) => splitReports(m.text).map((text) => ({ text, who: m.senderName || m.senderId, date: m.createTime.slice(0, 10) })));
   const stored = await ChatReport.find().select("rawText key").lean();
   const storedTexts = new Set(stored.map((r) => norm(r.rawText)));
+  // A message listing several themes counts as stored when it is stored whole (an earlier import) or every theme's part is.
+  const inSpace = reportMessages.flatMap((m) =>
+    splitReports(m.text).flatMap((chunk) => {
+      const parts = splitThemes(chunk);
+      const wholeStored = storedTexts.has(norm(chunk));
+      return parts.map((text) => ({ text: wholeStored ? chunk : text, who: m.senderName || m.senderId, date: m.createTime.slice(0, 10) }));
+    })
+  );
   const spaceTexts = new Set(inSpace.map((r) => norm(r.text)));
 
   const missing = inSpace
