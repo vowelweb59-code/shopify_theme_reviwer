@@ -40,7 +40,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
   const [pickId, setPickId] = useState("");
-  const [days, setDays] = useState<{ memberId: string; name: string; designation: string; theme: number; preset: number; update: number; total: number }[]>([]);
+  const [days, setDays] = useState<{ memberId: string; name: string; designation: string; theme: number; preset: number; update: number; total: number; spaceHours: number; manualHours: number; totalHours: number }[]>([]);
   const [suggestion, setSuggestion] = useState<{ designDays: number | null; developmentDays: number | null; reportCount: number; from: string | null; to: string | null } | null>(null);
 
   function apply(loaded: Loaded) {
@@ -150,6 +150,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const assigned = new Set(project.members.map((m) => m.memberId));
   const hasStatus = typeHasStatus(project.type);
   const available = team.filter((m) => !assigned.has(m._id));
+  const sum = (pick: (d: (typeof days)[number]) => number) => Math.round(days.reduce((n, d) => n + pick(d), 0) * 100) / 100;
 
   return (
     <PageContainer>
@@ -264,7 +265,10 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
       {days.length > 0 && (
         <Card>
-          <CardHeader title="Days worked" description="Days each team member has reported on this theme in the Theme Status Group (8.5 hours = 1 day). Product Managers are not listed." />
+          <CardHeader
+            title="Days worked"
+            description="Days and hours each team member has put into this theme: reported in the Theme Status Group, plus hours entered by hand in the Theme Update hours log (8.5 hours = 1 day). Product Managers are not listed."
+          />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -273,7 +277,10 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                   <th className="py-2 pr-4 font-medium">New theme</th>
                   <th className="py-2 pr-4 font-medium">Presets</th>
                   <th className="py-2 pr-4 font-medium">Updates</th>
-                  <th className="py-2 font-medium">Total</th>
+                  <th className="py-2 pr-4 font-medium">Total days</th>
+                  <th className="py-2 pr-4 font-medium">From the space (h)</th>
+                  <th className="py-2 pr-4 font-medium">Entered by hand (h)</th>
+                  <th className="py-2 font-medium">Total hours</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
@@ -285,10 +292,25 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                     <td className="py-2 pr-4">{d.theme || "—"}</td>
                     <td className="py-2 pr-4">{d.preset || "—"}</td>
                     <td className="py-2 pr-4">{d.update || "—"}</td>
-                    <td className="py-2 font-medium text-zinc-900 dark:text-zinc-100">{d.total} d</td>
+                    <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">{d.total} d</td>
+                    <td className="py-2 pr-4">{d.spaceHours || "—"}</td>
+                    <td className="py-2 pr-4">{d.manualHours || "—"}</td>
+                    <td className="py-2 font-medium text-zinc-900 dark:text-zinc-100">{d.totalHours} h</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t border-border-subtle font-medium text-zinc-900 dark:text-zinc-100">
+                  <td className="py-2 pr-4">Total</td>
+                  <td className="py-2 pr-4">{sum((d) => d.theme) || "—"}</td>
+                  <td className="py-2 pr-4">{sum((d) => d.preset) || "—"}</td>
+                  <td className="py-2 pr-4">{sum((d) => d.update) || "—"}</td>
+                  <td className="py-2 pr-4">{sum((d) => d.total)} d</td>
+                  <td className="py-2 pr-4">{sum((d) => d.spaceHours) || "—"}</td>
+                  <td className="py-2 pr-4">{sum((d) => d.manualHours) || "—"}</td>
+                  <td className="py-2">{sum((d) => d.totalHours)} h</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </Card>

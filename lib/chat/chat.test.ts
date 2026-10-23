@@ -131,8 +131,20 @@ describe("summarizeDays", () => {
       { memberId: "m", name: "Max", designation: "Product Manager", minutes: 5000, kind: "theme" },
     ]);
     expect(rows).toEqual([
-      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", theme: 2, preset: 0, update: 1, total: 3 },
-      { memberId: "a", name: "Ann", designation: "UI/UX Designer", theme: 1, preset: 0.5, update: 0, total: 1.5 },
+      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", theme: 2, preset: 0, update: 1, total: 3, spaceHours: 25.5, manualHours: 0, totalHours: 25.5 },
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", theme: 1, preset: 0.5, update: 0, total: 1.5, spaceHours: 12.75, manualHours: 0, totalHours: 12.75 },
     ]);
+  });
+
+  it("adds hours entered by hand as update work and keeps space and manual hours apart", () => {
+    const rows = summarizeDays([
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", minutes: 510, kind: "theme" },
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", minutes: 255, kind: "update", manual: true },
+      { memberId: "b", name: "Bob", designation: "Shopify Developer", minutes: 120, kind: "update", manual: true },
+      { memberId: "m", name: "Max", designation: "Product Manager", minutes: 600, kind: "update", manual: true },
+    ]);
+    expect(rows[0]).toMatchObject({ memberId: "a", theme: 1, update: 0.5, total: 1.5, spaceHours: 8.5, manualHours: 4.25, totalHours: 12.75 });
+    expect(rows[1]).toMatchObject({ memberId: "b", spaceHours: 0, manualHours: 2, totalHours: 2 });
+    expect(rows).toHaveLength(2);
   });
 });
