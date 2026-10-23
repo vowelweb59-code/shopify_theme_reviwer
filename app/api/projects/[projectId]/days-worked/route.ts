@@ -8,8 +8,8 @@ import { TeamMember } from "@/models/team-member";
 import { TimeEntry } from "@/models/time-entry";
 
 /**
- * Days and hours each team member has put into this project's theme (Product Managers left out): the Google Chat time
- * reports, plus the hours entered by hand in the theme's Theme Update hours log.
+ * Days and hours each team member has put into this project (Product Managers left out): the Google Chat time reports
+ * that belong to it, plus, on a Theme Update project, the hours entered by hand in its hours log.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -19,18 +19,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   const project = await Project.findById(projectId).select("themeId type").lean();
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  // A preset project shows only the reports linked to it (it has no hours log). Any other project shows its theme's own work:
-  // preset work is left out, since each preset has its own project and its people are on that page, not on the main theme's.
-  const isPreset = project.type === "preset_development";
-  const scope = isPreset ? { projectId } : { themeId: project.themeId, kind: { $ne: "preset" } };
+  // Each project shows its own work only:
+  //   a preset project  - the reports linked to it
+  //   an Update project - the theme's update reports, plus its hand-entered hours log
+  //   the theme itself  - the new-theme reports (presets and updates have their own projects)
+  const type = project.type ?? "theme_development";
+  const scope = type === "preset_development" ? { projectId } : type === "theme_update" ? { themeId: project.themeId, kind: "update" } : { themeId: project.themeId, kind: "theme" };
   const reports = await ChatReport.find({ ...scope, status: "ok", memberId: { $ne: null } }).select("memberId minutes kind").lean();
 
-  // Hours entered by hand: the theme's Theme Update projects' log entries that did not come from the space
+  // Hours entered by hand: this Update project's log entries that did not come from the space
   // (the ones that did are already counted from the reports above).
-  const updateProjectIds = isPreset ? [] : (await Project.find({ themeId: project.themeId, type: "theme_update" }).select("_id").lean()).map((p) => p._id);
-  const manual = updateProjectIds.length
-    ? await TimeEntry.find({ projectId: { $in: updateProjectIds }, chatReportKey: { $not: { $type: "string" } } }).select("memberId hours").lean()
-    : [];
+  const manual = type === "theme_update" ? await TimeEntry.find({ projectId, chatReportKey: { $not: { $type: "string" } } }).select("memberId hours").lean() : [];
 
   const members = await TeamMember.find({ _id: { $in: [...reports.map((r) => r.memberId), ...manual.map((e) => e.memberId)] } }).select("name designation").lean();
   const byId = new Map(members.map((m) => [String(m._id), m]));

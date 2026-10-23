@@ -267,7 +267,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         <Card>
           <CardHeader
             title="Days worked"
-            description="Days and hours each team member has put into this project: reported in the Theme Status Group, plus hours entered by hand in the Theme Update hours log (8.5 hours = 1 day). A theme's preset work is shown on the preset's own project. Product Managers are not listed."
+            description="Days and hours each team member has put into this project: reported in the Theme Status Group, plus hours entered by hand in the Theme Update hours log (8.5 hours = 1 day). A theme's preset work and update work are shown on their own projects. Product Managers are not listed."
           />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
