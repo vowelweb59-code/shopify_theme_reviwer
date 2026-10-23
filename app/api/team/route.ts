@@ -4,6 +4,7 @@ import { parseTeamMemberInput } from "@/lib/projects/sanitize";
 import { countOutcomes, countRejections } from "@/lib/projects/rounds";
 import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
+import { Theme } from "@/models/theme";
 import { Project } from "@/models/project";
 
 export async function GET() {
@@ -15,11 +16,18 @@ export async function GET() {
   ]);
   const countById = new Map<string, number>(counts.map((c) => [String(c._id), c.projectCount]));
   const rejectionsById = countRejections(projects);
-  // Who reported time on which theme: once a theme has reports, only they count on its rounds (see countOutcomes).
-  const reported = await ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null } }).select("themeId memberId").lean();
+  // Who reported time on which theme: for a theme still in development, only they count on its current round (see countOutcomes).
+  // A theme that is live on the Shopify Theme Store (it has a rank in the daily Theme Store ranking crawl) was built before the
+  // reports began, and its reports are updates, so it counts everyone listed on its rounds.
+  const [reported, liveThemes] = await Promise.all([
+    ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null } }).select("themeId memberId").lean(),
+    Theme.find({ themeStoreRank: { $ne: null } }).select("_id").lean(),
+  ]);
+  const live = new Set(liveThemes.map((t) => String(t._id)));
   const worked = { themesWithReports: new Set<string>(), byTheme: new Map<string, Set<string>>() };
   for (const r of reported) {
     const theme = String(r.themeId);
+    if (live.has(theme)) continue;
     worked.themesWithReports.add(theme);
     worked.byTheme.set(theme, (worked.byTheme.get(theme) ?? new Set<string>()).add(String(r.memberId)));
   }
