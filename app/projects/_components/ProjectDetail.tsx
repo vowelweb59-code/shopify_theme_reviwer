@@ -40,6 +40,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
   const [pickId, setPickId] = useState("");
+  const [days, setDays] = useState<{ memberId: string; name: string; designation: string; theme: number; preset: number; update: number; total: number }[]>([]);
   const [suggestion, setSuggestion] = useState<{ designDays: number | null; developmentDays: number | null; reportCount: number; from: string | null; to: string | null } | null>(null);
 
   function apply(loaded: Loaded) {
@@ -65,6 +66,10 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
       .then((res) => (res.ok ? res.json() : null))
       .then(setSuggestion)
       .catch(() => setSuggestion(null));
+    fetch(`/api/projects/${projectId}/days-worked`)
+      .then((res) => (res.ok ? res.json() : { rows: [] }))
+      .then((body) => setDays(body.rows ?? []))
+      .catch(() => setDays([]));
   }, [projectId]);
 
   async function patch(body: Record<string, unknown>): Promise<boolean> {
@@ -256,6 +261,38 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </p>
         )}
       </Card>
+
+      {days.length > 0 && (
+        <Card>
+          <CardHeader title="Days worked" description="Days each team member has reported on this theme in the Theme Status Group (8.5 hours = 1 day). Product Managers are not listed." />
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-zinc-500">
+                  <th className="py-2 pr-4 font-medium">Team member</th>
+                  <th className="py-2 pr-4 font-medium">New theme</th>
+                  <th className="py-2 pr-4 font-medium">Presets</th>
+                  <th className="py-2 pr-4 font-medium">Updates</th>
+                  <th className="py-2 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle">
+                {days.map((d) => (
+                  <tr key={d.memberId}>
+                    <td className="py-2 pr-4">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">{d.name}</span> <span className="text-xs text-zinc-500">{d.designation}</span>
+                    </td>
+                    <td className="py-2 pr-4">{d.theme || "—"}</td>
+                    <td className="py-2 pr-4">{d.preset || "—"}</td>
+                    <td className="py-2 pr-4">{d.update || "—"}</td>
+                    <td className="py-2 font-medium text-zinc-900 dark:text-zinc-100">{d.total} d</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {hasStatus && project.rounds.length > 0 && (
         <Card>

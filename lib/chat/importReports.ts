@@ -21,6 +21,18 @@ export type ImportSummary = {
 };
 export type ReprocessSummary = { checked: number; fixed: number; stillNeedsReview: { text: string; reason: string }[] };
 
+/** Puts each poster on the team of the Theme Update project their hours are logged on (once; nobody is added twice). */
+async function addPostersToTeams(adds: { projectId: unknown; memberId: string }[]): Promise<void> {
+  const unique = new Map(adds.map((a) => [`${String(a.projectId)}:${a.memberId}`, a]));
+  if (unique.size === 0) return;
+  await Project.bulkWrite(
+    [...unique.values()].map((a) => ({
+      updateOne: { filter: { _id: a.projectId, "members.memberId": { $ne: a.memberId } }, update: { $push: { members: { memberId: a.memberId, role: null } } } },
+    })) as never,
+    { ordered: false }
+  );
+}
+
 /** Stable per report, so the same one imported twice is stored once. */
 function reportKey(who: string, text: string): string {
   return createHash("sha1").update(`${who}\n${text.replace(/\s+/g, " ").trim().toLowerCase()}`).digest("hex");
@@ -29,20 +41,23 @@ function reportKey(who: string, text: string): string {
 // Everything classification needs, loaded once per run.
 type Context = {
   themeRefs: ThemeRef[];
-  memberRefs: { id: string; name: string }[];
+  memberRefs: { id: string; name: string; aliases: string[] }[];
   updatesOnly: Set<string>;
   updateByTheme: Map<string, { _id: unknown; memberIds: Set<string> }[]>;
+  /** Themes with a preset-development project that isn't Live: their preset hours are new development, not updates. */
+  presetDev: Set<string>;
 };
 
 async function loadContext(): Promise<Context> {
   const [themes, members, updateProjects, buildProjects] = await Promise.all([
     Theme.find().select("name themeStorePresets demoStorePresets").lean(),
-    TeamMember.find().select("name updatesAndPresetsOnly").lean(),
+    TeamMember.find().select("name aliases updatesAndPresetsOnly").lean(),
     Project.find({ type: "theme_update" }).select("themeId members").lean(),
     // Projects saved before types existed have no type and are Theme Design & Development.
-    Project.find({ type: { $in: ["theme_development", null] }, status: { $ne: "live" } }).select("themeId").lean(),
+    Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $ne: "live" } }).select("themeId type").lean(),
   ]);
-  const building = new Set(buildProjects.map((p) => String(p.themeId)));
+  const building = new Set(buildProjects.filter((p) => p.type !== "preset_development").map((p) => String(p.themeId)));
+  const presetDev = new Set(buildProjects.filter((p) => p.type === "preset_development").map((p) => String(p.themeId)));
   const updateByTheme = new Map<string, { _id: unknown; memberIds: Set<string> }[]>();
   for (const p of updateProjects) {
     const list = updateByTheme.get(String(p.themeId)) ?? [];
@@ -56,13 +71,16 @@ async function loadContext(): Promise<Context> {
       presets: [...new Set([...(t.themeStorePresets ?? []).map((p: { name: string }) => p.name), ...(t.demoStorePresets ?? []).map((p: { label: string }) => p.label)])],
       building: building.has(String(t._id)),
     })),
-    memberRefs: members.map((m) => ({ id: String(m._id), name: m.name as string })),
+    memberRefs: members.map((m) => ({ id: String(m._id), name: m.name as string, aliases: (m.aliases ?? []) as string[] })),
     updatesOnly: new Set(members.filter((m) => m.updatesAndPresetsOnly).map((m) => String(m._id))),
     updateByTheme,
+    presetDev,
   };
 }
 
 type Built = {
+  /** Set when logging the hours needs the poster added to the Theme Update project's team. */
+  addToTeam: { projectId: unknown; memberId: string } | null;
   doc: Record<string, unknown>;
   /** The Theme Update hours entry this report makes, when it is update work that can be logged. */
   entry: Record<string, unknown> | null;
@@ -76,17 +94,23 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
   const theme = resolveTheme(parsed.value, ctx.themeRefs, { updatesAndPresetsOnly: memberId !== null && ctx.updatesOnly.has(memberId) });
   const reasons = [theme.ok ? "" : theme.reason, memberId ? "" : `Could not match "${sender || "the poster"}" to a team member.`].filter(Boolean);
 
-  // Update work is logged as hours on the theme's Theme Update project, when there is exactly one and the poster is on its team.
+  // Update work is logged as hours on the theme's "<Theme> Update" project (there must be exactly one). That is theme updates,
+  // and preset work on a theme whose presets are not new development; the poster joins its team if they aren't on it yet.
   let updateProject: { _id: unknown } | null = null;
-  if (theme.ok && theme.kind === "update") {
+  let addToTeam: Built["addToTeam"] = null;
+  const presetUpdate = theme.ok && theme.kind === "preset" && !ctx.presetDev.has(theme.themeId) && !ctx.themeRefs.find((t) => t.id === theme.themeId)?.building;
+  if (theme.ok && (theme.kind === "update" || presetUpdate)) {
     const projects = ctx.updateByTheme.get(theme.themeId) ?? [];
     if (projects.length !== 1) reasons.push(projects.length === 0 ? `${theme.themeName} has no Theme Update project to log the hours on.` : `${theme.themeName} has more than one Theme Update project.`);
-    else if (memberId && !projects[0].memberIds.has(memberId)) reasons.push(`${sender || "The poster"} isn't on the ${theme.themeName} Theme Update team.`);
-    else if (memberId) updateProject = projects[0];
+    else if (memberId) {
+      updateProject = projects[0];
+      if (!projects[0].memberIds.has(memberId)) addToTeam = { projectId: projects[0]._id, memberId };
+    }
   }
 
   const date = new Date(`${parsed.value.date}T00:00:00.000Z`);
   return {
+    addToTeam,
     doc: {
       key,
       sender,
@@ -133,6 +157,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
   const summary: ImportSummary = { created: 0, alreadyImported: 0, needsReview: [] };
   const reports: Record<string, unknown>[] = [];
   const entries: Record<string, unknown>[] = [];
+  const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const seen = new Set<string>();
 
   for (const { text, memberId, sender, key } of candidates) {
@@ -149,12 +174,14 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     }
     reports.push(built.doc);
     if (built.entry) entries.push(built.entry);
+    if (built.addToTeam) teamAdds.push(built.addToTeam);
     summary.created++;
     if (built.reasons.length > 0) summary.needsReview.push({ text, reason: built.reasons.join(" ") });
   }
 
   // ordered: false so one bad row (or a key stored by a concurrent run) doesn't stop the rest.
   if (reports.length > 0) await ChatReport.insertMany(reports, { ordered: false });
+  await addPostersToTeams(teamAdds);
   if (entries.length > 0) await TimeEntry.insertMany(entries, { ordered: false });
   return summary;
 }
@@ -167,10 +194,12 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
  */
 export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
   const ctx = await loadContext();
-  const flagged = await ChatReport.find({ status: "needs_review" }).lean();
+  // The flagged ones, plus preset reports not yet logged as hours (a preset update on a finished theme is logged on its Update project).
+  const flagged = await ChatReport.find({ $or: [{ status: "needs_review" }, { kind: "preset", projectId: null }] }).lean();
 
   const operations: Record<string, unknown>[] = [];
   const entries: Record<string, unknown>[] = [];
+  const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const summary: ReprocessSummary = { checked: flagged.length, fixed: 0, stillNeedsReview: [] };
 
   for (const report of flagged) {
@@ -185,11 +214,13 @@ export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
     delete fields.key;
     operations.push({ updateOne: { filter: { _id: report._id }, update: { $set: fields } } });
     if (built.entry) entries.push(built.entry);
-    if (built.reasons.length === 0) summary.fixed++;
+    if (built.addToTeam) teamAdds.push(built.addToTeam);
+    if (built.reasons.length === 0) summary.fixed += report.status === "needs_review" ? 1 : 0;
     else summary.stillNeedsReview.push({ text: report.rawText, reason: built.reasons.join(" ") });
   }
 
   if (operations.length > 0) await ChatReport.bulkWrite(operations as never, { ordered: false });
+  await addPostersToTeams(teamAdds);
   // A hours entry per report key, once: the unique chatReportKey index rejects a repeat.
   if (entries.length > 0) await TimeEntry.insertMany(entries, { ordered: false }).catch(() => undefined);
   return summary;

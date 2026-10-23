@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { summarizeDays } from "./daysWorked";
 import { suggestDurations } from "./durations";
 import { parseReport, splitReports } from "./parseReport";
 import { isUpdateMemo, resolveMember, resolveTheme, type ThemeRef } from "./resolve";
@@ -101,6 +102,8 @@ describe("resolveTheme / resolveMember", () => {
     ];
     expect(resolveMember("  pranay  nimje ", members)).toBe("1");
     expect(resolveMember("Pranay", members)).toBeNull();
+    expect(resolveMember("Aaqib Iqbal", [{ id: "3", name: "Aaquib Iqbal", aliases: ["Aaqib Iqbal"] }])).toBe("3");
+    expect(resolveMember("Aaqib Iqbal", [{ id: "3", name: "Aaquib Iqbal" }])).toBeNull();
   });
 });
 
@@ -115,5 +118,21 @@ describe("suggestDurations", () => {
       ])
     ).toEqual({ designDays: 1, developmentDays: 3, reportCount: 4 });
     expect(suggestDurations([])).toEqual({ designDays: null, developmentDays: null, reportCount: 0 });
+  });
+});
+
+describe("summarizeDays", () => {
+  it("adds up days per member by kind at 8.5 h/day and leaves Product Managers out", () => {
+    const rows = summarizeDays([
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", minutes: 510, kind: "theme" },
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", minutes: 255, kind: "preset" },
+      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", minutes: 1020, kind: "theme" },
+      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", minutes: 510, kind: "update" },
+      { memberId: "m", name: "Max", designation: "Product Manager", minutes: 5000, kind: "theme" },
+    ]);
+    expect(rows).toEqual([
+      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", theme: 2, preset: 0, update: 1, total: 3 },
+      { memberId: "a", name: "Ann", designation: "UI/UX Designer", theme: 1, preset: 0.5, update: 0, total: 1.5 },
+    ]);
   });
 });

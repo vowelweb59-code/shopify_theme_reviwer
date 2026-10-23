@@ -97,4 +97,16 @@ describe("countOutcomes / successRate", () => {
     expect(tally.get("pm")).toMatchObject({ approved: 1, rejected: 1 });
     expect(tally.get("ui")).toMatchObject({ approved: 0, rejected: 1 });
   });
+
+  it("counts a round only for people who reported time on the theme, except managers, once the theme has reports", () => {
+    const designation = new Map([["dev", "Shopify Developer"], ["other", "Shopify Developer"], ["pm", "Product Manager"]]);
+    const projects = [{ themeId: "t1", status: "live", members: [m("dev"), m("other"), m("pm")], rounds: [{ status: "rejected", members: [m("dev"), m("other"), m("pm")] }] }];
+    const worked = { themesWithReports: new Set(["t1"]), byTheme: new Map([["t1", new Set(["dev"])]]) };
+    const tally = countOutcomes(projects, designation, worked);
+    expect(tally.get("dev")).toMatchObject({ approved: 1, rejected: 1 });
+    expect(tally.get("other")).toBeUndefined();
+    expect(tally.get("pm")).toMatchObject({ approved: 1, rejected: 1 });
+    // A theme nobody has reported on yet keeps counting everyone.
+    expect(countOutcomes(projects, designation, { themesWithReports: new Set(), byTheme: new Map() }).get("other")).toMatchObject({ approved: 1, rejected: 1 });
+  });
 });

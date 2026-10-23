@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { parseTeamMemberInput } from "@/lib/projects/sanitize";
 import { countOutcomes, countRejections } from "@/lib/projects/rounds";
+import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
 import { Project } from "@/models/project";
 
@@ -10,11 +11,19 @@ export async function GET() {
   const [members, counts, projects] = await Promise.all([
     TeamMember.find().sort({ name: 1 }).lean(),
     Project.aggregate([{ $unwind: "$members" }, { $group: { _id: "$members.memberId", projectCount: { $sum: 1 } } }]),
-    Project.find().select("name status rejectionStage members rounds").lean(),
+    Project.find().select("name themeId status rejectionStage members rounds").lean(),
   ]);
   const countById = new Map<string, number>(counts.map((c) => [String(c._id), c.projectCount]));
   const rejectionsById = countRejections(projects);
-  const outcomesById = countOutcomes(projects, new Map(members.map((m) => [String(m._id), m.designation as string])));
+  // Who reported time on which theme: once a theme has reports, only they count on its rounds (see countOutcomes).
+  const reported = await ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null } }).select("themeId memberId").lean();
+  const worked = { themesWithReports: new Set<string>(), byTheme: new Map<string, Set<string>>() };
+  for (const r of reported) {
+    const theme = String(r.themeId);
+    worked.themesWithReports.add(theme);
+    worked.byTheme.set(theme, (worked.byTheme.get(theme) ?? new Set<string>()).add(String(r.memberId)));
+  }
+  const outcomesById = countOutcomes(projects, new Map(members.map((m) => [String(m._id), m.designation as string])), worked);
   return NextResponse.json({
     members: members.map((m) => ({ ...m, projectCount: countById.get(String(m._id)) ?? 0, rejectionCount: rejectionsById.get(String(m._id)) ?? 0, approvedCount: outcomesById.get(String(m._id))?.approved ?? 0, decidedRejectedCount: outcomesById.get(String(m._id))?.rejected ?? 0, approvedIn: outcomesById.get(String(m._id))?.approvedIn ?? [], rejectedIn: outcomesById.get(String(m._id))?.rejectedIn ?? [] })),
   });

@@ -11,6 +11,8 @@ const teamMemberSchema = new Schema(
     designation: { type: String, required: true, trim: true },
     // Never works on a new theme: their time reports (lib/chat/resolve.ts) are preset work or theme updates.
     updatesAndPresetsOnly: { type: Boolean, default: false },
+    // Other spellings of the name that show up as the poster in Google Chat ("Aaqib Iqbal" for "Aaquib Iqbal").
+    aliases: { type: [String], default: () => [] },
   },
   { timestamps: true }
 );

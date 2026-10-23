@@ -73,9 +73,10 @@ export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?:
   return { ok: true, themeId: theme.id, themeName: theme.name, kind, preset: null };
 }
 
-/** Matches the poster to a team member by name (exact, ignoring case and extra spaces). */
-export function resolveMember(sender: string, members: { id: string; name: string }[]): string | null {
-  const key = lower(sender).replace(/\s+/g, " ");
-  const found = members.filter((m) => lower(m.name).replace(/\s+/g, " ") === key);
+/** Matches the poster to a team member by name or alias (exact, ignoring case and extra spaces). */
+export function resolveMember(sender: string, members: { id: string; name: string; aliases?: string[] }[]): string | null {
+  const norm = (s: string) => lower(s).replace(/\s+/g, " ");
+  const key = norm(sender);
+  const found = members.filter((m) => norm(m.name) === key || (m.aliases ?? []).some((a) => norm(a) === key));
   return found.length === 1 ? found[0].id : null;
 }
