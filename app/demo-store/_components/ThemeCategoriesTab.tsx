@@ -17,11 +17,11 @@ export function ThemeCategoriesTab() {
   const { data: store } = useApi<{ themes: StoreListing[] }>("/api/theme-store");
   const storeListings = store?.themes ?? [];
 
-  // Every Theme Store category is listed, with 0 where you have no theme in it; "Uncategorized" only when some theme has none.
+  // Every Theme Store category is listed, with 0 where you have no theme in it; themes with no category aren't shown.
   const byCategory = new Map<string | null, string[]>(INDUSTRIES.map((i) => [i.slug, []]));
   for (const t of themes) byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t.themeName]);
   const categories: CategoryRow[] = [...byCategory]
-    .filter(([category, names]) => category !== null || names.length > 0)
+    .filter(([category]) => category !== null)
     .map(([category, names]) => ({
       category,
       themes: names.sort((a, b) => a.localeCompare(b)),
