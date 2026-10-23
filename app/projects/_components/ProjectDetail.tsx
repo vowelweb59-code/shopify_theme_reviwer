@@ -267,7 +267,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         <Card>
           <CardHeader
             title="Days worked"
-            description="Days and hours each team member has put into this theme: reported in the Theme Status Group, plus hours entered by hand in the Theme Update hours log (8.5 hours = 1 day). Product Managers are not listed."
+            description="Days and hours each team member has put into this project: reported in the Theme Status Group, plus hours entered by hand in the Theme Update hours log (8.5 hours = 1 day). A theme's preset work is shown on the preset's own project. Product Managers are not listed."
           />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -275,7 +275,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 <tr className="text-left text-xs text-zinc-500">
                   <th className="py-2 pr-4 font-medium">Team member</th>
                   <th className="py-2 pr-4 font-medium">New theme</th>
-                  <th className="py-2 pr-4 font-medium">Presets</th>
+                  {sum((d) => d.preset) > 0 && <th className="py-2 pr-4 font-medium">Presets</th>}
                   <th className="py-2 pr-4 font-medium">Updates</th>
                   <th className="py-2 pr-4 font-medium">Total days</th>
                   <th className="py-2 pr-4 font-medium">From the space (h)</th>
@@ -290,7 +290,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                       <span className="font-medium text-zinc-900 dark:text-zinc-100">{d.name}</span> <span className="text-xs text-zinc-500">{d.designation}</span>
                     </td>
                     <td className="py-2 pr-4">{d.theme || "—"}</td>
-                    <td className="py-2 pr-4">{d.preset || "—"}</td>
+                    {sum((d) => d.preset) > 0 && <td className="py-2 pr-4">{d.preset || "—"}</td>}
                     <td className="py-2 pr-4">{d.update || "—"}</td>
                     <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">{d.total} d</td>
                     <td className="py-2 pr-4">{d.spaceHours || "—"}</td>
@@ -303,7 +303,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 <tr className="border-t border-border-subtle font-medium text-zinc-900 dark:text-zinc-100">
                   <td className="py-2 pr-4">Total</td>
                   <td className="py-2 pr-4">{sum((d) => d.theme) || "—"}</td>
-                  <td className="py-2 pr-4">{sum((d) => d.preset) || "—"}</td>
+                  {sum((d) => d.preset) > 0 && <td className="py-2 pr-4">{sum((d) => d.preset)}</td>}
                   <td className="py-2 pr-4">{sum((d) => d.update) || "—"}</td>
                   <td className="py-2 pr-4">{sum((d) => d.total)} d</td>
                   <td className="py-2 pr-4">{sum((d) => d.spaceHours) || "—"}</td>

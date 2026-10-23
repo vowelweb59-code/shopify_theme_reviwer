@@ -19,9 +19,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   const project = await Project.findById(projectId).select("themeId type").lean();
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  // A preset project shows only the reports linked to it (it has no hours log); any other project shows its whole theme.
+  // A preset project shows only the reports linked to it (it has no hours log). Any other project shows its theme's own work:
+  // preset work is left out, since each preset has its own project and its people are on that page, not on the main theme's.
   const isPreset = project.type === "preset_development";
-  const scope = isPreset ? { projectId } : { themeId: project.themeId };
+  const scope = isPreset ? { projectId } : { themeId: project.themeId, kind: { $ne: "preset" } };
   const reports = await ChatReport.find({ ...scope, status: "ok", memberId: { $ne: null } }).select("memberId minutes kind").lean();
 
   // Hours entered by hand: the theme's Theme Update projects' log entries that did not come from the space
