@@ -34,6 +34,12 @@ type ProjectRow = {
   description?: string;
   designDays: number | null;
   developmentDays: number | null;
+  /** Fixed days entered by hand plus what the Theme Status Group reports add on top; null when neither has any. */
+  designTotalDays: number | null;
+  developmentTotalDays: number | null;
+  /** The fixed days were one entered total, split by the average design share. */
+  durationEstimated?: boolean;
+  spaceHours: number;
   rejections: number;
   members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
@@ -60,8 +66,6 @@ function NewProjectModal({
   const [newThemeName, setNewThemeName] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
-  const [designDays, setDesignDays] = useState("");
-  const [developmentDays, setDevelopmentDays] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,7 +77,7 @@ function NewProjectModal({
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal, type, ...(themeId === NEW_THEME ? { newThemeName } : { themeId }), name, status, designDays, developmentDays }),
+        body: JSON.stringify({ portal, type, ...(themeId === NEW_THEME ? { newThemeName } : { themeId }), name, status }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -170,18 +174,6 @@ function NewProjectModal({
               ))}
             </select>
           </label>
-        )}
-        {typeHasStatus(type) && (
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">Design duration (days)</span>
-              <input type="number" min={0} step={0.5} value={designDays} onChange={(e) => setDesignDays(e.target.value)} className={INPUT} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">Development duration (days)</span>
-              <input type="number" min={0} step={0.5} value={developmentDays} onChange={(e) => setDevelopmentDays(e.target.value)} className={INPUT} />
-            </label>
-          </div>
         )}
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
         <div className="flex justify-end gap-2">
@@ -294,20 +286,44 @@ export default function ProjectsPage() {
     {
       key: "rejections",
       header: "Rejections",
-      sortValue: (p) => p.rejections,
-      render: (p) => (p.rejections > 0 ? p.rejections : <span className="text-zinc-400">—</span>),
+      sortValue: (p) => (typeHasStatus(p.type) ? p.rejections : -1),
+      // 0 when a project that goes through reviews hasn't been rejected; a Theme Update has no reviews.
+      render: (p) => (typeHasStatus(p.type) ? p.rejections : <span className="text-zinc-400">—</span>),
     },
     {
       key: "design",
       header: "Design",
-      sortValue: (p) => p.designDays ?? -1,
-      render: (p) => (p.designDays == null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.designDays} d`),
+      sortValue: (p) => p.designTotalDays ?? -1,
+      render: (p) =>
+        p.designTotalDays == null || !typeHasStatus(p.type) ? (
+          <span className="text-zinc-400">—</span>
+        ) : (
+          <span title={p.durationEstimated ? "Split from the one total entered earlier, by the average design share" : undefined}>
+            {p.durationEstimated ? "~" : ""}
+            {p.designTotalDays} d
+          </span>
+        ),
     },
     {
       key: "development",
       header: "Development",
-      sortValue: (p) => p.developmentDays ?? -1,
-      render: (p) => (p.developmentDays == null || !typeHasStatus(p.type) ? <span className="text-zinc-400">—</span> : `${p.developmentDays} d`),
+      sortValue: (p) => p.developmentTotalDays ?? -1,
+      render: (p) =>
+        p.developmentTotalDays == null || !typeHasStatus(p.type) ? (
+          <span className="text-zinc-400">—</span>
+        ) : (
+          <span title={p.durationEstimated ? "Split from the one total entered earlier, by the average design share" : undefined}>
+            {p.durationEstimated ? "~" : ""}
+            {p.developmentTotalDays} d
+          </span>
+        ),
+    },
+    {
+      key: "totalHours",
+      header: "Total hours",
+      sortValue: (p) => p.totalHours,
+      // Fixed days entered by hand (8.5 h each) plus the hours reported in the Theme Status Group; a Theme Update shows its hours log.
+      render: (p) => (p.totalHours > 0 ? `${p.totalHours} h` : <span className="text-zinc-400">—</span>),
     },
     {
       key: "actions",

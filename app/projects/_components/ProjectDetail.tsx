@@ -17,7 +17,7 @@ type ProjectMember = { memberId: string; name: string; designation: string; role
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
 type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
 type Loaded = {
-  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number };
+  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -34,14 +34,11 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [portal, setPortal] = useState<Portal | "">("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [rejectionStage, setRejectionStage] = useState<RejectionStage | "">("");
-  const [designDays, setDesignDays] = useState("");
-  const [developmentDays, setDevelopmentDays] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
   const [pickId, setPickId] = useState("");
   const [days, setDays] = useState<{ memberId: string; name: string; designation: string; theme: number; preset: number; update: number; total: number; spaceHours: number; manualHours: number; totalHours: number }[]>([]);
-  const [suggestion, setSuggestion] = useState<{ designDays: number | null; developmentDays: number | null; reportCount: number; from: string | null; to: string | null } | null>(null);
 
   function apply(loaded: Loaded) {
     setData(loaded);
@@ -50,8 +47,6 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     setPortal(loaded.project.portal ?? "");
     setStatus(loaded.project.status ?? "planning");
     setRejectionStage(loaded.project.rejectionStage ?? "");
-    setDesignDays(loaded.project.designDays?.toString() ?? "");
-    setDevelopmentDays(loaded.project.developmentDays?.toString() ?? "");
   }
 
   useEffect(() => {
@@ -62,10 +57,6 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         apply(body);
       })
       .catch((err: Error) => setLoadError(err.message));
-    fetch(`/api/projects/${projectId}/duration-suggestion`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then(setSuggestion)
-      .catch(() => setSuggestion(null));
     fetch(`/api/projects/${projectId}/days-worked`)
       .then((res) => (res.ok ? res.json() : { rows: [] }))
       .then((body) => setDays(body.rows ?? []))
@@ -92,8 +83,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     e.preventDefault();
     setSaving(true);
     const hasStatus = data ? typeHasStatus(data.project.type) : true;
-    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "", designDays, developmentDays } : { name, portal, description })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null, designDays: designDays === "" ? null : Number(designDays), developmentDays: developmentDays === "" ? null : Number(developmentDays) } : {}) } } : d));
+    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "" } : { name, portal, description })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null } : {}) } } : d));
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -191,27 +182,6 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <span className="text-zinc-700 dark:text-zinc-300">Description</span>
             <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT} />
           </label>
-          {hasStatus && suggestion && suggestion.reportCount > 0 && (suggestion.designDays !== null || suggestion.developmentDays !== null) && (
-            <div className="flex flex-wrap items-center gap-3 rounded-md border border-border-subtle px-3 py-2 text-sm">
-              <span className="text-zinc-600 dark:text-zinc-400">
-                Suggested from {suggestion.reportCount} time report{suggestion.reportCount === 1 ? "" : "s"} ({suggestion.from} to {suggestion.to}):
-                {suggestion.designDays !== null && <strong className="ml-2 font-medium text-zinc-900 dark:text-zinc-100">design {suggestion.designDays} d</strong>}
-                {suggestion.developmentDays !== null && <strong className="ml-2 font-medium text-zinc-900 dark:text-zinc-100">development {suggestion.developmentDays} d</strong>}
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  if (suggestion.designDays !== null) setDesignDays(String(suggestion.designDays));
-                  if (suggestion.developmentDays !== null) setDevelopmentDays(String(suggestion.developmentDays));
-                }}
-              >
-                Use these
-              </Button>
-              <span className="text-xs text-zinc-500">Fills the boxes below; nothing is saved until you press Save changes.</span>
-            </div>
-          )}
           {hasStatus && (
             <div className="grid gap-3 sm:grid-cols-3">
               <label className="flex flex-col gap-1 text-sm">
@@ -230,14 +200,21 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                   <StageSelect value={rejectionStage} onChange={setRejectionStage} />
                 </label>
               )}
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-zinc-700 dark:text-zinc-300">Design duration (days)</span>
-                <input type="number" min={0} step={0.5} value={designDays} onChange={(e) => setDesignDays(e.target.value)} className={INPUT} />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-zinc-700 dark:text-zinc-300">Development duration (days)</span>
-                <input type="number" min={0} step={0.5} value={developmentDays} onChange={(e) => setDevelopmentDays(e.target.value)} className={INPUT} />
-              </label>
+            </div>
+          )}
+          {hasStatus && project.totals && (
+            <div className="rounded-md border border-border-subtle px-3 py-2 text-sm">
+              <p className="mb-1 font-medium text-zinc-900 dark:text-zinc-100">Time taken</p>
+              <p className="text-zinc-600 dark:text-zinc-400">
+                Design {project.totals.designDays ?? "—"} d · Development {project.totals.developmentDays ?? "—"} d · Total {project.totals.totalHours} h
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {project.totals.estimated
+                  ? `Only one total (${project.designDays ?? project.developmentDays} d) was entered earlier, so it is split into design ${project.totals.fixedDesignDays} d and development ${project.totals.fixedDevelopmentDays} d by the average design share of the other projects`
+                  : `Fixed days entered earlier: design ${project.designDays ?? 0} d, development ${project.developmentDays ?? 0} d`}{" "}
+                ({project.totals.fixedHours} h, 8.5 h per day; these can no longer be edited). Plus {project.totals.spaceHours} h
+                reported in the Theme Status Group, recalculated from the reports each time. Product Managers&apos; hours are not counted.
+              </p>
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">

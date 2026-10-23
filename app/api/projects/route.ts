@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { MAX_NAME, typeHasStatus } from "@/lib/projects/constants";
 import { parseProjectFields, parseProjectMembers, parseProjectType } from "@/lib/projects/sanitize";
 import { rejectionCount } from "@/lib/projects/rounds";
+import { loadProjectTotals } from "@/lib/projects/loadTotals";
 import { resolveMembers, resolveRounds } from "@/lib/projects/resolveMembers";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
@@ -24,6 +25,7 @@ export async function GET() {
     TeamMember.find().select("name designation").lean(),
     TimeEntry.aggregate([{ $group: { _id: "$projectId", totalHours: { $sum: "$hours" } } }]),
   ]);
+  const totals = await loadProjectTotals(projects);
   const themeName = new Map(themes.map((t) => [String(t._id), t.name as string]));
   const memberById = new Map(members.map((m) => [String(m._id), m]));
   const hoursById = new Map<string, number>(hours.map((h) => [String(h._id), Math.round(h.totalHours * 100) / 100]));
@@ -35,7 +37,13 @@ export async function GET() {
       // Rows saved before project types existed are all Theme Design & Development.
       type: p.type ?? "theme_development",
       themeName: themeName.get(String(p.themeId)) ?? null,
-      totalHours: hoursById.get(String(p._id)) ?? 0,
+      // Total hours: a Theme Update project's hours log; any other project the fixed days entered by hand plus the space reports.
+      // designTotalDays / developmentTotalDays are the fixed days plus the days the space reports add on top.
+      totalHours: totals.get(String(p._id))?.totalHours ?? hoursById.get(String(p._id)) ?? 0,
+      spaceHours: totals.get(String(p._id))?.spaceHours ?? 0,
+      durationEstimated: totals.get(String(p._id))?.estimated ?? false,
+      designTotalDays: totals.get(String(p._id))?.designDays ?? null,
+      developmentTotalDays: totals.get(String(p._id))?.developmentDays ?? null,
       members: resolveMembers(p.members, memberById),
       rounds: resolveRounds(p.rounds, memberById),
       rejections: rejectionCount(p),
@@ -59,9 +67,10 @@ export async function POST(request: Request) {
   } else {
     // A Theme Update is continuous: no status, and no design/development phases to time.
     fields.value.status = undefined;
-    fields.value.designDays = null;
-    fields.value.developmentDays = null;
   }
+  // The design and development days entered by hand are fixed history and are never entered or edited again; the space reports add to them.
+  fields.value.designDays = null;
+  fields.value.developmentDays = null;
   let members: { memberId: string; role: string | null }[] = [];
   if ("members" in body) {
     const parsed = parseProjectMembers(body.members);

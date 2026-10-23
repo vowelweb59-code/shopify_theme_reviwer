@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { MAX_DESCRIPTION, typeHasStatus } from "@/lib/projects/constants";
 import { parseProjectFields, parseProjectMembers, parseRounds } from "@/lib/projects/sanitize";
 import { rejectionCount } from "@/lib/projects/rounds";
+import { loadProjectTotals } from "@/lib/projects/loadTotals";
 import { resolveMembers, resolveRounds } from "@/lib/projects/resolveMembers";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
@@ -32,6 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
       members: resolveMembers(project.members, teamById),
       rounds: resolveRounds(project.rounds, teamById),
       rejections: rejectionCount(project),
+      totals: (await loadProjectTotals([project])).get(String(project._id)) ?? null,
     },
     theme,
     team,
@@ -53,12 +55,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   const project = await Project.findById(projectId);
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  // A Theme Update has no status or design/development phases (it tracks hours instead).
-  if (!typeHasStatus(project.type)) {
-    delete update.status;
-    delete update.designDays;
-    delete update.developmentDays;
-  }
+  // A Theme Update has no status (it tracks hours instead).
+  if (!typeHasStatus(project.type)) delete update.status;
+  // The design and development days entered by hand are fixed: they can't be edited (resubmitting a rejected round is the only thing that moves them).
+  delete update.designDays;
+  delete update.developmentDays;
 
   if ("members" in body) {
     const members = parseProjectMembers(body.members);
