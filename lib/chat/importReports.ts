@@ -13,6 +13,8 @@ export type ImportInput = {
   /** The poster's name as the space shows it, matched to a team member when memberId isn't given. */
   sender?: string;
   text: string;
+  /** The day the message was posted (YYYY-MM-DD); used for a report that has no date of its own. */
+  postedOn?: string;
 };
 export type ImportSummary = {
   created: number;
@@ -88,8 +90,8 @@ type Built = {
 };
 
 /** Classifies one report text: who, which theme, theme / preset / update, and whether it can be logged. Null when the text isn't a usable report. */
-function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context): Built | { error: string } {
-  const parsed = parseReport(text);
+function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context, postedOn?: string): Built | { error: string } {
+  const parsed = parseReport(text, postedOn);
   if (!parsed.ok) return { error: parsed.error };
   const theme = resolveTheme(parsed.value, ctx.themeRefs, { updatesAndPresetsOnly: memberId !== null && ctx.updatesOnly.has(memberId) });
   const reasons = [theme.ok ? "" : theme.reason, memberId ? "" : `Could not match "${sender || "the poster"}" to a team member.`].filter(Boolean);
@@ -150,7 +152,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     const given = input.memberId && memberIds.has(input.memberId) ? input.memberId : null;
     const memberId = given ?? (input.sender ? resolveMember(input.sender, ctx.memberRefs) : null);
     const sender = input.sender?.trim() || ctx.memberRefs.find((m) => m.id === memberId)?.name || "";
-    return splitReports(input.text).map((text) => ({ text, memberId, sender, key: reportKey(memberId ?? sender, text) }));
+    return splitReports(input.text).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, key: reportKey(memberId ?? sender, text) }));
   });
   const stored = new Set((await ChatReport.find({ key: { $in: candidates.map((c) => c.key) } }).select("key").lean()).map((r) => r.key as string));
 
@@ -160,13 +162,13 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
   const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const seen = new Set<string>();
 
-  for (const { text, memberId, sender, key } of candidates) {
+  for (const { text, memberId, sender, key, postedOn } of candidates) {
     if (stored.has(key) || seen.has(key)) {
       summary.alreadyImported++;
       continue;
     }
     seen.add(key);
-    const built = buildReport(text, memberId, sender, key, ctx);
+    const built = buildReport(text, memberId, sender, key, ctx, postedOn);
     if ("error" in built) {
       // Nothing usable to store (no date or hours): report it back without saving.
       summary.needsReview.push({ text, reason: built.error });
@@ -205,7 +207,7 @@ export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
   for (const report of flagged) {
     // The poster may have been matched since (a renamed team member).
     const memberId = report.memberId ? String(report.memberId) : report.sender ? resolveMember(report.sender, ctx.memberRefs) : null;
-    const built = buildReport(report.rawText, memberId, report.sender ?? "", report.key, ctx);
+    const built = buildReport(report.rawText, memberId, report.sender ?? "", report.key, ctx, report.date ? new Date(report.date).toISOString().slice(0, 10) : undefined);
     if ("error" in built) {
       summary.stillNeedsReview.push({ text: report.rawText, reason: built.error });
       continue;

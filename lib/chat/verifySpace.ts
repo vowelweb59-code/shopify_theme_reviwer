@@ -45,7 +45,7 @@ export async function verifySpace(): Promise<VerifyResult> {
   const missing = inSpace
     .filter((r) => !storedTexts.has(norm(r.text)))
     .map((r) => {
-      const parsed = parseReport(r.text);
+      const parsed = parseReport(r.text, r.date);
       return { date: r.date, who: r.who, reason: parsed.ok ? "Readable, but not stored yet" : `Can't be imported: ${parsed.error}`, text: r.text.replace(/\s+/g, " ").slice(0, 200) };
     });
 

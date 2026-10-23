@@ -103,15 +103,18 @@ export function ImportReportsModal({
     }
   }
 
-  async function handleSync() {
+  async function handleSync(all = false) {
     setSyncing(true);
     setSyncError(null);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/chat/sync", { method: "POST" });
+      const res = await fetch(all ? "/api/chat/sync?all=1" : "/api/chat/sync", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setSyncError(data.error ?? "Syncing failed.");
-      else setSyncResult(data);
+      else {
+        setSyncResult(data);
+        if (all) void handleVerify();
+      }
     } catch {
       setSyncError("Lost connection to the server. Try again.");
     } finally {
@@ -159,7 +162,7 @@ export function ImportReportsModal({
               Connected as {chat.connection.email}. {chat.connection.lastSyncAt ? `Last synced ${new Date(chat.connection.lastSyncAt).toLocaleString()}.` : "Not synced yet."}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" onClick={handleSync} loading={syncing}>
+              <Button type="button" size="sm" onClick={() => void handleSync()} loading={syncing}>
                 Sync now
               </Button>
               <a href="/api/chat/google/connect" className="self-center text-xs text-primary underline">
@@ -236,6 +239,11 @@ export function ImportReportsModal({
             <p className={verify.missing.length === 0 ? "text-status-pass-text" : "text-status-fail-text"}>
               {verify.missing.length === 0 ? "Every report in the space is stored." : `${verify.missing.length} in the space are not stored:`}
             </p>
+            {verify.missing.length > 0 && (
+              <Button type="button" size="sm" variant="secondary" className="self-start" onClick={() => void handleSync(true)} loading={syncing}>
+                Import the missing ones
+              </Button>
+            )}
             {verify.missing.length > 0 && (
               <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto text-zinc-600 dark:text-zinc-400">
                 {verify.missing.map((m, i) => (

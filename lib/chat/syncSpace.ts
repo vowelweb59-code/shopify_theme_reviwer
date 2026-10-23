@@ -33,9 +33,9 @@ export async function chatAccessToken(connection: ConnectionDoc): Promise<string
   return accessToken;
 }
 
-/** A message is a time report when it has a Theme Name line; other chatter in the space is ignored. */
+/** A message is a time report when it has a filled-in Theme Name line; other chatter (and the blank template) is ignored. */
 export function looksLikeReport(text: string): boolean {
-  return /theme\s*name/i.test(text);
+  return /theme\s*name\s*[:\-–—][\s:\-–—]*(?!memo\b|timer?\b)[^\s:\-–—]/i.test(text);
 }
 
 /**
@@ -45,7 +45,7 @@ export function looksLikeReport(text: string): boolean {
  * interrupted run is simply repeated. Throws a message-only Error for the
  * route to show.
  */
-export async function syncSpace(): Promise<SyncResult> {
+export async function syncSpace(options: { all?: boolean } = {}): Promise<SyncResult> {
   const connection = await loadConnection();
   if (!connection || connection.status !== "active") throw new Error("Google Chat isn't connected. Connect it first.");
 
@@ -55,10 +55,10 @@ export async function syncSpace(): Promise<SyncResult> {
     const space = getChatSpace();
     // Names are a convenience (the sender usually carries one); without the memberships permission they are just empty.
     const memberNames = await listMemberNames(space, accessToken).catch(() => new Map<string, string>());
-    const messages = await listSpaceMessages(space, accessToken, connection.lastMessageAt ?? null, memberNames);
+    const messages = await listSpaceMessages(space, accessToken, options.all ? null : (connection.lastMessageAt ?? null), memberNames);
     const reports = messages.filter((m) => looksLikeReport(m.text));
 
-    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text })));
+    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: m.createTime.slice(0, 10) })));
 
     const newest = messages.reduce<Date | null>((latest, m) => {
       const at = new Date(m.createTime);

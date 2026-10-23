@@ -65,3 +65,11 @@ describe("space + report detection", () => {
     expect(looksLikeReport("Good morning everyone")).toBe(false);
   });
 });
+
+describe("looksLikeReport: chatter and blank templates", () => {
+  it("ignores them", () => {
+    expect(looksLikeReport("@all In the theme name, please add the Google Chat space name")).toBe(false);
+    expect(looksLikeReport("Date:- \nTheme Name:- \nMemo:- \nTimer:-")).toBe(false);
+    expect(looksLikeReport("Theme Name:- Flaunt | Clothing\nMemo:- x")).toBe(true);
+  });
+});

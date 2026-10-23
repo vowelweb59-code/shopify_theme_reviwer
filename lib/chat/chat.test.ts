@@ -162,3 +162,31 @@ describe("summarizeDays", () => {
     expect(rows).toHaveLength(2);
   });
 });
+
+describe("parseReport: other layouts", () => {
+  const ok = (text: string, postedOn?: string) => {
+    const r = parseReport(text, postedOn);
+    return r.ok ? { date: r.value.date, theme: r.value.themeParts[0], minutes: r.value.minutes } : r;
+  };
+  it("reads 'Theme Report' headers and a Time line", () => {
+    expect(ok("========\nTheme Report (24/09/2026)\nTheme Name: Breeze | Fresco Solutions\nTask Assign: X\nTime: 5.00 Hours\nMemo: Worked")).toEqual({ date: "2026-09-24", theme: "Breeze", minutes: 300 });
+    expect(ok("Theme Report:- 25/09/2026\nTheme Name:- Breeze | Fresco Solutions\nMemo:- x\nTimer:- 8:30 hrs")).toEqual({ date: "2026-09-25", theme: "Breeze", minutes: 510 });
+  });
+  it("reads month names and spaces in the date", () => {
+    expect((ok("Date:- 26 sept 2026\nTheme Name:- Aspire\nMemo:- x\nTimer:- 2:00 hrs") as { date: string }).date).toBe("2026-09-26");
+    expect((ok("Date :- ( 22- OCT - 2026 )\nTheme Name:- Aspire | Wellness Preset.\nMemo:- x\nTimer:- 8.00 hrs.") as { date: string }).date).toBe("2026-10-22");
+    expect((ok("Date:- (22 -10-2026)\nTheme Name: Noble Theme | Theme Update\nTimer:- 04:00 hrs") as { date: string }).date).toBe("2026-10-22");
+  });
+  it("uses the day the message was posted when the report has no date", () => {
+    expect(ok("Theme Name:- Flaunt | Clothing\nMemo:- 3 images\nTimer:- 1:00 hrs", "2026-10-07")).toEqual({ date: "2026-10-07", theme: "Flaunt", minutes: 60 });
+    expect(ok("Theme Name:- Flaunt\nTimer:- 1:00 hrs")).toEqual({ ok: false, error: "No date found." });
+  });
+  it("splits a message with several themes that each have a timer", () => {
+    const parts = splitReports("Date:- (12-10-2026)\nTheme Name: Versatile (Zeal Preset)\nMemo: a\nTime: 3.00 Hour\nTheme Name: Breeze\nMemo: b\nTime: 2.00 Hour");
+    expect(parts).toHaveLength(2);
+    expect(parts.map((p) => ok(p))).toEqual([
+      { date: "2026-10-12", theme: "Versatile (Zeal Preset)", minutes: 180 },
+      { date: "2026-10-12", theme: "Breeze", minutes: 120 },
+    ]);
+  });
+});

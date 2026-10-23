@@ -14,11 +14,11 @@ export async function GET() {
   });
 }
 
-/** Reads the space's new messages and imports the time reports among them. */
-export async function POST() {
+/** Reads the space's new messages and imports the time reports among them; ?all=1 reads the whole space again (reports already stored are skipped). */
+export async function POST(request: Request) {
   await connectToDatabase();
   try {
-    return NextResponse.json(await syncSpace());
+    return NextResponse.json(await syncSpace({ all: new URL(request.url).searchParams.get("all") === "1" }));
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Syncing failed." }, { status: 502 });
   }
