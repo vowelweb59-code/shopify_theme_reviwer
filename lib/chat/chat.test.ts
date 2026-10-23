@@ -41,13 +41,17 @@ describe("splitReports", () => {
 
 const themes: ThemeRef[] = [
   { id: "g", name: "Gravity", presets: ["Decor", "Gold"] },
-  { id: "k", name: "Kombat", presets: [] },
+  { id: "k", name: "Kombat", presets: [], building: true },
 ];
 
 describe("resolveTheme / resolveMember", () => {
-  it("calls it preset work only when the second part is one of the theme's presets", () => {
+  it("calls it preset work only when the second part is one of the theme's presets, and flags any other second part", () => {
     expect(resolveTheme({ themeParts: ["Gravity", "decor", "Home Decor"] }, themes)).toMatchObject({ ok: true, kind: "preset", preset: "Decor" });
+    // Kombat is still being built, so its category is not a preset; Gravity is Live, so an unknown second part is flagged.
     expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme", "Theme Studio"] }, themes)).toMatchObject({ ok: true, kind: "theme", preset: null });
+    expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"] }, themes, { updatesAndPresetsOnly: true })).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Gravity", "Kids"], memo: "Fixes" }, themes)).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Kombat"], memo: "Product page" }, themes)).toMatchObject({ ok: true, kind: "theme", preset: null });
     expect(resolveTheme({ themeParts: ["Nope"] }, themes)).toMatchObject({ ok: false });
   });
 
@@ -66,7 +70,28 @@ describe("resolveTheme / resolveMember", () => {
     expect(resolveTheme({ themeParts: ["Gravity", "Decor"], memo: "Fixed footer" }, themes, only)).toMatchObject({ ok: true, kind: "preset" });
     expect(resolveTheme({ themeParts: ["Gravity", "Pearl"], memo: "Fixed footer" }, themes, only)).toMatchObject({ ok: false });
     expect(resolveTheme({ themeParts: ["Gravity", "Pearl"], memo: "Updating footer" }, themes, only)).toMatchObject({ ok: true, kind: "update" });
-    expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Product page" }, themes)).toMatchObject({ ok: true, kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Updating product page" }, themes)).toMatchObject({ ok: true, kind: "update" });
+  });
+
+  it("finds the theme in loosely written names, and treats the word Preset as preset work", () => {
+    const known: ThemeRef[] = [
+      { id: "a", name: "Aspire", presets: [] },
+      { id: "v", name: "Voltix", presets: [] },
+      { id: "n", name: "Nexus", presets: [] },
+      { id: "z", name: "Zeal", presets: [] },
+      { id: "s", name: "Soft", presets: [] },
+    ];
+    expect(resolveTheme({ themeParts: ["Aspire Preset", "Beauty"] }, known)).toMatchObject({ ok: true, themeId: "a", kind: "preset", preset: "Beauty" });
+    expect(resolveTheme({ themeParts: ["Clothing Theme (Voltix Preset)"] }, known)).toMatchObject({ ok: true, themeId: "v", kind: "preset" });
+    expect(resolveTheme({ themeParts: ["Women's Clothing Shopify Theme ( Nexus )"], memo: "Fixes" }, known)).toMatchObject({ ok: true, themeId: "n", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Zeal Theme - Zeal"] }, known)).toMatchObject({ ok: true, themeId: "z" });
+    expect(resolveTheme({ themeParts: ["Soft Theme"] }, known)).toMatchObject({ ok: true, themeId: "s" });
+    expect(resolveTheme({ themeParts: ["Pearl", "Beauty"] }, known)).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Aspire and Voltix"] }, known)).toMatchObject({ ok: false });
+  });
+
+  it("splits a capital I used as a separator", () => {
+    expect(parseReport("Date: 1-1-2026\nTheme Name : Voltix I Scarlet I Jewelry\nTimer: 1 hrs")).toMatchObject({ ok: true, value: { themeParts: ["Voltix", "Scarlet", "Jewelry"] } });
   });
 
   it("matches a poster to one team member by name", () => {

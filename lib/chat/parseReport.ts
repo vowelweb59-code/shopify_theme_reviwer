@@ -34,7 +34,8 @@ export function parseReport(text: string): Result<ParsedReport> {
   if (Number.isNaN(check.getTime()) || check.toISOString().slice(0, 10) !== iso) return { ok: false, error: `"${date[1]}-${date[2]}-${date[3]}" is not a real date.` };
 
   const theme = THEME_RE.exec(text);
-  const themeParts = (theme?.[1] ?? "").split("|").map((p) => p.trim()).filter(Boolean);
+  // "|" separates the parts; some people type a capital "I" between spaces instead ("Voltix I Clothing").
+  const themeParts = (theme?.[1] ?? "").split(/\s*\|\s*|\s+I\s+/).map((p) => p.trim()).filter(Boolean);
   if (themeParts.length === 0) return { ok: false, error: "No theme name found." };
 
   const timer = TIMER_RE.exec(text);

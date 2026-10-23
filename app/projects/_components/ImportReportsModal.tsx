@@ -11,6 +11,7 @@ const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 /** Paste daily time reports from the Theme Status Group space; durations are suggested from them on each project. */
 type ChatStatus = { configured: boolean; connection: { email: string; status: "active" | "revoked"; lastSyncAt: string | null; lastError: string | null } | null };
 type SyncResult = Summary & { fetched: number; reports: number; connectedAs: string };
+type RecheckResult = { checked: number; fixed: number; stillNeedsReview: { text: string; reason: string }[] };
 
 export function ImportReportsModal({
   open,
@@ -28,6 +29,9 @@ export function ImportReportsModal({
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [rechecking, setRechecking] = useState(false);
+  const [recheck, setRecheck] = useState<RecheckResult | null>(null);
+  const [recheckError, setRecheckError] = useState<string | null>(null);
 
   const [team, setTeam] = useState<{ _id: string; name: string }[]>([]);
   const [memberId, setMemberId] = useState("");
@@ -51,6 +55,22 @@ export function ImportReportsModal({
       .catch(() => setChat(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  async function handleRecheck() {
+    setRechecking(true);
+    setRecheckError(null);
+    setRecheck(null);
+    try {
+      const res = await fetch("/api/chat/reprocess", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setRecheckError(data.error ?? "Re-checking failed.");
+      else setRecheck(data);
+    } catch {
+      setRecheckError("Lost connection to the server. Try again.");
+    } finally {
+      setRechecking(false);
+    }
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -136,6 +156,31 @@ export function ImportReportsModal({
                 {syncResult.needsReview.map((r, i) => (
                   <li key={i}>
                     Needs a look: {r.reason} <span className="text-zinc-400">— {r.text.split("\n").find((l) => /theme/i.test(l)) ?? r.text.slice(0, 60)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-subtle p-3 text-sm">
+        <p className="text-xs text-zinc-500">Reports marked &ldquo;Needs a look&rdquo; (unknown theme, no Theme Update project, poster not matched) can be re-checked after you fix the cause, without reading Chat again.</p>
+        <div>
+          <Button type="button" size="sm" variant="secondary" onClick={handleRecheck} loading={rechecking}>
+            Re-check flagged reports
+          </Button>
+        </div>
+        {recheckError && <p className="text-xs text-status-fail-text">{recheckError}</p>}
+        {recheck && (
+          <div role="status" className="text-xs">
+            <p className="text-status-pass-text">
+              Checked {recheck.checked}: {recheck.fixed} now resolved, {recheck.stillNeedsReview.length} still need a look.
+            </p>
+            {recheck.stillNeedsReview.length > 0 && (
+              <ul className="mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto text-zinc-600 dark:text-zinc-400">
+                {recheck.stillNeedsReview.map((r, i) => (
+                  <li key={i}>
+                    {r.reason} <span className="text-zinc-400">— {r.text.split("\n").find((l) => /theme/i.test(l)) ?? r.text.slice(0, 60)}</span>
                   </li>
                 ))}
               </ul>
