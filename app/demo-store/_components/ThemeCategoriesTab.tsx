@@ -8,18 +8,29 @@ import { INDUSTRIES, industryLabel } from "@/lib/themes/industries";
 import { ThemeStoreCatalogSection } from "./ThemeStoreCatalogSection";
 
 type ThemeRow = { themeId: string; themeName: string; category: string | null; publisher: string | null; publisherThemes: number | null };
-type CategoryRow = { category: string | null; themes: string[] };
+type StoreListing = { name: string; industries: string[]; rank: number | null };
+type CategoryRow = { category: string | null; themes: string[]; storeThemes: string[] };
 
 export function ThemeCategoriesTab() {
   const { data, loading, error } = useApi<{ themes: ThemeRow[] }>("/api/theme-categories");
   const themes: ThemeRow[] = data?.themes ?? [];
+  const { data: store } = useApi<{ themes: StoreListing[] }>("/api/theme-store");
+  const storeListings = store?.themes ?? [];
 
   // Every Theme Store category is listed, with 0 where you have no theme in it; "Uncategorized" only when some theme has none.
   const byCategory = new Map<string | null, string[]>(INDUSTRIES.map((i) => [i.slug, []]));
   for (const t of themes) byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t.themeName]);
   const categories: CategoryRow[] = [...byCategory]
     .filter(([category, names]) => category !== null || names.length > 0)
-    .map(([category, names]) => ({ category, themes: names.sort((a, b) => a.localeCompare(b)) }))
+    .map(([category, names]) => ({
+      category,
+      themes: names.sort((a, b) => a.localeCompare(b)),
+      // Main Theme Store themes whose own (default) card is listed under this category, in the store's own order. A theme in several categories is a leftover of an older crawl that counted presets, so it isn't trusted here.
+      storeThemes: storeListings
+        .filter((s) => (category === null ? s.industries.length === 0 : s.industries.length === 1 && s.industries[0] === category))
+        .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER))
+        .map((s) => s.name),
+    }))
     .sort((a, b) => b.themes.length - a.themes.length || industryLabel(a.category).localeCompare(industryLabel(b.category)));
 
   const themeColumns: TableColumn<ThemeRow>[] = [
@@ -49,6 +60,20 @@ export function ThemeCategoriesTab() {
     },
     { key: "count", header: "Themes", render: (r) => <span className="tabular-nums">{r.themes.length}</span>, sortValue: (r) => r.themes.length, className: "text-right" },
     { key: "names", header: "Which themes", render: (r) => (r.themes.length ? <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> : <span className="text-zinc-400">—</span>) },
+    { key: "storeCount", header: "On the Theme Store", render: (r) => <span className="tabular-nums">{r.storeThemes.length.toLocaleString()}</span>, sortValue: (r) => r.storeThemes.length, className: "text-right" },
+    {
+      key: "storeNames",
+      header: "Theme Store themes",
+      render: (r) =>
+        r.storeThemes.length ? (
+          <details className="text-xs text-zinc-600 dark:text-zinc-400">
+            <summary className="cursor-pointer text-primary">Show {r.storeThemes.length.toLocaleString()}</summary>
+            <p className="mt-1 max-w-xl">{r.storeThemes.join(", ")}</p>
+          </details>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
+    },
   ];
 
   return (
