@@ -34,8 +34,12 @@ export function isUpdateMemo(memo: string): boolean {
  * preset ("Gravity | Pearl | ...") is not guessed at: it may be a preset the
  * app doesn't list yet, so it is flagged for review.
  */
-export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
-  const parts = parsed.themeParts;
+/** Which theme a Theme Name line is about, and what is left of the line once the theme's own name is set aside. */
+export type FoundTheme =
+  | { ok: true; theme: ThemeRef; others: string[]; known: string | undefined; saysPreset: boolean }
+  | { ok: false; reason: string };
+
+export function findTheme(parts: string[], themes: ThemeRef[]): FoundTheme {
   const [name] = parts;
   const line = parts.join(" | ");
 
@@ -53,7 +57,13 @@ export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?:
   // The other parts, once the one naming the theme is set aside, are where a preset name would be.
   const others = parts.filter((p, i) => !(fuzzy ? hasWord(p, theme.name) : i === 0));
   const known = others.map((p) => theme.presets.find((preset) => lower(preset) === lower(p))).find(Boolean);
-  const saysPreset = /\bpreset\b/i.test(line);
+  return { ok: true, theme, others, known, saysPreset: /\bpreset\b/i.test(line) };
+}
+
+export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
+  const found = findTheme(parsed.themeParts, themes);
+  if (!found.ok) return found;
+  const { theme, others, known, saysPreset } = found;
   const second = others[0];
 
   if (known || saysPreset) return { ok: true, themeId: theme.id, themeName: theme.name, kind: "preset", preset: known ?? (saysPreset ? (others.find((p) => !/\bpreset\b/i.test(p)) ?? null) : null) };

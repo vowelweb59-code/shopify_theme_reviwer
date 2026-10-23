@@ -25,6 +25,8 @@ const chatReportSchema = new Schema(
     status: { type: String, enum: CHAT_REPORT_STATUSES, required: true },
     reason: { type: String, default: null },
     rawText: { type: String, default: "" },
+    // Classified once by scripts/classify-existing-reports.ts (the monthly development lists): re-checks leave it alone.
+    locked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

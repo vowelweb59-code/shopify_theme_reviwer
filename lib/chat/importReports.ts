@@ -195,7 +195,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
 export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
   const ctx = await loadContext();
   // The flagged ones, plus preset reports not yet logged as hours (a preset update on a finished theme is logged on its Update project).
-  const flagged = await ChatReport.find({ $or: [{ status: "needs_review" }, { kind: "preset", projectId: null }] }).lean();
+  const flagged = await ChatReport.find({ locked: { $ne: true }, $or: [{ status: "needs_review" }, { kind: "preset", projectId: null }] }).lean();
 
   const operations: Record<string, unknown>[] = [];
   const entries: Record<string, unknown>[] = [];
