@@ -29,8 +29,8 @@ export type OutcomeEntry = { projectId: string; name: string; round: number | nu
 export type Outcomes = { approved: number; rejected: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 /**
- * Who reported time on which theme (from the Google Chat reports). Once a theme has any reports, a round only counts for the
- * people who worked on it; a theme with no reports yet (older history) counts everyone on its rounds, as before.
+ * Who reported time on which theme (from the Google Chat reports). Once a theme has any reports, its current round only counts
+ * for the people who worked on it; its earlier rounds, and a theme with no reports yet, count everyone listed on them.
  */
 export type WorkedOn = { themesWithReports: Set<string>; byTheme: Map<string, Set<string>> };
 
@@ -51,7 +51,8 @@ export function countOutcomes(projects: RoundsOf[], designationById: Map<string,
       const entry: OutcomeEntry = { projectId: String(project._id ?? ""), name: project.name ?? "", round: earlier.length > 0 ? i + 1 : null };
       for (const m of round.members) {
         if (isExcludedFromRound(round, designationById.get(String(m.memberId)))) continue;
-        if (skippedForNotWorking(project.themeId, String(m.memberId), designationById.get(String(m.memberId)), worked)) continue;
+        // Only the current round is checked against the time reports: they cover recent work, and earlier rounds can predate them.
+        if (i === earlier.length && skippedForNotWorking(project.themeId, String(m.memberId), designationById.get(String(m.memberId)), worked)) continue;
         const tally = out.get(String(m.memberId)) ?? { approved: 0, rejected: 0, approvedIn: [], rejectedIn: [] };
         if (round.status === "live") {
           tally.approved++;

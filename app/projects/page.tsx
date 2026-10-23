@@ -207,7 +207,7 @@ export default function ProjectsPage() {
   const [autoSync, setAutoSync] = useState(false);
   const [chatNotice, setChatNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [portalTab, setPortalTab] = useState<Portal | "none">(PORTALS[0]);
-  const [typeFilter, setTypeFilter] = useState<ProjectType | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<ProjectType>(PROJECT_TYPES[0]);
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -335,7 +335,7 @@ export default function ProjectsPage() {
   // Projects with no portal yet (e.g. made before portals existed) get their own tab, shown only while there are any.
   const unassigned = projects.filter((p) => !p.portal).length;
   const inPortal = projects.filter((p) => (portalTab === "none" ? !p.portal : p.portal === portalTab));
-  const visible = typeFilter === "all" ? inPortal : inPortal.filter((p) => p.type === typeFilter);
+  const visible = inPortal.filter((p) => p.type === typeFilter);
   const countOf = (t: ProjectType) => inPortal.filter((p) => p.type === t).length;
   const portalCount = (p: Portal) => projects.filter((x) => x.portal === p).length;
 
@@ -390,7 +390,7 @@ export default function ProjectsPage() {
 
       {projects.length > 0 && (
         <div role="tablist" aria-label="Project type" className="flex flex-wrap gap-2">
-          {(["all", ...PROJECT_TYPES] as const).map((t) => {
+          {PROJECT_TYPES.map((t) => {
             const active = typeFilter === t;
             return (
               <button
@@ -403,7 +403,7 @@ export default function ProjectsPage() {
                   active ? "border-transparent bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
                 }`}
               >
-                {t === "all" ? "All" : PROJECT_TYPE_LABELS[t]} ({t === "all" ? inPortal.length : countOf(t)})
+                {PROJECT_TYPE_LABELS[t]} ({countOf(t)})
               </button>
             );
           })}
