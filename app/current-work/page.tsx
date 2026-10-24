@@ -7,6 +7,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { formatDateTime } from "@/app/_components/formatDate";
 import { useApi } from "@/app/analytics/_components/useApi";
+import { MissedReports } from "./_components/MissedReports";
 
 type Kind = "theme" | "preset" | "update" | null;
 type Item = { work: string; kind: Kind; memo: string; minutes: number };
@@ -135,6 +136,8 @@ export default function CurrentWorkPage() {
           <ResponsiveTable columns={columns} rows={data.unmatched} rowKey={(p) => `u-${p.name}`} theadClassName="bg-primary-tint text-primary-tint-text" />
         </section>
       )}
+
+      <MissedReports />
     </PageContainer>
   );
 }

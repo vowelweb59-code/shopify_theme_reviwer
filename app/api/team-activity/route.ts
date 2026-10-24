@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { ChatReport } from "@/models/chat-report";
-import { TeamMember } from "@/models/team-member";
+import { listTrackedMembers, dayKey, todayInIst } from "@/lib/chat/teamActivity";
 
 // What each team member is working on now: their latest time report in the Theme Status Group, plus everything they reported the same day.
 const WINDOW_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
-// People left off this page by name (only here; the Team page and their stored reports are unchanged).
-const HIDDEN_NAMES = new Set(["dharmandra"]);
-const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 type Report = { memberId: unknown; sender: string; date: Date; postedAt: Date | null; createdAt: Date; themeName: string; kind: "theme" | "preset" | "update" | null; preset: string | null; memo: string; minutes: number };
-
-const dayKey = (d: Date) => d.toISOString().slice(0, 10);
 
 /** What the report is work on: the theme being built, one of its presets, or its Update project. */
 function workLabel(r: Report): string {
@@ -25,14 +20,14 @@ export async function GET() {
   await connectToDatabase();
   const since = new Date(Date.now() - WINDOW_DAYS * DAY_MS);
   const [members, reports] = await Promise.all([
-    TeamMember.find().select("name designation").sort({ name: 1 }).lean<{ _id: unknown; name: string; designation: string }[]>(),
+    listTrackedMembers(),
     ChatReport.find({ date: { $gte: since } }).select("memberId sender date postedAt createdAt themeName kind preset memo minutes").lean<Report[]>(),
   ]);
 
   // Newest first: by day, then by the time posted within the day.
   const at = (r: Report) => (r.postedAt ?? r.createdAt).getTime();
   reports.sort((a, b) => b.date.getTime() - a.date.getTime() || at(b) - at(a));
-  const todayIst = dayKey(new Date(Date.now() + IST_OFFSET_MS));
+  const todayIst = todayInIst();
 
   const byMember = new Map<string, Report[]>();
   const unmatched = new Map<string, Report[]>();
@@ -66,8 +61,7 @@ export async function GET() {
 
   return NextResponse.json({
     todayIst,
-    // Product Managers and the names above are left off this page.
-    people: members.filter((m) => !/product\s*manager/i.test(m.designation) && !HIDDEN_NAMES.has(m.name.trim().toLowerCase())).map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
+    people: members.map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
     unmatched: [...unmatched].map(([sender, list]) => person(sender, null, list)),
   });
 }
