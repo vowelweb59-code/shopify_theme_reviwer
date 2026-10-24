@@ -58,7 +58,7 @@ export async function syncSpace(options: { all?: boolean } = {}): Promise<SyncRe
     const messages = await listSpaceMessages(space, accessToken, options.all ? null : (connection.lastMessageAt ?? null), memberNames);
     const reports = messages.filter((m) => looksLikeReport(m.text));
 
-    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: m.createTime.slice(0, 10) })));
+    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: m.createTime.slice(0, 10), postedAt: m.createTime })));
 
     const newest = messages.reduce<Date | null>((latest, m) => {
       const at = new Date(m.createTime);

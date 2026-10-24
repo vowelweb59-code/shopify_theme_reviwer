@@ -14,6 +14,8 @@ const chatReportSchema = new Schema(
     sender: { type: String, default: "", trim: true },
     memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
     date: { type: Date, required: true },
+    // When the message was posted in the space (null for pasted reports and ones imported before this was kept); orders a person's reports within a day.
+    postedAt: { type: Date, default: null },
     themeName: { type: String, default: "", trim: true },
     themeId: { type: Schema.Types.ObjectId, ref: "Theme", default: null },
     // theme: design/development work; preset: preset work; update: theme-update work, logged as hours on the theme's Theme Update project.

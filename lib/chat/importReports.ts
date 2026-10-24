@@ -15,6 +15,8 @@ export type ImportInput = {
   text: string;
   /** The day the message was posted (YYYY-MM-DD); used for a report that has no date of its own. */
   postedOn?: string;
+  /** The exact time the message was posted (ISO), kept on the report. */
+  postedAt?: string;
 };
 export type ImportSummary = {
   created: number;
@@ -90,7 +92,7 @@ type Built = {
 };
 
 /** Classifies one report text: who, which theme, theme / preset / update, and whether it can be logged. Null when the text isn't a usable report. */
-function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context, postedOn?: string): Built | { error: string } {
+function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context, postedOn?: string, postedAt?: string): Built | { error: string } {
   const parsed = parseReport(text, postedOn);
   if (!parsed.ok) return { error: parsed.error };
   const theme = resolveTheme(parsed.value, ctx.themeRefs, { updatesAndPresetsOnly: memberId !== null && ctx.updatesOnly.has(memberId) });
@@ -118,6 +120,7 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
       sender,
       memberId,
       date,
+      postedAt: postedAt ? new Date(postedAt) : null,
       themeName: parsed.value.themeParts[0],
       themeId: theme.ok ? theme.themeId : null,
       kind: theme.ok ? theme.kind : null,
@@ -155,7 +158,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     // A message listing several themes is stored per theme, unless it was already stored whole (an earlier import): then it is left as it is.
     return splitReports(input.text).flatMap((chunk) => {
       const wholeKey = reportKey(memberId ?? sender, chunk);
-      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, key: reportKey(memberId ?? sender, text), wholeKey }));
+      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, postedAt: input.postedAt, key: reportKey(memberId ?? sender, text), wholeKey }));
     });
   });
   const stored = new Set((await ChatReport.find({ key: { $in: candidates.flatMap((c) => [c.key, c.wholeKey]) } }).select("key").lean()).map((r) => r.key as string));
@@ -166,13 +169,13 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
   const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const seen = new Set<string>();
 
-  for (const { text, memberId, sender, key, postedOn, wholeKey } of candidates) {
+  for (const { text, memberId, sender, key, postedOn, postedAt, wholeKey } of candidates) {
     if (stored.has(key) || stored.has(wholeKey) || seen.has(key)) {
       summary.alreadyImported++;
       continue;
     }
     seen.add(key);
-    const built = buildReport(text, memberId, sender, key, ctx, postedOn);
+    const built = buildReport(text, memberId, sender, key, ctx, postedOn, postedAt);
     if ("error" in built) {
       // Nothing usable to store (no date or hours): report it back without saving.
       summary.needsReview.push({ text, reason: built.error });
