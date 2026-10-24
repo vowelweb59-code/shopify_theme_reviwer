@@ -64,7 +64,8 @@ export async function GET() {
 
   return NextResponse.json({
     todayIst,
-    people: members.map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
+    // Product Managers are left off this page (only here; the Team page and their stored reports are unchanged).
+    people: members.filter((m) => !/product\s*manager/i.test(m.designation)).map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
     unmatched: [...unmatched].map(([sender, list]) => person(sender, null, list)),
   });
 }
