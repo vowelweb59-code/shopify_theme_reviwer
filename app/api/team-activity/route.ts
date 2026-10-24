@@ -6,6 +6,8 @@ import { TeamMember } from "@/models/team-member";
 // What each team member is working on now: their latest time report in the Theme Status Group, plus everything they reported the same day.
 const WINDOW_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
+// People left off this page by name (only here; the Team page and their stored reports are unchanged).
+const HIDDEN_NAMES = new Set(["dharmandra"]);
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 type Report = { memberId: unknown; sender: string; date: Date; postedAt: Date | null; createdAt: Date; themeName: string; kind: "theme" | "preset" | "update" | null; preset: string | null; memo: string; minutes: number };
@@ -64,8 +66,8 @@ export async function GET() {
 
   return NextResponse.json({
     todayIst,
-    // Product Managers are left off this page (only here; the Team page and their stored reports are unchanged).
-    people: members.filter((m) => !/product\s*manager/i.test(m.designation)).map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
+    // Product Managers and the names above are left off this page.
+    people: members.filter((m) => !/product\s*manager/i.test(m.designation) && !HIDDEN_NAMES.has(m.name.trim().toLowerCase())).map((m) => person(m.name, m.designation, byMember.get(String(m._id)) ?? [])),
     unmatched: [...unmatched].map(([sender, list]) => person(sender, null, list)),
   });
 }
