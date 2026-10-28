@@ -84,7 +84,7 @@ export function SuggestedAppsTab() {
       <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Apps suggested by Theme Store themes</h2>
       <p className="max-w-3xl text-sm text-zinc-500">
         Some theme pages on themes.shopify.com show a &ldquo;More for your store. Made for your theme.&rdquo; section with an app from the theme&apos;s own developer. This maps every Theme Store theme to that
-        app. It is filled by <strong>Refresh Theme Store</strong> in the Theme Categories tab, so themes added to the store later appear (and get checked) on the next refresh.
+        app. The Theme Store is re-read automatically about once a day (new themes are picked up and checked then; a theme&apos;s page is re-read at least weekly). <strong>Refresh Theme Store</strong> in the Theme Categories tab does it on demand.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">

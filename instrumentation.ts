@@ -1,6 +1,6 @@
 // Next.js server-boot hook (stable, no config flag needed as of Next 15+).
 // Starts the background jobs once per server process — see lib/audit/recovery.ts (fails audits a restart cut off),
-// lib/demoStore/scheduler.ts, lib/themes/rankingScheduler.ts and
+// lib/demoStore/scheduler.ts, lib/themes/rankingScheduler.ts, lib/themeStore/scheduler.ts (daily Theme Store catalog read) and
 // lib/chat/scheduler.ts (Theme Status Group, every 5 minutes) and
 // lib/analytics/sync/scheduler.ts (GA4 sync). Guarded
 // to the nodejs runtime since these touch MongoDB/setTimeout, neither
@@ -13,6 +13,7 @@ export async function register() {
       ["audit-recovery", async () => (await import("./lib/audit/recovery")).startAuditRecovery()],
       ["demo-store", async () => (await import("./lib/demoStore/scheduler")).startDemoStoreScheduler()],
       ["theme-ranking", async () => (await import("./lib/themes/rankingScheduler")).startThemeRankingScheduler()],
+      ["theme-store", async () => (await import("./lib/themeStore/scheduler")).startThemeStoreScheduler()],
       ["chat-sync", async () => (await import("./lib/chat/scheduler")).startChatSyncScheduler()],
       ["ga4-sync", async () => (await import("./lib/analytics/sync/scheduler")).startGa4SyncScheduler()],
     ];

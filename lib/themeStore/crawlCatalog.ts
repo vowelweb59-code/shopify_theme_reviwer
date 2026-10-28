@@ -169,9 +169,9 @@ async function crawlDetails(): Promise<void> {
   }
 }
 
-/** Starts a full read of the Theme Store in the background (no-op if one is already running). */
-export function startThemeStoreCrawl(): void {
-  if (crawl.running) return;
+/** Starts a full read of the Theme Store in the background (no-op if one is already running). Resolves when the read ends, whether or not it was this call that started it. */
+export function startThemeStoreCrawl(): Promise<void> {
+  if (crawl.running) return crawl.running;
   crawl.errors = [];
   crawl.done = 0;
   crawl.total = 0;
@@ -193,4 +193,5 @@ export function startThemeStoreCrawl(): void {
       crawl.finishedAt = new Date();
       crawl.running = null;
     });
+  return crawl.running;
 }
