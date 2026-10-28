@@ -3,14 +3,14 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { INDUSTRIES } from "@/lib/themes/industries";
 import { fetchThemeStoreListingBySlug } from "@/lib/themes/themeStoreFeatures";
 import { ThemeStoreTheme } from "@/models/theme-store-theme";
-import { parseCatalogCards, parseDesigner, parseLastPage, type CatalogCard } from "./parseCatalog";
+import { parseCatalogCards, parseCompanionApp, parseDesigner, parseLastPage, type CatalogCard } from "./parseCatalog";
 
 // Reads every theme on themes.shopify.com in three steps, in the background,
 // with progress the tab polls (same shape as lib/partners/crawlPartners.ts):
 //   1. the whole catalog, page by page — name, price, rating, presets, order;
 //   2. one pass per industry collection — which categories each theme is in;
 //   3. each theme's own page — designer, features, reviews, latest version.
-// Step 3 only reads themes not read in the last week.
+// Step 3 only reads themes not read in the last week (or not yet checked for a suggested app).
 
 const LISTING = "https://themes.shopify.com/themes";
 const HEADERS = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" };
@@ -122,7 +122,7 @@ async function crawlCategories(): Promise<void> {
 
 async function crawlDetails(): Promise<void> {
   crawl.phase = "details";
-  const stale = await ThemeStoreTheme.find({ $or: [{ detailAt: null }, { detailAt: { $lt: new Date(Date.now() - DETAIL_FRESH_MS) } }] })
+  const stale = await ThemeStoreTheme.find({ $or: [{ detailAt: null }, { companionAppAt: null }, { detailAt: { $lt: new Date(Date.now() - DETAIL_FRESH_MS) } }] })
     .sort({ rank: 1 })
     .select("slug")
     .lean<{ slug: string }[]>();
@@ -151,6 +151,8 @@ async function crawlDetails(): Promise<void> {
             positivePercent: result.positivePercent,
             latestVersion: result.latestVersion,
             latestVersionReleasedAt: result.latestVersionReleasedAt,
+            companionApp: result.html ? parseCompanionApp(result.html) : null,
+            companionAppAt: new Date(),
             detailAt: new Date(),
             detailError: null,
           },

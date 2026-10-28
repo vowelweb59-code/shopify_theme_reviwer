@@ -15,6 +15,8 @@ type Row = {
   latestVersion: string | null;
   latestVersionReleasedAt: string | null;
   features: string[];
+  companionApp?: { name: string; subtitle: string | null; url: string; pricing: string | null } | null;
+  companionAppAt?: Date | null;
   rank: number | null;
   detailAt: Date | null;
   lastSeenAt: Date;
@@ -41,6 +43,8 @@ export async function GET() {
       latestVersion: r.latestVersion,
       latestVersionReleasedAt: r.latestVersionReleasedAt,
       features: r.features,
+      companionApp: r.companionApp ?? null,
+      companionAppChecked: Boolean(r.companionAppAt),
       // Position among main themes only; the stored rank counts every preset card too.
       rank: i + 1,
     })),

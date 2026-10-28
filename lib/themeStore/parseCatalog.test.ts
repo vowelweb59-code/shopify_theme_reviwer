@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogCards, parseDesigner, parseLastPage } from "./parseCatalog";
+import { parseCatalogCards, parseCompanionApp, parseDesigner, parseLastPage } from "./parseCatalog";
 
 const card = (base: string, preset: string, title: string, extra: string) =>
   `<a aria-label="Details" href="/themes/${base}/presets/${preset}?surface_inter_position=1&amp;surface_intra_position=1&amp;surface_type=all"><picture></picture><div><p class="t">${title}</p><div><data value="${extra}">x</data></div></div></a>`;
@@ -29,5 +29,15 @@ describe("parseLastPage / parseDesigner", () => {
   it("reads the designer", () => {
     expect(parseDesigner(`<p class="x">\n  by <a class="l" href="#ReleaseNotes">Archetype Themes</a></p>`)).toBe("Archetype Themes");
     expect(parseDesigner("<p>nothing</p>")).toBeNull();
+  });
+});
+
+describe("parseCompanionApp", () => {
+  it("reads the suggested app off a theme page", () => {
+    const html = `<section data-companion-app-section><a href="https://apps.shopify.com/crawl-hunt?x=1" data-companion-app-listing-link><span data-companion-app-name>CrawlHunt - Fix SEO</span><span data-companion-app-subtitle>Improve &amp; fix</span></a><dd data-companion-app-pricing-summary>Free plan available</dd></section>`;
+    expect(parseCompanionApp(html)).toEqual({ name: "CrawlHunt - Fix SEO", subtitle: "Improve & fix", url: "https://apps.shopify.com/crawl-hunt", pricing: "Free plan available" });
+  });
+  it("is null when the page has no such section", () => {
+    expect(parseCompanionApp("<p>Features</p>")).toBeNull();
   });
 });

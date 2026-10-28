@@ -104,3 +104,50 @@ export function parseDesigner(html: string): string | null {
   const m = /<p[^>]*>\s*by\s*<a[^>]*href="#ReleaseNotes"[^>]*>([^<]+)<\/a>/.exec(html);
   return m ? m[1].replace(/&amp;/g, "&").replace(/&#39;/g, "'").trim() || null : null;
 }
+
+export type CompanionApp = { name: string; subtitle: string | null; url: string; pricing: string | null };
+
+/**
+ * The "More for your store. Made for your theme." section of a theme's page: the app add-on the theme's developer suggests
+ * (marked with `data-companion-app-*` attributes). Null when the page has no such section — most themes don't.
+ */
+export function parseCompanionApp(html: string): CompanionApp | null {
+  let inSection = false;
+  let url: string | null = null;
+  let capture: "name" | "subtitle" | "pricing" | null = null;
+  const text = { name: "", subtitle: "", pricing: "" };
+
+  const parser = new Parser(
+    {
+      onopentag(_tag, attribs) {
+        if ("data-companion-app-section" in attribs) inSection = true;
+        if (!inSection) return;
+        if ("data-companion-app-listing-link" in attribs && !url) url = attribs.href ?? null;
+        if ("data-companion-app-name" in attribs) capture = "name";
+        else if ("data-companion-app-subtitle" in attribs) capture = "subtitle";
+        else if ("data-companion-app-pricing-summary" in attribs) capture = "pricing";
+        else return;
+      },
+      ontext(chunk) {
+        if (capture) text[capture] += chunk;
+      },
+      onclosetag() {
+        capture = null;
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+
+  const name = text.name.trim();
+  if (!name || !url) return null;
+  let clean: string = url;
+  try {
+    const u = new URL(url);
+    clean = `${u.origin}${u.pathname}`;
+  } catch {
+    /* keep the raw href */
+  }
+  return { name, subtitle: text.subtitle.trim() || null, url: clean, pricing: text.pricing.trim() || null };
+}
