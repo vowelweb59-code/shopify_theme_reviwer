@@ -49,6 +49,9 @@ const projectSchema = new Schema(
     designDays: { type: Number, default: null, min: 0 },
     developmentDays: { type: Number, default: null, min: 0 },
     members: { type: [projectMemberSchema], default: () => [] },
+    // When the project is due (UTC midnight of the picked day); null = not set. Once the project is
+    // Live / Completed the Deadlines page shows its last report date instead (lib/projects/deadlines.ts).
+    deadline: { type: Date, default: null },
     // Earlier submissions, oldest first; kept so rejections stay countable per member.
     rounds: { type: [roundSchema], default: () => [] },
   },
