@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
-import { SalesFileError, matchThemeForTab, parseDelimited, salesFromRows } from "@/lib/sales/parseSalesFile";
+import { SalesFileError, matchThemeForTab, onlyMonth, parseDelimited, parseMonth, salesFromRows } from "@/lib/sales/parseSalesFile";
 import { importSales } from "@/lib/sales/importSales";
 import { startDetection } from "@/lib/sales/detectionJob";
 import { Theme } from "@/models/theme";
@@ -8,16 +8,18 @@ import type { TabResult } from "../route";
 
 const MAX_TEXT_CHARS = 5 * 1024 * 1024;
 
-// POST /api/sales/import/paste — JSON { themeName, text }.
+// POST /api/sales/import/paste — JSON { themeName, text, month? } (`month` "YYYY-MM" imports only that month's rows).
 // `text` is rows copied straight out of the sales sheet (tab-separated when
 // copied from Google Sheets or Excel; CSV also works), with or without the
 // header row. `themeName` is matched to a Themes-module theme the same way
 // a workbook tab name is. Rows already imported are skipped, so pasting the
 // whole tab again only adds the new sales.
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { themeName?: unknown; text?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { themeName?: unknown; text?: unknown; month?: unknown } | null;
   const themeName = typeof body?.themeName === "string" ? body.themeName.trim() : "";
   const text = typeof body?.text === "string" ? body.text.replace(/^﻿/, "") : "";
+  const month = parseMonth(body?.month);
+  if (body?.month && !month) return NextResponse.json({ error: "Month must look like 2026-10." }, { status: 400 });
   if (!themeName) return NextResponse.json({ error: "Enter the main theme name." }, { status: 400 });
   if (!text.trim()) return NextResponse.json({ error: "Paste the sales rows." }, { status: 400 });
   if (text.length > MAX_TEXT_CHARS) return NextResponse.json({ error: "That's more than 5 MB of text. Upload the workbook as .xlsx instead." }, { status: 400 });
@@ -40,9 +42,11 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const result = await importSales(String(theme._id), parsed.sales);
+    const picked = onlyMonth(parsed.sales, month);
+    if (picked.sales.length === 0) return NextResponse.json({ error: `None of the ${parsed.sales.length} pasted rows are from ${month}.` }, { status: 400 });
+    const result = await importSales(String(theme._id), picked.sales);
     startDetection();
-    const tab: TabResult = { tab: "Pasted rows", themeName: theme.name, ...result, rowsRead: parsed.sales.length, skipped: parsed.skipped };
+    const tab: TabResult = { tab: "Pasted rows", themeName: theme.name, ...result, rowsRead: picked.sales.length, skipped: parsed.skipped, otherMonths: picked.otherMonths };
     return NextResponse.json({ tabs: [tab] });
   } catch (err) {
     if (err instanceof SalesFileError) return NextResponse.json({ error: err.message }, { status: 400 });

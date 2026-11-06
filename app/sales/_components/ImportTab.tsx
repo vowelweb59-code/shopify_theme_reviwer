@@ -14,14 +14,43 @@ type TabResult = {
   newStores: number;
   rowsRead: number;
   skipped: number;
+  otherMonths: number;
   error?: string;
 };
 
 const ALL_TABS = "";
 
+/** The month before today, as "YYYY-MM": the month a monthly update is normally for. */
+function lastMonth(): string {
+  const d = new Date();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() - 1);
+  return d.toISOString().slice(0, 7);
+}
+
+function MonthField({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">Only sales from</label>
+      <div className="flex items-center gap-2">
+        <input id={id} type="month" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm" />
+        {value && (
+          <button type="button" onClick={() => onChange("")} className="text-xs text-zinc-500 underline hover:text-primary">
+            All months
+          </button>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-zinc-500">
+        {value ? "Rows from other months are left out, so the whole sheet can be uploaded each month. Dates are read in UTC, as in the sheet." : "Every month in the sheet is imported."}
+      </p>
+    </div>
+  );
+}
+
 export function ImportTab({ onImported }: { onImported: () => void }) {
   const themes = useApi<{ themes: { id: string; name: string; presets: string[] }[] }>("/api/sales/themes");
   const [themeId, setThemeId] = useState(ALL_TABS);
+  const [month, setMonth] = useState(lastMonth);
   const [file, setFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
   const [results, setResults] = useState<TabResult[] | null>(null);
@@ -43,6 +72,7 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
       const body = new FormData();
       if (themeId) body.set("themeId", themeId);
       body.set("file", file);
+      if (month) body.set("month", month);
       const res = await fetch("/api/sales/import", { method: "POST", body });
       const data = (await res.json().catch(() => null)) as { tabs?: TabResult[]; error?: string } | null;
       if (data?.tabs) setResults(data.tabs);
@@ -115,6 +145,7 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
             className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary-tint file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-primary-tint-text"
           />
         </div>
+        <MonthField id="sales-month" value={month} onChange={setMonth} />
         {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
         {results && <ImportResults results={results} />}
         <div className="flex flex-wrap items-center gap-3">
@@ -139,6 +170,7 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
 function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImported: () => void }) {
   const [themeName, setThemeName] = useState("");
   const [text, setText] = useState("");
+  const [month, setMonth] = useState(lastMonth);
   const [pending, setPending] = useState(false);
   const [results, setResults] = useState<TabResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,7 +186,7 @@ function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImporte
       const res = await fetch("/api/sales/import/paste", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ themeName, text }),
+        body: JSON.stringify({ themeName, text, month: month || undefined }),
       });
       const data = (await res.json().catch(() => null)) as { tabs?: TabResult[]; error?: string } | null;
       if (!res.ok) throw new Error(data?.error ?? "Import failed.");
@@ -205,6 +237,7 @@ function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImporte
           />
           <p className="mt-1 text-xs text-zinc-500">Without the header row, shop names and the sheet&apos;s preset columns aren&apos;t read. The preset still comes from the live store check.</p>
         </div>
+        <MonthField id="paste-month" value={month} onChange={setMonth} />
         {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
         {results && <ImportResults results={results} />}
         <div>
@@ -237,6 +270,7 @@ function ImportResults({ results }: { results: TabResult[] }) {
               <span className="text-zinc-600 dark:text-zinc-400">
                 {r.themeName && r.themeName !== r.tab ? ` → ${r.themeName}` : ""}: {r.inserted} new sale{r.inserted === 1 ? "" : "s"}
                 {r.duplicates > 0 && `, ${r.duplicates} already imported`}
+                {r.otherMonths > 0 && `, ${r.otherMonths} from other months left out`}
                 {r.skipped > 0 && `, ${r.skipped} row${r.skipped === 1 ? "" : "s"} without a date or domain ignored`}
               </span>
             )}

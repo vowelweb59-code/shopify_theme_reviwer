@@ -24,6 +24,44 @@ export type ParseResult = { sales: ParsedSale[]; skipped: number; headerRow: num
 
 export class SalesFileError extends Error {}
 
+// Windows-1252 codes for the 0x80-0x9F range, which is where a UTF-8 file read as Windows-1252 turns "(tm)" into "a-euro-etc".
+const CP1252_HIGH = "€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ";
+const MOJIBAKE_RE = /[\u00C2-\u00F4][\u0080-\u00BF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
+
+/**
+ * Repairs text that was UTF-8 but got read as Windows-1252 on its way into the sheet (the "trade mark" and "g with breve"
+ * of a shop name arriving as two or three odd characters). Returns the text unchanged when it doesn't look that way or
+ * doesn't decode cleanly.
+ */
+export function fixMojibake(text: string): string {
+  if (!MOJIBAKE_RE.test(text)) return text;
+  const bytes: number[] = [];
+  for (const ch of text) {
+    const code = ch.codePointAt(0)!;
+    const high = CP1252_HIGH.indexOf(ch);
+    if (code < 0x100) bytes.push(code);
+    else if (high >= 0) bytes.push(0x80 + high);
+    else return text;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes));
+  } catch {
+    return text;
+  }
+}
+
+/** A "YYYY-MM" month (the value of an <input type="month">), or null for anything else. */
+export function parseMonth(value: unknown): string | null {
+  return typeof value === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(value) ? value : null;
+}
+
+/** Keeps only the sales made in `month` (UTC, the sheet's own timezone); `month` null keeps every sale. */
+export function onlyMonth(sales: ParsedSale[], month: string | null): { sales: ParsedSale[]; otherMonths: number } {
+  if (!month) return { sales, otherMonths: 0 };
+  const kept = sales.filter((s) => s.month === month);
+  return { sales: kept, otherMonths: sales.length - kept.length };
+}
+
 const HEADER_ALIASES: Record<string, string[]> = {
   date: ["date", "sale date", "created at", "charge date"],
   shopName: ["shop name", "store name", "shop"],
@@ -251,7 +289,7 @@ export function salesFromRows(rows: string[][], { headerOptional = false } = {})
     sales.push({
       soldAt,
       month: soldAt.toISOString().slice(0, 7),
-      shopName: get(idx.shopName),
+      shopName: fixMojibake(get(idx.shopName)),
       shopDomain,
       country,
       chargeType,
