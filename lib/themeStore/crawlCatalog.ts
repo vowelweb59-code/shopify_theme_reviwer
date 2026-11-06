@@ -81,21 +81,36 @@ async function crawlCatalog(): Promise<void> {
   });
 
   const now = new Date();
+  // The price each theme had before this read, so a change can be added to its price history.
+  const before = new Map(
+    (await ThemeStoreTheme.find({}).select("slug price priceHistory firstSeenAt").lean<{ slug: string; price: number | null; priceHistory?: { price: number; at: Date }[]; firstSeenAt: Date }[]>()).map((r) => [r.slug, r])
+  );
   await ThemeStoreTheme.bulkWrite(
     [...byTheme].map(([slug, t]) => {
       const main = t.base ?? t.first;
+      const prev = before.get(slug);
+      const history = prev?.priceHistory ?? [];
+      const lastKnown = history.length > 0 ? history[history.length - 1].price : (prev?.price ?? null);
+      // A card with no price says nothing about the price. Otherwise record when it differs from the last known price; a theme read
+      // before history existed first gets its old price as the starting point.
+      const entries: { price: number; at: Date }[] = [];
+      if (main.price !== null && main.price !== lastKnown) {
+        if (prev && history.length === 0 && prev.price !== null) entries.push({ price: prev.price, at: prev.firstSeenAt });
+        entries.push({ price: main.price, at: now });
+      } else if (prev && history.length === 0 && main.price !== null) entries.push({ price: main.price, at: prev.firstSeenAt });
       return {
         updateOne: {
           filter: { slug },
           update: {
             // A theme's name comes from its default preset's card; a theme whose default card isn't listed keeps the name its page gave it.
             $set: { ...(t.base ? { name: t.base.name } : {}), price: main.price, isNew: main.isNew, presets: t.presets, rank: t.rank, lastSeenAt: now, ...(main.positivePercent !== null ? { positivePercent: main.positivePercent } : {}) },
-            $setOnInsert: { firstSeenAt: now, ...(t.base ? {} : { name: titleCase(slug) }) },
+            $setOnInsert: { firstSeenAt: now, ...(t.base ? {} : { name: titleCase(slug) }), ...(prev ? {} : { priceHistory: main.price !== null ? [{ price: main.price, at: now }] : [] }) },
+            ...(prev && entries.length > 0 ? { $push: { priceHistory: { $each: entries } } } : {}),
           },
           upsert: true,
         },
       };
-    })
+    }) as never
   );
   crawl.themesSeen = byTheme.size;
 }

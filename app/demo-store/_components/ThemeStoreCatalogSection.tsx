@@ -1,11 +1,13 @@
 "use client";
 
-import { Download, ExternalLink, RefreshCw, Store } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, ExternalLink, RefreshCw, Store } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
+import { Modal } from "@/app/_components/ui/Modal";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { formatDateTime } from "@/app/_components/formatDate";
+import { LineChart } from "@/app/themes/[themeId]/_components/LineChart";
 import { useApi } from "@/app/analytics/_components/useApi";
 import { INDUSTRIES, industryLabel } from "@/lib/themes/industries";
 
@@ -14,6 +16,8 @@ type StoreTheme = {
   name: string;
   url: string;
   price: number | null;
+  /** Every price seen, oldest first; an entry only when the price changed. */
+  priceHistory: { price: number; at: string }[];
   isNew: boolean;
   presetCount: number;
   industries: string[];
@@ -32,6 +36,42 @@ type Progress = { running: boolean; phase: "catalog" | "categories" | "details" 
 const PHASE_LABEL = { catalog: "Reading the catalog", categories: "Reading categories", details: "Reading theme pages" } as const;
 const dash = <span className="text-zinc-400">—</span>;
 const priceLabel = (p: number | null) => (p === null ? "—" : p === 0 ? "Free" : `$${p.toLocaleString()}`);
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+
+/** Price history as a step line: the old price holds until the moment of the change, then jumps. */
+function PriceHistory({ theme }: { theme: StoreTheme }) {
+  const [now] = useState(() => Date.now());
+  const h = theme.priceHistory;
+  const points: { x: number; y: number }[] = [];
+  h.forEach((e, i) => {
+    const x = new Date(e.at).getTime();
+    if (i > 0) points.push({ x, y: h[i - 1].price });
+    points.push({ x, y: e.price });
+  });
+  if (h.length > 0) points.push({ x: Math.max(now, new Date(h[h.length - 1].at).getTime()), y: h[h.length - 1].price });
+  const changes = h.slice(1).map((e, i) => ({ ...e, from: h[i].price })).reverse();
+  return (
+    <div className="flex flex-col gap-3">
+      <LineChart series={[{ key: "price", label: "Price", points }]} yTickFormat={(v) => `$${Math.round(v)}`} xTickFormat={(ms) => shortDate(new Date(ms).toISOString())} yFloor={0} emptyMessage="No price recorded yet." />
+      {h.length > 0 && <p className="text-xs text-zinc-500">Tracked since {shortDate(h[0].at)}, starting at {priceLabel(h[0].price)}.</p>}
+      {changes.length === 0 ? (
+        <p className="text-sm text-zinc-500">The price hasn&apos;t changed since tracking began.</p>
+      ) : (
+        <ul className="flex flex-col gap-1 text-sm">
+          {changes.map((c) => (
+            <li key={c.at} className="flex items-center justify-between gap-3">
+              <span className="text-zinc-500">{shortDate(c.at)}</span>
+              <span className="tabular-nums">
+                {priceLabel(c.from)} → <strong>{priceLabel(c.price)}</strong>
+                <span className={c.price > c.from ? "ml-2 text-status-fail-text" : "ml-2 text-green-600"}>{c.price > c.from ? "+" : "−"}${Math.abs(c.price - c.from).toLocaleString()}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function ThemeStoreCatalogSection() {
   const { data, loading, error, reload } = useApi<StoreData>("/api/theme-store");
@@ -40,6 +80,7 @@ export function ThemeStoreCatalogSection() {
   const [price, setPrice] = useState("");
   const [query, setQuery] = useState("");
   const [startError, setStartError] = useState<string | null>(null);
+  const [historyFor, setHistoryFor] = useState<StoreTheme | null>(null);
 
   // Poll while a crawl runs (and once on mount, to pick up one already running).
   const running = progress?.running ?? false;
@@ -127,7 +168,19 @@ export function ThemeStoreCatalogSection() {
       sortValue: (t) => t.name.toLowerCase(),
     },
     { key: "designer", header: "Publisher", render: (t) => (t.designer ? <span>{t.designer}</span> : dash), sortValue: (t) => (t.designer ?? "~").toLowerCase() },
-    { key: "price", header: "Price", render: (t) => <span className="tabular-nums">{priceLabel(t.price)}</span>, sortValue: (t) => t.price ?? -1, className: "text-right" },
+    {
+      key: "price",
+      header: "Price",
+      render: (t) => {
+        const last = t.priceHistory.length > 1 ? t.priceHistory[t.priceHistory.length - 1] : null;
+        const prev = last ? t.priceHistory[t.priceHistory.length - 2].price : null;
+        return (
+          <button type="button" onClick={() => setHistoryFor(t)} title="Price history" className="inline-flex items-center gap-1 tabular-nums underline-offset-2 hover:text-primary hover:underline">
+            {last && prev !== null && (last.price > prev ? <ArrowUp className="h-3 w-3 text-status-fail-text" aria-label="Price went up" /> : <ArrowDown className="h-3 w-3 text-green-600" aria-label="Price went down" />)}
+            {priceLabel(t.price)}
+          </button>
+        );
+      }, sortValue: (t) => t.price ?? -1, className: "text-right" },
     { key: "positive", header: "Positive", render: (t) => <span className="tabular-nums">{t.positivePercent === null ? "—" : `${t.positivePercent}%`}</span>, sortValue: (t) => t.positivePercent ?? -1, className: "text-right" },
     { key: "reviews", header: "Reviews", render: (t) => <span className="tabular-nums">{t.reviewCount?.toLocaleString() ?? "—"}</span>, sortValue: (t) => t.reviewCount ?? -1, className: "text-right" },
     { key: "presets", header: "Presets", render: (t) => <span className="tabular-nums">{t.presetCount}</span>, sortValue: (t) => t.presetCount, className: "text-right" },
@@ -222,6 +275,9 @@ export function ThemeStoreCatalogSection() {
             {shown.length.toLocaleString()} themes shown
             {(data?.detailsPending ?? 0) > 0 ? ` · ${data!.detailsPending} theme pages not read yet` : ""}
           </p>
+          <Modal open={historyFor !== null} onOpenChange={(o) => !o && setHistoryFor(null)} title={historyFor ? `${historyFor.name} price history` : "Price history"}>
+            {historyFor && <PriceHistory theme={historyFor} />}
+          </Modal>
           <ResponsiveTable columns={columns} rows={shown} rowKey={(t) => t.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={50} emptyMessage="No themes match." />
 
           <section className="mt-6 flex flex-col gap-3">

@@ -9,6 +9,8 @@ const themeStoreThemeSchema = new Schema(
     name: { type: String, required: true },
     /** USD; 0 = free. */
     price: { type: Number, default: null },
+    /** Every price the store has shown for the theme, oldest first; an entry is added only when the price changes (the first entry is the price when tracking began). */
+    priceHistory: { type: [{ _id: false, price: Number, at: Date }], default: [] },
     isNew: { type: Boolean, default: false },
     /** Presets (style variants) the theme has, the default one included. */
     presets: { type: [{ _id: false, slug: String, name: String }], default: [] },

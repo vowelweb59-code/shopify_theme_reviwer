@@ -7,6 +7,7 @@ type Row = {
   name: string;
   price: number | null;
   isNew: boolean;
+  priceHistory?: { price: number; at: Date }[];
   presets: { slug: string; name: string }[];
   industries: string[];
   designer: string | null;
@@ -34,6 +35,7 @@ export async function GET() {
       name: r.name,
       url: `https://themes.shopify.com/themes/${r.slug}`,
       price: r.price,
+      priceHistory: (r.priceHistory ?? []).map((h) => ({ price: h.price, at: h.at })),
       isNew: r.isNew,
       presetCount: r.presets.length,
       industries: r.industries,
