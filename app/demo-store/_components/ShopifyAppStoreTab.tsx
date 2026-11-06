@@ -7,7 +7,8 @@ import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { useApi } from "@/app/analytics/_components/useApi";
-import type { Analytics, CategoryInsight, PricingMix, StageInsight } from "@/lib/shopifyApps/analytics";
+import type { Analytics, CategoryInsight, Level, PricingMix, StageInsight } from "@/lib/shopifyApps/analytics";
+import { TOPIC_LABEL } from "@/lib/shopifyApps/topics";
 
 type StageKey = StageInsight["key"];
 type Pricing = keyof PricingMix;
@@ -22,10 +23,11 @@ type StoreApp = {
   builtForShopify: boolean;
   categories: string[];
   stages: StageKey[];
+  topics: string[];
   developer: string | null;
   launchedAt: string | null;
 };
-type StoreData = { lastCrawledAt: string | null; analytics: Analytics; categoryLabels: Record<string, string>; apps: StoreApp[] };
+type StoreData = { lastCrawledAt: string | null; analytics: Analytics; levels: { niche: Analytics; topic: Analytics }; categoryLabels: Record<string, string>; apps: StoreApp[] };
 type Progress = { running: boolean; phase: "tree" | "listings" | "details" | null; total: number; done: number; current: string | null; appsSeen: number; errors: string[] };
 
 const PHASE_LABEL = { tree: "Reading the category tree", listings: "Reading every category's apps", details: "Reading app pages (launch date, star split)" } as const;
@@ -165,6 +167,8 @@ export function ShopifyAppStoreTab() {
   const [startError, setStartError] = useState<string | null>(null);
   const [view, setView] = useState<"opportunities" | "apps">("opportunities");
   const [stage, setStage] = useState<StageKey | "">("");
+  const [level, setLevel] = useState<Level>("niche");
+  const [topic, setTopic] = useState("");
   const [category, setCategory] = useState("");
   const [pricing, setPricing] = useState<Pricing | "">("");
   const [query, setQuery] = useState("");
@@ -206,18 +210,22 @@ export function ShopifyAppStoreTab() {
   const labels = data?.categoryLabels;
   const stageLabel = (k: StageKey) => analytics?.stages.find((s) => s.key === k)?.label ?? k;
 
-  const categories = useMemo(() => (analytics?.categories ?? []).filter((c) => !stage || c.stage === stage), [analytics, stage]);
+  // The table groups apps at the chosen level; the stage cards and the app list always use Shopify categories.
+  const levelData = level === "category" ? analytics : data?.levels[level];
+  const categories = useMemo(() => (levelData?.categories ?? []).filter((c) => !stage || c.stage === stage), [levelData, stage]);
   const shownApps = useMemo(() => {
     const q = query.trim().toLowerCase();
     return apps.filter(
       (a) =>
         (!stage || a.stages.includes(stage)) &&
         (!category || a.categories.includes(category)) &&
+        (!topic || a.topics.includes(topic)) &&
         (!pricing || a.pricing === pricing) &&
         (!q || a.name.toLowerCase().includes(q) || (a.developer ?? "").toLowerCase().includes(q) || (a.tagline ?? "").toLowerCase().includes(q))
     );
-  }, [apps, stage, category, pricing, query]);
-  const openCategory = analytics?.categories.find((c) => c.slug === open) ?? null;
+  }, [apps, stage, category, topic, pricing, query]);
+  const openCategory = levelData?.categories.find((c) => c.slug === open) ?? null;
+  const GROUP_HEADER = { category: "Category (Shopify’s)", niche: "Niche (category › topic)", topic: "Topic (all categories)" }[level];
 
   function exportCsv() {
     const cell = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -237,7 +245,7 @@ export function ShopifyAppStoreTab() {
     { key: "gap", header: "Opportunity", render: (c) => (c.gap === null ? <span className="text-xs text-zinc-400">too few apps</span> : <ScoreBar value={c.gap} />), sortValue: (c) => c.gap ?? -1 },
     {
       key: "category",
-      header: "Category (the job)",
+      header: GROUP_HEADER,
       render: (c) => (
         <button type="button" onClick={() => setOpen(c.slug)} className="text-left font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
           {c.label}
@@ -272,6 +280,7 @@ export function ShopifyAppStoreTab() {
     },
     { key: "dev", header: "Developer", render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash), sortValue: (a) => (a.developer ?? "~").toLowerCase() },
     { key: "stages", header: "Lifecycle stage", render: (a) => (a.stages.length ? <span className="text-xs">{a.stages.map(stageLabel).join(" · ")}</span> : dash) },
+    { key: "topics", header: "Topics", render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.topics.map((k) => TOPIC_LABEL[k]).join(", ") || "—"}</span> },
     { key: "cats", header: "Categories", render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.categories.map((s) => labels?.[s] ?? s).join(", ") || "—"}</span> },
     { key: "rating", header: "★", render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>), sortValue: (a) => a.rating ?? -1, className: "text-right" },
     { key: "reviews", header: "Reviews", render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>, sortValue: (a) => a.reviewCount, className: "text-right" },
@@ -362,6 +371,17 @@ export function ShopifyAppStoreTab() {
 
             {view === "opportunities" ? (
               <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    Group apps by
+                    <select value={level} onChange={(e) => { setLevel(e.target.value as Level); setOpen(null); }} aria-label="Grouping level" className={select}>
+                      <option value="category">Shopify category</option>
+                      <option value="niche">Niche (category › topic)</option>
+                      <option value="topic">Topic across categories</option>
+                    </select>
+                  </label>
+                  <span className="text-xs text-zinc-500">{num(categories.length)} groups{level !== "category" ? " with at least 5 apps. Topics are read from each app’s name and tagline." : ""}</span>
+                </div>
                 {openCategory && <WhyPanel category={openCategory} onClose={() => setOpen(null)} />}
                 <ResponsiveTable columns={opportunityColumns} rows={categories} rowKey={(c) => c.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} emptyMessage="No categories." />
               </>
@@ -378,6 +398,14 @@ export function ShopifyAppStoreTab() {
                           {c.label}
                         </option>
                       ))}
+                  </select>
+                  <select value={topic} onChange={(e) => setTopic(e.target.value)} aria-label="Topic" className={select}>
+                    <option value="">All topics</option>
+                    {Object.entries(TOPIC_LABEL).sort((a, b) => a[1].localeCompare(b[1])).map(([k, label]) => (
+                      <option key={k} value={k}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                   <select value={pricing} onChange={(e) => setPricing(e.target.value as Pricing | "")} aria-label="Pricing" className={select}>
                     <option value="">Any pricing</option>

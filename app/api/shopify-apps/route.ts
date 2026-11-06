@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { computeAnalytics, type AppRow } from "@/lib/shopifyApps/analytics";
 import { stagesOfApp } from "@/lib/shopifyApps/lifecycle";
+import { topicsOfApp } from "@/lib/shopifyApps/topics";
 import { pricingModel } from "@/lib/shopifyApps/parseApps";
 import { ShopifyApp, ShopifyAppCategory } from "@/models/shopify-app";
 
@@ -17,6 +18,8 @@ export async function GET() {
   return NextResponse.json({
     lastCrawledAt: rows.reduce<Date | null>((latest, r) => (!latest || r.lastSeenAt > latest ? r.lastSeenAt : latest), null),
     analytics: computeAnalytics(rows, categories),
+    // Finer cuts of the same apps: category › topic, and a topic across categories.
+    levels: { niche: computeAnalytics(rows, categories, new Date(), "niche"), topic: computeAnalytics(rows, categories, new Date(), "topic") },
     categoryLabels: Object.fromEntries(categories.map((c) => [c.slug, c.label])),
     apps: rows.map((r) => ({
       handle: r.handle,
@@ -29,6 +32,7 @@ export async function GET() {
       builtForShopify: r.builtForShopify,
       categories: r.categories,
       stages: stagesOfApp(r.categories),
+      topics: topicsOfApp(r.name, r.tagline),
       developer: r.developer,
       launchedAt: r.launchedAt,
     })),

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeAnalytics, percentileRanks, type AppRow } from "./analytics";
 import { stageOfCategory, stagesOfApp } from "./lifecycle";
+import { topicsOfApp } from "./topics";
 import { parseAppCards, parseAppDetail, parseCategoryLabel, parseCategoryLinks, pricingModel } from "./parseApps";
 
 const cardHtml = (handle: string, name: string, rating: string | null, reviews: number, pricing: string, bfs = false) =>
@@ -86,5 +87,26 @@ describe("computeAnalytics", () => {
     expect(fulfil).toMatchObject({ apps: 6, reviews: 3000, categories: 1, launchesByYear: { "2025": 6 } });
     expect(result.coverage).toEqual({ apps: 12, withDetails: 6 });
     expect(result.launchYears).toEqual([2025]);
+  });
+});
+
+describe("topics and finer levels", () => {
+  it("reads topics from name and tagline without matching inside longer words", () => {
+    expect(topicsOfApp("Fast SMS Marketing", "Recover abandoned carts by WhatsApp")).toEqual(expect.arrayContaining(["sms", "abandoned-cart"]));
+    expect(topicsOfApp("Starter Kit", "Optimize your store")).toEqual([]);
+  });
+  const sms = (i: number, cat: string) => app(`s${i}`, [cat], 100, 4.5, { name: "SMS Pro", tagline: "text messages" });
+  const mail = (i: number, cat: string) => app(`m${i}`, [cat], 100, 4.5, { name: "Mailer", tagline: "newsletter email" });
+  const rows = [...[1, 2, 3, 4, 5].map((i) => sms(i, "marketing-and-conversion-marketing-email-marketing")), ...[1, 2, 3, 4, 5].map((i) => mail(i, "marketing-and-conversion-marketing-email-marketing")), sms(9, "orders-and-shipping-orders")];
+  it("splits a category into niches, dropping ones with fewer than 5 apps", () => {
+    const niches = computeAnalytics(rows, [{ slug: "marketing-and-conversion-marketing-email-marketing", label: "Email marketing" }], new Date(), "niche").categories;
+    expect(niches.map((c) => c.label).sort()).toEqual(["Email marketing › Email", "Email marketing › SMS & WhatsApp"]);
+    expect(niches[0].stage).toBe("retain");
+  });
+  it("groups a topic across categories once per app, in its most common stage", () => {
+    const topics = computeAnalytics(rows, [], new Date(), "topic").categories;
+    const smsTopic = topics.find((c) => c.slug === "topic::sms")!;
+    expect(smsTopic.apps).toBe(6);
+    expect(smsTopic.stage).toBe("retain");
   });
 });

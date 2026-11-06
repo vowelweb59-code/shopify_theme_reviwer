@@ -1,5 +1,6 @@
 import { pricingModel, type PricingModel } from "./parseApps";
 import { STAGES, stageOfCategory, type StageKey } from "./lifecycle";
+import { TOPIC_LABEL, topicsOfApp } from "./topics";
 
 // Turns the apps read from the App Store into "where is there room for a new app" numbers, per category
 // (the job an app does) and per lifecycle stage. Pure: takes plain rows, returns plain data.
@@ -11,6 +12,7 @@ import { STAGES, stageOfCategory, type StageKey } from "./lifecycle";
 export type AppRow = {
   handle: string;
   name: string;
+  tagline?: string | null;
   rating: number | null;
   reviewCount: number;
   pricingLabel: string | null;
@@ -22,6 +24,49 @@ export type AppRow = {
 };
 
 export type CategoryRow = { slug: string; label: string };
+
+/** How finely apps are grouped: Shopify's category; a niche (category › topic); or a topic across all categories. */
+export type Level = "category" | "niche" | "topic";
+
+type Group = { label: string; stage: StageKey; apps: AppRow[] };
+
+function groupApps(apps: AppRow[], categories: CategoryRow[], level: Level): Map<string, Group> {
+  const labelOf = new Map(categories.map((c) => [c.slug, c.label]));
+  const groups = new Map<string, Group>();
+  const add = (key: string, label: string, stage: StageKey, app: AppRow) => {
+    const g = groups.get(key) ?? { label, stage, apps: [] };
+    g.apps.push(app);
+    groups.set(key, g);
+  };
+  const stageVotes = new Map<string, Map<StageKey, number>>();
+  for (const app of apps) {
+    const topics = level === "category" ? [] : topicsOfApp(app.name, app.tagline ?? null);
+    for (const slug of app.categories) {
+      const catLabel = labelOf.get(slug) ?? slug;
+      const stage = stageOfCategory(slug);
+      if (level === "category") add(slug, catLabel, stage, app);
+      for (const topic of topics) {
+        if (level === "niche") add(`${slug}::${topic}`, `${catLabel} › ${TOPIC_LABEL[topic]}`, stage, app);
+        if (level === "topic") {
+          // A topic's stage is the one most of its apps' categories sit in.
+          const votes = stageVotes.get(topic) ?? new Map<StageKey, number>();
+          votes.set(stage, (votes.get(stage) ?? 0) + 1);
+          stageVotes.set(topic, votes);
+        }
+      }
+    }
+    if (level === "topic") for (const topic of topics) add(`topic::${topic}`, TOPIC_LABEL[topic], "scale", app);
+  }
+  if (level === "topic") {
+    for (const [key, g] of groups) {
+      const votes = [...(stageVotes.get(key.slice("topic::".length)) ?? [])].sort((a, b) => b[1] - a[1]);
+      if (votes[0]) g.stage = votes[0][0];
+      // An app listed in several categories was counted once per category above; the group holds it once.
+      g.apps = [...new Set(g.apps)];
+    }
+  }
+  return groups;
+}
 
 export const MIN_APPS_FOR_SCORE = 5;
 export const WEIGHTS = { demand: 0.3, weakness: 0.25, openness: 0.25, headroom: 0.2 } as const;
@@ -111,7 +156,7 @@ function mixOf(apps: AppRow[]): PricingMix {
   return mix;
 }
 
-function basics(slug: string, label: string, apps: AppRow[], now: Date): CategoryInsight {
+function basics(slug: string, label: string, stage: StageKey, apps: AppRow[], now: Date): CategoryInsight {
   const byReviews = [...apps].sort((a, b) => b.reviewCount - a.reviewCount);
   const reviews = apps.reduce((s, a) => s + a.reviewCount, 0);
   const leaders = byReviews.slice(0, LEADERS).filter((a) => a.rating !== null && a.reviewCount > 0);
@@ -120,7 +165,7 @@ function basics(slug: string, label: string, apps: AppRow[], now: Date): Categor
   return {
     slug,
     label,
-    stage: stageOfCategory(slug),
+    stage,
     apps: apps.length,
     reviews,
     reviewsPerApp: apps.length ? reviews / apps.length : 0,
@@ -140,12 +185,11 @@ function basics(slug: string, label: string, apps: AppRow[], now: Date): Categor
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
-export function computeAnalytics(apps: AppRow[], categories: CategoryRow[], now: Date = new Date()): Analytics {
-  const labelOf = new Map(categories.map((c) => [c.slug, c.label]));
-  const bySlug = new Map<string, AppRow[]>();
-  for (const a of apps) for (const slug of a.categories) bySlug.set(slug, [...(bySlug.get(slug) ?? []), a]);
-
-  const insights = [...bySlug].map(([slug, list]) => basics(slug, labelOf.get(slug) ?? slug, list, now));
+export function computeAnalytics(apps: AppRow[], categories: CategoryRow[], now: Date = new Date(), level: Level = "category"): Analytics {
+  // A niche or topic needs enough apps to say anything; thinner ones are left out rather than shown unscored.
+  const insights = [...groupApps(apps, categories, level)]
+    .filter(([, g]) => level === "category" || g.apps.length >= MIN_APPS_FOR_SCORE)
+    .map(([slug, g]) => basics(slug, g.label, g.stage, [...new Set(g.apps)], now));
   const scored = insights.filter((c) => c.apps >= MIN_APPS_FOR_SCORE);
 
   const demand = percentileRanks(scored.map((c) => c.reviews));
