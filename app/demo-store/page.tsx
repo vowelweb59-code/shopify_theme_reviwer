@@ -15,6 +15,7 @@ import { ThemeCategoriesTab } from "./_components/ThemeCategoriesTab";
 import { PotentialAffiliatesTab } from "./_components/PotentialAffiliatesTab";
 import { GoogleAdsTab } from "./_components/GoogleAdsTab";
 import { SuggestedAppsTab } from "./_components/SuggestedAppsTab";
+import { ShopifyAppStoreTab } from "./_components/ShopifyAppStoreTab";
 
 type DemoStoreRecord = {
   _id: string;
@@ -197,6 +198,7 @@ const VIEW_TABS = [
   { key: "categories", label: "Theme Categories" },
   { key: "apps", label: "Suggested Apps" },
   { key: "affiliates", label: "Potential Affiliates" },
+  { key: "appstore", label: "Shopify App Store" },
   { key: "ads", label: "Google Ads" },
 ] as const;
 
@@ -731,6 +733,12 @@ function DemoStoreView() {
       {view === "affiliates" && (
         <div role="tabpanel" id="view-panel-affiliates" aria-labelledby="view-tab-affiliates">
           <PotentialAffiliatesTab />
+        </div>
+      )}
+
+      {view === "appstore" && (
+        <div role="tabpanel" id="view-panel-appstore" aria-labelledby="view-tab-appstore">
+          <ShopifyAppStoreTab />
         </div>
       )}
 
