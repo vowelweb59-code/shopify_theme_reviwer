@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Store, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
 import { PageContainer } from "@/app/_components/shell/PageContainer";
@@ -12,6 +13,7 @@ import { formatDateTime } from "@/app/_components/formatDate";
 import { INDUSTRIES } from "@/lib/themes/industries";
 import { ThemeCategoriesTab } from "./_components/ThemeCategoriesTab";
 import { PotentialAffiliatesTab } from "./_components/PotentialAffiliatesTab";
+import { GoogleAdsTab } from "./_components/GoogleAdsTab";
 import { SuggestedAppsTab } from "./_components/SuggestedAppsTab";
 
 type DemoStoreRecord = {
@@ -195,14 +197,25 @@ const VIEW_TABS = [
   { key: "categories", label: "Theme Categories" },
   { key: "apps", label: "Suggested Apps" },
   { key: "affiliates", label: "Potential Affiliates" },
+  { key: "ads", label: "Google Ads" },
 ] as const;
 
 export default function DemoStorePage() {
+  return (
+    <Suspense fallback={null}>
+      <DemoStoreView />
+    </Suspense>
+  );
+}
+
+function DemoStoreView() {
   const [data, setData] = useState<DemoStoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [activeStore, setActiveStore] = useState<string | null>(null);
-  const [view, setView] = useState<(typeof VIEW_TABS)[number]["key"]>("history");
+  // Google's sign-in sends the user back here with ?tab=ads.
+  const searchParams = useSearchParams();
+  const [view, setView] = useState<(typeof VIEW_TABS)[number]["key"]>(searchParams.get("tab") === "ads" ? "ads" : "history");
 
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [rankingLoading, setRankingLoading] = useState(true);
@@ -718,6 +731,12 @@ export default function DemoStorePage() {
       {view === "affiliates" && (
         <div role="tabpanel" id="view-panel-affiliates" aria-labelledby="view-tab-affiliates">
           <PotentialAffiliatesTab />
+        </div>
+      )}
+
+      {view === "ads" && (
+        <div role="tabpanel" id="view-panel-ads" aria-labelledby="view-tab-ads">
+          <GoogleAdsTab />
         </div>
       )}
     </PageContainer>
