@@ -39,7 +39,12 @@ export type FoundTheme =
   | { ok: true; theme: ThemeRef; others: string[]; known: string | undefined; saysPreset: boolean }
   | { ok: false; reason: string };
 
-export function findTheme(parts: string[], themes: ThemeRef[]): FoundTheme {
+/** Other names a theme goes by in reports (lower case): "Pearl" is Pretty. */
+const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty" };
+
+export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
+  const alias = THEME_NAME_ALIASES[nameKey(rawParts[0] ?? "")];
+  const parts = alias ? [alias, ...rawParts.slice(1)] : rawParts;
   const [name] = parts;
   const line = parts.join(" | ");
 
