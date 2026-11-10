@@ -16,6 +16,7 @@ export async function register() {
       ["theme-store", async () => (await import("./lib/themeStore/scheduler")).startThemeStoreScheduler()],
       ["shopify-apps", async () => (await import("./lib/shopifyApps/scheduler")).startShopifyAppsScheduler()],
       ["chat-sync", async () => (await import("./lib/chat/scheduler")).startChatSyncScheduler()],
+      ["service-chat-sync", async () => (await import("./lib/service/chat/scheduler")).startServiceChatScheduler()],
       ["ga4-sync", async () => (await import("./lib/analytics/sync/scheduler")).startGa4SyncScheduler()],
     ];
     for (const [name, start] of starters) {
