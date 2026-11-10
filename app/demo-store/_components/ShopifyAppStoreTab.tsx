@@ -338,6 +338,7 @@ export function ShopifyAppStoreTab() {
       )}
       {(error || startError) && <p className="text-sm text-status-fail-text">{error ?? startError}</p>}
 
+      {loading && !data && <p className="text-sm text-zinc-500">Loading App Store data… the first load after the server wakes up can take up to a minute.</p>}
       {!loading && apps.length === 0 ? (
         <EmptyState icon={Layers} title="No App Store apps yet" description="Press “Read App Store” to read the categories and apps." />
       ) : (

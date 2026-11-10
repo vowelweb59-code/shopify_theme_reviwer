@@ -97,6 +97,8 @@ Open, in order:
    `https://shopify-theme-reviwer.onrender.com/api/service/chat/google/callback`. The account that connects must be a
    member of TIMER STATUS (and a test user if the consent screen is in Testing).
 4. Production data (owner runs it): `UPWORK_DATABASE_URL=<old app DATABASE_URL> npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts`, then add `--apply`. Needs the old app's Docker Postgres running.
-5. Connect Chat on `/service/chat` (local and live), then Import month for the current month.
+5. Connect Chat on `/service/chat` (local and live), then Import month for the current month. Live connected
+   2026-11-10 (vowelweb59@gmail.com); its auto sync now writes to the live service collections, so the production
+   migration (item 4) needs `--apply --replace` (the connection itself is not emptied).
 6. The ops-web client secret was pasted in chat on 2026-11-10: rotate it once everything works.
 7. Not exercised yet: write actions (approve, assign, edit, bulk) on real data.
