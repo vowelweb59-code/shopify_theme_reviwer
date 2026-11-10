@@ -102,3 +102,46 @@ Open, in order:
    migration (item 4) needs `--apply --replace` (the connection itself is not emptied).
 6. The ops-web client secret was pasted in chat on 2026-11-10: rotate it once everything works.
 7. Not exercised yet: write actions (approve, assign, edit, bulk) on real data.
+
+## 3. Shopify App Store (Demo Store > Shopify App Store)
+
+Goal (owner, 2026-11-10): hold **all** App Store data in this app, kept current by periodic scans, so new apps can be
+designed from it (first case: FAQ apps, category `store-management-support-faq`).
+
+| Decision | Consequence |
+|---|---|
+| The category tree is walked **recursively** (`crawlTree` in `lib/shopifyApps/crawlApps.ts`) | The old crawl only followed links on the 7 top-level pages, so nested categories such as FAQ (store-management > support > faq) were never read. A parent with children is no longer read as a leaf. |
+| Per-app depth is stored on `ShopifyApp`: description, `features` (Shopify handles like `cf.faq.display_options.search_bar`), `plans` (name, price, note, bullets), `languages`, `worksWith` | `parseAppDeepDetail` in `lib/shopifyApps/parseApps.ts`. Labels and groups of features live in `ShopifyAppFeature`. Prices are in the crawler's currency (INR from the owner's location). |
+| `DETAIL_VERSION` (crawlApps.ts) | Bump it when the reader learns to read more; every app below it is read again. Version 2 added the fields above. |
+| Three reads share one running guard: **full** (tree + listings + 100 app pages, daily), **details** (200 app pages per batch while a backlog exists), **category** (one category and all its apps, on demand) | `scheduler.ts` ticks every 5 minutes (started in `instrumentation.ts`): full read once the last is 24 h old, otherwise a detail batch while apps wait. About 12,000 apps fill in over a day or two of the server being up; a free Render instance only scans while awake. |
+| **Watched** categories (`ShopifyAppCategory.priority`; FAQ from the first tree read) | Their apps are read before all others and re-read after 7 days (others 30). Toggle in the category workspace. |
+| FAQ is classified in the **convert** stage (`lifecycle.ts`); the rest of support stays in **retain** | A FAQ answers pre-purchase questions. One line to move. |
+| Heavy per-app data is served by `GET /api/shopify-apps/category?slug=` only; the main `GET /api/shopify-apps` stays slim | Keeps the main payload small as the data grows. The category workspace (tab) shows feature coverage (click features to see which apps cover them all) and exports everything to CSV. |
+
+Open:
+1. After deploy, press **Refresh App Store** once (about 35 minutes: tree walk of ~330 categories plus listings). That creates
+   the FAQ category and its ~148 apps; then **Read this category now** on FAQ (about 4 minutes) for the full data.
+2. Not built yet: a searchable category browser (simpler navigation across ~330 categories) and change history over scans.
+
+## 4. Attendance (`/attendance`)
+
+Owner brief (2026-11-10): the attendance Chat space (`spaces/AAAA6adFMF8`, override `ATTENDANCE_CHAT_SPACE`) only announces
+**leaves**, never presence. Check each person's reports in Upwork (TIMER STATUS) and the theme team (Theme Status Group) and flag
+any day with nothing.
+
+| Decision | Consequence |
+|---|---|
+| Mon to Fri are working days; **Sunday off; Saturday flexible, never flagged** (shown ✓ if someone reported) | `lib/attendance/grid.ts`. The owner's "alternate Saturdays are half days" is not modelled: Saturdays are optional either way. |
+| Everyone is expected to report every working day unless a leave is announced | A flag is a past working day with no leave and no report in the person's own place(s). A half-day leave still expects a report. A full-day leave on a day hours were reported is flagged too ("leave but reported"). Today and later are never flagged. |
+| Who is checked is **derived**, not listed: a person is active from their first report until 30 days after their last | `INACTIVE_AFTER_DAYS` in grid.ts. Leavers stop being flagged by themselves; someone who stops reporting is flagged for 30 days. Managers who never report are never checked. |
+| A person in both places counts as present when either has a report | Merged by name (`matchPersonKey`): service sender `displayName` against theme `TeamMember.name` and aliases. Add an alias on the Team page if the spellings differ. |
+| Leave announcements are stored raw (`attendance_messages`) and **parsed when read** (`lib/attendance/leave.ts`) | A parser fix needs no re-import. Shape: `@<team lead> <person> has applied for a leave on <date>.(<reason>)`; the @mention (position kept from the Chat annotation) is the lead, the name after it is the person. Ranges, lists, half days, numeric dates and cancellations are read; anything else lands in "Messages I couldn't read" on the page, and names with no reports in "Leaves for names not found". Only one real message was seen when this was written: check those two lists first. |
+| Reads through the **Service Chat connection** (`serviceChatToken`/`serviceChatGet` exported from `lib/service/chat/google.ts`), bot posts included | The connected Google account must be a member of the attendance space. `lib/attendance/scheduler.ts` reads the last 2 months every 30 min (`ATTENDANCE_SYNC_MINUTES`), the page button the last 3. |
+| This page reads **both** teams' data (read-only), an exception to section 2's "no overlap with the theme team" | It writes nothing outside `attendance_*` collections. The Service section itself is unchanged. |
+
+Where: `lib/attendance/{leave,grid,report,chat,sync,scheduler}.ts` (pure: leave, grid; tests beside them), `models/attendance.ts`,
+`app/api/attendance/**`, `app/attendance/**`, nav entry in `app/_components/shell/navItems.ts`.
+
+Open: after deploy, open `/attendance`, press **Read attendance space now**; if it errors, the Chat account is not in that space.
+Then read the two review lists and send any message shape the parser missed. Not built: company-wide holidays announced in the
+space (they would show as leaves for whoever is named), per-person exclusions, a leave count report.

@@ -119,3 +119,7 @@ export async function listServiceMessages(refreshToken: string, space: string, {
   }
   throw new Error("Chat returned too many pages; stopping");
 }
+
+// Shared with the attendance page (lib/attendance/chat.ts), which reads its own space through this same connection.
+export const serviceChatToken = accessToken;
+export const serviceChatGet = getJson;
