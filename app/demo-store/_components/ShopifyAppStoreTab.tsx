@@ -27,10 +27,38 @@ type StoreApp = {
   developer: string | null;
   launchedAt: string | null;
 };
-type StoreData = { lastCrawledAt: string | null; analytics: Analytics; levels: { niche: Analytics; topic: Analytics }; categoryLabels: Record<string, string>; apps: StoreApp[] };
-type Progress = { running: boolean; phase: "tree" | "listings" | "details" | null; total: number; done: number; current: string | null; appsSeen: number; errors: string[] };
+type StoreData = {
+  lastCrawledAt: string | null;
+  analytics: Analytics;
+  levels: { niche: Analytics; topic: Analytics };
+  categoryLabels: Record<string, string>;
+  apps: StoreApp[];
+  watched: { slug: string; label: string; apps: number; read: number; lastReadAt: string | null }[];
+  detail: { read: number; total: number; backlog: number };
+};
+type Progress = { running: boolean; mode: "full" | "details" | "category" | null; scope: string | null; phase: "tree" | "listings" | "details" | null; total: number; done: number; current: string | null; appsSeen: number; errors: string[]; finishedAt: string | null };
+type CategoryFeature = { handle: string; label: string; group: string; apps: number; share: number };
+type CategoryApp = {
+  handle: string;
+  name: string;
+  url: string;
+  tagline: string | null;
+  description: string | null;
+  rating: number | null;
+  reviewCount: number;
+  pricing: Pricing;
+  builtForShopify: boolean;
+  developer: string | null;
+  launchedAt: string | null;
+  read: boolean;
+  features: string[];
+  plans: { name: string; price: string | null; note: string | null; features: string[] }[];
+  languages: string[];
+  worksWith: string[];
+};
+type CategoryData = { slug: string; label: string; priority: boolean; lastReadAt: string | null; appCount: number; readCount: number; features: CategoryFeature[]; apps: CategoryApp[] };
 
-const PHASE_LABEL = { tree: "Reading the category tree", listings: "Reading every category's apps", details: "Reading app pages (launch date, star split)" } as const;
+const PHASE_LABEL = { tree: "Reading the category tree", listings: "Reading every category's apps", details: "Reading app pages (features, plans, launch date, star split)" } as const;
 const PRICING_LABEL: Record<Pricing, string> = { free: "Free", freemium: "Free plan", trial: "Free trial", paid: "Paid", unknown: "Unknown" };
 const dash = <span className="text-zinc-400">—</span>;
 const num = (n: number) => n.toLocaleString();
@@ -161,6 +189,184 @@ function WhyPanel({ category, onClose }: { category: CategoryInsight; onClose: (
   );
 }
 
+// Everything read about one category: its features and how many apps tick each, and every app with its plans, languages and
+// description. Pick features to see which apps cover them (and whether any app covers them all): where a new app could fit.
+function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, onClose }: { slug: string; refreshKey: string | null; running: boolean; onRead: () => void; onWatchChanged: () => void; onClose: () => void }) {
+  const { data, loading, error, reload } = useApi<CategoryData>(`/api/shopify-apps/category?slug=${encodeURIComponent(slug)}&v=${encodeURIComponent(refreshKey ?? "")}`);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const labelOf = useMemo(() => new Map((data?.features ?? []).map((f) => [f.handle, f.label])), [data]);
+  const groups = useMemo(() => {
+    const byGroup = new Map<string, CategoryFeature[]>();
+    for (const f of data?.features ?? []) byGroup.set(f.group, [...(byGroup.get(f.group) ?? []), f]);
+    return [...byGroup];
+  }, [data]);
+  const rows = useMemo(() => {
+    const list = (data?.apps ?? []).map((a) => ({ ...a, covered: picked.filter((h) => a.features.includes(h)).length }));
+    return picked.length ? list.sort((a, b) => b.covered - a.covered || b.reviewCount - a.reviewCount) : list;
+  }, [data, picked]);
+  const coverAll = picked.length ? rows.filter((a) => a.covered === picked.length).length : 0;
+
+  async function toggleWatch() {
+    if (!data) return;
+    setMessage(null);
+    const res = await fetch("/api/shopify-apps/category", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, priority: !data.priority }) });
+    if (!res.ok) return setMessage("Couldn't change that.");
+    reload();
+    onWatchChanged();
+  }
+
+  function exportCsv() {
+    if (!data) return;
+    const cell = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const header = ["App", "Developer", "Rating", "Reviews", "Pricing", "Launched", "Built for Shopify", "Description", "Plans", "Languages", "Works with", "Features in this category", "Link"];
+    const lines = data.apps.map((a) =>
+      [
+        a.name,
+        a.developer,
+        a.rating,
+        a.reviewCount,
+        PRICING_LABEL[a.pricing],
+        a.launchedAt,
+        a.builtForShopify ? "Yes" : "",
+        a.description ?? a.tagline,
+        a.plans.map((p) => `${p.name}: ${p.price ?? ""}${p.note ? ` (${p.note})` : ""}${p.features.length ? ` — ${p.features.join("; ")}` : ""}`).join(" | "),
+        a.languages.join("; "),
+        a.worksWith.join("; "),
+        a.features.map((h) => labelOf.get(h) ?? h).join("; "),
+        a.url,
+      ].map(cell).join(",")
+    );
+    const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `shopify-app-store-${slug}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const columns: TableColumn<(typeof rows)[number]>[] = [
+    {
+      key: "app",
+      header: "App",
+      render: (a) => (
+        <div className="flex flex-col gap-0.5">
+          <a href={a.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
+            {a.name}
+            <ExternalLink className="h-3 w-3 text-zinc-400" aria-hidden />
+          </a>
+          <span className="max-w-md text-xs text-zinc-500" title={a.description ?? a.tagline ?? ""}>{(a.description ?? a.tagline ?? "").slice(0, 140)}</span>
+        </div>
+      ),
+      sortValue: (a) => a.name.toLowerCase(),
+    },
+    ...(picked.length ? [{ key: "covers", header: `Covers (of ${picked.length})`, render: (a: (typeof rows)[number]) => <span className="tabular-nums font-medium">{a.covered}</span>, sortValue: (a: (typeof rows)[number]) => a.covered, className: "text-right" } as TableColumn<(typeof rows)[number]>] : []),
+    { key: "features", header: "Features ticked", render: (a) => (a.read ? <span className="tabular-nums">{a.features.length} of {data?.features.length ?? 0}</span> : <span className="text-xs text-zinc-400">not read yet</span>), sortValue: (a) => (a.read ? a.features.length : -1), className: "text-right" },
+    { key: "rating", header: "★", render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>), sortValue: (a) => a.rating ?? -1, className: "text-right" },
+    { key: "reviews", header: "Reviews", render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>, sortValue: (a) => a.reviewCount, className: "text-right" },
+    {
+      key: "plans",
+      header: "Plans",
+      render: (a) => (a.plans.length ? <span className="text-xs">{a.plans.map((p) => `${p.name} ${p.price ?? ""}`.trim()).join(" · ")}</span> : <span className="text-xs">{PRICING_LABEL[a.pricing]}</span>),
+    },
+    { key: "dev", header: "Developer", render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash), sortValue: (a) => (a.developer ?? "~").toLowerCase() },
+    { key: "langs", header: "Languages", render: (a) => (a.languages.length ? <span className="tabular-nums">{a.languages.length}</span> : dash), sortValue: (a) => a.languages.length, className: "text-right" },
+    { key: "launched", header: "Launched", render: (a) => (a.launchedAt ? <span className="text-xs tabular-nums">{a.launchedAt}</span> : dash), sortValue: (a) => a.launchedAt ?? "" },
+  ];
+
+  return (
+    <section className="flex flex-col gap-3 rounded-lg border border-border-subtle p-4" aria-label={`${data?.label ?? slug} workspace`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">{data?.label ?? slug}: apps, plans and features</h3>
+          {data && (
+            <p className="text-xs text-zinc-500">
+              {num(data.appCount)} apps, {num(data.readCount)} read in depth{data.lastReadAt ? ` · category last read ${formatDateTime(data.lastReadAt)}` : ""}
+              {data.priority ? " · watched: re-read weekly, before other apps" : ""}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" onClick={onRead} disabled={running}>
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${running ? "animate-spin" : ""}`} aria-hidden />
+            Read this category now
+          </Button>
+          <Button type="button" onClick={toggleWatch} disabled={!data}>
+            {data?.priority ? "Stop watching" : "Watch (keep fresh)"}
+          </Button>
+          <Button type="button" onClick={exportCsv} disabled={!data || data.apps.length === 0}>
+            <Download className="mr-1.5 h-4 w-4" aria-hidden />
+            Export CSV
+          </Button>
+          <button type="button" onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+            Close
+          </button>
+        </div>
+      </div>
+      {(error || message) && <p className="text-sm text-status-fail-text">{error ?? message}</p>}
+      {loading && !data && <p className="text-sm text-zinc-500">Loading…</p>}
+      {data && data.readCount < data.appCount && (
+        <p className="text-xs text-zinc-500">
+          {num(data.appCount - data.readCount)} of {num(data.appCount)} apps have not had their page read yet, so their features are missing from the counts below. “Read this category now” reads them all (about {Math.ceil((data.appCount - data.readCount) / 40)} minutes).
+        </p>
+      )}
+
+      {data && data.features.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Features: how many apps tick each (click to pick what you want to build)</h4>
+            {picked.length > 0 && (
+              <>
+                <span className="text-xs text-zinc-700 dark:text-zinc-300">
+                  {coverAll === 0 ? "No app covers all " : `${num(coverAll)} app${coverAll === 1 ? " covers" : "s cover"} all `}
+                  {picked.length} picked
+                </span>
+                <button type="button" onClick={() => setPicked([])} className="text-xs text-primary hover:underline">
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+          {groups.map(([group, features]) => (
+            <div key={group} className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{group}</span>
+              <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                {features.map((f) => {
+                  const on = picked.includes(f.handle);
+                  return (
+                    <li key={f.handle}>
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setPicked(on ? picked.filter((h) => h !== f.handle) : [...picked, f.handle])}
+                        className={`flex w-full flex-col gap-1 rounded-md border px-2 py-1.5 text-left text-sm transition-colors ${on ? "border-primary bg-primary-tint" : "border-border-subtle hover:border-zinc-400"}`}
+                      >
+                        <span className="flex justify-between gap-2">
+                          <span>{f.label}</span>
+                          <span className="tabular-nums text-xs text-zinc-500">
+                            {num(f.apps)} app{f.apps === 1 ? "" : "s"} · {Math.round(f.share * 100)}%
+                          </span>
+                        </span>
+                        <span className="h-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" aria-hidden>
+                          <span className="block h-full bg-primary" style={{ width: `${f.share * 100}%` }} />
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+      {data && data.features.length === 0 && data.appCount > 0 && <p className="text-xs text-zinc-500">No features read for this category yet.</p>}
+
+      {data && <ResponsiveTable columns={columns} rows={rows} rowKey={(a) => a.handle} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} emptyMessage="No apps read for this category yet. Press “Read this category now”." />}
+    </section>
+  );
+}
+
 export function ShopifyAppStoreTab() {
   const { data, loading, error, reload } = useApi<StoreData>("/api/shopify-apps");
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -203,6 +409,20 @@ export function ShopifyAppStoreTab() {
     const res = await fetch("/api/shopify-apps/crawl", { method: "POST" });
     if (!res.ok) return setStartError("Couldn't start reading the App Store.");
     setProgress((await res.json()) as Progress);
+  }
+
+  async function startCategoryRead(slug: string) {
+    setStartError(null);
+    const res = await fetch("/api/shopify-apps/crawl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category: slug }) });
+    if (!res.ok) return setStartError("Couldn't start reading that category.");
+    setProgress((await res.json()) as Progress);
+  }
+
+  function openWatched(slug: string) {
+    setView("opportunities");
+    setLevel("category");
+    setStage("");
+    setOpen(slug);
   }
 
   const analytics = data?.analytics;
@@ -336,6 +556,12 @@ export function ShopifyAppStoreTab() {
           {progress.errors.length > 5 ? "…" : ""}
         </p>
       )}
+      {data && data.detail.total > 0 && (
+        <p className="text-xs text-zinc-500">
+          App pages read in depth (features, plans, languages): {num(data.detail.read)} of {num(data.detail.total)}
+          {data.detail.backlog > 0 ? ` · ${num(data.detail.backlog)} waiting` : " · up to date"}. Scans run on their own while the server is up: the whole store daily, then app pages in batches (watched categories weekly, the rest monthly).
+        </p>
+      )}
       {(error || startError) && <p className="text-sm text-status-fail-text">{error ?? startError}</p>}
 
       {loading && !data && <p className="text-sm text-zinc-500">Loading App Store data… the first load after the server wakes up can take up to a minute.</p>}
@@ -344,6 +570,21 @@ export function ShopifyAppStoreTab() {
       ) : (
         analytics && (
           <>
+            {data && data.watched.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-zinc-500">Watched categories</span>
+                {data.watched.map((w) => (
+                  <button
+                    key={w.slug}
+                    type="button"
+                    onClick={() => openWatched(w.slug)}
+                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${open === w.slug && level === "category" ? "border-primary bg-primary-tint text-primary" : "border-border-subtle hover:border-zinc-400"}`}
+                  >
+                    {w.label} <span className="tabular-nums text-xs text-zinc-500">{num(w.apps)} apps · {num(w.read)} read</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
               {analytics.stages.map((s, i) => (
                 <StageCard key={s.key} stage={s} index={i} years={analytics.launchYears} selected={stage === s.key} onSelect={() => setStage(stage === s.key ? "" : s.key)} />
@@ -384,6 +625,9 @@ export function ShopifyAppStoreTab() {
                   <span className="text-xs text-zinc-500">{num(categories.length)} groups{level !== "category" ? " with at least 5 apps. Topics are read from each app’s name and tagline." : ""}</span>
                 </div>
                 {openCategory && <WhyPanel category={openCategory} onClose={() => setOpen(null)} />}
+                {level === "category" && open && (
+                  <CategoryWorkspace slug={open} refreshKey={progress?.finishedAt ?? null} running={running} onRead={() => void startCategoryRead(open)} onWatchChanged={reload} onClose={() => setOpen(null)} />
+                )}
                 <ResponsiveTable columns={opportunityColumns} rows={categories} rowKey={(c) => c.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} emptyMessage="No categories." />
               </>
             ) : (

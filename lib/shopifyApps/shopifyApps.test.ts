@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { computeAnalytics, percentileRanks, type AppRow } from "./analytics";
 import { stageOfCategory, stagesOfApp } from "./lifecycle";
 import { topicsOfApp } from "./topics";
-import { parseAppCards, parseAppDetail, parseCategoryLabel, parseCategoryLinks, pricingModel } from "./parseApps";
+import { featureBelongsTo, featureParts, parseAppCards, parseAppDeepDetail, parseAppDetail, parseCategoryLabel, parseCategoryLinks, pricingModel } from "./parseApps";
 
 const cardHtml = (handle: string, name: string, rating: string | null, reviews: number, pricing: string, bfs = false) =>
   `<div class="tw-w-full" data-controller="app-card" data-app-card-handle-value="${handle}" data-app-card-name-value="${name}">
@@ -108,5 +108,53 @@ describe("topics and finer levels", () => {
     const smsTopic = topics.find((c) => c.slug === "topic::sms")!;
     expect(smsTopic.apps).toBe(6);
     expect(smsTopic.stage).toBe("retain");
+  });
+});
+
+describe("parseAppDeepDetail", () => {
+  const li = (t: string) => `<li class="x"><span>${t}</span> <li>`; // the store leaves these <li> unclosed
+  const html = `<script type="application/ld+json">{"@type":"SoftwareApplication","name":"A","description":"Answers &amp; more"}</script>
+    <p class="tw-col-span-full sm:tw-col-span-1 h">Languages</p><div class="c"><p>English, German, and French</p></div>
+    <p class="tw-col-span-full sm:tw-col-span-1 h">Works with</p><ul class="c"><li class="i"><a>Checkout</a></li><li class="i"><a>Shopify Admin</a></li></ul></div></div><div data-controller="accordion">
+    <a href="https://apps.shopify.com/categories/x/all?feature_handles%5B%5D=cf.faq.display_options.search_bar&amp;locale=en"> Search bar </a>
+    <a href="https://apps.shopify.com/categories/x/all?feature_handles%5B%5D=cf.faq.display_options.search_bar&amp;surface=1">Search bar</a>
+    <a href="https://apps.shopify.com/categories/x/all?feature_handles%5B%5D=cf.chat.customization.chat_flows">Chat flows</a>
+    <div data-pricing-component-target="cardHeading"><p data-test-id="name"> Free </p><h3 aria-label="Free"></h3>
+      <ul data-test-id="features">${li("5 questions")}${li("Basic styling")}</ul></div>
+    <div data-pricing-component-target="cardHeading"><p data-test-id="name"> Pro </p><h3 aria-label="$9/month"></h3><p data-test-id="additional-charges"> Billed yearly </p>
+      <ul data-test-id="features">${li("Unlimited questions")}</ul></div>`;
+
+  it("reads description, features (deduped), plans with their bullets, languages and works-with", () => {
+    const d = parseAppDeepDetail(html);
+    expect(d.description).toBe("Answers & more");
+    expect(d.features).toEqual([
+      { handle: "cf.faq.display_options.search_bar", label: "Search bar" },
+      { handle: "cf.chat.customization.chat_flows", label: "Chat flows" },
+    ]);
+    expect(d.plans).toEqual([
+      { name: "Free", price: "Free", note: null, features: ["5 questions", "Basic styling"] },
+      { name: "Pro", price: "$9/month", note: "Billed yearly", features: ["Unlimited questions"] },
+    ]);
+    expect(d.languages).toEqual(["English", "German", "French"]);
+    expect(d.worksWith).toEqual(["Checkout", "Shopify Admin"]);
+  });
+  it("is empty where the page shows nothing", () => {
+    expect(parseAppDeepDetail("<p>nothing</p>")).toEqual({ description: null, features: [], plans: [], languages: [], worksWith: [] });
+  });
+});
+
+describe("feature handles and the FAQ category", () => {
+  it("splits a handle into its category key and group", () => {
+    expect(featureParts("cf.faq.display_options.search_bar")).toEqual({ category: "faq", group: "Display options" });
+    expect(featureParts("something-else")).toBeNull();
+  });
+  it("matches a handle's category key to the end of a category slug", () => {
+    expect(featureBelongsTo("cf.faq.display_options.search_bar", "store-management-support-faq")).toBe(true);
+    expect(featureBelongsTo("cf.bulk_editor.x.y", "store-management-operations-bulk-editor")).toBe(true);
+    expect(featureBelongsTo("cf.chat.customization.chat_flows", "store-management-support-faq")).toBe(false);
+  });
+  it("puts FAQ with conversion while the rest of support stays with retention", () => {
+    expect(stageOfCategory("store-management-support-faq")).toBe("convert");
+    expect(stageOfCategory("store-management-support-chat")).toBe("retain");
   });
 });

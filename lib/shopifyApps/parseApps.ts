@@ -103,3 +103,99 @@ export function parseCategoryLabel(html: string): string | null {
   const h1 = /<h1[^>]*>\s*([^<]*?)\s*<\/h1>/.exec(html)?.[1];
   return h1 ? decode(h1).replace(/\s+apps$/i, "") : null;
 }
+
+// ---- Deep app data (the listing's own text, features, plans, languages) ----
+
+export type AppFeature = {
+  /** Shopify's stable id, e.g. "cf.faq.display_options.search_bar". */
+  handle: string;
+  label: string;
+};
+
+export type AppPlan = {
+  name: string;
+  /** The plan's price as the page states it ("₹2,725.21 INR/month"; "Free"), in the store's currency for the crawler's location. */
+  price: string | null;
+  /** The small print under the price ("Only 4% commission on AI-generated sales"). */
+  note: string | null;
+  features: string[];
+};
+
+export type AppDeepDetail = {
+  /** The listing's short description (what the store shows in search results). */
+  description: string | null;
+  /** Every feature the app ticks, across all the categories it is listed in. */
+  features: AppFeature[];
+  plans: AppPlan[];
+  languages: string[];
+  worksWith: string[];
+};
+
+const stripTags = (s: string) => decode(s.replace(/<[^>]*>/g, " "));
+
+/** A two-column "label | value" row on an app page ("Languages", "Works with"): the HTML that follows the label up to the next row. */
+function rowAfter(html: string, label: string): string | null {
+  const m = new RegExp(String.raw`>\s*${label}\s*</p>([\s\S]*?)(?=<p class="[^"]*tw-col-span-full sm:tw-col-span-1|data-controller="accordion"|$)`).exec(html);
+  return m ? m[1] : null;
+}
+
+/** The items of an HTML list. The store leaves some <li> unclosed, so items are cut at each opening tag rather than matched as pairs. */
+function listItems(html: string): string[] {
+  return html.split(/<li(?:\s[^>]*)?>/).slice(1).map((part) => stripTags(part.replace(/<\/?li>/g, " "))).filter(Boolean);
+}
+
+/** Features, plans, languages, works-with and the short description from an app's own page. */
+export function parseAppDeepDetail(html: string): AppDeepDetail {
+  let description: string | null = null;
+  const ld = /<script type="application\/ld\+json">\s*(\{[\s\S]*?"@type":"SoftwareApplication"[\s\S]*?\})\s*<\/script>/.exec(html)?.[1];
+  if (ld) {
+    try {
+      const d = (JSON.parse(ld) as { description?: unknown }).description;
+      if (typeof d === "string" && d.trim()) description = decode(d);
+    } catch {
+      /* a malformed block just leaves the description empty */
+    }
+  }
+
+  const features: AppFeature[] = [];
+  const seen = new Set<string>();
+  for (const m of html.matchAll(/<a [^>]*href="[^"]*feature_handles%5B%5D=([A-Za-z0-9._-]+)[^"]*"[^>]*>\s*([^<]*?)\s*<\/a>/g)) {
+    if (seen.has(m[1])) continue;
+    seen.add(m[1]);
+    features.push({ handle: m[1], label: decode(m[2]) });
+  }
+
+  const plans: AppPlan[] = [];
+  const cards = html.split('data-pricing-component-target="cardHeading"').slice(1);
+  for (const card of cards) {
+    const name = /data-test-id="name"[^>]*>\s*([^<]*?)\s*<\/p>/.exec(card)?.[1];
+    if (!name) continue;
+    const price = /<h3[^>]*aria-label="([^"]*)"/.exec(card)?.[1] ?? null;
+    const note = /data-test-id="additional-charges"[^>]*>\s*([^<]*?)\s*<\/p>/.exec(card)?.[1] ?? null;
+    // The plan's bullet list sits between its "Features" heading and the next card / section.
+    const body = /data-test-id="features"[^>]*>([\s\S]*?)(?:<\/ul>|$)/.exec(card)?.[1] ?? "";
+    const list = listItems(body);
+    plans.push({ name: decode(name), price: price ? decode(price) : null, note: note ? decode(note) : null, features: list });
+  }
+
+  const languagesRow = rowAfter(html, "Languages");
+  const languages = languagesRow ? stripTags(languagesRow).split(/,\s*(?:and\s+)?|\s+and\s+/).map((s) => s.trim()).filter(Boolean) : [];
+  const worksRow = rowAfter(html, "Works with");
+  const worksWith = worksRow ? listItems(worksRow.split("</ul>")[0]) : [];
+
+  return { description, features, plans, languages, worksWith };
+}
+
+/** "cf.faq.display_options.search_bar" → { category: "faq", group: "Display options" }; null for a handle in another shape. */
+export function featureParts(handle: string): { category: string; group: string } | null {
+  const [prefix, category, group] = handle.split(".");
+  if (prefix !== "cf" || !category || !group) return null;
+  const words = group.replace(/_/g, " ");
+  return { category, group: words.charAt(0).toUpperCase() + words.slice(1) };
+}
+
+/** Whether a feature handle's category key ("faq", "bulk_editor") belongs to an App Store category slug ("store-management-support-faq"). */
+export function featureBelongsTo(handle: string, slug: string): boolean {
+  const key = featureParts(handle)?.category;
+  return Boolean(key) && slug.endsWith(key!.replace(/_/g, "-"));
+}

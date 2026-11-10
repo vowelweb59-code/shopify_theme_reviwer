@@ -50,6 +50,8 @@ const STAGE_BY_PREFIX: [string, StageKey][] = [
 
   ["store-management", "scale"],
   ["store-management-support", "retain"],
+  // A FAQ answers a buyer's questions before they pay (shipping, sizing, returns), so it lives with conversion; live chat and helpdesk stay in retention.
+  ["store-management-support-faq", "convert"],
   ["support", "retain"],
 ];
 
