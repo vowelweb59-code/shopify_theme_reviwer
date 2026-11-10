@@ -89,6 +89,9 @@ rendered with real data locally. `.env.local` has the ops-web client.
 Open, in order:
 1. Commit and push `master`; confirm Render deployed it.
 2. Render dashboard: add `SERVICE_GOOGLE_CLIENT_ID` and `SERVICE_GOOGLE_CLIENT_SECRET` (ops-web), then redeploy.
+   2026-11-10: live connect failed with `invalid_client` (Render log `[service-chat] OAuth callback failed`), so the
+   secret on Render doesn't match the ID; re-paste both from `.env.local`. The callback now shows Google's reason on
+   the page, and the credentials are trimmed.
 3. Google Cloud, Upwork-Ops-Platform, client ops-web: authorized redirect URIs
    `http://localhost:3000/api/service/chat/google/callback` and
    `https://shopify-theme-reviwer.onrender.com/api/service/chat/google/callback`. The account that connects must be a

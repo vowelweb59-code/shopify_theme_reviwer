@@ -40,7 +40,18 @@ export async function GET(request: NextRequest) {
     await recordServiceAudit("chat.connect", { account: result.email });
     return finish({ connected: "1" });
   } catch (err) {
-    console.error("[service-chat] OAuth callback failed:", err instanceof Error ? err.message : err);
-    return finish({ error: err instanceof Error && /granted|verify|identify/.test(err.message) ? err.message : "Something went wrong saving the connection. Please try again." });
+    const google = googleTokenError(err);
+    console.error("[service-chat] OAuth callback failed:", google ?? (err instanceof Error ? err.message : err));
+    if (google) return finish({ error: `Google refused the sign-in (${google}). Please connect again.` });
+    return finish({ error: err instanceof Error && /granted|verify|identify|ANALYTICS_TOKEN|APP_URL|CLIENT_ID/.test(err.message) ? err.message : "Something went wrong saving the connection. Please try again." });
   }
+}
+
+// The token endpoint's own reason (e.g. "invalid_grant: Bad Request", "invalid_client: Unauthorized") from a GaxiosError.
+// It comes from Google's server response, not the query string, so it is safe to show.
+function googleTokenError(err: unknown): string | null {
+  const data = (err as { response?: { data?: { error?: unknown; error_description?: unknown } } } | null)?.response?.data;
+  if (!data || typeof data.error !== "string") return null;
+  const text = typeof data.error_description === "string" ? `${data.error}: ${data.error_description}` : data.error;
+  return text.replace(/[^\w .:,'()-]/g, "").slice(0, 160);
 }

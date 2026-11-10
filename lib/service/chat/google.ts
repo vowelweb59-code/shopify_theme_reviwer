@@ -28,9 +28,9 @@ export function serviceChatSpace(env: Env = process.env): string {
  * Upwork-Ops-Platform Google Cloud project) take precedence; otherwise the app-wide GOOGLE_CLIENT_ID/SECRET is used.
  */
 function credentials(env: Env): { id: string; secret: string } | null {
-  if (env.SERVICE_GOOGLE_CLIENT_ID && env.SERVICE_GOOGLE_CLIENT_SECRET) return { id: env.SERVICE_GOOGLE_CLIENT_ID, secret: env.SERVICE_GOOGLE_CLIENT_SECRET };
-  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) return { id: env.GOOGLE_CLIENT_ID, secret: env.GOOGLE_CLIENT_SECRET };
-  return null;
+  // Trimmed: a pasted dashboard value with a trailing space or newline makes Google answer invalid_client.
+  const pair = (id?: string, secret?: string) => (id?.trim() && secret?.trim() ? { id: id.trim(), secret: secret.trim() } : null);
+  return pair(env.SERVICE_GOOGLE_CLIENT_ID, env.SERVICE_GOOGLE_CLIENT_SECRET) ?? pair(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
 }
 
 export function isServiceChatConfigured(env: Env = process.env): boolean {
