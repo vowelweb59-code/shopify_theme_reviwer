@@ -4,7 +4,10 @@ import { AnalyticsSync } from "@/models/analytics-sync";
 import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
 import { Ga4ConnectionError, getAuthorizedClient, markConnectionRevoked } from "../googleConnections";
+import { themeNames } from "../themeNames";
+import { attributeInstalls, installRows, installsByThemeRequest, mergeInstallRows, pickThemeDimension, themeAliases, unattributedReportRows } from "../installAttribution";
 import { createAdminApi, getPropertyDetails, Ga4PropertyError, type AdminApi } from "../properties";
+import { PRIMARY_EVENTS } from "../constants";
 import { GA4_EARLIEST_DATE, addDays, chunkDateRange, dateInTimeZone, maxDate, todayInTimeZone } from "./dates";
 import { Ga4DataError, classifyDataApiError, createDataApi, runFullReport, type DataApi } from "./ga4Client";
 import { buildReportSpecs, estimateInstallRows, installEstimateRequest, toAggregateRows, type AggregateRow } from "./reports";
@@ -148,6 +151,11 @@ export function toPublicSync(doc: SyncLean): PublicSync {
 type ThemeForSync = {
   _id: { toString(): string };
   name: string;
+  /** The audited theme of the same name, whose Theme Store presets an install event may name instead of the theme. */
+  themeId?: { toString(): string } | null;
+  /** The event parameter this theme's installs were last counted from (null: estimated), and the first day it exists. */
+  installsExactBy?: string | null;
+  installsExactFrom?: string | null;
   googleConnectionId?: { toString(): string } | null;
   ga4PropertyId?: string | null;
   ga4PropertyTimeZone?: string | null;
@@ -159,6 +167,13 @@ type ThemeForSync = {
   historyStartDate?: string | null;
   syncedThroughDate?: string | null;
 };
+
+/** The day exact install counting starts: the earlier of what was stored (for the same parameter) and what this sync saw. */
+export function mergeFrom(theme: Pick<ThemeForSync, "installsExactBy" | "installsExactFrom">, dimension: string | null, seen: string | null): string | null {
+  const stored = theme.installsExactBy === dimension ? (theme.installsExactFrom ?? null) : null;
+  if (stored && seen) return stored < seen ? stored : seen;
+  return stored ?? seen;
+}
 
 /** Where one date range's rows come from: the theme's own property, or its earlier-history one. */
 type Source = { propertyId: string; pagePathPrefix: string | null };
@@ -424,6 +439,38 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     const api = await deps.dataApiFor(theme.googleConnectionId.toString());
     const warnings = new Set(job.warnings ?? []);
 
+    // A theme that shares its property: when the property's install events name their theme (a registered custom event parameter),
+    // its installs are counted from them, not estimated. Metadata that can't be read right now keeps what worked last time.
+    const aliases = themeAliases(await themeNames(theme));
+    const dimensionByProperty = new Map<string, { known: boolean; dimension: string | null }>();
+    const themeParameterOf = async (propertyId: string) => {
+      const cached = dimensionByProperty.get(propertyId);
+      if (cached) return cached;
+      let found: { known: boolean; dimension: string | null } = { known: false, dimension: theme.installsExactBy ?? null };
+      if (api.properties.getMetadata) {
+        try {
+          const md = await api.properties.getMetadata({ name: `properties/${propertyId}/metadata` });
+          found = { known: true, dimension: pickThemeDimension((md.data.dimensions ?? []).map((d) => ({ apiName: d.apiName ?? "", uiName: d.uiName ?? "" }))) };
+        } catch {
+          /* keep the unknown result */
+        }
+      }
+      dimensionByProperty.set(propertyId, found);
+      return found;
+    };
+    if (pagePathPrefix && job.syncType !== "initial") {
+      const own = await themeParameterOf(job.ga4PropertyId);
+      if (own.known && own.dimension !== (theme.installsExactBy ?? null)) {
+        // How installs are counted just changed (the property gained or lost the theme parameter): history has to be read again.
+        await AnalyticsTheme.updateOne(mappingMatch, { $set: { historyStartDate: null, syncedThroughDate: null, lastSuccessfulSyncAt: null } });
+        await cancelStale();
+        return;
+      }
+    }
+    let sharedSources = 0;
+    let namedSources = 0;
+    let firstNamedDate: string | null = null;
+
     const upsertRows = async (rows: AggregateRow[], fetched: number, propertyId: string) => {
       let written = 0;
       for (let i = 0; i < rows.length; i += UPSERT_BATCH) {
@@ -461,10 +508,31 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
           await upsertRows(rows, result.rows.length, source.propertyId);
         }
         if (source.pagePathPrefix) {
-          // Installs have no page, so the page filter drops them all; estimate this theme's share instead.
-          const result = await runFullReport(api, source.propertyId, installEstimateRequest(range), { sleep: deps.sleep });
-          noteMetadata(result);
-          await upsertRows(estimateInstallRows(themeTotals, result.rows), result.rows.length, source.propertyId);
+          // Installs have no page, so the page filter drops them all.
+          sharedSources++;
+          const dimension = (await themeParameterOf(source.propertyId)).dimension;
+          if (dimension) {
+            // The install event names its theme: this theme's installs are counted exactly. Installs from before the parameter
+            // existed carry no theme; those alone are estimated, as below.
+            namedSources++;
+            const named = await runFullReport(api, source.propertyId, installsByThemeRequest(range, dimension), { sleep: deps.sleep });
+            noteMetadata(named);
+            const attribution = attributeInstalls(named.rows, aliases);
+            if (attribution.firstNamedDate && (!firstNamedDate || attribution.firstNamedDate < firstNamedDate)) firstNamedDate = attribution.firstNamedDate;
+            let rows = installRows(attribution.exact);
+            if (attribution.unattributed.size > 0) {
+              const property = await runFullReport(api, source.propertyId, installEstimateRequest(range), { sleep: deps.sleep });
+              noteMetadata(property);
+              const rest = [...property.rows.filter((r) => r.dimensions[1] !== PRIMARY_EVENTS.themeInstall), ...unattributedReportRows(attribution.unattributed)];
+              rows = mergeInstallRows(rows, estimateInstallRows(themeTotals, rest));
+            }
+            await upsertRows(rows, named.rows.length, source.propertyId);
+          } else {
+            // No parameter names the theme: estimate this theme's share instead.
+            const result = await runFullReport(api, source.propertyId, installEstimateRequest(range), { sleep: deps.sleep });
+            noteMetadata(result);
+            await upsertRows(estimateInstallRows(themeTotals, result.rows), result.rows.length, source.propertyId);
+          }
         }
       }
 
@@ -480,7 +548,14 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
 
     const now = deps.now();
     await AnalyticsSync.updateOne({ _id: syncId }, { $set: { status: "succeeded", completedAt: now, error: { message: null, code: null } }, $unset: { isActive: "" } });
-    await AnalyticsTheme.updateOne(mappingMatch, { $set: { lastSuccessfulSyncAt: now, lastError: null } });
+    // Record how this theme's installs were counted, so the dashboard can say "estimated" only where it is. Left alone when the
+    // property's metadata could not be read this time.
+    const own = pagePathPrefix ? await themeParameterOf(job.ga4PropertyId) : null;
+    const counting =
+      pagePathPrefix && own?.known
+        ? { installsExactBy: sharedSources > 0 && namedSources === sharedSources ? own.dimension : null, installsExactFrom: sharedSources > 0 && namedSources === sharedSources ? mergeFrom(theme, own.dimension, firstNamedDate) : null }
+        : {};
+    await AnalyticsTheme.updateOne(mappingMatch, { $set: { lastSuccessfulSyncAt: now, lastError: null, ...counting } });
   } catch (raw) {
     await handleFailure(job, theme, raw, deps);
   }

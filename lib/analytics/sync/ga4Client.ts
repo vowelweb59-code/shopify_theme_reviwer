@@ -9,7 +9,8 @@ import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 // outages and quota exhaustion are the job runner's to handle (it
 // reschedules the whole job) — see runSync.ts. Server-side only.
 
-export type DataApi = { properties: Pick<analyticsdata_v1beta.Resource$Properties, "runReport"> };
+// getMetadata is optional so a test double needs only runReport; the sync skips exact install counting without it.
+export type DataApi = { properties: Pick<analyticsdata_v1beta.Resource$Properties, "runReport"> & Partial<Pick<analyticsdata_v1beta.Resource$Properties, "getMetadata">> };
 export type ReportRequest = analyticsdata_v1beta.Schema$RunReportRequest;
 export type ReportRow = { dimensions: string[]; metrics: number[] };
 

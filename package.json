@@ -16,6 +16,8 @@
     "seed:analytics-themes": "tsx --env-file-if-exists=.env.local scripts/seed-analytics-themes.ts",
     "import:projects": "tsx --env-file-if-exists=.env.local scripts/import-projects.ts",
     "merge:rounds": "tsx --env-file-if-exists=.env.local scripts/merge-project-rounds.ts",
+    "sales:import": "tsx --env-file-if-exists=.env.local scripts/import-sales.ts",
+    "theme:add": "tsx --env-file-if-exists=.env.local scripts/add-theme.ts",
     "service:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate-upwork-postgres.ts",
     "service:reread": "tsx --env-file-if-exists=.env.local scripts/service-reread-stored.ts",
     "db:compact": "tsx --env-file-if-exists=.env.local scripts/compact-database.ts",

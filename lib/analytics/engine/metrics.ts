@@ -26,7 +26,18 @@ export const RATES_NOTE =
 
 function installsEstimatedWarning(names: string[]): string {
   const list = names.join(", ");
-  return `Installs for ${list} are estimated. ${names.length === 1 ? "Its" : "Their"} GA4 property also tracks another theme, and install events carry no page, so each day's installs are split by that day's share of Try Theme clicks. Breakdowns (country, device, …) can't include these installs.`;
+  return `Installs for ${list} are estimated. ${names.length === 1 ? "Its" : "Their"} GA4 property also tracks another theme, and install events carry no page, so each day's installs are split by that day's share of Try Theme clicks (installs whose event names the theme are counted exactly, from the day GA4 started recording that). Breakdowns (country, device, …) can't include these installs.`;
+}
+
+/**
+ * A theme on a shared GA4 property has estimated installs unless its install events name their theme (`installsExactBy`) for the
+ * whole range, i.e. the range starts on or after the day that parameter first appears (`installsExactFrom`).
+ */
+export function installsAreEstimated(t: Pick<ThemeContext, "pagePathPrefix" | "earlier" | "installsExactFrom" | "period">): boolean {
+  if (!t.pagePathPrefix && !t.earlier?.pagePathPrefix) return false;
+  if (t.earlier?.pagePathPrefix || !t.installsExactFrom) return true;
+  const start = [t.period.current.start, t.period.previous?.start].filter((d): d is string => Boolean(d)).sort()[0];
+  return start < t.installsExactFrom;
 }
 
 type ThemeLean = {
@@ -39,6 +50,8 @@ type ThemeLean = {
   earlierPropertyId?: string | null;
   earlierPagePathPrefix?: string | null;
   earlierUntil?: string | null;
+  installsExactBy?: string | null;
+  installsExactFrom?: string | null;
   syncedThroughDate?: string | null;
   lastSuccessfulSyncAt?: Date | null;
 };
@@ -51,6 +64,8 @@ export type ThemeContext = {
   timeZone: string | null;
   /** Set when the theme shares its GA4 property: only its pages count, and its installs are estimated. */
   pagePathPrefix: string | null;
+  /** The first day this theme's installs are counted from its install events (null: estimated throughout). */
+  installsExactFrom: string | null;
   /** Dates up to `until` come from this other property (the theme's earlier history). */
   earlier: { propertyId: string; pagePathPrefix: string | null; until: string } | null;
   syncedThroughDate: string | null;
@@ -90,7 +105,7 @@ type Context = {
 };
 
 async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Context> {
-  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil syncedThroughDate lastSuccessfulSyncAt";
+  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil installsExactBy installsExactFrom syncedThroughDate lastSuccessfulSyncAt";
   let docs: ThemeLean[];
   let selected: PublicThemeRef | null = null;
   const warnings: string[] = [];
@@ -117,6 +132,7 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
       propertyId: d.ga4PropertyId as string,
       timeZone: d.ga4PropertyTimeZone ?? null,
       pagePathPrefix: d.pagePathPrefix ?? null,
+      installsExactFrom: d.installsExactBy ? (d.installsExactFrom ?? null) : null,
       earlier: d.earlierPropertyId && d.earlierUntil ? { propertyId: d.earlierPropertyId, pagePathPrefix: d.earlierPagePathPrefix ?? null, until: d.earlierUntil } : null,
       syncedThroughDate: d.syncedThroughDate ?? null,
       lastSuccessfulSyncAt: d.lastSuccessfulSyncAt ? new Date(d.lastSuccessfulSyncAt).toISOString() : null,
@@ -130,7 +146,7 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
 
   const unsynced = themes.filter((t) => !t.syncedThroughDate).map((t) => t.name);
   if (unsynced.length) warnings.push(`${unsynced.join(", ")} ${unsynced.length === 1 ? "hasn't" : "haven't"} finished a first GA4 sync, so data may be missing.`);
-  const estimated = themes.filter((t) => t.pagePathPrefix || t.earlier?.pagePathPrefix).map((t) => t.name);
+  const estimated = themes.filter(installsAreEstimated).map((t) => t.name);
   if (estimated.length) warnings.push(installsEstimatedWarning(estimated));
   return { query, scope: query.theme === "all" ? "all" : "theme", selected, themes, warnings };
 }
@@ -148,7 +164,7 @@ function buildMeta(ctx: Context, breakdown: AggregateBreakdown, now: Date): Metr
       timeZone: t.timeZone,
       syncedThroughDate: t.syncedThroughDate,
       lastSuccessfulSyncAt: t.lastSuccessfulSyncAt,
-      installsEstimated: Boolean(t.pagePathPrefix || t.earlier?.pagePathPrefix),
+      installsEstimated: installsAreEstimated(t),
       current: t.period.current,
       previous: t.period.previous,
     })),

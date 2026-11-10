@@ -15,6 +15,7 @@ export const ANALYTICS_SECTIONS = [
   { href: "/analytics", label: "Overview" },
   { href: "/analytics/geography", label: "Geography" },
   { href: "/analytics/pages", label: "Pages" },
+  { href: "/analytics/installs", label: "Installs" },
 ] as const;
 
 /**

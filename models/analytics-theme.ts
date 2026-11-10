@@ -36,6 +36,13 @@ const analyticsThemeSchema = new Schema(
     // start with, e.g. "/themes/adorn/". Every GA4 report for the theme is
     // filtered to it; installs, which have no page, are estimated.
     pagePathPrefix: { type: String, default: null, trim: true },
+    // For a theme with a pagePathPrefix: the custom event parameter ("customEvent:theme_name") the property's install events use to
+    // name their theme, set by the sync once it counts this theme's installs from it. Null = installs are estimated from the
+    // theme's share of Try Theme clicks. A change makes the next sync re-read the full history (lib/analytics/sync/runSync.ts).
+    installsExactBy: { type: String, default: null },
+    // The first day GA4 recorded that parameter. Installs before it carry no theme and stay estimated, so a date range reaching back
+    // before this day is still shown as partly estimated.
+    installsExactFrom: { type: String, default: null, match: GA4_DATE_PATTERN },
     // Optional earlier history: a theme that used to be tracked in another
     // theme's property (e.g. Flaunt inside "Adorn Main" until it got its own
     // property) reads every date up to earlierUntil from earlierPropertyId,
