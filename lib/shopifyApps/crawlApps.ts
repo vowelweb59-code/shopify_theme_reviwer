@@ -1,5 +1,6 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
+import { fetchPublicText, sleep } from "@/lib/net/fetchPublic";
 import { ShopifyApp, ShopifyAppCategory, ShopifyAppFeature } from "@/models/shopify-app";
 import { featureParts, parseAppCards, parseAppDeepDetail, parseAppDetail, parseCategoryLabel, parseCategoryLinks, type AppCard } from "./parseApps";
 
@@ -19,7 +20,6 @@ const ORIGIN = "https://apps.shopify.com";
 const TOP_LEVEL = ["finding-products", "marketing-and-conversion", "orders-and-shipping", "sales-channels", "selling-products", "store-design", "store-management"];
 /** Categories watched from the start; more can be watched from the tab. */
 const WATCHED_BY_DEFAULT = ["store-management-support-faq"];
-const HEADERS = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" };
 const PAUSE_MS = 1_200;
 const RATE_LIMIT_WAIT_MS = 90_000;
 const MAX_PAGES = 150; // per category; the largest has ~100
@@ -40,22 +40,11 @@ export function shopifyAppsCrawlProgress() {
   return { running: crawl.running !== null, mode: crawl.mode, scope: crawl.scope, phase: crawl.phase, total: crawl.total, done: crawl.done, current: crawl.current, appsSeen: crawl.appsSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const titleCase = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 /** The page's HTML; null on 404. Waits out a 429 and retries; any other failure throws. */
 async function fetchPage(url: string): Promise<string | null> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, { headers: HEADERS, redirect: "follow", signal: AbortSignal.timeout(30_000) });
-    if (res.status === 404) return null;
-    if (res.status === 429 && attempt < 2) {
-      await sleep(RATE_LIMIT_WAIT_MS);
-      continue;
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return await res.text();
-  }
-  throw new Error(`Rate limited (429) for ${url}`);
+  return fetchPublicText(url, { attempts: 3, rateLimitWaitMs: RATE_LIMIT_WAIT_MS, nullOn404: true });
 }
 
 /**

@@ -78,4 +78,3 @@ export function ServiceStatusBadge({ status }: { status: ServiceProjectStatus })
 
 /** Shared form-control look for the Service pages. */
 export const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm";
-export const MUTED = "text-zinc-500";

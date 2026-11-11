@@ -1,4 +1,5 @@
 import { Parser } from "htmlparser2";
+import { BROWSER_UA } from "@/lib/net/fetchPublic";
 
 // Confirmed against real Shopify Theme Store listings (themes.shopify.com):
 // a lowercase, hyphen-joined name reliably resolves for a real theme (e.g.
@@ -24,8 +25,7 @@ const THEME_STORE_TIMEOUT_MS = 20_000;
 // which then also excludes it from the ranking crawl (see
 // lib/themes/runRankingCheck.ts's `themeStoreError: null` filter) until the
 // next manual re-check happens to land on a 200.
-const BROWSER_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
+const BROWSER_USER_AGENT = BROWSER_UA;
 
 export type ThemeStorePreset = { name: string; slug: string };
 

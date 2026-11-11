@@ -1,5 +1,6 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
+import { fetchPublicText, sleep } from "@/lib/net/fetchPublic";
 import { PARTNER_TIERS, ShopifyPartner } from "@/models/shopify-partner";
 import { PAGE_SIZE, parseCards, parseCountrySlugs, parseProfile, parseTotal, type DirectoryPartner } from "./parseDirectory";
 
@@ -9,7 +10,6 @@ import { PAGE_SIZE, parseCards, parseCountrySlugs, parseProfile, parseTotal, typ
 // crawl in lib/sales/categories.ts.
 
 const BASE = "https://www.shopify.com/partners/directory/locations";
-const HEADERS = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36", Accept: "text/html" };
 const PAUSE_MS = 1_200;
 const RATE_LIMIT_WAIT_MS = 60_000;
 const MAX_PAGES_PER_COUNTRY = 200; // safety net; the largest country is ~81 pages
@@ -22,21 +22,10 @@ export function partnerCrawlProgress() {
   return { running: crawl.running !== null, total: crawl.total, done: crawl.done, current: crawl.current, partnersSeen: crawl.partnersSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** GET a directory page. Returns null for a redirect (an unknown country) or a 404 (a profile that was removed). */
 async function fetchPage(url: string): Promise<string | null> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(url, { headers: HEADERS, redirect: "manual", signal: AbortSignal.timeout(30_000) });
-    if ((res.status >= 300 && res.status < 400) || res.status === 404) return null;
-    if (res.status === 429 && attempt === 0) {
-      await sleep(RATE_LIMIT_WAIT_MS);
-      continue;
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return await res.text();
-  }
-  throw new Error(`Rate limited (429) for ${url}`);
+  return fetchPublicText(url, { attempts: 2, rateLimitWaitMs: RATE_LIMIT_WAIT_MS, redirect: "manual", nullOnRedirect: true, nullOn404: true, headers: { Accept: "text/html" } });
 }
 
 /** Pages through one listing (a country, optionally narrowed by a query like `partnerTiers=tier_plus`). */

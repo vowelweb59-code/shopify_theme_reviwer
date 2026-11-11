@@ -1,5 +1,6 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
+import { fetchPublicText, sleep } from "@/lib/net/fetchPublic";
 import { INDUSTRIES } from "@/lib/themes/industries";
 import { fetchThemeStoreListingBySlug } from "@/lib/themes/themeStoreFeatures";
 import { ThemeStoreTheme } from "@/models/theme-store-theme";
@@ -13,7 +14,6 @@ import { parseCatalogCards, parseCompanionApp, parseDesigner, parseLastPage, typ
 // Step 3 only reads themes not read in the last week (or not yet checked for a suggested app).
 
 const LISTING = "https://themes.shopify.com/themes";
-const HEADERS = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" };
 const PAUSE_MS = 1_500;
 const RATE_LIMIT_WAIT_MS = 90_000;
 const MAX_PAGES = 200; // safety net; the full catalog is ~55 pages
@@ -28,19 +28,9 @@ export function themeStoreCrawlProgress() {
   return { running: crawl.running !== null, phase: crawl.phase, total: crawl.total, done: crawl.done, current: crawl.current, themesSeen: crawl.themesSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function fetchListing(url: string): Promise<string> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, { headers: HEADERS, redirect: "follow", signal: AbortSignal.timeout(30_000) });
-    if (res.status === 429 && attempt < 2) {
-      await sleep(RATE_LIMIT_WAIT_MS);
-      continue;
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return await res.text();
-  }
-  throw new Error(`Rate limited (429) for ${url}`);
+  return fetchPublicText(url, { attempts: 3, rateLimitWaitMs: RATE_LIMIT_WAIT_MS });
 }
 
 /** Every card of a listing (the whole catalog, or one industry), in the store's own order. Throws if any page fails, so a partial read never passes for a full one. */

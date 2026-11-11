@@ -79,8 +79,6 @@ export function stepAnchor(p: Period, dir: -1 | 1): string | null {
   return null;
 }
 
-/** Query string for the API. */
-export const apiRange = (p: Period) => `from=${p.from}&to=${p.to}`;
 
 export const fmtDeltaPeriod = (now: number, before: number, fmt: (m: number) => string): string => {
   const d = now - before;

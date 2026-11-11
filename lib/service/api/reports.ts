@@ -134,7 +134,6 @@ export function summarise(rows: Row[], previousMinutes: number, workingDays: num
   };
 }
 
-export type PersonUser = { id: string; displayName: string } | null;
 
 async function sendersWithUsers() {
   const [senders, users] = await Promise.all([

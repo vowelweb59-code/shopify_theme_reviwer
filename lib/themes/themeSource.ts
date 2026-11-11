@@ -20,6 +20,3 @@ export function localUploadSource(themeZip: Pick<ThemeZipDoc, "gridFsFileId">): 
     getZipBuffer: () => readZipBuffer(themeZip.gridFsFileId as unknown as string),
   };
 }
-
-// Future (not implemented — no Git functionality exists yet):
-// export type GitThemeSource = { kind: "git"; ref: string; getZipBuffer(): Promise<Buffer> };

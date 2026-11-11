@@ -182,10 +182,25 @@ Second batch, 2026-11-11:
 | Attendance name matching strips accents like the service import ("José" = "Jose") | `lib/attendance/leave.ts` |
 | README rewritten to the current app; the nine `phase-*-updated.md` specs and `ga4-analytics-architecture.md` moved to `docs/archive/`; the page-speed page no longer claims a Playwright fallback | `README.md`, `docs/archive/`, `app/page-speed/PageSpeedContent.tsx` |
 
-Still open from the audit, in order: login throttle trusts client IP headers and has a global cap that can lock the owner out;
-sync lease for the other schedulers; one scheduler helper (9 hand-rolled loops); one Google Chat client for the three copies
-(token caching, page limits, silent truncation in the theme reader, credential trimming in the theme side); shared name
-normalizer (accents); shared crawler fetch layer; generic API helper for the 94 theme-side routes; audit trail for theme-side
-deletes; time-entry double-click guard; stale docs (README, `phase-*-updated.md`, Playwright text on the page-speed page);
-`scripts/import-sales.ts` is untracked but `sales:import` needs it; dead `app/api/service/*` GET routes and one-off scripts
-(`create-update-projects`, `classify-existing-reports`, `import-projects`, `merge-project-rounds`) need an owner check first.
+Third batch, 2026-11-11:
+
+| Fix | Where |
+|---|---|
+| One page fetcher for the public-site crawlers (browser User-Agent, 30 s timeout, wait and retry on 429, optional null on 404 / redirect). The App Store, Theme Store catalog and Partner Directory crawls and the Theme Store ranking read use it; the ranking read now retries a 429 (it used to fail the whole crawl) | `lib/net/fetchPublic.ts` |
+| One loop helper for the three identical repeating syncs (theme Chat, service Chat, attendance). The other schedulers (GA4 rotation, demo store, ranking, Theme Store, App Store, audit recovery) have different shapes and keep their own | `lib/jobs/repeatingJob.ts` |
+| Removed code nothing used: `StatusBadge.tsx`, `MUTED`, `apiRange`, `SERVICE_CLOSED_STATUSES`, `PersonUser`, a commented-out `GitThemeSource` | various |
+
+Deliberately NOT done (each needs your call or is a larger piece of work):
+
+- **Owner checks before deleting:** one-off scripts (`create-update-projects`, `classify-existing-reports`, `import-projects`,
+  `merge-project-rounds` with `lib/projects/importPlan.ts`/`rounds.ts`), about 10 `app/api/service/*` GET routes no page calls
+  (`reports/*`, `dashboard/*`, `chat/status`, `chat/disconnect`, ...), `app/api/rules`, the legacy `demoStoreUrl` field of
+  `/api/audit/run`, `lib/service/import/contract-events.ts` (only its test uses it), `pg` and the Postgres migration script (after
+  production is migrated, item 4 of section 2).
+- **`scripts/import-sales.ts`** is untracked but `npm run sales:import` points at it: commit it when it is ready.
+- **One Google Chat client for the three copies** (OAuth code exchange, paging, callbacks, connection schema): large; the bugs the
+  copies had (token reuse, truncation, trimming, revoked tokens) are fixed individually above.
+- **One API helper for the 94 theme-side routes** (`lib/service/api/http.ts` is the model): migrate route by route when each is next
+  touched; 41 have no try/catch and some echo `err.message` to the client.
+- **Shared date helpers beyond IST** (`addDays`, `daysBetween` with four meanings, month bounds) and one HTML entity decoder.
+- **Review hand-offs:** the 14 vs 30 day "inactive" cutoff (theme team activity vs attendance) is undecided.
