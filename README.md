@@ -139,7 +139,7 @@ Both reuse `lib/google/sheetsExport.ts`'s `createGoogleSheet`/`updateGoogleSheet
   /enhancements                 — optional capability trends ("Future updates"), non-blocking
   /settings                     — Google connections (GA4, Sheets, Ads) and maintenance
   /api/audit/run, /api/audit/[id], /api/audit/[id]/findings
-  /api/rules, /api/requirements, /api/enhancements (GET list/filter, PATCH triage), /api/enhancements/export/google-sheet
+  /api/requirements, /api/enhancements (GET list/filter, PATCH triage), /api/enhancements/export/google-sheet
   /api/reports, /api/reports/[id]
   /_components/findings.tsx     — shared SummaryBar/FindingsTable used by /audit and /reports/[id]
   /_components/enhancementReport.tsx  — the report page's "Future updates" tab

@@ -14,8 +14,6 @@
     "seed:enhancements": "tsx --env-file-if-exists=.env.local scripts/seed-enhancement-points.ts",
     "seed:native-capabilities": "tsx --env-file-if-exists=.env.local scripts/seed-native-capabilities.ts",
     "seed:analytics-themes": "tsx --env-file-if-exists=.env.local scripts/seed-analytics-themes.ts",
-    "import:projects": "tsx --env-file-if-exists=.env.local scripts/import-projects.ts",
-    "merge:rounds": "tsx --env-file-if-exists=.env.local scripts/merge-project-rounds.ts",
     "sales:import": "tsx --env-file-if-exists=.env.local scripts/import-sales.ts",
     "theme:add": "tsx --env-file-if-exists=.env.local scripts/add-theme.ts",
     "service:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate-upwork-postgres.ts",

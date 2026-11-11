@@ -192,12 +192,19 @@ Third batch, 2026-11-11:
 
 Deliberately NOT done (each needs your call or is a larger piece of work):
 
-- **Owner checks before deleting:** one-off scripts (`create-update-projects`, `classify-existing-reports`, `import-projects`,
-  `merge-project-rounds` with `lib/projects/importPlan.ts`/`rounds.ts`), about 10 `app/api/service/*` GET routes no page calls
-  (`reports/*`, `dashboard/*`, `chat/status`, `chat/disconnect`, ...), `app/api/rules`, the legacy `demoStoreUrl` field of
-  `/api/audit/run`, `lib/service/import/contract-events.ts` (only its test uses it), `pg` and the Postgres migration script (after
-  production is migrated, item 4 of section 2).
-- **`scripts/import-sales.ts`** is untracked but `npm run sales:import` points at it: commit it when it is ready.
+- **Removed 2026-11-11 (restore from git history if ever needed):** the four October one-off scripts (`create-update-projects`,
+  `classify-existing-reports`, `import-projects`, `merge-project-rounds`) with the code only they used (`lib/projects/importPlan.ts`,
+  `planMerge` / `splitVersionName` in `rounds.ts`, `lib/chat/developmentSchedule.ts`, `historicalClassification.ts`) and the
+  `import:projects` / `merge:rounds` npm scripts; 18 API routes no page called (`app/api/rules` and, under `app/api/service`:
+  `chat/status`, `dashboard/*`, `reports/*`, `review/entries`, `review/senders` (list), `team` and `team/[id]` (read), `projects/[id]`
+  (read/PATCH), `projects/[id]/details|team-hours|weekly-hours`, `projects/activity-rules|assignable-users|filter-options`; 17 in all). The
+  pages read through `lib/service/api/*` directly, so nothing changed for them. Whether the scripts were ever run against the
+  live database was not checked: their results are in the data either way. `data/project-import.json` (git-ignored) is now unused.
+  Kept on purpose: `app/api/service/chat/disconnect` (the only way to disconnect Chat, no button yet) and the unused GET handlers
+  inside routes that also have a used POST/PUT (`departments`, `users`, `projects`, `review/clients`, `review/profiles`,
+  `projects/[id]/assignments|contract`).
+- **Still to decide:** the legacy `demoStoreUrl` field of `/api/audit/run`, `lib/service/import/contract-events.ts` (only its test
+  uses it), `pg` and the Postgres migration script (after production is migrated, item 4 of section 2).
 - **One Google Chat client for the three copies** (OAuth code exchange, paging, callbacks, connection schema): large; the bugs the
   copies had (token reuse, truncation, trimming, revoked tokens) are fixed individually above.
 - **One API helper for the 94 theme-side routes** (`lib/service/api/http.ts` is the model): migrate route by route when each is next
