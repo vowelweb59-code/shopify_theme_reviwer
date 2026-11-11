@@ -28,6 +28,18 @@ export function authMode(env: Env): "check" | "open" | "misconfigured" {
   return "misconfigured";
 }
 
+/**
+ * A production site signing with the password-derived key lets anyone holding one session cookie guess the password
+ * offline, so a real SESSION_SECRET (32+ characters) is expected there. Reported as a boot warning, not enforced: making
+ * it fatal would lock the owner out of a deploy that predates the setting.
+ */
+export function sessionSecretProblem(env: Env): string | null {
+  if (authMode(env) !== "check" || env.NODE_ENV !== "production") return null;
+  if (!env.SESSION_SECRET) return "SESSION_SECRET is not set: sessions are signed with a key derived from the login password. Set a random 32+ character value.";
+  if (env.SESSION_SECRET.length < 32) return "SESSION_SECRET is shorter than 32 characters.";
+  return null;
+}
+
 function signingKey(env: Env): Buffer {
   if (env.SESSION_SECRET) return Buffer.from(env.SESSION_SECRET, "utf8");
   return createHash("sha256").update(`session:${env.BASIC_AUTH_USER}:${env.BASIC_AUTH_PASSWORD}`).digest();

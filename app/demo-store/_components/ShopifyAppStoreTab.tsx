@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, ExternalLink, Layers, RefreshCw } from "lucide-react";
+import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useEffect, useMemo, useState } from "react";
 import { formatDateTime } from "@/app/_components/formatDate";
 import { Button } from "@/app/_components/ui/Button";
@@ -219,7 +220,6 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
 
   function exportCsv() {
     if (!data) return;
-    const cell = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const header = ["App", "Developer", "Rating", "Reviews", "Pricing", "Launched", "Built for Shopify", "Description", "Plans", "Languages", "Works with", "Features in this category", "Link"];
     const lines = data.apps.map((a) =>
       [
@@ -448,7 +448,6 @@ export function ShopifyAppStoreTab() {
   const GROUP_HEADER = { category: "Category (Shopify’s)", niche: "Niche (category › topic)", topic: "Topic (all categories)" }[level];
 
   function exportCsv() {
-    const cell = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const header = ["App", "Developer", "Stages", "Categories", "Rating", "Reviews", "Pricing", "Built for Shopify", "Launched", "Link"];
     const lines = shownApps.map((a) =>
       [a.name, a.developer, a.stages.map(stageLabel).join("; "), a.categories.map((s) => labels?.[s] ?? s).join("; "), a.rating, a.reviewCount, PRICING_LABEL[a.pricing], a.builtForShopify ? "Yes" : "", a.launchedAt, a.url].map(cell).join(",")

@@ -1,20 +1,2 @@
-/** IST month "YYYY-MM" as [from, to) in UTC. */
-export function istMonthWindow(month: string) {
-  const [y, m] = month.split("-").map(Number) as [number, number];
-  const ny = m === 12 ? y + 1 : y;
-  const nm = m === 12 ? 1 : m + 1;
-  const at = (yy: number, mm: number) => new Date(`${yy}-${String(mm).padStart(2, "0")}-01T00:00:00+05:30`);
-  return { from: at(y, m), to: at(ny, nm) };
-}
-
-/** The IST month "YYYY-MM" that contains `now`, moved back by `back` months. */
-export function istMonth(now: Date, back = 0): string {
-  const ist = new Date(now.getTime() + 330 * 60_000);
-  const d = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth() - back, 1));
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-}
-
-/** The IST calendar day "YYYY-MM-DD" of `now`. */
-export function istDay(now: Date): string {
-  return new Date(now.getTime() + 330 * 60_000).toISOString().slice(0, 10);
-}
+// Moved to lib/time/ist.ts so the theme side uses the same IST day; re-exported for the service code that imports it here.
+export { istDay, istMonth, istMonthWindow } from "@/lib/time/ist";

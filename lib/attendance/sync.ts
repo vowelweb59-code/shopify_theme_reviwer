@@ -1,7 +1,7 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
 import { istMonth, istMonthWindow } from "@/lib/service/chat/months";
-import { serviceRefreshToken } from "@/lib/service/chat/sync";
+import { noteIfGoogleAccessLost, serviceRefreshToken } from "@/lib/service/chat/sync";
 import { AttendanceMessage, AttendanceSync } from "@/models/attendance";
 import { attendanceSpace, listAttendanceMessages } from "./chat";
 
@@ -32,7 +32,8 @@ export async function syncAttendance(months = DEFAULT_SYNC_MONTHS) {
     await AttendanceSync.updateOne({ key: "attendance" }, { $set: { lastSyncAt: new Date(), lastCount: messages.length, lastWindowFrom: from, lastError: null } }, { upsert: true });
     return { fetched: messages.length, from, space };
   } catch (err) {
-    await AttendanceSync.updateOne({ key: "attendance" }, { $set: { lastError: err instanceof Error ? err.message : String(err) } }, { upsert: true });
-    throw err;
+    const lost = await noteIfGoogleAccessLost(err);
+    await AttendanceSync.updateOne({ key: "attendance" }, { $set: { lastError: lost ?? (err instanceof Error ? err.message : String(err)) } }, { upsert: true });
+    throw lost ? new Error(lost) : err;
   }
 }

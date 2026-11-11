@@ -31,6 +31,12 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     cache.promise = mongoose.connect(MONGODB_URI).then((m) => m);
   }
 
-  cache.conn = await cache.promise;
+  try {
+    cache.conn = await cache.promise;
+  } catch (err) {
+    // Forget the failed attempt, or one blip (Atlas, cold start) would reject every later call until a restart.
+    cache.promise = null;
+    throw err;
+  }
   return cache.conn;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
@@ -39,7 +40,6 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
   ];
 
   function exportCsv() {
-    const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
     const lines = [["Date", ...group.dimensions.map((d) => d.label), "Installs"].map(cell).join(","), ...rows.map((r) => [r.date, ...r.values, r.installs].map(cell).join(","))];
     const url = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");

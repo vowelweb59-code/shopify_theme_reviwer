@@ -1,10 +1,11 @@
 import { connectToDatabase } from "@/lib/db/connect";
+import { intervalMs } from "@/lib/jobs/intervalMinutes";
 import { ServiceChatConnection } from "@/models/service-chat";
 import { syncAttendance } from "./sync";
 
 // Reads the attendance space every 30 minutes (the last two months, for late or edited posts) while the Service Chat connection
 // is active. Skipped until Chat is connected.
-const INTERVAL_MS = Number(process.env.ATTENDANCE_SYNC_MINUTES ?? 30) * 60 * 1000;
+const INTERVAL_MS = intervalMs(process.env.ATTENDANCE_SYNC_MINUTES, 30);
 
 const g = globalThis as typeof globalThis & { _attendanceScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean; running: boolean } };
 const state = (g._attendanceScheduler ??= { timer: null, started: false, running: false });

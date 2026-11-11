@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, ExternalLink, Mail, RefreshCw, Star, Users } from "lucide-react";
+import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
@@ -96,7 +97,6 @@ export function PotentialAffiliatesTab() {
   }, [partners, country, tier, query]);
 
   function exportCsv() {
-    const cell = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const header = ["Partner", "Country", "Tier", "Location", "Rating", "Reviews", "Email", "Phone", "Website", "Profile"];
     const lines = shown.map((p) => [p.name, countryFromLocation(p.location), p.tier ? TIER_LABEL[p.tier] : "", p.location, p.rating, p.reviewCount, p.email, p.phone, p.website, p.url].map(cell).join(","));
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));

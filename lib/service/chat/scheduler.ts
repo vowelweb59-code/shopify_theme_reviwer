@@ -1,11 +1,12 @@
 import { connectToDatabase } from "@/lib/db/connect";
+import { intervalMs } from "@/lib/jobs/intervalMinutes";
 import { ServiceChatConnection } from "@/models/service-chat";
 import { istDay, istMonth } from "./months";
 import { syncServiceMonth } from "./sync";
 
 // Service team (TIMER STATUS) auto sync: this IST month every 15 minutes, and on the first round of each IST day also last
 // month (late posts). Skipped while Chat is not connected. Separate from the theme team's lib/chat/scheduler.ts.
-const INTERVAL_MS = Number(process.env.SERVICE_CHAT_SYNC_MINUTES ?? 15) * 60 * 1000;
+const INTERVAL_MS = intervalMs(process.env.SERVICE_CHAT_SYNC_MINUTES, 15);
 
 const g = globalThis as typeof globalThis & { _serviceChatScheduler?: { timer: ReturnType<typeof setTimeout> | null; started: boolean; running: boolean; lastBackfillDay: string } };
 const state = (g._serviceChatScheduler ??= { timer: null, started: false, running: false, lastBackfillDay: "" });

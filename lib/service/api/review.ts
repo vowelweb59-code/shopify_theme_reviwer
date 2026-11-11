@@ -149,6 +149,16 @@ async function pendingEntry(entryId: string): Promise<EntryDoc> {
   return e;
 }
 
+/**
+ * Writes a review decision only if the entry is still in the state it was read in, and appends the notes instead of
+ * rewriting the list. Two people acting on the same entry therefore can't both succeed (the second is told it changed) and
+ * a note written in between is never lost.
+ */
+async function applyDecision(e: EntryDoc, set: Record<string, unknown>, notes: string[]) {
+  const r = await ServiceTimeEntry.updateOne({ _id: e._id, state: e.state }, { $set: set, $push: { notes: { $each: notes } } });
+  if (r.matchedCount === 0) throw badRequest("Someone else just changed this entry. Reload and check it again.");
+}
+
 export async function approveEntry(entryId: string, body: Record<string, unknown>) {
   const e = await pendingEntry(entryId);
   for (const k of Object.keys(body)) if (!["minutes", "clientId", "projectId"].includes(k)) throw badRequest(`Unknown field: ${k}`);
@@ -161,12 +171,11 @@ export async function approveEntry(entryId: string, body: Record<string, unknown
   if (projectId && !(await ServiceProject.exists({ _id: projectId, contract: { $ne: null } }))) throw badRequest("Unknown project.");
   const set: Record<string, unknown> = {
     state: "APPROVED",
-    notes: [...e.notes, "APPROVED_BY_REVIEW", ...(minutes !== null && minutes !== e.minutes ? ["MINUTES_CORRECTED"] : [])],
   };
   if (minutes !== null) set.minutes = minutes;
   if (clientId) set.clientId = clientId;
   if (projectId) Object.assign(set, { projectId, allocations: [] });
-  await ServiceTimeEntry.updateOne({ _id: e._id }, { $set: set });
+  await applyDecision(e, set, ["APPROVED_BY_REVIEW", ...(minutes !== null && minutes !== e.minutes ? ["MINUTES_CORRECTED"] : [])]);
   const to = minutes ?? e.minutes;
   await recordServiceAudit("time_entry.approve", { entryId: e._id, from: e.minutes, to, clientChanged: !!clientId });
   return { id: e._id, state: "APPROVED", minutes: to };
@@ -175,7 +184,7 @@ export async function approveEntry(entryId: string, body: Record<string, unknown
 export async function rejectEntry(entryId: string, body: Record<string, unknown>) {
   const e = await pendingEntry(entryId);
   const reason = str(body.reason, "reason", { max: 500 })!;
-  await ServiceTimeEntry.updateOne({ _id: e._id }, { $set: { state: "REJECTED", notes: [...e.notes, `REJECTED_BY_REVIEW: ${reason}`] } });
+  await applyDecision(e, { state: "REJECTED" }, [`REJECTED_BY_REVIEW: ${reason}`]);
   await recordServiceAudit("time_entry.reject", { entryId: e._id, reason });
   return { id: e._id, state: "REJECTED" };
 }
@@ -207,7 +216,7 @@ export async function resolveTimer(entryId: string, body: Record<string, unknown
   if (minutes > MAX_PLAUSIBLE_MINUTES) throw badRequest("More than 16 hours: split it or reject the entry.");
   const flags = e.flags.filter((f) => f !== "OPEN_INTERVAL" && f !== "ORPHAN_OFF" && f !== "DUPLICATE_ON");
   const state = flags.length ? "NEEDS_REVIEW" : "APPROVED";
-  await ServiceTimeEntry.updateOne({ _id: e._id }, { $set: { minutes, flags, state, notes: [...e.notes, open ? "OFF_SUPPLIED_BY_REVIEW" : "ON_SUPPLIED_BY_REVIEW"] } });
+  await applyDecision(e, { minutes, flags, state }, [open ? "OFF_SUPPLIED_BY_REVIEW" : "ON_SUPPLIED_BY_REVIEW"]);
   await recordServiceAudit("time_entry.resolve_timer", { entryId: e._id, kind: open ? "open" : "orphan", minutes });
   return { id: e._id, state, minutes, flags };
 }

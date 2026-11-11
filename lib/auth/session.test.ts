@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createSessionToken, credentialsMatch, isValidSessionToken } from "./session";
+import { createSessionToken, credentialsMatch, isValidSessionToken, sessionSecretProblem } from "./session";
 import { safeNextPath } from "./nextPath";
 import { clientIp, recordFailure, recordSuccess, resetLoginRateLimit, retryAfterSeconds } from "./loginRateLimit";
 
@@ -26,6 +26,19 @@ describe("session tokens", () => {
     const token = createSessionToken({ ...ENV, SESSION_SECRET: "s1" });
     expect(isValidSessionToken(token, { ...ENV, SESSION_SECRET: "s1" })).toBe(true);
     expect(isValidSessionToken(token, { ...ENV, SESSION_SECRET: "s2" })).toBe(false);
+  });
+});
+
+describe("sessionSecretProblem", () => {
+  const PROD = { ...ENV, NODE_ENV: "production" };
+  it("warns in production without a strong SESSION_SECRET", () => {
+    expect(sessionSecretProblem(PROD)).toMatch(/not set/);
+    expect(sessionSecretProblem({ ...PROD, SESSION_SECRET: "short" })).toMatch(/shorter/);
+    expect(sessionSecretProblem({ ...PROD, SESSION_SECRET: "x".repeat(32) })).toBeNull();
+  });
+  it("stays quiet outside production or when the site is open", () => {
+    expect(sessionSecretProblem({ ...ENV, NODE_ENV: "development" })).toBeNull();
+    expect(sessionSecretProblem({ NODE_ENV: "production", BASIC_AUTH_DISABLED: "1" })).toBeNull();
   });
 });
 

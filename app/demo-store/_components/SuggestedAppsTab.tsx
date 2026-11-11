@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, ExternalLink, Puzzle } from "lucide-react";
+import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
@@ -41,7 +42,6 @@ export function SuggestedAppsTab() {
   }, [withApp]);
 
   function exportCsv() {
-    const cell = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = rows.map((t) => [t.name, t.designer, t.companionApp?.name, t.companionApp?.subtitle, t.companionApp?.pricing, t.companionApp?.url, t.url].map(cell).join(","));
     const header = ["Theme", "Publisher", "Suggested app", "App tagline", "App pricing", "App link", "Theme link"];
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));

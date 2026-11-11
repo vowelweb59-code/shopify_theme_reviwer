@@ -1,6 +1,7 @@
 import "server-only";
 import { decryptSecret, encryptSecret } from "@/lib/analytics/crypto";
 import { googleErrorCode } from "@/lib/analytics/googleOAuth";
+import { istDay } from "@/lib/time/ist";
 import { ChatConnection } from "@/models/chat-connection";
 import { createChatOAuthClient, getChatSpace, listMemberNames, listSpaceMessages } from "./googleChat";
 import { importReports, type ImportSummary } from "./importReports";
@@ -58,7 +59,7 @@ export async function syncSpace(options: { all?: boolean } = {}): Promise<SyncRe
     const messages = await listSpaceMessages(space, accessToken, options.all ? null : (connection.lastMessageAt ?? null), memberNames);
     const reports = messages.filter((m) => looksLikeReport(m.text));
 
-    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: m.createTime.slice(0, 10), postedAt: m.createTime })));
+    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: istDay(new Date(m.createTime)), postedAt: m.createTime })));
 
     const newest = messages.reduce<Date | null>((latest, m) => {
       const at = new Date(m.createTime);

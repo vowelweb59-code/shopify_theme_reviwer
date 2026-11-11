@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Download, ExternalLink, RefreshCw, Store } from "lucide-react";
+import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
@@ -140,7 +141,6 @@ export function ThemeStoreCatalogSection() {
   ];
 
   function exportCsv() {
-    const cell = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const header = ["Rank", "Theme", "Publisher", "Price", "Positive %", "Reviews", "Presets", "Categories", "Latest version", "Released", "Features", "Link"];
     const lines = shown.map((t) =>
       [t.rank, t.name, t.designer, t.price, t.positivePercent, t.reviewCount, t.presetCount, t.industries.map(industryLabel).join("; "), t.latestVersion, t.latestVersionReleasedAt, t.features.join("; "), t.url].map(cell).join(",")
