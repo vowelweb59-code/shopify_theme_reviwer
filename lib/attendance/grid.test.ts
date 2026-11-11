@@ -59,6 +59,7 @@ describe("matchPersonKey", () => {
   ];
   it("matches exactly, then by a unique contained name, and refuses an ambiguous one", () => {
     expect(matchPersonKey("kunal  MENDHE", people, normalizeName)).toBe("kunal mendhe");
+    expect(normalizeName("José  Núñez")).toBe("jose nunez");
     expect(matchPersonKey("Asha Rao Patil", people, normalizeName)).toBe("asha rao");
     expect(matchPersonKey("Sam Lee", people, normalizeName)).toBe("sam lee");
     expect(matchPersonKey("Nobody Here", people, normalizeName)).toBeNull();

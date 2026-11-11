@@ -53,7 +53,7 @@ async function loadGaMonths(themes: { _id: unknown; name: string }[], from?: str
     else g.tryTheme += r.n;
     byKey.set(key, g);
   }
-  // Installs can be fractional estimates (see ga4-analytics-architecture §5g); show whole numbers.
+  // Installs can be fractional estimates (see docs/archive/ga4-analytics-architecture.md §5g); show whole numbers.
   return [...byKey.values()].map((g) => ({ ...g, installs: Math.round(g.installs), tryTheme: Math.round(g.tryTheme) }));
 }
 

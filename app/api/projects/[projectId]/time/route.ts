@@ -59,6 +59,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
     return NextResponse.json({ error: "That person isn't on this project's team." }, { status: 400 });
   }
 
+  // A double-click (or a retry after a slow response) sends the same entry twice: return the one just logged instead of adding
+  // a second, which would inflate the project's hours.
+  const duplicate = await TimeEntry.findOne({ ...parsed.value, projectId, createdAt: { $gte: new Date(Date.now() - 10_000) } });
+  if (duplicate) return NextResponse.json({ entry: duplicate }, { status: 200 });
+
   const entry = await TimeEntry.create({ ...parsed.value, projectId });
   return NextResponse.json({ entry }, { status: 201 });
 }

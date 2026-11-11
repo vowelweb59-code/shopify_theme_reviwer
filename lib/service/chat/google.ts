@@ -64,11 +64,20 @@ export async function exchangeServiceChatCode(code: string, client = serviceChat
   return { googleAccountId: payload.sub, email: payload.email, refreshToken: tokens.refresh_token ?? null, scopes };
 }
 
+// A read asks for a token several times (the sync, the attendance sync, the member list); Google's tokens last an hour, so one is
+// reused until a minute before it expires, as the theme side does. Keyed by the refresh token, so reconnecting never reuses one.
+const TOKEN_MARGIN_MS = 60_000;
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+
 async function accessToken(refreshToken: string): Promise<string> {
+  const cached = tokenCache.get(refreshToken);
+  if (cached && cached.expiresAt - Date.now() > TOKEN_MARGIN_MS) return cached.token;
   const client = serviceChatOAuthClient();
   client.setCredentials({ refresh_token: refreshToken });
   const { token } = await client.getAccessToken();
   if (!token) throw new Error("Google returned no access token. Reconnect Chat.");
+  tokenCache.clear(); // only the connected account's token is ever needed
+  tokenCache.set(refreshToken, { token, expiresAt: client.credentials.expiry_date ?? Date.now() });
   return token;
 }
 

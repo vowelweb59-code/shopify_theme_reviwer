@@ -22,9 +22,12 @@ const valid = (y: number, m: number, d: number) => {
   return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
 };
 
-/** Lower case, single spaces, no punctuation: the form names are compared in. */
+/**
+ * Lower case, no accents, single spaces, no punctuation: the form names are compared in. Accents are stripped the way the
+ * service import does (lib/service/import/text.ts), so "José" in a leave post matches "Jose" in a time report.
+ */
 export function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  return name.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 }
 
 type Token = { day: number; month: number | null; year: number | null; start: number; end: number; suffix: boolean };

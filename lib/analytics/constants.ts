@@ -1,7 +1,7 @@
 // GA4 analytics — shared vocabulary for the models (models/analytics-*.ts,
 // models/google-connection.ts) and, in later phases, the sync pipeline and
 // analytics engine. Phase 1 foundation only: nothing here talks to Google.
-// See ga4-analytics-architecture.md for the full design.
+// See docs/archive/ga4-analytics-architecture.md for the full design.
 
 /** The two business events the dashboard is built around. */
 export const PRIMARY_EVENTS = {

@@ -170,6 +170,18 @@ A read-only audit (security, stale code, duplicated mechanics) found the items b
 | One service import per IST month at a time, across the button, the scheduler and a second server instance: a Mongo lease (`job_leases`, `models/job-lease.ts`, `lib/jobs/lease.ts`). The busy caller gets "already running". Other schedulers (attendance, theme chat, App Store, GA4) do not use it yet | `syncServiceMonth` |
 | Review approve / reject / resolve-timer only apply if the entry is still in the state it was read in, and append notes with `$push` (two people can no longer both win, notes are not lost) | `applyDecision` in `lib/service/api/review.ts` |
 
+Second batch, 2026-11-11:
+
+| Fix | Where |
+|---|---|
+| Login throttle: past the global limit (100 failures per 15 minutes) one attempt per 30 seconds gets through instead of refusing everyone (an attacker could lock the owner out); `TRUSTED_PROXY_HOPS=n` makes the per-IP key the Nth entry from the END of `x-forwarded-for` (a client can't forge it). Unset = old header order. **Owner: check Render's `x-forwarded-for` and set it.** | `lib/auth/loginRateLimit.ts` |
+| The same Mongo lease now guards the theme Chat sync and the attendance sync (GA4 already has per-theme locks; the App Store crawl is long and idempotent, so it has none) | `lib/chat/syncSpace.ts`, `lib/attendance/sync.ts` |
+| The theme Chat reader throws when it hits its page cap with more to read (it used to return a partial list, and the caller then moved its "last read" mark past unseen messages); it trims the Google client id/secret like the service side; the service reader reuses its access token | `lib/chat/googleChat.ts`, `lib/service/chat/google.ts` |
+| Destructive theme-side actions (delete project, delete team member, clear a theme's sales, disconnect Ads) are recorded in `admin_audit_log` (what, which record, when; no "who" with one shared login). Separate from the Service section's hash-chained log. | `models/admin-audit.ts`, `lib/api/adminAudit.ts` |
+| A time entry identical to one logged in the last 10 seconds is not added twice (double-click guard) | `app/api/projects/[projectId]/time/route.ts` |
+| Attendance name matching strips accents like the service import ("José" = "Jose") | `lib/attendance/leave.ts` |
+| README rewritten to the current app; the nine `phase-*-updated.md` specs and `ga4-analytics-architecture.md` moved to `docs/archive/`; the page-speed page no longer claims a Playwright fallback | `README.md`, `docs/archive/`, `app/page-speed/PageSpeedContent.tsx` |
+
 Still open from the audit, in order: login throttle trusts client IP headers and has a global cap that can lock the owner out;
 sync lease for the other schedulers; one scheduler helper (9 hand-rolled loops); one Google Chat client for the three copies
 (token caching, page limits, silent truncation in the theme reader, credential trimming in the theme side); shared name

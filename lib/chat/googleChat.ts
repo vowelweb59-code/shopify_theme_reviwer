@@ -42,8 +42,11 @@ export function getChatSpace(env: Env = process.env): string {
 }
 
 export function createChatOAuthClient(env: Env = process.env): OAuth2Client {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) throw new ChatOAuthError("not_configured", "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set.");
-  return new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, getChatRedirectUri(env));
+  // Trimmed: a pasted dashboard value with a trailing space or newline makes Google answer invalid_client.
+  const id = env.GOOGLE_CLIENT_ID?.trim();
+  const secret = env.GOOGLE_CLIENT_SECRET?.trim();
+  if (!id || !secret) throw new ChatOAuthError("not_configured", "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set.");
+  return new OAuth2Client(id, secret, getChatRedirectUri(env));
 }
 
 export function buildChatAuthUrl(state: string, client: OAuth2Client = createChatOAuthClient()): string {
@@ -117,6 +120,7 @@ export async function listMemberNames(space: string, accessToken: string, fetche
 export async function listSpaceMessages(space: string, accessToken: string, since: Date | null, memberNames: Map<string, string>, fetcher: Fetcher = fetch): Promise<SpaceMessage[]> {
   const out: SpaceMessage[] = [];
   let pageToken = "";
+  let finished = false;
   for (let page = 0; page < MAX_PAGES; page++) {
     const params = new URLSearchParams({ pageSize: "1000", orderBy: "createTime asc" });
     if (since) params.set("filter", `createTime > "${since.toISOString()}"`);
@@ -130,8 +134,13 @@ export async function listSpaceMessages(space: string, accessToken: string, sinc
       const senderId = m.sender?.name ?? "";
       out.push({ id: m.name, senderId, senderName: m.sender?.displayName || memberNames.get(senderId) || "", createTime: m.createTime, text: m.text });
     }
-    if (!data.nextPageToken) break;
+    if (!data.nextPageToken) {
+      finished = true;
+      break;
+    }
     pageToken = data.nextPageToken;
   }
+  // Returning a partial list would let the caller advance its "last read" mark past messages it never saw, losing them for good.
+  if (!finished) throw new Error("Chat returned too many pages; stopping before the read is complete.");
   return out;
 }

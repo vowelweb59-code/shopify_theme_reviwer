@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const wait = retryAfterSeconds(ip);
   if (wait > 0) {
     return NextResponse.json(
-      { error: `Too many failed attempts. Try again in ${Math.ceil(wait / 60)} minute${wait > 60 ? "s" : ""}.` },
+      { error: `Too many failed attempts. Try again in ${wait < 60 ? `${wait} second${wait === 1 ? "" : "s"}` : `${Math.ceil(wait / 60)} minute${wait > 60 ? "s" : ""}`}.` },
       { status: 429, headers: { "Retry-After": String(wait) } }
     );
   }

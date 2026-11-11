@@ -78,6 +78,23 @@ describe("login rate limit", () => {
     expect(retryAfterSeconds("1.1.1.1")).toBe(0);
   });
 
+  it("past the global limit lets one attempt through per slot instead of locking everyone out", () => {
+    const now = 9_000_000;
+    for (let i = 0; i < 100; i++) recordFailure(`10.0.0.${i % 50}-${i}`, now); // spread over many IPs
+    expect(retryAfterSeconds("5.5.5.5", now)).toBe(0); // the owner gets the slot
+    expect(retryAfterSeconds("6.6.6.6", now + 1000)).toBe(29); // the next caller waits for the next slot
+    expect(retryAfterSeconds("6.6.6.6", now + 30_000)).toBe(0);
+    expect(retryAfterSeconds("5.5.5.5", now + 15 * 60 * 1000 + 1)).toBe(0); // window over: no slots needed
+  });
+
+  it("uses the Nth-from-last x-forwarded-for entry when TRUSTED_PROXY_HOPS is set", () => {
+    const h = new Headers({ "x-forwarded-for": "6.6.6.6, 7.7.7.7, 10.0.0.1", "true-client-ip": "8.8.8.8" });
+    expect(clientIp(h, { TRUSTED_PROXY_HOPS: "1" })).toBe("10.0.0.1");
+    expect(clientIp(h, { TRUSTED_PROXY_HOPS: "2" })).toBe("7.7.7.7");
+    expect(clientIp(h, { TRUSTED_PROXY_HOPS: "9" })).toBe("8.8.8.8"); // fewer hops than configured: fall back
+    expect(clientIp(h, {})).toBe("8.8.8.8");
+  });
+
   it("reads the client IP from the edge headers first", () => {
     expect(clientIp(new Headers({ "true-client-ip": "9.9.9.9", "x-forwarded-for": "1.1.1.1" }))).toBe("9.9.9.9");
     expect(clientIp(new Headers({ "x-forwarded-for": "1.1.1.1, 10.0.0.1" }))).toBe("1.1.1.1");

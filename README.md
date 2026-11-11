@@ -1,8 +1,22 @@
 # Shopify Theme Auditor
 
-Internal, single-user tool for auditing Shopify themes against Theme Store requirements, accessibility, and technical SEO/AEO. No authentication — not exposed beyond localhost.
+Internal tool for the team: it audits Shopify themes against Theme Store requirements, accessibility and technical SEO/AEO, and also tracks the theme and service teams' work and the themes' performance. Sign-in is one shared login (`BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD`; see `SECURITY.md`).
 
-The core audit pipeline is fully deterministic — **no AI API, no embeddings, no vector search**. See `phase-0-scaffolding-updated.md` through `phase-8-testing-security-deployment-updated.md` in the repo root for the full spec (these superseded the original phase docs after a scope change; the originals have been removed). Currently: Phases 0-2 complete, **Phase 3 — Static Rules Engine** underway — theme ZIPs are parsed, evaluated against the rule set, and findings are persisted and viewable in the app.
+**Start with `DECISIONS.md`**: it records where each part lives, why it is built the way it is, the environments (local and Render) and what is still open. This README covers the audit pipeline and local setup.
+
+The core audit pipeline is fully deterministic: **no AI API, no embeddings, no vector search**. The original build specs (`phase-0-scaffolding-updated.md` to `phase-8-testing-security-deployment-updated.md`, and `ga4-analytics-architecture.md`) are kept for history in `docs/archive/`; they describe the plan, not the current state, and parts are out of date.
+
+## What the app has
+
+| Area | Where |
+|---|---|
+| Theme audit (upload a ZIP, rules, reports, re-audit diff, Sheets export) | `/audit`, `/reports`, `/rules`, `/enhancements`, `/themes` |
+| Projects, team, Chat time reports, current work | `/projects`, `/team`, `/current-work` |
+| GA4 analytics, installs, sales | `/analytics`, `/sales` |
+| Demo-store tracker, Theme Store and App Store data | `/demo-store` |
+| Page speed, insights, maintenance | `/page-speed`, `/insights`, `/maintenance` |
+| Service team (hours from TIMER STATUS, projects, review) | `/service` |
+| Attendance (leave announcements vs reports) | `/attendance` |
 
 ## Stack
 
@@ -123,7 +137,7 @@ Both reuse `lib/google/sheetsExport.ts`'s `createGoogleSheet`/`updateGoogleSheet
   /rules                        — requirement knowledge base + rule coverage
   /reports, /reports/[id]       — audit run history + per-run findings detail
   /enhancements                 — optional capability trends ("Future updates"), non-blocking
-  /settings                     — placeholder until Phase 7
+  /settings                     — Google connections (GA4, Sheets, Ads) and maintenance
   /api/audit/run, /api/audit/[id], /api/audit/[id]/findings
   /api/rules, /api/requirements, /api/enhancements (GET list/filter, PATCH triage), /api/enhancements/export/google-sheet
   /api/reports, /api/reports/[id]

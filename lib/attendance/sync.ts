@@ -1,5 +1,6 @@
 import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
+import { withLease } from "@/lib/jobs/lease";
 import { istMonth, istMonthWindow } from "@/lib/service/chat/months";
 import { noteIfGoogleAccessLost, serviceRefreshToken } from "@/lib/service/chat/sync";
 import { AttendanceMessage, AttendanceSync } from "@/models/attendance";
@@ -11,6 +12,13 @@ import { attendanceSpace, listAttendanceMessages } from "./chat";
 export const DEFAULT_SYNC_MONTHS = 3;
 
 export async function syncAttendance(months = DEFAULT_SYNC_MONTHS) {
+  await connectToDatabase();
+  const leased = await withLease("attendance-sync", 10 * 60_000, () => readAttendance(months));
+  if (!leased.ran) throw new Error("An attendance sync is already running. Try again in a minute.");
+  return leased.value;
+}
+
+async function readAttendance(months: number) {
   const back = Math.min(Math.max(Math.floor(months), 1), 24);
   const space = attendanceSpace();
   await connectToDatabase();

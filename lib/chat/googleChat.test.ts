@@ -11,6 +11,11 @@ function fakeFetch(pages: unknown[], calls: string[] = []): typeof fetch {
 }
 
 describe("listSpaceMessages", () => {
+  it("fails instead of returning a partial list when the page cap is hit with more to read", async () => {
+    const endless = (async () => ({ ok: true, json: async () => ({ messages: [], nextPageToken: "more" }) }) as Response) as unknown as typeof fetch;
+    await expect(listSpaceMessages("AAA", "token", null, new Map(), endless)).rejects.toThrow(/too many pages/);
+  });
+
   it("follows pages, filters by time, skips bots and empty messages, and names the sender from the member list", async () => {
     const calls: string[] = [];
     const messages = await listSpaceMessages(

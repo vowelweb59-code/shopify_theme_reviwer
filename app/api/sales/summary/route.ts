@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordAdminAudit } from "@/lib/api/adminAudit";
 import { connectToDatabase } from "@/lib/db/connect";
 import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { getSalesSummary } from "@/lib/sales/summary";
@@ -20,5 +21,6 @@ export async function DELETE(request: Request) {
   if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
   await connectToDatabase();
   const [sales, stores] = await Promise.all([SaleRecord.deleteMany({ themeId }), SalesStore.deleteMany({ themeId })]);
+  await recordAdminAudit("sales.delete_theme", { themeId, deletedSales: sales.deletedCount, deletedStores: stores.deletedCount });
   return NextResponse.json({ deletedSales: sales.deletedCount, deletedStores: stores.deletedCount });
 }

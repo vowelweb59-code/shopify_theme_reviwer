@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
+import { recordAdminAudit } from "@/lib/api/adminAudit";
 import { connectToDatabase } from "@/lib/db/connect";
 import { parseTeamMemberInput } from "@/lib/projects/sanitize";
 import { TeamMember } from "@/models/team-member";
@@ -30,5 +31,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   await connectToDatabase();
   const member = await TeamMember.findByIdAndDelete(memberId).lean();
   if (!member) return NextResponse.json({ error: "Team member not found." }, { status: 404 });
+  await recordAdminAudit("team_member.delete", { memberId, name: member.name ?? null });
   return NextResponse.json({ ok: true });
 }

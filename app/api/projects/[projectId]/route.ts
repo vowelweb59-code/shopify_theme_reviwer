@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
+import { recordAdminAudit } from "@/lib/api/adminAudit";
 import { connectToDatabase } from "@/lib/db/connect";
 import { MAX_DESCRIPTION, typeHasStatus } from "@/lib/projects/constants";
 import { parseProjectFields, parseProjectMembers, parseRounds } from "@/lib/projects/sanitize";
@@ -109,6 +110,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   await connectToDatabase();
   const project = await Project.findByIdAndDelete(projectId).lean();
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
-  await TimeEntry.deleteMany({ projectId });
+  const hours = await TimeEntry.deleteMany({ projectId });
+  await recordAdminAudit("project.delete", { projectId, name: project.name ?? null, timeEntriesDeleted: hours.deletedCount });
   return NextResponse.json({ ok: true });
 }

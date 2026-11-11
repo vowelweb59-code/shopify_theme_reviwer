@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordAdminAudit } from "@/lib/api/adminAudit";
 import { connectToDatabase } from "@/lib/db/connect";
 import { googleErrorCode } from "@/lib/analytics/googleOAuth";
 import { adsAccessToken, hasDeveloperToken, isAdsConfigured, listAdsAccounts, loadAdsConnection } from "@/lib/ads/googleAds";
@@ -30,5 +31,6 @@ export async function GET() {
 export async function DELETE() {
   await connectToDatabase();
   await AdsConnection.deleteOne({ key: "ads" });
+  await recordAdminAudit("ads.disconnect");
   return NextResponse.json({ ok: true });
 }

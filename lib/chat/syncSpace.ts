@@ -1,6 +1,7 @@
 import "server-only";
 import { decryptSecret, encryptSecret } from "@/lib/analytics/crypto";
 import { googleErrorCode } from "@/lib/analytics/googleOAuth";
+import { withLease } from "@/lib/jobs/lease";
 import { istDay } from "@/lib/time/ist";
 import { ChatConnection } from "@/models/chat-connection";
 import { createChatOAuthClient, getChatSpace, listMemberNames, listSpaceMessages } from "./googleChat";
@@ -47,6 +48,13 @@ export function looksLikeReport(text: string): boolean {
  * route to show.
  */
 export async function syncSpace(options: { all?: boolean } = {}): Promise<SyncResult> {
+  // One read at a time across the scheduler, the Sync button and a second server instance.
+  const leased = await withLease("theme-chat-sync", 10 * 60_000, () => readSpace(options));
+  if (!leased.ran) throw new Error("A Google Chat sync is already running. Try again in a minute.");
+  return leased.value;
+}
+
+async function readSpace(options: { all?: boolean }): Promise<SyncResult> {
   const connection = await loadConnection();
   if (!connection || connection.status !== "active") throw new Error("Google Chat isn't connected. Connect it first.");
 
