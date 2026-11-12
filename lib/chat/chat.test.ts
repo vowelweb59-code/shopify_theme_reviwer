@@ -197,3 +197,34 @@ describe("splitReports keeps a message whole", () => {
     expect(splitReports(text)).toHaveLength(1);
   });
 });
+
+describe("merged themes (Aspire is Rare)", () => {
+  const withAspire: ThemeRef[] = [
+    { id: "a", name: "Aspire", presets: [] },
+    { id: "r", name: "Rare", presets: ["Rare", "Touch", "Charisma", "Synergy", "Presence"] },
+  ];
+  it("resolves a report naming Aspire to Rare and renames its preset", () => {
+    expect(resolveTheme({ themeParts: ["Aspire Preset", "Beauty"] }, withAspire)).toMatchObject({ ok: true, themeId: "r", themeName: "Rare", kind: "preset", preset: "Touch" });
+    expect(resolveTheme({ themeParts: ["Aspire", "Wellness"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Synergy" });
+    expect(resolveTheme({ themeParts: ["Aspire", "Clothing"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Charisma" });
+    expect(resolveTheme({ themeParts: ["Aspire Art"] }, withAspire)).toMatchObject({ themeId: "r" });
+  });
+  it("leaves reports naming Rare itself alone, and an unknown preset name as written", () => {
+    expect(resolveTheme({ themeParts: ["Rare", "Touch"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Touch" });
+    expect(resolveTheme({ themeParts: ["Aspire Preset", "Collective"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Collective" });
+  });
+  it("keeps Aspire when Rare is not among the themes", () => {
+    expect(resolveTheme({ themeParts: ["Aspire", "Beauty"] }, [withAspire[0]])).toMatchObject({ themeId: "a" });
+  });
+});
+
+import { MERGED_THEMES, mergedPresetName } from "./resolve";
+
+describe("mergedPresetName", () => {
+  it("maps an old preset name, ignoring case and a trailing 'theme' or 'preset'", () => {
+    expect(mergedPresetName(MERGED_THEMES.aspire, "Beauty")).toBe("Touch");
+    expect(mergedPresetName(MERGED_THEMES.aspire, "art theme")).toBe("Presence");
+    expect(mergedPresetName(MERGED_THEMES.aspire, "Clothing Preset")).toBe("Charisma");
+    expect(mergedPresetName(MERGED_THEMES.aspire, "Collective")).toBeUndefined();
+  });
+});

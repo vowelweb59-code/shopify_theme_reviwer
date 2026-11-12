@@ -65,7 +65,7 @@ export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
   return { ok: true, theme, others, known, saysPreset: /\bpreset\b/i.test(line) };
 }
 
-export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
+function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
   const found = findTheme(parsed.themeParts, themes);
   if (!found.ok) return found;
   const { theme, others, known, saysPreset } = found;
@@ -86,6 +86,39 @@ export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?:
   }
   const kind = isUpdateMemo(parsed.memo ?? "") || options.updatesAndPresetsOnly ? "update" : "theme";
   return { ok: true, themeId: theme.id, themeName: theme.name, kind, preset: null };
+}
+
+/**
+ * Themes whose reports now belong to another theme (owner, 2026-11-12: Aspire's reports are Rare's), and the preset each of the
+ * old theme's presets became. Keys are lower case. The old theme row stays in the database; reports that still name it are
+ * resolved to the new theme here, so a re-check or a late report lands on the right theme.
+ */
+export const MERGED_THEMES: Record<string, { into: string; presets: Record<string, string> }> = {
+  aspire: { into: "Rare", presets: { beauty: "Touch", wellness: "Synergy", clothing: "Charisma", arts: "Presence", art: "Presence" } },
+};
+
+/** The new preset name for an old one ("Beauty", "Art theme", "clothing preset" -> its replacement), or undefined when it has none. */
+export function mergedPresetName(merge: { presets: Record<string, string> }, preset: string): string | undefined {
+  return merge.presets[lower(preset).replace(/\s+(theme|preset)$/, "")];
+}
+
+/** Applies MERGED_THEMES to a resolved report; unchanged when its theme wasn't merged or the target theme isn't in `themes`. */
+export function applyThemeMerge(resolved: Resolved, themes: ThemeRef[]): Resolved {
+  if (!resolved.ok) return resolved;
+  const merge = MERGED_THEMES[lower(resolved.themeName)];
+  const target = merge && themes.find((t) => lower(t.name) === lower(merge.into));
+  if (!merge || !target) return resolved;
+  const preset = resolved.preset ? (mergedPresetName(merge, resolved.preset) ?? resolved.preset) : null;
+  return { ...resolved, themeId: target.id, themeName: target.name, preset };
+}
+
+export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
+  // A merged theme's old preset names (Beauty, Wellness, ...) must still read as presets of it, so they resolve before being renamed.
+  const withOldPresets = themes.map((t) => {
+    const merge = MERGED_THEMES[lower(t.name)];
+    return merge ? { ...t, presets: [...t.presets, ...Object.keys(merge.presets).map((p) => p[0].toUpperCase() + p.slice(1))] } : t;
+  });
+  return applyThemeMerge(resolveThemeUnmerged(parsed, withOldPresets, options), themes);
 }
 
 /** Matches the poster to a team member by name or alias (exact, ignoring case and extra spaces). */
