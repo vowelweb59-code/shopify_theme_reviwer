@@ -82,6 +82,10 @@ const themeSchema = new Schema(
     // real "last updated" date instead of this app's own audit cadence.
     themeStoreVersion: { type: String, default: null },
     themeStoreVersionReleasedAt: { type: Date, default: null },
+    // Every version the Theme Store's release notes list (newest first), read when a Theme Update project's time per version is
+    // shown (lib/themes/versionHistory.ts); releasedOn is YYYY-MM-DD, null when the store shows no date for that version.
+    themeStoreVersions: { type: [{ _id: false, version: { type: String, required: true }, releasedOn: { type: String, default: null } }], default: undefined },
+    themeStoreVersionsAt: { type: Date, default: null },
     // This theme's own default listing's overall position in the public
     // Theme Store's "/themes" catalog (see lib/demoStore/themeStoreRanking.ts
     // — shared with the demo-store module since it's the same public

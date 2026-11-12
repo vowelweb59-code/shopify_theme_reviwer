@@ -12,6 +12,7 @@ import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
 import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, REJECTION_STAGES, REJECTION_STAGE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType, type RejectionStage } from "@/lib/projects/constants";
 import { ProjectStatusPill } from "./ProjectStatusPill";
 import { TimeLog } from "./TimeLog";
+import { VersionTime } from "./VersionTime";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
@@ -317,6 +318,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </ul>
         </Card>
       )}
+
+      {!hasStatus && <VersionTime projectId={project._id} />}
 
       {!hasStatus && <TimeLog projectId={project._id} members={project.members} />}
 
