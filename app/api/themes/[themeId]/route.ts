@@ -7,6 +7,7 @@ import { AuditRun } from "@/models/audit-run";
 import { EnhancementPoint } from "@/models/enhancement-point";
 import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun, loadCheckCatalog } from "@/lib/themes/deriveChecksForAuditRun";
+import { isValidGitUrl } from "@/lib/themes/gitSource";
 import { sanitizePresets } from "@/lib/themes/presets";
 import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
@@ -129,10 +130,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ th
   const { themeId } = await params;
   if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
 
-  const body = await request.json().catch(() => null);
-  const demoStorePresets = sanitizePresets((body as { demoStorePresets?: unknown } | null)?.demoStorePresets);
+  const body = (await request.json().catch(() => null)) as { demoStorePresets?: unknown; gitRepoUrl?: unknown; gitBranch?: unknown } | null;
+  // Only the fields present in the body change (saving presets must not wipe the Git settings, and the reverse).
+  const update: Record<string, unknown> = {};
+  if (body && "demoStorePresets" in body) update.demoStorePresets = sanitizePresets(body.demoStorePresets);
+  if (body && "gitRepoUrl" in body) {
+    const raw = typeof body.gitRepoUrl === "string" ? body.gitRepoUrl.trim() : "";
+    if (raw && !isValidGitUrl(raw)) {
+      return NextResponse.json({ error: "The Git URL must start with https:// (for example https://github.com/your-org/your-theme.git)." }, { status: 400 });
+    }
+    update.gitRepoUrl = raw || null;
+    update.gitLastCommit = null; // a new repo is read fresh
+  }
+  if (body && "gitBranch" in body) {
+    const branch = typeof body.gitBranch === "string" ? body.gitBranch.trim() : "";
+    if (branch && !/^[\w./-]{1,100}$/.test(branch)) return NextResponse.json({ error: "That branch name isn't valid." }, { status: 400 });
+    update.gitBranch = branch || null;
+  }
+  if (Object.keys(update).length === 0) return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
 
-  const theme = await Theme.findByIdAndUpdate(themeId, { demoStorePresets }, { returnDocument: "after" });
+  const theme = await Theme.findByIdAndUpdate(themeId, update, { returnDocument: "after" });
   if (!theme) {
     return NextResponse.json({ error: "Theme not found." }, { status: 404 });
   }

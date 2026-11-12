@@ -17,6 +17,9 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# git: the automatic theme audit reads each theme's repository (lib/themes/gitSource.ts).
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Next's standalone output (next.config.ts): a minimal server.js plus only
 # the node_modules files the server actually uses. Static assets and
 # public/ aren't included in it by design, so they're copied alongside.

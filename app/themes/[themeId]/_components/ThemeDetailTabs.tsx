@@ -24,6 +24,10 @@ type ThemeDetail = {
     themeStoreFeatures?: string[];
     themeStoreCheckedAt?: string | null;
     themeStoreError?: string | null;
+    gitRepoUrl?: string | null;
+    gitBranch?: string | null;
+    autoAuditAt?: string | null;
+    autoAuditError?: string | null;
   };
   versions: { _id: string; version: string; createdAt: string }[];
   latestVersion: { _id: string; version: string } | null;
@@ -111,6 +115,10 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 themeStoreFeatures={detail.theme.themeStoreFeatures}
                 themeStoreCheckedAt={detail.theme.themeStoreCheckedAt ?? null}
                 themeStoreError={detail.theme.themeStoreError ?? null}
+                gitRepoUrl={detail.theme.gitRepoUrl ?? null}
+                gitBranch={detail.theme.gitBranch ?? null}
+                autoAuditAt={detail.theme.autoAuditAt ?? null}
+                autoAuditError={detail.theme.autoAuditError ?? null}
                 onChanged={load}
               />
             ),

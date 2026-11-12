@@ -43,6 +43,10 @@ type Props = {
   themeStoreFeatures?: string[];
   themeStoreCheckedAt: string | null;
   themeStoreError: string | null;
+  gitRepoUrl: string | null;
+  gitBranch: string | null;
+  autoAuditAt: string | null;
+  autoAuditError: string | null;
   onChanged: () => void;
 };
 
@@ -298,6 +302,81 @@ function PresetsSection({
             Cancel
           </Button>
         </div>
+      </div>
+    </Card>
+  );
+}
+
+// Where the theme's code lives, and what the automatic audit (every 48 hours, one theme at a time) did last.
+function GitSourceSection({
+  themeId,
+  initialUrl,
+  initialBranch,
+  autoAuditAt,
+  autoAuditError,
+  onSaved,
+}: {
+  themeId: string;
+  initialUrl: string | null;
+  initialBranch: string | null;
+  autoAuditAt: string | null;
+  autoAuditError: string | null;
+  onSaved: () => void;
+}) {
+  const [url, setUrl] = useState(initialUrl ?? "");
+  const [branch, setBranch] = useState(initialBranch ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch(`/api/themes/${themeId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ gitRepoUrl: url, gitBranch: branch }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Failed to save.");
+        return;
+      }
+      setSaved(true);
+      onSaved();
+    } catch {
+      setError("Lost connection to the server. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader
+        title="Code source and automatic audit"
+        description="The theme's Git repository (its files at the repository root). Every 48 hours the latest commit is read and audited against the live demo stores."
+      />
+      <div className="flex flex-col gap-3 text-sm">
+        <div className="flex flex-wrap gap-3">
+          <label className="flex min-w-64 flex-1 flex-col gap-1">
+            <span className="text-zinc-700 dark:text-zinc-300">Repository URL</span>
+            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/your-org/theme.git" className="rounded-md border border-border-subtle bg-transparent px-3 py-2" />
+          </label>
+          <label className="flex w-40 flex-col gap-1">
+            <span className="text-zinc-700 dark:text-zinc-300">Branch</span>
+            <input value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="default" className="rounded-md border border-border-subtle bg-transparent px-3 py-2" />
+          </label>
+        </div>
+        <p className="text-xs text-zinc-500">{autoAuditAt ? `Last automatic audit: ${formatDate(autoAuditAt)}.` : "Not audited automatically yet."}</p>
+        {autoAuditError && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{autoAuditError}</div>}
+        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
+        {saved && <p className="text-xs text-status-pass-text">Saved.</p>}
+        <Button size="sm" onClick={handleSave} loading={saving} className="w-fit">
+          {saving ? "Saving…" : "Save"}
+        </Button>
       </div>
     </Card>
   );
@@ -633,6 +712,10 @@ export function OverviewPanel({
   themeStoreFeatures,
   themeStoreCheckedAt,
   themeStoreError,
+  gitRepoUrl,
+  gitBranch,
+  autoAuditAt,
+  autoAuditError,
   onChanged,
 }: Props) {
   const [showUpload, setShowUpload] = useState(false);
@@ -912,6 +995,15 @@ export function OverviewPanel({
           }}
         />
       )}
+
+      <GitSourceSection
+        themeId={themeId}
+        initialUrl={gitRepoUrl}
+        initialBranch={gitBranch}
+        autoAuditAt={autoAuditAt}
+        autoAuditError={autoAuditError}
+        onSaved={onChanged}
+      />
 
       <PresetsSection themeId={themeId} initialPresets={demoStorePresets} latestAuditId={latestAudit?._id ?? null} onSaved={onChanged} />
 

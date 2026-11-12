@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { fetchPublicText, sleep } from "@/lib/net/fetchPublic";
 import { INDUSTRIES } from "@/lib/themes/industries";
 import { fetchThemeStoreListingBySlug } from "@/lib/themes/themeStoreFeatures";
+import { syncThemesFromCatalog } from "@/lib/themes/syncFromCatalog";
 import { ThemeStoreTheme } from "@/models/theme-store-theme";
 import { parseCatalogCards, parseCompanionApp, parseDesigner, parseLastPage, type CatalogCard } from "./parseCatalog";
 
@@ -185,8 +186,11 @@ export function startThemeStoreCrawl(): Promise<void> {
   crawl.running = (async () => {
     await connectToDatabase();
     await crawlCatalog();
+    // Our own themes learn whether they are live as soon as the catalog is read, and pick up the details once those are read.
+    await syncThemesFromCatalog().catch((err) => console.error("[themeStore] theme sync failed:", err));
     await crawlCategories();
     await crawlDetails();
+    await syncThemesFromCatalog().catch((err) => console.error("[themeStore] theme sync failed:", err));
   })()
     .catch((err) => {
       console.error("[themeStore] crawl failed:", err);

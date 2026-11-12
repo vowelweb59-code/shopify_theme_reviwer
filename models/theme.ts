@@ -97,6 +97,16 @@ const themeSchema = new Schema(
     // See themeStorePresetSchema's previousRank for the same "one prior
     // data point, shifted forward on every crawl" semantics.
     themeStorePreviousRank: { type: Number, default: null },
+    // Whether the theme is on the public Theme Store, set by lib/themes/syncFromCatalog.ts after each catalog read.
+    // null = not decided yet (shown); false = not live (hidden from the Themes page).
+    themeStoreLive: { type: Boolean, default: null },
+    // Where the theme's source lives. The automatic audit exports the branch as a ZIP (lib/themes/gitSource.ts).
+    gitRepoUrl: { type: String, default: null },
+    gitBranch: { type: String, default: null },
+    gitLastCommit: { type: String, default: null },
+    // Last automatic audit attempt (lib/themes/autoAudit.ts) and why it didn't produce a result, if it didn't.
+    autoAuditAt: { type: Date, default: null },
+    autoAuditError: { type: String, default: null },
   },
   { timestamps: true }
 );

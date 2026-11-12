@@ -155,6 +155,30 @@ space (they would show as leaves for whoever is named), per-person exclusions, a
 | Installs on a property shared by several themes (page-path prefix each: Soft and Rare, Zeal and Noble) are counted **from the install event's own theme parameter** when the property has one, else **estimated** and shown "≈" | The install event has no page but names its theme in a custom event parameter (owner, 2026-11-10). `lib/analytics/installAttribution.ts` + `runSync.ts`: the sync finds the property's custom event parameter with "theme" in its name (metadata), counts events whose value is the theme or one of its Theme Store presets (`Theme.themeStorePresets`; run `theme:add` / "Check Theme Store" so presets exist), and stores `AnalyticsTheme.installsExactBy` / `installsExactFrom`. Installs with no theme value (before GA4 started recording it; custom dimensions are not retroactive) stay estimated from the day's Try Theme share (`installEstimateRequest` in `reports.ts`), so a range reaching back before `installsExactFrom` still shows "≈" (`installsAreEstimated` in `engine/metrics.ts`). When the parameter appears or disappears the next sync resets the theme's sync state and re-reads its full history once. The parameter must be registered in GA4 (Admin > Custom definitions, scope Event) or the Data API cannot return it. A property of its own per theme is exact with no parameter. |
 | Analytics > **Installs** shows each `shopify_theme_install` event with the details it carries (store URL, store title), read **live** from GA4, not stored | `lib/analytics/installEvents.ts`: one report per GA4 property, with the property's own registered custom event parameters (`customEvent:*`, from its metadata; `lib/analytics/installDimensions.ts` picks them). GA4 returns an event parameter only when it is registered as a custom dimension (Admin > Custom definitions, scope Event); the page says so when none are. Themes sharing a property show the whole property's installs. The parameter names were never seen; they are discovered, not assumed. |
 
+## 7. Themes page automation (owner decisions 2026-11-12; built, not yet deployed or exercised)
+
+Scope and rationale: `docs/themes-automation-scope.md`.
+
+| Decision | Consequence |
+|---|---|
+| The Themes tab shows **live themes only** (on the public Theme Store) | `Theme.themeStoreLive`, set by `syncThemesFromCatalog` (`lib/themes/syncFromCatalog.ts`) after each daily catalog read and when the page loads with undecided themes. Not live = hidden, not deleted. Nothing is marked not-live while the catalog is empty. A theme is matched by its saved `themeStoreSlug`, else the slug derived from its name, so a name that differs from its listing slug (e.g. "Home Décor") is hidden: check the list |
+| The same sync fills version, release date, features, presets, reviews from the catalog | No "Check Theme Store" click needed; the button stays as a force refresh |
+| Code comes from **one Git repo per theme** | `Theme.gitRepoUrl/gitBranch/gitLastCommit`, edited in the theme page's "Code source" card. `lib/themes/gitSource.ts` clones (https only), `git archive` to a ZIP, then `uploadThemeVersion`. Theme files must be at the repo root. Private repos: set `GIT_ACCESS_TOKEN` (read-only) on Render. The Dockerfile now installs git |
+| Audit every theme every **48 hours, one theme at a time** | `lib/themes/autoAudit.ts` + `autoAuditPlan.ts` + `autoAuditScheduler.ts` (started in `instrumentation.ts`): every 30 min (`THEME_AUTO_AUDIT_CHECK_MINUTES`) it takes the single live theme whose last attempt is over 48 h old (oldest first), under a Mongo lease. Attempt time is stored before the audit, so a failing theme waits 48 h instead of looping; the reason shows on its page (`autoAuditError`). Interpretation of the owner's wording: each theme is re-audited every 48 h, never two at once. A free Render instance only audits while awake |
+| Audit uses both live demo URLs and code | Presets: saved ones, else the demo URLs the Theme Store listing shows for each preset (saved to the theme) |
+| Theme Update projects are created **automatically** | After an audit, a theme with no `theme_update` project gets "<Theme> update" with its top 5 issues as the description. One per theme, never recreated |
+| Projects of non-live themes are removed | `npm run themes:remove-non-live-projects` (dry run; `--apply` deletes the projects and their time entries, logs to `admin_audit_log`). Themes themselves are kept. **Owner runs it on the live database** (`npx tsx --env-file=.env.production.local scripts/remove-non-live-projects.ts --apply`) after checking the dry run and taking a backup |
+
+Open: deploy; run the dry run on the live database and read the list; set each theme's Git URL (and `GIT_ACCESS_TOKEN`);
+check the hidden-theme list for slug mismatches. Not built: the "Next step" column, a weekly digest, trend arrows, live-only
+audits for a theme with no repo or ZIP (those show an error instead). Local Mongo was not running, so the removal script was
+typechecked but not run locally.
+
+Live dry run (2026-11-12, read-only, nothing written): 10 themes live, 14 not live (Velocity, Grocery, Breeze, Aspire, Kombat,
+Pretty, Silver, Loyal, Apollo, Auto, Legacy, Krafton, Aroma, Home Décor); 21 projects and 0 time entries would be deleted.
+`--apply` has NOT been run. Before it: confirm on themes.shopify.com that those 14 are really unpublished (Home Décor has no
+projects and looks like a slug mismatch; Aspire has 5 projects), then take a backup.
+
 ## 6. Code audit 2026-11-11: fixes made and what remains
 
 A read-only audit (security, stale code, duplicated mechanics) found the items below. Done on 2026-11-11 (typecheck, lint, tests pass):

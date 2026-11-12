@@ -16,6 +16,7 @@ export async function register() {
       ["demo-store", async () => (await import("./lib/demoStore/scheduler")).startDemoStoreScheduler()],
       ["theme-ranking", async () => (await import("./lib/themes/rankingScheduler")).startThemeRankingScheduler()],
       ["theme-store", async () => (await import("./lib/themeStore/scheduler")).startThemeStoreScheduler()],
+      ["theme-auto-audit", async () => (await import("./lib/themes/autoAuditScheduler")).startThemeAutoAuditScheduler()],
       ["shopify-apps", async () => (await import("./lib/shopifyApps/scheduler")).startShopifyAppsScheduler()],
       ["chat-sync", async () => (await import("./lib/chat/scheduler")).startChatSyncScheduler()],
       ["service-chat-sync", async () => (await import("./lib/service/chat/scheduler")).startServiceChatScheduler()],
