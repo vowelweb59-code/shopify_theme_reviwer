@@ -9,11 +9,10 @@ import { Project } from "@/models/project";
 import { Finding } from "@/models/finding";
 import { MAX_DESCRIPTION } from "@/lib/projects/constants";
 import { pickLatestVersion } from "./compareVersions";
-import { sanitizePresets } from "./presets";
+import { ensureDemoPresets } from "./ensurePresets";
 import { fetchGitZip } from "./gitSource";
 import { localUploadSource } from "./themeSource";
 import { uploadThemeVersion } from "./uploadThemeVersion";
-import { fetchPresetDemoStoreUrls } from "./themeStoreFeatures";
 import { pickNextDueTheme } from "./autoAuditPlan";
 
 const LEASE_TTL_MS = 90 * 60 * 1000;
@@ -77,12 +76,7 @@ async function auditTheme(theme: ThemeRow): Promise<string | null> {
   if (!latest || !zip) return gitNote ?? "No Git repository is set and no ZIP has been uploaded for this theme.";
 
   // 3. The live demo stores: saved ones, else the ones the Theme Store listing shows for each preset.
-  let presets = sanitizePresets(theme.demoStorePresets);
-  if (presets.length === 0 && theme.themeStoreSlug && theme.themeStorePresets?.length) {
-    const found = await fetchPresetDemoStoreUrls(theme.themeStoreSlug, theme.themeStorePresets);
-    presets = sanitizePresets(found.filter((p) => p.url).map((p) => ({ label: p.name, url: p.url })));
-    if (presets.length > 0) await Theme.updateOne({ _id: theme._id }, { $set: { demoStorePresets: presets } });
-  }
+  const presets = await ensureDemoPresets(theme);
 
   // 4. The audit itself (the same one the Run Audit button starts).
   const buffer = await localUploadSource(zip).getZipBuffer();

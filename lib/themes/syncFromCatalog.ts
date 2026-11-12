@@ -2,6 +2,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeStoreTheme } from "@/models/theme-store-theme";
 import { deriveThemeStoreSlug } from "./themeStoreFeatures";
+import { ensureDemoPresets } from "./ensurePresets";
 
 /**
  * Copies what the daily Theme Store catalog read (ThemeStoreTheme) knows onto our own Theme rows, so the Themes page needs no
@@ -53,7 +54,13 @@ export async function syncThemesFromCatalog({ dryRun = false }: { dryRun?: boole
         return { name: p.name, slug: p.slug, rank: old?.rank ?? null, page: old?.page ?? null, previousRank: old?.previousRank ?? null };
       });
     }
-    if (!dryRun) await Theme.updateOne({ _id: theme._id }, { $set: set });
+    if (!dryRun) {
+      await Theme.updateOne({ _id: theme._id }, { $set: set });
+      // A live theme with no demo URLs saved gets them from its listing, so audits and Core Web Vitals have URLs to measure.
+      if (!theme.demoStorePresets?.length && match.presets?.length) {
+        await ensureDemoPresets({ _id: theme._id, themeStoreSlug: match.slug, themeStorePresets: match.presets }).catch(() => undefined);
+      }
+    }
   }
   return { live, notLive, notLiveThemes };
 }

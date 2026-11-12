@@ -8,6 +8,7 @@ import type { AuditRunDoc } from "@/models/audit-run";
 import { executeAuditRun } from "@/lib/audit/executeAuditRun";
 import { localUploadSource } from "@/lib/themes/themeSource";
 import { sanitizePresets } from "@/lib/themes/presets";
+import { ensureDemoPresets } from "@/lib/themes/ensurePresets";
 
 /**
  * "Run Audit" — the explicit, separate step from upload (spec §7). Runs
@@ -49,7 +50,8 @@ export async function POST(
   // supplies none — so calling "Run Audit" still exercises live checks
   // against the theme's known style variants without having to resend
   // them from the client every time.
-  const demoStorePresets = requestedPresets.length > 0 ? requestedPresets : sanitizePresets(theme.demoStorePresets);
+  // (and, when none are saved either, the demo URLs from the Theme Store listing — see ensureDemoPresets).
+  const demoStorePresets = requestedPresets.length > 0 ? requestedPresets : await ensureDemoPresets(theme);
 
   const buffer = await localUploadSource(themeZip).getZipBuffer();
 
