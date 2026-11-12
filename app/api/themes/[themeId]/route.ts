@@ -9,6 +9,7 @@ import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/t
 import { deriveChecksForAuditRun, loadCheckCatalog } from "@/lib/themes/deriveChecksForAuditRun";
 import { isValidGitUrl } from "@/lib/themes/gitSource";
 import { sanitizePresets } from "@/lib/themes/presets";
+import { ensureDemoPresets } from "@/lib/themes/ensurePresets";
 import { computeScoreboard } from "@/lib/themes/computeScoreboard";
 import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
 import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
@@ -26,6 +27,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
   const theme = await Theme.findById(themeId).lean();
   if (!theme) {
     return NextResponse.json({ error: "Theme not found." }, { status: 404 });
+  }
+
+  // A theme with no saved presets gets them automatically (Theme Store listing + its ZIP), once; the page then shows them.
+  if (!theme.demoStorePresets?.length && theme.themeStoreSlug) {
+    const filled = await ensureDemoPresets(theme).catch(() => []);
+    if (filled.length > 0) theme.demoStorePresets = filled;
   }
 
   const versions = await ThemeVersion.find({ themeId }).lean();
