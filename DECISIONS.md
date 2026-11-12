@@ -167,7 +167,7 @@ Scope and rationale: `docs/themes-automation-scope.md`.
 | Audit every theme every **48 hours, one theme at a time** | `lib/themes/autoAudit.ts` + `autoAuditPlan.ts` + `autoAuditScheduler.ts` (started in `instrumentation.ts`): every 30 min (`THEME_AUTO_AUDIT_CHECK_MINUTES`) it takes the single live theme whose last attempt is over 48 h old (oldest first), under a Mongo lease. Attempt time is stored before the audit, so a failing theme waits 48 h instead of looping; the reason shows on its page (`autoAuditError`). Interpretation of the owner's wording: each theme is re-audited every 48 h, never two at once. A free Render instance only audits while awake |
 | Audit uses both live demo URLs and code | Presets: saved ones, else the demo URLs the Theme Store listing shows for each preset (saved to the theme) |
 | Theme Update projects are created **automatically** | After an audit, a theme with no `theme_update` project gets "<Theme> update" with its top 5 issues as the description. One per theme, never recreated |
-| Projects of non-live themes are removed | `npm run themes:remove-non-live-projects` (dry run; `--apply` deletes the projects and their time entries, logs to `admin_audit_log`). Themes themselves are kept. **Owner runs it on the live database** (`npx tsx --env-file=.env.production.local scripts/remove-non-live-projects.ts --apply`) after checking the dry run and taking a backup |
+| Projects of non-live themes **stay**; only the Themes tab hides non-live themes (owner, 2026-11-12, after a removal had been run) | `npm run themes:remove-non-live-projects` is now **list-only** and deletes nothing. `scripts/recreate-removed-projects.ts` (one-off, already applied) re-created the 21 deleted projects |
 
 Open: deploy; run the dry run on the live database and read the list; set each theme's Git URL (and `GIT_ACCESS_TOKEN`);
 check the hidden-theme list for slug mismatches. Not built: the "Next step" column, a weekly digest, trend arrows, live-only
@@ -176,8 +176,13 @@ typechecked but not run locally.
 
 Live dry run (2026-11-12, read-only, nothing written): 10 themes live, 14 not live (Velocity, Grocery, Breeze, Aspire, Kombat,
 Pretty, Silver, Loyal, Apollo, Auto, Legacy, Krafton, Aroma, Home Décor); 21 projects and 0 time entries would be deleted.
-`--apply` has NOT been run. Before it: confirm on themes.shopify.com that those 14 are really unpublished (Home Décor has no
-projects and looks like a slug mismatch; Aspire has 5 projects), then take a backup.
+Rare was added to the live database the same day (`theme:add Rare --apply`), making 11 live.
+`--apply` was run by the owner on the live database on 2026-11-12: 21 projects and 0 time entries deleted across the 14 not-live
+themes (11 live, 14 not live at that run); the themes themselves remain, hidden. The owner then said those projects should have
+stayed (only the Themes tab hides non-live themes), so the same day `scripts/recreate-removed-projects.ts --apply` re-created all
+21 as bare projects (name and theme only: Theme Update for the 4 "... Update" names, else Theme Design & Development in Planning;
+descriptions, members, deadlines and rounds are lost). `remove-non-live-projects.ts` can no longer delete. Home Décor
+(no projects) may still be a slug mismatch, so check it if it should be live.
 
 ## 6. Code audit 2026-11-11: fixes made and what remains
 
