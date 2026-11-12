@@ -31,7 +31,11 @@ function averageDefined(values: (number | undefined)[]): number | null {
 // honestly reports "not available" rather than a fabricated score in that
 // (currently the default) configuration.
 function performanceScoreCard(id: string, label: string, pageSpeed: PageSpeedMetric[] | undefined, strategy: "desktop" | "mobile"): ScoreCard {
-  const relevant = (pageSpeed ?? []).filter((m) => m.strategy === strategy);
+  const forStrategy = (pageSpeed ?? []).filter((m) => m.strategy === strategy);
+  // The score is the average over the presets' home pages, so a preset with extra pages measured (collection, product)
+  // doesn't weigh more than the others. Older runs with no home entries fall back to every measured page.
+  const homePages = forStrategy.filter((m) => m.pageType === "home" && m.performanceScore !== undefined);
+  const relevant = homePages.length > 0 ? homePages : forStrategy;
   const score = averageDefined(relevant.map((m) => m.performanceScore));
   if (score === null) {
     return {
@@ -44,7 +48,8 @@ function performanceScoreCard(id: string, label: string, pageSpeed: PageSpeedMet
           : `Not tested — no ${strategy} measurement was taken for this run.`,
     };
   }
-  return { id, label, score, detail: `Averaged across ${relevant.length} page${relevant.length === 1 ? "" : "s"} measured` };
+  const noun = homePages.length > 0 ? "preset" : "page";
+  return { id, label, score, detail: `Averaged across ${relevant.length} ${noun}${relevant.length === 1 ? "" : "s"} measured` };
 }
 
 function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined, themeStoreLabels?: Set<string>): ScoreCard {

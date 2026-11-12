@@ -392,6 +392,24 @@ async function discoverPageUrls(homeUrl: string): Promise<{ home: string; collec
  * checked for contrast/touch-target issues (only their homepage is) —
  * accepted as part of eliminating Chromium entirely.
  */
+/**
+ * One preset's home page, mobile and desktop: scores only (no findings). Used by the "check this preset" button on the theme
+ * page, which stores the result on the latest audit run without re-running the whole audit.
+ */
+export async function measurePresetHome(preset: PresetLink): Promise<{ metrics: PageSpeedMetric[]; errors: string[] }> {
+  const metrics: PageSpeedMetric[] = [];
+  const errors: string[] = [];
+  const [mobile, desktop] = await Promise.all([
+    fetchPsiLighthouseResult(preset.url, "mobile", ["performance", "accessibility"]),
+    fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"]),
+  ]);
+  for (const [strategy, lhr] of [["mobile", mobile], ["desktop", desktop]] as const) {
+    if (lhr) metrics.push({ label: preset.label, url: preset.url, pageType: "home", strategy, ...extractCoreMetrics(lhr) });
+    else errors.push(`PageSpeed Insights request failed for the home page (${strategy}).`);
+  }
+  return { metrics, errors };
+}
+
 export async function runPageSpeedChecksForPresets(
   presets: PresetLink[],
   onItemComplete?: () => void
@@ -428,9 +446,9 @@ export async function runPageSpeedChecksForPresets(
     // dependency, and the desktop home-page read doesn't depend on the
     // mobile one either.
     const urlsPromise = isBaseline ? discoverPageUrls(preset.url) : null;
-    const desktopHomePromise = isBaseline
-      ? fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"])
-      : null;
+    // Every preset gets a desktop home-page read too (not just the baseline), so the Desktop Performance
+    // score is an average over all the presets' demo URLs.
+    const desktopHomePromise = fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"]);
 
     const homeLhr = await fetchPsiLighthouseResult(preset.url, "mobile", homeCategories);
     if (!homeLhr) {
@@ -454,6 +472,15 @@ export async function runPageSpeedChecksForPresets(
     findings.push(...touchTargetFindingsFromPsi(preset.label, preset.url, homeLhr));
 
     if (!isBaseline) {
+      // Score and thresholds only; the opportunities list stays baseline-only to keep one set of findings per issue.
+      const desktopLhr = await desktopHomePromise;
+      if (desktopLhr) {
+        const desktopMetrics = extractCoreMetrics(desktopLhr);
+        metrics.push({ label: preset.label, url: preset.url, pageType: "home", strategy: "desktop", ...desktopMetrics });
+        findings.push(...psiThresholdFindings(preset.label, preset.url, desktopMetrics, "desktop"));
+      } else {
+        errors.push({ label: preset.label, url: preset.url, error: "PageSpeed Insights request failed for the home page (desktop)." });
+      }
       onItemComplete?.();
       return;
     }

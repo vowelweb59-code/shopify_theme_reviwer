@@ -307,6 +307,124 @@ function PresetsSection({
   );
 }
 
+// Core Web Vitals of each preset's demo URL (home page), with a button to measure one preset on its own. The Desktop and Mobile
+// Performance cards above average these scores.
+function PageSpeedByPreset({
+  themeId,
+  presets,
+  pageSpeed,
+  hasAudit,
+  onChanged,
+}: {
+  themeId: string;
+  presets: DemoStorePreset[];
+  pageSpeed: PageSpeedMetric[];
+  hasAudit: boolean;
+  onChanged: () => void;
+}) {
+  const [busyUrl, setBusyUrl] = useState<string | null>(null);
+  const [checkingAll, setCheckingAll] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Returns an error message, or null when the preset was measured.
+  async function measure(preset: DemoStorePreset): Promise<string | null> {
+    setBusyUrl(preset.url);
+    try {
+      const res = await fetch(`/api/themes/${themeId}/page-speed`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: preset.url }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return `${preset.label}: ${data.error ?? "Failed to measure."}`;
+      onChanged();
+      return null;
+    } catch {
+      return `${preset.label}: lost connection to the server.`;
+    } finally {
+      setBusyUrl(null);
+    }
+  }
+
+  async function checkOne(preset: DemoStorePreset) {
+    setError(null);
+    setError(await measure(preset));
+  }
+
+  async function checkAll() {
+    setCheckingAll(true);
+    setError(null);
+    const failures: string[] = [];
+    for (const preset of presets) {
+      const failure = await measure(preset);
+      if (failure) failures.push(failure);
+    }
+    setError(failures.length > 0 ? failures.join(" ") : null);
+    setCheckingAll(false);
+  }
+
+  function scoreFor(url: string, strategy: "mobile" | "desktop") {
+    return pageSpeed.find((m) => m.url === url && m.pageType === "home" && m.strategy === strategy)?.performanceScore;
+  }
+
+  function Score({ value }: { value: number | undefined }) {
+    if (value === undefined) return <span className="text-zinc-400">—</span>;
+    const tone = value >= 90 ? "text-status-pass-text" : value >= 50 ? "text-status-warning-text" : "text-status-fail-text";
+    return <span className={`font-semibold ${tone}`}>{value}</span>;
+  }
+
+  if (presets.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader
+        title="Core Web Vitals by preset"
+        description={
+          hasAudit
+            ? "Performance score of each preset's demo store home page. The Desktop and Mobile Performance cards show the average of these. Check one preset on its own, or all of them."
+            : "Run an audit first; the scores are stored on the latest completed audit."
+        }
+      />
+      <div className="flex flex-col gap-3 text-sm">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="text-xs text-zinc-500">
+              <th className="py-1 font-medium">Preset</th>
+              <th className="py-1 font-medium">Mobile</th>
+              <th className="py-1 font-medium">Desktop</th>
+              <th className="py-1" />
+            </tr>
+          </thead>
+          <tbody>
+            {presets.map((p) => (
+              <tr key={p.url} className="border-t border-border-subtle">
+                <td className="py-2 pr-3">
+                  <div className="font-medium text-zinc-900 dark:text-zinc-100">{p.label}</div>
+                  <div className="max-w-xs truncate font-mono text-xs text-zinc-500">{p.url}</div>
+                </td>
+                <td className="py-2 pr-3">
+                  <Score value={scoreFor(p.url, "mobile")} />
+                </td>
+                <td className="py-2 pr-3">
+                  <Score value={scoreFor(p.url, "desktop")} />
+                </td>
+                <td className="py-2 text-right">
+                  <Button variant="secondary" size="sm" onClick={() => checkOne(p)} loading={busyUrl === p.url} disabled={!hasAudit || checkingAll || busyUrl !== null}>
+                    Check
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
+        <Button size="sm" onClick={checkAll} loading={checkingAll} disabled={!hasAudit || busyUrl !== null} className="w-fit">
+          {checkingAll ? "Checking all presets…" : "Check all presets"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 // Where the theme's code lives, and what the automatic audit (every 48 hours, one theme at a time) did last.
 function GitSourceSection({
   themeId,
@@ -1062,6 +1180,10 @@ export function OverviewPanel({
             <ScoreboardGrid cards={scoreboard} expandedCardId={expandedCardId} onToggle={handleToggleCard} renderExpanded={renderExpanded} />
           </div>
         )}
+
+        <div className="mt-4">
+          <PageSpeedByPreset themeId={themeId} presets={demoStorePresets} pageSpeed={pageSpeed} hasAudit={latestAudit !== null} onChanged={onChanged} />
+        </div>
       </div>
     </div>
   );

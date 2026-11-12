@@ -75,12 +75,14 @@ describe("computeScoreboard", () => {
       ...baseArgs,
       pageSpeed: [
         { label: "A", url: "https://a", pageType: "home", strategy: "desktop", performanceScore: 80 },
-        { label: "A", url: "https://a", pageType: "collection", strategy: "desktop", performanceScore: 60 },
+        { label: "B", url: "https://b", pageType: "home", strategy: "desktop", performanceScore: 60 },
+        { label: "B", url: "https://b", pageType: "collection", strategy: "desktop", performanceScore: 10 },
         { label: "A", url: "https://a", pageType: "home", strategy: "mobile" },
       ],
     });
     const desktop = cards.find((c) => c.id === "desktop-performance")!;
-    expect(desktop.score).toBe(70);
+    expect(desktop.score).toBe(70); // home pages of the two presets only; the collection page doesn't weigh in
+    expect(desktop.detail).toBe("Averaged across 2 presets measured");
 
     const mobile = cards.find((c) => c.id === "mobile-performance")!;
     expect(mobile.score).toBeNull();
