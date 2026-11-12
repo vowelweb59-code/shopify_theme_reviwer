@@ -1,9 +1,12 @@
 import { Parser } from "htmlparser2";
 import { extractLiteralJsonLdTypes } from "@/lib/theme-parser/liquidJson";
 import { fetchPublicText } from "@/lib/net/publicUrl";
+import { extractDemoContent, type DemoContent } from "./demoContent";
 
 export type PageFacts = {
   url: string;
+  /** What the page shows a visitor (images, copy, product names), for the demo-realism checks. */
+  content?: DemoContent;
   jsonLdTypes: string[];
   canonical: string | null;
   metaDescription: string | null;
@@ -120,5 +123,5 @@ export function extractPageFactsFromHtml(html: string, baseUrl: string): Omit<Pa
 
 export async function fetchPageFacts(url: string): Promise<PageFacts> {
   const html = await fetchHtml(url);
-  return { url, ...extractPageFactsFromHtml(html, url) };
+  return { url, ...extractPageFactsFromHtml(html, url), content: extractDemoContent(html, url) };
 }

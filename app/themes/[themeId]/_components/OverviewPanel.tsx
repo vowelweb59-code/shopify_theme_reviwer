@@ -1077,6 +1077,12 @@ export function OverviewPanel({
             <div className="text-right">
               <div className={`text-2xl font-semibold ${healthTone(healthPercent)}`}>{healthPercent}%</div>
               <div className="text-xs text-zinc-500">Health</div>
+              {checkTotals && (
+                <div className="mt-0.5 text-xs text-zinc-500" title="Health = checks passed ÷ all checks. Warnings, failures and checks not tested all count as not passed.">
+                  {checkTotals.passed} of {checkTotals.total} checks passed
+                  {checkTotals.notTested > 0 && ` · ${checkTotals.notTested} not tested`}
+                </div>
+              )}
             </div>
           )}
         </div>

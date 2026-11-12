@@ -1,6 +1,7 @@
 import type { ExecutedFinding } from "../runRules";
 import { fetchPageFacts, type PageFacts } from "./fetchPageFacts";
 import { homepageFindings, productPageFindings } from "./structuralFindings";
+import { demoRealismFindings } from "./demoRealism";
 import { comparePresets, type PresetFacts } from "./presetComparison";
 import { mapWithConcurrency, FETCH_CONCURRENCY_LIMIT, type PresetLink, type PresetLiveCheckError } from "./shared";
 
@@ -17,15 +18,29 @@ type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; produc
 async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<PresetCheckOutcome> {
   const homeFacts = await fetchPageFacts(demoStoreUrl);
   const findings = homepageFindings(homeFacts).map((f) => ({ ...f, presetLabel: label }));
+  // Demo realism (real copy, products and pictures) from the same page loads; skipped when a page has no content read.
+  if (homeFacts.content) findings.push(...demoRealismFindings(homeFacts.content, "home", homeFacts.url).map((f) => ({ ...f, presetLabel: label })));
 
   let productFacts: PageFacts | undefined;
   if (homeFacts.firstProductLink) {
     try {
       productFacts = await fetchPageFacts(homeFacts.firstProductLink);
       findings.push(...productPageFindings(productFacts).map((f) => ({ ...f, presetLabel: label })));
+      if (productFacts.content) findings.push(...demoRealismFindings(productFacts.content, "product", productFacts.url).map((f) => ({ ...f, presetLabel: label })));
     } catch {
       // Product page fetch failing doesn't invalidate the homepage
       // findings already collected — skip it and move on.
+    }
+  }
+
+  // The first collection linked from the homepage: does it hold enough products to look like a real catalog?
+  const collectionLink = homeFacts.content?.firstCollectionLink;
+  if (collectionLink) {
+    try {
+      const collectionFacts = await fetchPageFacts(collectionLink);
+      if (collectionFacts.content) findings.push(...demoRealismFindings(collectionFacts.content, "collection", collectionFacts.url).map((f) => ({ ...f, presetLabel: label })));
+    } catch {
+      // A collection page that won't load is not a realism finding; skip it.
     }
   }
 

@@ -1,0 +1,116 @@
+import { Parser } from "htmlparser2";
+
+export type DemoImage = { src: string; alt: string | null };
+
+/** What a demo-store page shows a visitor, read from its server-rendered HTML (no browser, so late JS-injected content is not seen). */
+export type DemoContent = {
+  images: DemoImage[];
+  /** `<svg class="placeholder…">` graphics: the empty-image slots Shopify draws when a product or section has no picture. */
+  placeholderSvgCount: number;
+  /** Visible text with scripts, styles and templates removed, whitespace collapsed. */
+  text: string;
+  /** Product link text by product URL (the longest text seen for each), i.e. the product names shown on the page. */
+  productTitles: Record<string, string>;
+  /** First collection link on the page, preferring a real collection over /collections/all. */
+  firstCollectionLink: string | null;
+};
+
+const SKIP_TEXT_TAGS = new Set(["script", "style", "noscript", "template", "svg"]);
+const PRODUCT_HREF_RE = /\/products\/([^/?#]+)/;
+const COLLECTION_HREF_RE = /\/collections\/([^/?#]+)/;
+
+const HIDDEN_CLASS_TOKENS = new Set(["hidden", "is-hidden", "d-none", "hide", "display-none", "visually-hidden", "sr-only"]);
+
+function isHidden(attribs: Record<string, string>): boolean {
+  if ("hidden" in attribs || attribs["aria-hidden"] === "true") return true;
+  if (/display\s*:\s*none/i.test(attribs.style ?? "")) return true;
+  return (attribs.class ?? "").split(/\s+/).some((c) => HIDDEN_CLASS_TOKENS.has(c));
+}
+
+function resolveUrl(href: string, baseUrl: string): string | null {
+  try {
+    const url = new URL(href.startsWith("//") ? `https:${href}` : href, baseUrl);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The first URL in a srcset ("a.jpg 1x, b.jpg 2x"). */
+function firstSrcsetUrl(srcset: string | undefined): string | undefined {
+  return srcset?.split(",")[0]?.trim().split(/\s+/)[0] || undefined;
+}
+
+export function extractDemoContent(html: string, baseUrl: string): DemoContent {
+  const images: DemoImage[] = [];
+  const textParts: string[] = [];
+  const productTitles: Record<string, string> = {};
+  let placeholderSvgCount = 0;
+  let firstCollectionLink: string | null = null;
+  let fallbackCollectionLink: string | null = null;
+  let skipDepth = 0;
+  // Elements a visitor never sees (quick-add / cart / modal templates ship in the HTML but stay hidden): their copy and
+  // pictures say nothing about the demo. `openHidden` mirrors the open-tag stack so a hidden element's end is matched.
+  let hiddenCount = 0;
+  const openHidden: boolean[] = [];
+  let productHref: string | null = null;
+  let productText = "";
+
+  const parser = new Parser(
+    {
+      onopentag(name, attribs) {
+        const hidden = isHidden(attribs);
+        openHidden.push(hidden);
+        if (hidden) hiddenCount++;
+        if (name === "svg" && hiddenCount === 0 && /placeholder/i.test(attribs.class ?? "")) placeholderSvgCount++;
+        if (SKIP_TEXT_TAGS.has(name)) skipDepth++;
+
+        if (name === "img" && hiddenCount === 0) {
+          // Lazy-loaded themes put a 1px data: URI in src and the real picture in data-src / srcset.
+          const candidates = [attribs["data-src"], firstSrcsetUrl(attribs["data-srcset"]), attribs.src, firstSrcsetUrl(attribs.srcset)];
+          const raw = candidates.find((c) => c && !c.startsWith("data:"));
+          const src = raw ? resolveUrl(raw, baseUrl) : null;
+          if (src) images.push({ src, alt: attribs.alt ?? null });
+        }
+
+        if (name === "a" && attribs.href) {
+          if (PRODUCT_HREF_RE.test(attribs.href)) {
+            productHref = resolveUrl(attribs.href, baseUrl)?.split(/[?#]/)[0] ?? null;
+            productText = "";
+          }
+          const collection = COLLECTION_HREF_RE.exec(attribs.href);
+          if (collection) {
+            const link = resolveUrl(attribs.href, baseUrl)?.split(/[?#]/)[0] ?? null;
+            if (link && collection[1] !== "all") firstCollectionLink ??= link;
+            else if (link) fallbackCollectionLink ??= link;
+          }
+        }
+      },
+      ontext(text) {
+        if (skipDepth > 0 || hiddenCount > 0) return;
+        textParts.push(text);
+        if (productHref) productText += text;
+      },
+      onclosetag(name) {
+        if (openHidden.pop()) hiddenCount--;
+        if (SKIP_TEXT_TAGS.has(name) && skipDepth > 0) skipDepth--;
+        if (name === "a" && productHref) {
+          const title = productText.replace(/\s+/g, " ").trim();
+          if (title && title.length > (productTitles[productHref]?.length ?? 0)) productTitles[productHref] = title;
+          productHref = null;
+        }
+      },
+    },
+    { decodeEntities: true }
+  );
+  parser.write(html);
+  parser.end();
+
+  return {
+    images,
+    placeholderSvgCount,
+    text: textParts.join(" ").replace(/\s+/g, " ").trim(),
+    productTitles,
+    firstCollectionLink: firstCollectionLink ?? fallbackCollectionLink,
+  };
+}
