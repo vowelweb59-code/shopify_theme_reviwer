@@ -52,9 +52,9 @@ function performanceScoreCard(id: string, label: string, pageSpeed: PageSpeedMet
   return { id, label, score, detail: `Averaged across ${relevant.length} ${noun}${relevant.length === 1 ? "" : "s"} measured` };
 }
 
-function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined, themeStoreLabels?: Set<string>): ScoreCard {
+function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined, themeStoreLabels?: Set<string>, liveFeatureIds?: Set<string>): ScoreCard {
   const detections = new Map((enhancementDetections ?? []).map((d) => [d.pointId, d.detected]));
-  const statuses = AVAILABLE_FEATURES.map((f) => featureStatus(f, detections, themeStoreLabels));
+  const statuses = AVAILABLE_FEATURES.map((f) => featureStatus(f, detections, themeStoreLabels, liveFeatureIds));
   const checked = statuses.filter((s) => s !== "not_checked").length;
   const detected = statuses.filter((s) => s === "detected").length;
   if (checked === 0) {
@@ -132,7 +132,10 @@ export function computeScoreboard({
   enhancementPoints,
   themeStoreFeatures,
   demoRealism,
+  liveFeatures,
 }: {
+  // Feature ids the live demo stores showed on this run (AuditRun.liveFeatures); absent when no demo store was read.
+  liveFeatures?: string[];
   demoRealism?: DemoRealismInput;
   categories: CategoryChecks[];
   pageSpeed: PageSpeedMetric[] | undefined;
@@ -152,7 +155,7 @@ export function computeScoreboard({
     categoryScore(categories, ["Theme Store Compliance"], "store-requirement", "Store Requirement"),
     demoRealismScoreCard(demoRealism),
     categoryScore(categories, ["Internal Standard"], "internal-standards", "Internal Standards"),
-    featuresScoreCard(enhancementDetections, themeStoreLabels),
+    featuresScoreCard(enhancementDetections, themeStoreLabels, liveFeatures ? new Set(liveFeatures) : undefined),
     opportunitiesScoreCard(enhancementDetections, enhancementPoints),
   ];
 }

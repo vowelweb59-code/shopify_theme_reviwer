@@ -6,9 +6,14 @@ import { probeImages } from "./imageProbe";
 import { comparePresets, type PresetFacts } from "./presetComparison";
 import { mapWithConcurrency, FETCH_CONCURRENCY_LIMIT, type PresetLink, type PresetLiveCheckError } from "./shared";
 
-export type MultiPresetLiveCheckResult = { findings: ExecutedFinding[]; errors: PresetLiveCheckError[] };
+export type MultiPresetLiveCheckResult = {
+  findings: ExecutedFinding[];
+  errors: PresetLiveCheckError[];
+  /** Features seen on the live demo pages of any preset (home, first product, first collection); null when no preset could be read. */
+  liveFeatures: string[] | null;
+};
 
-type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; product?: PageFacts };
+type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; product?: PageFacts; liveFeatures: string[] };
 
 /**
  * Fetches a preset's homepage (and, if found, its first product page) as
@@ -28,6 +33,7 @@ async function realismImageFindings(content: NonNullable<PageFacts["content"]>, 
 async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<PresetCheckOutcome> {
   const homeFacts = await fetchPageFacts(demoStoreUrl);
   const findings = homepageFindings(homeFacts).map((f) => ({ ...f, presetLabel: label }));
+  const liveFeatures = new Set(homeFacts.liveFeatures ?? []);
   // Demo realism (real copy, products and pictures) from the same page loads; skipped when a page has no content read.
   if (homeFacts.content) {
     findings.push(...demoRealismFindings(homeFacts.content, "home", homeFacts.url).map((f) => ({ ...f, presetLabel: label })));
@@ -38,6 +44,7 @@ async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<
   if (homeFacts.firstProductLink) {
     try {
       productFacts = await fetchPageFacts(homeFacts.firstProductLink);
+      for (const id of productFacts.liveFeatures ?? []) liveFeatures.add(id);
       findings.push(...productPageFindings(productFacts).map((f) => ({ ...f, presetLabel: label })));
       if (productFacts.content) {
         findings.push(...demoRealismFindings(productFacts.content, "product", productFacts.url).map((f) => ({ ...f, presetLabel: label })));
@@ -54,13 +61,14 @@ async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<
   if (collectionLink) {
     try {
       const collectionFacts = await fetchPageFacts(collectionLink);
+      for (const id of collectionFacts.liveFeatures ?? []) liveFeatures.add(id);
       if (collectionFacts.content) findings.push(...demoRealismFindings(collectionFacts.content, "collection", collectionFacts.url).map((f) => ({ ...f, presetLabel: label })));
     } catch {
       // A collection page that won't load is not a realism finding; skip it.
     }
   }
 
-  return { findings, home: homeFacts, product: productFacts };
+  return { findings, home: homeFacts, product: productFacts, liveFeatures: [...liveFeatures] };
 }
 
 /**
@@ -79,6 +87,7 @@ export async function runLiveChecksForPresets(
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const presetFacts: PresetFacts[] = [];
+  const liveFeatures = new Set<string>();
 
   const results = await mapWithConcurrency(presets, FETCH_CONCURRENCY_LIMIT, async (preset) => {
     try {
@@ -94,6 +103,7 @@ export async function runLiveChecksForPresets(
   for (const result of results) {
     if (result.ok) {
       findings.push(...result.outcome.findings);
+      for (const id of result.outcome.liveFeatures) liveFeatures.add(id);
       presetFacts.push({ label: result.preset.label, home: result.outcome.home, product: result.outcome.product });
     } else {
       errors.push({ label: result.preset.label, url: result.preset.url, error: result.error });
@@ -105,5 +115,5 @@ export async function runLiveChecksForPresets(
     findings.push(...presetOverlapFindings(presetFacts.map((p) => ({ label: p.label, url: p.home.url, content: p.home.content }))));
   }
 
-  return { findings, errors };
+  return { findings, errors, liveFeatures: presetFacts.length > 0 ? [...liveFeatures] : null };
 }

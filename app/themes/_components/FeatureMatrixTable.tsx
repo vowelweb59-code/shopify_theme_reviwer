@@ -1,16 +1,15 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { AVAILABLE_FEATURES, featureStatus } from "@/lib/audit/availableFeatures";
+import { AVAILABLE_FEATURES } from "@/lib/audit/availableFeatures";
+import { featureCells, hasFeature, type FeatureCell } from "@/lib/themes/featureSuggestions";
 
 type EnhancementDetection = { pointId: string; detected: boolean };
 
 export type FeatureMatrixRow = {
   theme: { _id: string; name: string; themeStoreFeatures?: string[] };
-  latestAudit: { enhancementDetections?: EnhancementDetection[] } | null;
+  latestAudit: { enhancementDetections?: EnhancementDetection[]; liveFeatures?: string[] } | null;
 };
-
-type Status = ReturnType<typeof featureStatus>;
 
 // One soft tint per feature category, cycling; kept as /10 washes so both light and dark themes stay readable.
 const GROUP_TINTS = [
@@ -38,11 +37,14 @@ const LABEL_ROW_HEIGHT = "h-52";
  * on top while scrolling. The last row counts how many themes have each feature.
  */
 export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
-  const statuses: Map<string, Status>[] = rows.map((r) => {
-    const detections = new Map((r.latestAudit?.enhancementDetections ?? []).map((d) => [d.pointId, d.detected]));
-    const themeStoreLabels = r.theme.themeStoreFeatures ? new Set(r.theme.themeStoreFeatures.map((label) => label.toLowerCase())) : undefined;
-    return new Map(AVAILABLE_FEATURES.map((f) => [f.id, featureStatus(f, detections, themeStoreLabels)]));
-  });
+  const cells: Map<string, FeatureCell>[] = rows.map((r) =>
+    featureCells({
+      name: r.theme.name,
+      themeStoreFeatures: r.theme.themeStoreFeatures,
+      detections: r.latestAudit?.enhancementDetections,
+      liveFeatures: r.latestAudit?.liveFeatures,
+    })
+  );
   const total = AVAILABLE_FEATURES.length;
 
   return (
@@ -79,7 +81,9 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
         </thead>
         <tbody>
           {rows.map((r, rowIndex) => {
-            const covered = AVAILABLE_FEATURES.filter((f) => statuses[rowIndex].get(f.id) === "detected").length;
+            const covered = AVAILABLE_FEATURES.filter((f) => cells[rowIndex].get(f.id)?.status === "detected").length;
+            const verifiedLive = AVAILABLE_FEATURES.filter((f) => cells[rowIndex].get(f.id)?.sources.live === true).length;
+            const liveRead = r.latestAudit?.liveFeatures !== undefined;
             return (
               <tr key={r.theme._id} className="group even:bg-surface-muted/50">
                 <td className="sticky left-0 z-10 border-b border-r border-border-subtle bg-surface px-4 py-2.5 group-even:bg-surface-muted group-hover:bg-primary-tint">
@@ -92,30 +96,44 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
                       {covered}/{total}
                     </span>
                   </div>
+                  <div className="mt-0.5 text-[11px] text-zinc-500" title="Features whose markup was seen on the theme's live demo stores">
+                    {liveRead ? `${verifiedLive} seen on live store` : "live store not read"}
+                  </div>
                 </td>
                 {GROUPS.flatMap((g) =>
                   g.features.map((f, i) => {
-                    const status = statuses[rowIndex].get(f.id);
+                    const cell = cells[rowIndex].get(f.id);
+                    const status = cell?.status;
+                    const verified = cell?.sources.live === true;
+                    const why = cell ? sourcesText(cell) : "";
                     return (
                       <td key={f.id} className={`border-b border-border-subtle px-1 py-2.5 text-center group-hover:bg-primary-tint/60 ${i === 0 ? "border-l" : ""}`}>
-                        {status === "detected" && (
+                        {status === "detected" && verified && (
+                          <span
+                            className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow-sm ring-1 ring-emerald-600/40"
+                            title={`${r.theme.name}: ${f.label} is available and seen on the live store. ${why}`}
+                          >
+                            <Check className="h-3.5 w-3.5 stroke-[3] text-white" aria-label="Available, seen on the live store" />
+                          </span>
+                        )}
+                        {status === "detected" && !verified && (
                           <span
                             className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30"
-                            title={`${r.theme.name}: ${f.label} is available`}
+                            title={`${r.theme.name}: ${f.label} is available, not seen on the live store. ${why}`}
                           >
-                            <Check className="h-3.5 w-3.5 stroke-[3] text-emerald-600 dark:text-emerald-400" aria-label="Available" />
+                            <Check className="h-3.5 w-3.5 stroke-[3] text-emerald-600 dark:text-emerald-400" aria-label="Available, not seen on the live store" />
                           </span>
                         )}
                         {status === "conflict" && (
                           <span
                             className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-500/40"
-                            title={`${r.theme.name}: ${f.label} is listed on the Theme Store, but not detected in the theme's code. Worth a second look`}
+                            title={`${r.theme.name}: ${f.label} is listed on the Theme Store, but not detected in the theme's code. Worth a second look. ${why}`}
                           >
                             <Check className="h-3.5 w-3.5 stroke-[3] text-amber-600 dark:text-amber-400" aria-label="Conflicting signal" />
                           </span>
                         )}
                         {status !== "detected" && status !== "conflict" && (
-                          <span className="mx-auto block h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600" title={`${r.theme.name}: no ${f.label}`} aria-label="Not available" />
+                          <span className="mx-auto block h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600" title={`${r.theme.name}: ${f.label} not found. ${why}`} aria-label="Not available" />
                         )}
                       </td>
                     );
@@ -128,7 +146,7 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
             <td className="sticky left-0 z-10 border-r border-border-subtle bg-surface-muted px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Themes with it</td>
             {GROUPS.flatMap((g) =>
               g.features.map((f, i) => {
-                const n = statuses.filter((s) => s.get(f.id) === "detected" || s.get(f.id) === "conflict").length;
+                const n = cells.filter((c) => hasFeature(c.get(f.id))).length;
                 return (
                   <td key={f.id} className={`bg-surface-muted px-1 py-2.5 text-center tabular-nums text-[11px] font-medium ${n === rows.length ? "text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} ${i === 0 ? "border-l border-border-subtle" : ""}`}>
                     {n}
@@ -141,4 +159,12 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
       </table>
     </div>
   );
+}
+
+const yesNo = (v: boolean | null, yes: string, no: string) => (v === null ? "n/a" : v ? yes : no);
+
+/** The three sources behind one cell, for its tooltip. */
+function sourcesText(cell: FeatureCell): string {
+  const { code, live, store } = cell.sources;
+  return `Code: ${yesNo(code, "found", "not found")}. Live store: ${yesNo(live, "seen", "not seen on the pages read")}. Theme Store listing: ${store ? "lists it" : "does not list it"}.`;
 }

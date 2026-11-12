@@ -31,7 +31,7 @@ type ThemeDetail = {
   };
   versions: { _id: string; version: string; createdAt: string }[];
   latestVersion: { _id: string; version: string } | null;
-  latestAudit: { _id: string; startedAt: string } | null;
+  latestAudit: { _id: string; startedAt: string; liveFeatures?: string[] } | null;
   checks: { categories: CategoryChecks[]; totals: CheckTotals } | null;
   scoreboard: ScoreCard[] | null;
   pageSpeed: PageSpeedMetric[];
@@ -113,6 +113,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
                 categories={detail.checks?.categories ?? []}
                 themeStoreSlug={detail.theme.themeStoreSlug ?? null}
                 themeStoreFeatures={detail.theme.themeStoreFeatures}
+                liveFeatures={detail.latestAudit?.liveFeatures}
                 themeStoreCheckedAt={detail.theme.themeStoreCheckedAt ?? null}
                 themeStoreError={detail.theme.themeStoreError ?? null}
                 gitRepoUrl={detail.theme.gitRepoUrl ?? null}

@@ -132,6 +132,8 @@ const auditRunSchema = new Schema(
     liveCheckErrors: { type: [presetLiveCheckErrorSchema], default: undefined },
     pageSpeed: { type: [pageSpeedMetricSchema], default: undefined },
     enhancementDetections: { type: [enhancementDetectionSchema], default: undefined },
+    // Feature ids (availableFeatures.ts) whose markup the live demo stores showed on this run; absent when no demo store was read.
+    liveFeatures: { type: [String], default: undefined },
     // Snapshot of every rule's version (ruleId -> Rule.version) at the
     // moment this audit ran (phase-6 §14) — lets a later diff tell "this
     // finding is new because a rule was added/changed" apart from "this

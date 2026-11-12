@@ -55,7 +55,7 @@ export async function GET() {
       // (timings, diagnostics, version snapshots, ...).
       const latestAudit = await AuditRun.findOne({ themeVersionId: latestVersion._id, status: "complete" })
         .sort({ startedAt: -1 })
-        .select("_id startedAt enhancementDetections pageSpeed demoStorePresets")
+        .select("_id startedAt enhancementDetections liveFeatures pageSpeed demoStorePresets")
         .lean();
       if (!latestAudit) {
         return { theme, latestVersion, latestAudit: null, checkTotals: null, scoreboard: null };
@@ -89,6 +89,7 @@ export async function GET() {
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
         themeStoreFeatures: theme.themeStoreFeatures,
+        liveFeatures: latestAudit.liveFeatures,
       });
       return { theme, latestVersion, latestAudit, checkTotals: checks.totals, scoreboard };
     })

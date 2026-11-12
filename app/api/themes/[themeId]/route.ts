@@ -47,7 +47,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
           .sort({ startedAt: -1 })
           // Every run feeds "Previous Audits"; only the latest's page-speed
           // and enhancement data are used, and the client reads just _id/startedAt.
-          .select("_id themeVersionId status startedAt demoStorePresets liveCheckErrors pageSpeed enhancementDetections")
+          .select("_id themeVersionId status startedAt demoStorePresets liveCheckErrors pageSpeed enhancementDetections liveFeatures")
           .lean()
       : [];
   // One catalog for this run and every previous run's totals below,
@@ -103,6 +103,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
         enhancementPoints,
         themeStoreFeatures: theme.themeStoreFeatures,
         demoRealism: { presetLabels, findings: demoFindings },
+        liveFeatures: latestAudit.liveFeatures,
       });
     }
   }

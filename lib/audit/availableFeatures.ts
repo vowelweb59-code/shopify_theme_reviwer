@@ -15,6 +15,8 @@
 // New, unmapped features get a real EnhancementPoint + detector in a later
 // pass rather than a guessed pattern now.
 
+import { LIVE_CHECKABLE } from "./liveFeatures";
+
 export type AvailableFeature = {
   id: string;
   label: string;
@@ -167,7 +169,15 @@ export type FeatureStatus = "detected" | "not_detected" | "not_checked" | "confl
  * it out. When a detector explicitly says "absent" but the listing says
  * otherwise, that's a real disagreement worth flagging — see "conflict".
  */
-export function featureStatus(feature: AvailableFeature, detections: Map<string, boolean>, themeStoreLabels?: Set<string>): FeatureStatus {
+export function featureStatus(
+  feature: AvailableFeature,
+  detections: Map<string, boolean>,
+  themeStoreLabels?: Set<string>,
+  liveFeatureIds?: Set<string>
+): FeatureStatus {
+  // Seeing the feature's markup on the live demo store confirms it whatever the code detector or the listing said. Not seeing it
+  // proves nothing (it may sit behind a click or on another template), so it never lowers a status.
+  if (liveFeatureIds && LIVE_CHECKABLE.has(feature.id) && liveFeatureIds.has(feature.id)) return "detected";
   const themeStoreConfirms = themeStoreLabels?.has(feature.label.toLowerCase()) ?? false;
   if (feature.pointIds.length > 0) {
     const relevant = feature.pointIds.map((id) => detections.get(id)).filter((v): v is boolean => v !== undefined);
@@ -177,4 +187,22 @@ export function featureStatus(feature: AvailableFeature, detections: Map<string,
     }
   }
   return themeStoreConfirms ? "detected" : "not_checked";
+}
+
+/** Where the evidence for one feature comes from: the theme's code, the live demo store, and the Theme Store listing. */
+export type FeatureSources = { code: boolean | null; live: boolean | null; store: boolean };
+
+/** null = that source has no answer (no code detector mapped or it never ran; the live store wasn't read or can't show this feature). */
+export function featureSources(
+  feature: AvailableFeature,
+  detections: Map<string, boolean>,
+  themeStoreLabels?: Set<string>,
+  liveFeatureIds?: Set<string>
+): FeatureSources {
+  const relevant = feature.pointIds.map((id) => detections.get(id)).filter((v): v is boolean => v !== undefined);
+  return {
+    code: relevant.length === 0 ? null : relevant.some(Boolean),
+    live: liveFeatureIds && LIVE_CHECKABLE.has(feature.id) ? liveFeatureIds.has(feature.id) : null,
+    store: themeStoreLabels?.has(feature.label.toLowerCase()) ?? false,
+  };
 }

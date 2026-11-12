@@ -41,6 +41,8 @@ type Props = {
   // AVAILABLE_FEATURES entries our own detectors can't check on their own.
   themeStoreSlug: string | null;
   themeStoreFeatures?: string[];
+  // Feature ids the live demo stores showed on the latest audit (see lib/audit/liveFeatures.ts); absent when none was read.
+  liveFeatures?: string[];
   themeStoreCheckedAt: string | null;
   themeStoreError: string | null;
   gitRepoUrl: string | null;
@@ -828,6 +830,7 @@ export function OverviewPanel({
   categories,
   themeStoreSlug,
   themeStoreFeatures,
+  liveFeatures,
   themeStoreCheckedAt,
   themeStoreError,
   gitRepoUrl,
@@ -945,9 +948,10 @@ export function OverviewPanel({
         // AuditRun.enhancementDetections directly.
         const detections = new Map(reportData.enhancementPoints.map((p) => [p.pointId, p.detected === true]));
         const themeStoreLabels = themeStoreFeatures ? new Set(themeStoreFeatures.map((f) => f.toLowerCase())) : undefined;
-        const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_detected");
-        const conflicts = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "conflict");
-        const uncheckedCount = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels) === "not_checked").length;
+        const liveIds = liveFeatures ? new Set(liveFeatures) : undefined;
+        const missing = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels, liveIds) === "not_detected");
+        const conflicts = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels, liveIds) === "conflict");
+        const uncheckedCount = AVAILABLE_FEATURES.filter((f) => featureStatus(f, detections, themeStoreLabels, liveIds) === "not_checked").length;
 
         return (
           <div className="flex flex-col gap-3">

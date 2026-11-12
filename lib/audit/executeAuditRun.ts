@@ -225,6 +225,7 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
     let liveFindings: ExecutedFinding[] = [];
     let liveCheckErrors: { label: string; url: string; error: string }[] = [];
     let pageSpeedMetrics: PageSpeedMetric[] = [];
+    let liveFeatures: string[] | null = null;
     if (demoStorePresets.length > 0) {
       // One progress unit per preset per phase (live-check, page-speed) —
       // a rough but honest measure of "how much of the longest stage is
@@ -253,6 +254,7 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
       timer.record("liveChecks", Date.now() - liveCheckStart);
       timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);
 
+      liveFeatures = liveResult.liveFeatures;
       liveFindings = [...liveResult.findings, ...pageSpeedResult.findings];
       liveCheckErrors = [...liveResult.errors, ...pageSpeedResult.errors];
       pageSpeedMetrics = pageSpeedResult.metrics;
@@ -298,6 +300,7 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
     if (demoStorePresets.length > 0) auditRun.demoStorePresets = demoStorePresets;
     if (liveCheckErrors.length > 0) auditRun.liveCheckErrors = liveCheckErrors;
     if (pageSpeedMetrics.length > 0) auditRun.pageSpeed = pageSpeedMetrics;
+    if (liveFeatures) auditRun.liveFeatures = liveFeatures;
     if (enhancementDetections.length > 0) auditRun.enhancementDetections = enhancementDetections;
     auditRun.ruleVersionSnapshot = await captureRuleVersionSnapshot();
     auditRun.parserVersion = PARSER_VERSION;

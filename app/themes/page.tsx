@@ -9,6 +9,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { AddThemeModal } from "./_components/AddThemeModal";
 import { FeatureMatrixTable } from "./_components/FeatureMatrixTable";
+import { FeatureSuggestions } from "./_components/FeatureSuggestions";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import { computeUpdatePriority, type UpdatePriorityResult } from "@/lib/themes/updatePriority";
 import { formatDateOnly as formatDate } from "@/app/_components/formatDate";
@@ -24,7 +25,7 @@ type ThemeRow = {
     themeStoreVersionReleasedAt?: string | null;
   };
   latestVersion: { _id: string; version: string } | null;
-  latestAudit: { _id: string; startedAt: string; enhancementDetections?: { pointId: string; detected: boolean }[] } | null;
+  latestAudit: { _id: string; startedAt: string; enhancementDetections?: { pointId: string; detected: boolean }[]; liveFeatures?: string[] } | null;
   checkTotals: CheckTotals | null;
   scoreboard: ScoreCard[] | null;
 };
@@ -351,13 +352,27 @@ export default function ThemesPage() {
       )}
 
       {!loading && rows.length > 0 && (
+        <FeatureSuggestions
+          themes={rows.map((r) => ({
+            name: r.theme.name,
+            themeStoreFeatures: r.theme.themeStoreFeatures,
+            detections: r.latestAudit?.enhancementDetections,
+            liveFeatures: r.latestAudit?.liveFeatures,
+          }))}
+        />
+      )}
+
+      {!loading && rows.length > 0 && (
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Feature Availability</h2>
-            <p className="mt-1 text-sm text-zinc-500">Every feature in the catalog, per theme, from each theme&apos;s latest audit and its Shopify Theme Store listing.</p>
+            <p className="mt-1 text-sm text-zinc-500">Every feature in the catalog, per theme: from the theme&apos;s code, its live demo stores (read on each audit) and its Shopify Theme Store listing. Hover a check to see which sources found it.</p>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Available (detected in the code, or confirmed by the Theme Store listing)
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Available (found in the code or listed on the Theme Store; not seen on the live demo store)
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-2.5 py-1 font-medium text-white ring-1 ring-emerald-600/40">
+                <span className="inline-block h-2 w-2 rounded-full bg-white" /> Seen on the live demo store
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-700 ring-1 ring-amber-500/40 dark:text-amber-300">
                 <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> Listed on the Theme Store but not found in the code: worth a second look
