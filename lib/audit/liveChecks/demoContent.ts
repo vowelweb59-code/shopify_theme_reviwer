@@ -13,7 +13,47 @@ export type DemoContent = {
   productTitles: Record<string, string>;
   /** First collection link on the page, preferring a real collection over /collections/all. */
   firstCollectionLink: string | null;
+  /** The page's Product JSON-LD (what search engines read as the product), when it has one. */
+  product: ProductData | null;
 };
+
+export type ProductData = { name: string; description: string; price: string | null; imageCount: number };
+
+function findProduct(node: unknown): Record<string, unknown> | null {
+  if (Array.isArray(node)) {
+    for (const n of node) {
+      const hit = findProduct(n);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (!node || typeof node !== "object") return null;
+  const obj = node as Record<string, unknown>;
+  const type = obj["@type"];
+  if (type === "Product" || (Array.isArray(type) && type.includes("Product"))) return obj;
+  return findProduct(obj["@graph"]);
+}
+
+function productFromJsonLd(raw: string): ProductData | null {
+  let data: unknown;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  const p = findProduct(data);
+  if (!p) return null;
+  const offers = Array.isArray(p.offers) ? p.offers[0] : p.offers;
+  const o = (offers && typeof offers === "object" ? offers : {}) as Record<string, unknown>;
+  const price = o.price ?? o.lowPrice ?? null;
+  const image = p.image;
+  return {
+    name: typeof p.name === "string" ? p.name : "",
+    description: typeof p.description === "string" ? p.description : "",
+    price: price === null || price === undefined ? null : String(price),
+    imageCount: Array.isArray(image) ? image.length : image ? 1 : 0,
+  };
+}
 
 const SKIP_TEXT_TAGS = new Set(["script", "style", "noscript", "template", "svg"]);
 const PRODUCT_HREF_RE = /\/products\/([^/?#]+)/;
@@ -55,10 +95,17 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
   const openHidden: boolean[] = [];
   let productHref: string | null = null;
   let productText = "";
+  let product: ProductData | null = null;
+  let inJsonLd = false;
+  let jsonLdBuffer = "";
 
   const parser = new Parser(
     {
       onopentag(name, attribs) {
+        if (name === "script" && (attribs.type ?? "").toLowerCase() === "application/ld+json") {
+          inJsonLd = true;
+          jsonLdBuffer = "";
+        }
         const hidden = isHidden(attribs);
         openHidden.push(hidden);
         if (hidden) hiddenCount++;
@@ -87,11 +134,19 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
         }
       },
       ontext(text) {
+        if (inJsonLd) {
+          jsonLdBuffer += text;
+          return;
+        }
         if (skipDepth > 0 || hiddenCount > 0) return;
         textParts.push(text);
         if (productHref) productText += text;
       },
       onclosetag(name) {
+        if (name === "script" && inJsonLd) {
+          inJsonLd = false;
+          product ??= productFromJsonLd(jsonLdBuffer);
+        }
         if (openHidden.pop()) hiddenCount--;
         if (SKIP_TEXT_TAGS.has(name) && skipDepth > 0) skipDepth--;
         if (name === "a" && productHref) {
@@ -112,5 +167,6 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
     text: textParts.join(" ").replace(/\s+/g, " ").trim(),
     productTitles,
     firstCollectionLink: firstCollectionLink ?? fallbackCollectionLink,
+    product,
   };
 }

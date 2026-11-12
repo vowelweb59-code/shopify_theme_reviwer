@@ -1,7 +1,8 @@
 import type { ExecutedFinding } from "../runRules";
 import { fetchPageFacts, type PageFacts } from "./fetchPageFacts";
 import { homepageFindings, productPageFindings } from "./structuralFindings";
-import { demoRealismFindings } from "./demoRealism";
+import { demoRealismFindings, imageProbeFindings, presetOverlapFindings } from "./demoRealism";
+import { probeImages } from "./imageProbe";
 import { comparePresets, type PresetFacts } from "./presetComparison";
 import { mapWithConcurrency, FETCH_CONCURRENCY_LIMIT, type PresetLink, type PresetLiveCheckError } from "./shared";
 
@@ -15,18 +16,33 @@ type PresetCheckOutcome = { findings: ExecutedFinding[]; home: PageFacts; produc
  * meta-description) checks against each. A product page fetch failing
  * doesn't invalidate the homepage findings already collected.
  */
+/** Reads the headers of a page's first photos for broken or too-small images; any failure here just means no finding. */
+async function realismImageFindings(content: NonNullable<PageFacts["content"]>, pageType: "home" | "product", url: string): Promise<ExecutedFinding[]> {
+  try {
+    return imageProbeFindings(await probeImages(content), pageType, url);
+  } catch {
+    return [];
+  }
+}
+
 async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<PresetCheckOutcome> {
   const homeFacts = await fetchPageFacts(demoStoreUrl);
   const findings = homepageFindings(homeFacts).map((f) => ({ ...f, presetLabel: label }));
   // Demo realism (real copy, products and pictures) from the same page loads; skipped when a page has no content read.
-  if (homeFacts.content) findings.push(...demoRealismFindings(homeFacts.content, "home", homeFacts.url).map((f) => ({ ...f, presetLabel: label })));
+  if (homeFacts.content) {
+    findings.push(...demoRealismFindings(homeFacts.content, "home", homeFacts.url).map((f) => ({ ...f, presetLabel: label })));
+    findings.push(...(await realismImageFindings(homeFacts.content, "home", homeFacts.url)).map((f) => ({ ...f, presetLabel: label })));
+  }
 
   let productFacts: PageFacts | undefined;
   if (homeFacts.firstProductLink) {
     try {
       productFacts = await fetchPageFacts(homeFacts.firstProductLink);
       findings.push(...productPageFindings(productFacts).map((f) => ({ ...f, presetLabel: label })));
-      if (productFacts.content) findings.push(...demoRealismFindings(productFacts.content, "product", productFacts.url).map((f) => ({ ...f, presetLabel: label })));
+      if (productFacts.content) {
+        findings.push(...demoRealismFindings(productFacts.content, "product", productFacts.url).map((f) => ({ ...f, presetLabel: label })));
+        findings.push(...(await realismImageFindings(productFacts.content, "product", productFacts.url)).map((f) => ({ ...f, presetLabel: label })));
+      }
     } catch {
       // Product page fetch failing doesn't invalidate the homepage
       // findings already collected — skip it and move on.
@@ -84,7 +100,10 @@ export async function runLiveChecksForPresets(
     }
   }
 
-  if (presetFacts.length >= 2) findings.push(...comparePresets(presetFacts));
+  if (presetFacts.length >= 2) {
+    findings.push(...comparePresets(presetFacts));
+    findings.push(...presetOverlapFindings(presetFacts.map((p) => ({ label: p.label, url: p.home.url, content: p.home.content }))));
+  }
 
   return { findings, errors };
 }

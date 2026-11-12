@@ -35,13 +35,18 @@ function fileName(src: string): string {
 }
 
 /** The same picture at different sizes shares a name once the Shopify size suffix (_600x, _grande) and version are dropped. */
-function imageKey(src: string): string {
+export function imageKey(src: string): string {
   try {
     const u = new URL(src);
     return `${u.hostname}${u.pathname.replace(/_(\d+x\d*|x\d+|pico|icon|thumb|small|compact|medium|large|grande|original|master)(?=\.[a-z]+$)/i, "")}`;
   } catch {
     return src;
   }
+}
+
+/** The pictures that count as content: not icons, flags, logos or vector art. */
+export function contentImagesOf(content: DemoContent) {
+  return content.images.filter((i) => !NOT_CONTENT_IMAGE_RE.test(fileName(i.src)) && !/\.svg$/i.test(fileName(i.src)) && !/cdn\.shopify\.com\/static\//i.test(i.src));
 }
 
 function snippet(items: string[], max = 3): string {
@@ -90,7 +95,7 @@ export function demoRealismFindings(content: DemoContent, pageType: DemoPageType
 
   // 3. Alt text that is just a file name.
   // Icons, flags and other vector art are not photos: leave them out of every picture check.
-  const contentImages = content.images.filter((i) => !NOT_CONTENT_IMAGE_RE.test(fileName(i.src)) && !/\.svg$/i.test(fileName(i.src)) && !/cdn\.shopify\.com\/static\//i.test(i.src));
+  const contentImages = contentImagesOf(content);
   const fileAlt = contentImages.filter((i) => i.alt && FILENAME_ALT_RE.test(i.alt.trim()));
   if (fileAlt.length >= 2) {
     add(
@@ -174,5 +179,106 @@ export function demoRealismFindings(content: DemoContent, pageType: DemoPageType
     );
   }
 
+  // 7. A product with no description or no price in the page's own product data (Product JSON-LD).
+  if (pageType === "product" && content.product) {
+    if (content.product.description.replace(/\s+/g, " ").trim().length < 50) {
+      add(
+        "LIVE-DEMO-PRODUCT-004",
+        "medium",
+        "The demo product has no real description (its product data holds under 50 characters).",
+        "Write a believable product description so the product page shows how the theme lays out real copy."
+      );
+    }
+    if (content.product.price === null || !(Number(content.product.price) > 0)) {
+      add("LIVE-DEMO-PRODUCT-005", "medium", "The demo product has no price (or a price of zero).", "Give every demo product a real price.");
+    }
+  }
+
+  // 8. Every price the same: a sign the catalog is filler.
+  if (pageType !== "product") {
+    const prices = (content.text.match(PRICE_RE) ?? []).map((p) => p.replace(/\s/g, ""));
+    const distinct = new Set(prices).size;
+    if (prices.length >= 8 && distinct <= 2) {
+      add(
+        "LIVE-DEMO-PRODUCT-006",
+        "low",
+        `The ${pageType} page shows ${prices.length} prices but only ${distinct} different one${distinct === 1 ? "" : "s"}.`,
+        "Vary the prices across the demo catalog, including some sale prices."
+      );
+    }
+  }
+
+  // 9. A homepage with almost no copy.
+  if (pageType === "home" && content.text.length < 400) {
+    add(
+      "LIVE-DEMO-CONTENT-004",
+      "medium",
+      `The homepage has very little text (${content.text.length} characters).`,
+      "Add real headings, descriptions and calls to action to the homepage sections."
+    );
+  }
+
+  return findings;
+}
+
+const PRICE_RE = /(?:[$€£¥₹]|\bRs\.?|\b(?:USD|EUR|GBP|INR|CAD|AUD))\s?\d[\d,]*(?:\.\d{1,2})?/g;
+
+type ImageProbeResult = { src: string; status: number; width: number | null; height: number | null };
+const LOW_RES_PX = 600;
+
+/** Findings from reading the headers of a page's photos (see imageProbe.ts): pictures that don't load, and pictures too small. */
+export function imageProbeFindings(probes: ImageProbeResult[], pageType: DemoPageType, url: string): ExecutedFinding[] {
+  const findings: ExecutedFinding[] = [];
+  const add = (ruleId: string, severity: ExecutedFinding["severity"], finding: string, recommendation: string) =>
+    findings.push({ ruleId, filePath: url, category: CATEGORY, severity, finding, recommendation, sourceReference: SOURCE });
+
+  const broken = probes.filter((p) => p.status === 404 || p.status === 410);
+  if (broken.length > 0) {
+    add(
+      "LIVE-DEMO-IMG-004",
+      broken.length >= 3 ? "high" : "medium",
+      `${broken.length} of ${probes.length} images checked on the ${pageType} page don't load (not found): ${snippet(broken.map((b) => fileName(b.src)))}.`,
+      "Re-upload the missing pictures or remove the blocks that point to them."
+    );
+  }
+  const small = probes.filter((p) => p.width !== null && p.width < LOW_RES_PX);
+  if (small.length >= 2) {
+    add(
+      "LIVE-DEMO-IMG-005",
+      "medium",
+      `${small.length} of ${probes.length} images checked on the ${pageType} page are under ${LOW_RES_PX}px wide (${snippet(small.map((s) => `${fileName(s.src)} ${s.width}×${s.height}`))}), so they will look soft on large screens.`,
+      "Upload photos at least 1000px wide (1500px or more for hero and banner images)."
+    );
+  }
+  return findings;
+}
+
+/**
+ * Presets of one theme should look like different stores. Flags a preset whose homepage reuses most of another preset's pictures
+ * (the later preset in the list is the one reported). Needs at least 5 photos on each side to say anything.
+ */
+export function presetOverlapFindings(presets: { label: string; url: string; content?: DemoContent }[]): ExecutedFinding[] {
+  const findings: ExecutedFinding[] = [];
+  const keys = presets.map((p) => new Set(p.content ? contentImagesOf(p.content).map((i) => imageKey(i.src)) : []));
+  for (let j = 1; j < presets.length; j++) {
+    for (let i = 0; i < j; i++) {
+      const smaller = Math.min(keys[i].size, keys[j].size);
+      if (smaller < 5) continue;
+      const shared = [...keys[j]].filter((k) => keys[i].has(k)).length;
+      if (shared / smaller >= 0.8) {
+        findings.push({
+          ruleId: "LIVE-DEMO-PRESET-001",
+          filePath: presets[j].url,
+          category: CATEGORY,
+          severity: "low",
+          presetLabel: presets[j].label,
+          finding: `The "${presets[j].label}" preset's homepage reuses ${Math.round((shared / smaller) * 100)}% of the pictures on "${presets[i].label}", so it reads as the same store restyled, not a different one.`,
+          recommendation: "Give each preset its own photography so the presets show distinct looks.",
+          sourceReference: SOURCE,
+        });
+        break;
+      }
+    }
+  }
   return findings;
 }

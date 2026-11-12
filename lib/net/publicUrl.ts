@@ -152,3 +152,50 @@ export async function fetchPublicPage(raw: string, options: PublicFetchOptions):
     clearTimeout(timeout);
   }
 }
+
+async function readBytesCapped(res: Response, maxBytes: number): Promise<Buffer> {
+  if (!res.body) return Buffer.from(await res.arrayBuffer()).subarray(0, maxBytes);
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+    if (total >= maxBytes) {
+      await reader.cancel();
+      break;
+    }
+  }
+  return Buffer.concat(chunks).subarray(0, maxBytes);
+}
+
+/**
+ * GET the first `maxBytes` of a public URL (a Range request; a server that ignores Range is cut off after maxBytes), checking
+ * every redirect hop like fetchPublicText. Unlike it, a 4xx/5xx answer is returned as `status` rather than thrown, so a caller
+ * can tell "broken" from "unreachable". Used to read an image's size from its header without downloading the picture.
+ */
+export async function fetchPublicBytes(raw: string, options: PublicFetchOptions): Promise<{ status: number; bytes: Buffer }> {
+  const { timeoutMs, maxBytes = 65536, maxRedirects = 5, resolve } = options;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    let current = raw;
+    for (let hop = 0; ; hop++) {
+      const url = await assertPublicUrl(current, resolve);
+      const res = await fetch(url, { signal: controller.signal, redirect: "manual", headers: { Range: `bytes=0-${maxBytes - 1}` } });
+      if (REDIRECT_STATUSES.has(res.status)) {
+        const location = res.headers?.get("location");
+        if (!location) return { status: res.status, bytes: Buffer.alloc(0) };
+        if (hop >= maxRedirects) throw new Error("Too many redirects.");
+        current = new URL(location, url).toString();
+        continue;
+      }
+      if (!res.ok) return { status: res.status, bytes: Buffer.alloc(0) };
+      return { status: res.status, bytes: await readBytesCapped(res, maxBytes) };
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+}
