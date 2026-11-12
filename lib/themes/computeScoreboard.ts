@@ -89,8 +89,37 @@ function opportunitiesScoreCard(
   };
 }
 
+const DEMO_PENALTY: Record<string, number> = { blocker: 25, high: 25, medium: 10, low: 4 };
+
 /**
- * The 8 Lighthouse-style scores shown on Theme Detail's Overview, computed
+ * Demo realism (lib/audit/liveChecks/demoRealism.ts): each preset starts at 100 and loses 25 per high finding, 10 per medium
+ * and 4 per low (never below 0); the card is the average over the presets whose demo store was read. Null when no preset demo
+ * store was audited, so an untested theme never shows a misleading 100.
+ */
+export function demoRealismScoreCard(demoRealism: DemoRealismInput | undefined): ScoreCard {
+  const id = "demo-realism";
+  const label = "Demo Realism";
+  if (!demoRealism || demoRealism.presetLabels.length === 0) {
+    return { id, label, score: null, detail: "Not tested — no demo store URLs were audited for this run." };
+  }
+  const scores = demoRealism.presetLabels.map((preset) => {
+    const penalty = demoRealism.findings.filter((f) => f.presetLabel === preset).reduce((sum, f) => sum + (DEMO_PENALTY[f.severity] ?? 0), 0);
+    return Math.max(0, 100 - penalty);
+  });
+  const score = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const n = demoRealism.presetLabels.length;
+  return {
+    id,
+    label,
+    score,
+    detail: `Averaged across ${n} preset${n === 1 ? "" : "s"}; ${demoRealism.findings.length} finding${demoRealism.findings.length === 1 ? "" : "s"} (−25 high, −10 medium, −4 low)`,
+  };
+}
+
+export type DemoRealismInput = { presetLabels: string[]; findings: { severity: string; presetLabel?: string | null }[] };
+
+/**
+ * The 9 Lighthouse-style scores shown on Theme Detail's Overview, computed
  * for one specific audit run (never persisted — cheap to derive from data
  * the route already loaded). Each score is independent: a category with no
  * checks yet, or a run with no live checks/PSI data, reports `score: null`
@@ -102,7 +131,9 @@ export function computeScoreboard({
   enhancementDetections,
   enhancementPoints,
   themeStoreFeatures,
+  demoRealism,
 }: {
+  demoRealism?: DemoRealismInput;
   categories: CategoryChecks[];
   pageSpeed: PageSpeedMetric[] | undefined;
   enhancementDetections: EnhancementDetectionRecord[] | undefined;
@@ -119,6 +150,7 @@ export function computeScoreboard({
     categoryScore(categories, ["Accessibility"], "accessibility", "Accessibility"),
     categoryScore(categories, ["Technical SEO", "Technical AEO"], "seo", "SEO"),
     categoryScore(categories, ["Theme Store Compliance"], "store-requirement", "Store Requirement"),
+    demoRealismScoreCard(demoRealism),
     categoryScore(categories, ["Internal Standard"], "internal-standards", "Internal Standards"),
     featuresScoreCard(enhancementDetections, themeStoreLabels),
     opportunitiesScoreCard(enhancementDetections, enhancementPoints),

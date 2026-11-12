@@ -27,6 +27,7 @@ const CARD_ACCENTS: Record<string, string> = {
   accessibility: "border-t-4 border-t-purple-400",
   seo: "border-t-4 border-t-amber-400",
   "store-requirement": "border-t-4 border-t-rose-400",
+  "demo-realism": "border-t-4 border-t-pink-400",
   "internal-standards": "border-t-4 border-t-teal-400",
   features: "border-t-4 border-t-emerald-400",
   opportunities: "border-t-4 border-t-orange-400",

@@ -720,7 +720,7 @@ function RunAuditForm({
 // `categories` prop — expanding one of these lazily fetches
 // /api/reports/{auditRunId} (the same endpoint the Report tab uses) the
 // first time it's opened, then reuses that result for the rest.
-const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities", "features"]);
+const REPORT_BACKED_CARD_IDS = new Set(["desktop-performance", "mobile-performance", "opportunities", "features", "demo-realism"]);
 
 function formatMs(ms: number | undefined) {
   if (typeof ms !== "number") return "—";
@@ -1007,6 +1007,18 @@ export function OverviewPanel({
               </ul>
             )}
           </div>
+        );
+      }
+
+      if (card.id === "demo-realism") {
+        const demo = reportData.findings.filter((f) => f.ruleId.startsWith("LIVE-DEMO-") && f.status !== "ignored" && f.status !== "resolved");
+        if (demo.length === 0) return <p className="text-sm text-zinc-500">No demo realism issues found on the pages checked (home, first product and first collection of each preset).</p>;
+        return (
+          <ul className="flex flex-col gap-2">
+            {demo.map((f) => (
+              <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={`${f.presetLabel ?? ""} ${f.filePath}`.trim()} recommendation={f.recommendation} />
+            ))}
+          </ul>
         );
       }
 

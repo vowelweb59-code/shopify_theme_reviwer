@@ -33,7 +33,7 @@ const baseArgs = {
 };
 
 describe("computeScoreboard", () => {
-  it("returns exactly 8 cards in the documented order", () => {
+  it("returns exactly 9 cards in the documented order", () => {
     const cards = computeScoreboard(baseArgs);
     expect(cards.map((c) => c.id)).toEqual([
       "desktop-performance",
@@ -41,6 +41,7 @@ describe("computeScoreboard", () => {
       "accessibility",
       "seo",
       "store-requirement",
+      "demo-realism",
       "internal-standards",
       "features",
       "opportunities",
@@ -87,6 +88,19 @@ describe("computeScoreboard", () => {
     const mobile = cards.find((c) => c.id === "mobile-performance")!;
     expect(mobile.score).toBeNull();
     expect(mobile.detail).toMatch(/PAGESPEED_API_KEY/);
+  });
+
+  it("scores demo realism per preset (100 minus 25/10/4 per finding) and averages them; null when no preset was audited", () => {
+    const card = (demoRealism: Parameters<typeof computeScoreboard>[0]["demoRealism"]) =>
+      computeScoreboard({ ...baseArgs, demoRealism }).find((c) => c.id === "demo-realism")!;
+    expect(card(undefined).score).toBeNull();
+    expect(card({ presetLabels: [], findings: [] }).score).toBeNull();
+    expect(card({ presetLabels: ["A", "B"], findings: [] }).score).toBe(100);
+    // A: high + medium = 65; B untouched = 100 -> 83 (82.5 rounds up)
+    const mixed = card({ presetLabels: ["A", "B"], findings: [{ severity: "high", presetLabel: "A" }, { severity: "medium", presetLabel: "A" }] });
+    expect(mixed.score).toBe(83);
+    expect(mixed.detail).toContain("2 findings");
+    expect(card({ presetLabels: ["A"], findings: Array.from({ length: 6 }, () => ({ severity: "high", presetLabel: "A" })) }).score).toBe(0);
   });
 
   it("reports 'not tested' for performance when no pageSpeed entries exist at all", () => {

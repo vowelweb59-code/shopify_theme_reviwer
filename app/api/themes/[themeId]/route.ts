@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
 import { AuditRun } from "@/models/audit-run";
+import { Finding } from "@/models/finding";
 import { EnhancementPoint } from "@/models/enhancement-point";
 import { compareVersions, parseVersionForSort, pickLatestVersion } from "@/lib/themes/compareVersions";
 import { deriveChecksForAuditRun, loadCheckCatalog } from "@/lib/themes/deriveChecksForAuditRun";
@@ -46,7 +47,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
           .sort({ startedAt: -1 })
           // Every run feeds "Previous Audits"; only the latest's page-speed
           // and enhancement data are used, and the client reads just _id/startedAt.
-          .select("_id themeVersionId status startedAt demoStorePresets pageSpeed enhancementDetections")
+          .select("_id themeVersionId status startedAt demoStorePresets liveCheckErrors pageSpeed enhancementDetections")
           .lean()
       : [];
   // One catalog for this run and every previous run's totals below,
@@ -75,6 +76,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
       checks = await deriveChecksForAuditRun(latestAudit._id, Boolean(latestAudit.demoStorePresets?.length), catalog);
       const enhancementPoints = await EnhancementPoint.find().select("pointId themeCount").lean();
 
+      // Demo realism: the audit's LIVE-DEMO-* findings for the presets whose demo store was actually read.
+      const failedPresets = new Set((latestAudit.liveCheckErrors ?? []).map((e: { label: string }) => e.label));
+      const presetLabels = (latestAudit.demoStorePresets ?? []).map((p: { label: string }) => p.label).filter((l: string) => !failedPresets.has(l));
+      const demoFindings = presetLabels.length
+        ? await Finding.find({ auditRunId: latestAudit._id, ruleId: /^LIVE-DEMO-/, status: { $nin: ["ignored", "resolved"] } })
+            .select("severity presetLabel")
+            .lean<{ severity: string; presetLabel?: string }[]>()
+        : [];
+
       pageSpeed = latestAudit.pageSpeed ?? [];
       if (pageSpeed.length === 0) {
         const fallbackAudit = allAudits.find(
@@ -92,6 +102,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
         themeStoreFeatures: theme.themeStoreFeatures,
+        demoRealism: { presetLabels, findings: demoFindings },
       });
     }
   }
