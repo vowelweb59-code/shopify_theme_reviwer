@@ -38,3 +38,25 @@ describe("versionTimeRows", () => {
     expect(versionTimeRows([{ version: "1.0.0", releasedOn: null }], [e("2026-04-01", 1)], "2026-11-12")).toEqual({ rows: [], undated: ["1.0.0"] });
   });
 });
+
+describe("what each version shipped", () => {
+  const withNotes = [
+    { version: "1.1.3", releasedOn: "2026-10-13", summary: "Adds a quick order list.", notes: [{ heading: "Added", items: ["Quick order list."] }] },
+    { version: "1.1.2", releasedOn: "2026-07-27", summary: null, notes: [] },
+  ];
+  const note = (date: string, hours: number, text: string, name = "Asha", memberId = "a"): TimeEntryDay => ({ date, hours, memberId, name, note: text });
+
+  it("carries the release note and the developers' reports of the same window on each row", () => {
+    const { rows } = versionTimeRows(withNotes, [note("2026-08-01", 8.5, "Built   the quick\norder list"), note("2026-07-20", 4, "Fixed the cart"), note("2026-08-02", 2, "  ")], "2026-11-12");
+    const v113 = rows.find((r) => r.version === "1.1.3")!;
+    expect(v113.summary).toBe("Adds a quick order list.");
+    expect(v113.notes).toEqual([{ heading: "Added", items: ["Quick order list."] }]);
+    expect(v113.reports).toEqual([{ date: "2026-08-01", name: "Asha", hours: 8.5, note: "Built the quick order list" }]); // a blank memo is not a report
+    expect(rows.find((r) => r.version === "1.1.2")!.reports.map((r) => r.note)).toEqual(["Fixed the cart"]);
+  });
+  it("lists the reports oldest first and gives the next-release row no release note", () => {
+    const { rows } = versionTimeRows(withNotes, [note("2026-10-20", 1, "B"), note("2026-10-14", 1, "A"), note("2026-10-14", 1, "A2", "Bo", "b")], "2026-11-12");
+    expect(rows[0]).toMatchObject({ version: "Next release", summary: null, notes: [] });
+    expect(rows[0].reports.map((r) => r.note)).toEqual(["A", "A2", "B"]);
+  });
+});

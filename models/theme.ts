@@ -34,6 +34,18 @@ const themeStorePresetSchema = new Schema(
   { _id: false }
 );
 
+// One version of the Theme Store's release notes: its date, the store's summary, and the note's sections with their bullets.
+const releaseNoteGroupSchema = new Schema({ heading: { type: String, default: "" }, items: { type: [String], default: undefined } }, { _id: false });
+const themeStoreVersionSchema = new Schema(
+  {
+    version: { type: String, required: true },
+    releasedOn: { type: String, default: null },
+    summary: { type: String, default: null },
+    notes: { type: [releaseNoteGroupSchema], default: undefined },
+  },
+  { _id: false }
+);
+
 const themeSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -84,8 +96,10 @@ const themeSchema = new Schema(
     themeStoreVersionReleasedAt: { type: Date, default: null },
     // Every version the Theme Store's release notes list (newest first), read when a Theme Update project's time per version is
     // shown (lib/themes/versionHistory.ts); releasedOn is YYYY-MM-DD, null when the store shows no date for that version.
-    themeStoreVersions: { type: [{ _id: false, version: { type: String, required: true }, releasedOn: { type: String, default: null } }], default: undefined },
+    // summary and notes (the release note's sections and bullets) came with format 2; a cache in an older format is read again.
+    themeStoreVersions: { type: [themeStoreVersionSchema], default: undefined },
     themeStoreVersionsAt: { type: Date, default: null },
+    themeStoreVersionsFormat: { type: Number, default: 1 },
     // This theme's own default listing's overall position in the public
     // Theme Store's "/themes" catalog (see lib/demoStore/themeStoreRanking.ts
     // — shared with the demo-store module since it's the same public

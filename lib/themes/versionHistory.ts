@@ -1,7 +1,17 @@
 import { Parser } from "htmlparser2";
 import { BROWSER_UA } from "@/lib/net/fetchPublic";
 
-export type StoreVersion = { version: string; /** YYYY-MM-DD, or null when the listing shows no date for that version. */ releasedOn: string | null };
+/** One heading of a release note ("Added", "Fixes and Other Improvements") with its bullet points. */
+export type ReleaseNoteGroup = { heading: string; items: string[] };
+export type StoreVersion = {
+  version: string;
+  /** YYYY-MM-DD, or null when the listing shows no date for that version. */
+  releasedOn: string | null;
+  /** The one-paragraph summary the store shows under the version. */
+  summary?: string | null;
+  /** The release note's own sections and bullets. */
+  notes?: ReleaseNoteGroup[];
+};
 
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 
@@ -12,46 +22,79 @@ export function parseReleaseDate(text: string): string | null {
   const month = MONTHS.indexOf(m[1].toLowerCase());
   const day = Number(m[2]);
   if (month < 0 || day < 1 || day > 31) return null;
-  return `${m[3]}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return m[3] + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
 }
 
+const clean = (text: string) => text.replace(/\s+/g, " ").trim();
+
 /**
- * The Theme Store's "Release notes" modal (…/presets/<preset>/modal_version_details) lists every version, newest first, each as
- * `<h3>Version X.Y.Z</h3>` followed by a `<p>` holding its release date. Some versions carry no date (the first paragraph after
- * the heading is then the summary), so they come back with `releasedOn: null`. Headings inside a release note's body ("Added",
- * "Changed") never start with "Version", so they are ignored.
+ * The Theme Store's "Release notes" modal (…/presets/<preset>/modal_version_details) lists every version, newest first. Each is
+ * a `<h3>Version X.Y.Z</h3>` followed by a paragraph with its release date (some versions show none), a summary
+ * paragraph, and a release-note body whose own headings ("Added", "Changed", ...) hold bullet lists. Headings inside the body
+ * never start with "Version", so they are told apart from version headings.
  */
 export function parseVersionHistory(html: string): StoreVersion[] {
   const versions: StoreVersion[] = [];
-  let mode: "idle" | "in-h3" | "awaiting-p" | "in-p" = "idle";
-  let version = "";
+  let current: (StoreVersion & { notes: ReleaseNoteGroup[] }) | null = null;
+  let capture: "h3" | "p" | "li" | null = null;
   let buffer = "";
+  let bodyDepth = 0; // > 0 while inside a release-note body
+
   const parser = new Parser(
     {
-      onopentag(name) {
-        if (name === "h3" && mode !== "in-h3") {
-          // A version with no <p> at all before the next heading still counts, undated.
-          if (mode === "awaiting-p") versions.push({ version, releasedOn: null });
-          mode = "in-h3";
+      onopentag(name, attribs) {
+        if (bodyDepth > 0) {
+          bodyDepth++;
+          if (name === "h3" || name === "li") {
+            capture = name;
+            buffer = "";
+          }
+          return;
+        }
+        if ((attribs.class ?? "").includes("release-note-body")) {
+          bodyDepth = 1;
+          return;
+        }
+        if (name === "h3") {
+          capture = "h3";
           buffer = "";
-        } else if (name === "p" && mode === "awaiting-p") {
-          mode = "in-p";
+        } else if (name === "p" && current) {
+          capture = "p";
           buffer = "";
         }
       },
       ontext(text) {
-        if (mode === "in-h3" || mode === "in-p") buffer += text;
+        if (capture) buffer += text;
       },
       onclosetag(name) {
-        if (mode === "in-h3" && name === "h3") {
-          const m = /^Version\s+(.+)$/i.exec(buffer.trim());
+        if (bodyDepth > 0) {
+          bodyDepth--;
+          if (capture === name && current) {
+            const text = clean(buffer);
+            if (name === "h3" && text) current.notes.push({ heading: text, items: [] });
+            else if (name === "li" && text) {
+              if (current.notes.length === 0) current.notes.push({ heading: "", items: [] });
+              current.notes[current.notes.length - 1].items.push(text);
+            }
+            capture = null;
+          }
+          return;
+        }
+        if (capture === "h3" && name === "h3") {
+          const m = /^Version\s+(.+)$/i.exec(clean(buffer));
           if (m) {
-            version = m[1].trim();
-            mode = "awaiting-p";
-          } else mode = "idle";
-        } else if (mode === "in-p" && name === "p") {
-          versions.push({ version, releasedOn: parseReleaseDate(buffer) });
-          mode = "idle";
+            current = { version: m[1].trim(), releasedOn: null, summary: null, notes: [] };
+            versions.push(current);
+          }
+          capture = null;
+        } else if (capture === "p" && name === "p" && current) {
+          const text = clean(buffer);
+          if (text) {
+            const date = current.releasedOn === null && current.summary === null ? parseReleaseDate(text) : null;
+            if (date) current.releasedOn = date;
+            else if (current.summary === null) current.summary = text;
+          }
+          capture = null;
         }
       },
     },
@@ -59,8 +102,6 @@ export function parseVersionHistory(html: string): StoreVersion[] {
   );
   parser.write(html);
   parser.end();
-  // `mode` is changed inside the parser callbacks, which TypeScript cannot see here.
-  if ((mode as string) === "awaiting-p") versions.push({ version, releasedOn: null });
   return versions;
 }
 

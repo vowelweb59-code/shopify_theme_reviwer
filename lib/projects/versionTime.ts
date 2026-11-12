@@ -1,7 +1,10 @@
 import { HOURS_PER_DAY } from "@/lib/chat/durations";
-import type { StoreVersion } from "@/lib/themes/versionHistory";
+import type { ReleaseNoteGroup, StoreVersion } from "@/lib/themes/versionHistory";
 
-export type TimeEntryDay = { date: string; hours: number; memberId: string; name: string };
+export type TimeEntryDay = { date: string; hours: number; memberId: string; name: string; /** The developer's report memo for that day. */ note?: string };
+
+/** One developer report that falls inside a release's window. */
+export type VersionReport = { date: string; name: string; hours: number; note: string };
 
 export type VersionTimeRow = {
   /** The Theme Store version, or "Next release" for the work since the latest one. */
@@ -18,6 +21,11 @@ export type VersionTimeRow = {
   /** Hours as working days at 8.5 h/day. */
   effortDays: number;
   people: { name: string; hours: number; days: number }[];
+  /** What the Theme Store release notes say this version shipped (null on the "Next release" row). */
+  summary: string | null;
+  notes: ReleaseNoteGroup[];
+  /** The developers' own reports in the window, oldest first: what they say they worked on. */
+  reports: VersionReport[];
   inProgress: boolean;
 };
 
@@ -37,7 +45,7 @@ export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[
   const dated = versions.filter((v): v is { version: string; releasedOn: string } => v.releasedOn !== null).sort((a, b) => a.releasedOn.localeCompare(b.releasedOn));
   const undated = versions.filter((v) => v.releasedOn === null).map((v) => v.version);
 
-  const summarize = (version: string, releasedOn: string | null, since: string | null, calendarDays: number | null, inProgress: boolean, inWindow: TimeEntryDay[]): VersionTimeRow => {
+  const summarize = (version: string, releasedOn: string | null, since: string | null, calendarDays: number | null, inProgress: boolean, inWindow: TimeEntryDay[], store?: StoreVersion): VersionTimeRow => {
     const days = new Set(inWindow.map((e) => e.date));
     const byPerson = new Map<string, { name: string; hours: number; days: Set<string> }>();
     for (const e of inWindow) {
@@ -56,6 +64,12 @@ export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[
       hours: round2(hours),
       effortDays: round2(hours / HOURS_PER_DAY),
       people: [...byPerson.values()].map((p) => ({ name: p.name, hours: round2(p.hours), days: p.days.size })).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name)),
+      summary: store?.summary ?? null,
+      notes: store?.notes ?? [],
+      reports: inWindow
+        .filter((e) => (e.note ?? "").trim() !== "")
+        .map((e) => ({ date: e.date, name: e.name, hours: round2(e.hours), note: (e.note ?? "").replace(/\s+/g, " ").trim() }))
+        .sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name)),
       inProgress,
     };
   };
@@ -63,7 +77,7 @@ export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[
   const rows: VersionTimeRow[] = dated.map((v, i) => {
     const since = i > 0 ? dated[i - 1].releasedOn : null;
     const inWindow = entries.filter((e) => e.date <= v.releasedOn && (since === null || e.date > since));
-    return summarize(v.version, v.releasedOn, since, since === null ? null : daysBetween(since, v.releasedOn), false, inWindow);
+    return summarize(v.version, v.releasedOn, since, since === null ? null : daysBetween(since, v.releasedOn), false, inWindow, versions.find((x) => x.version === v.version));
   });
 
   const latest = dated.length > 0 ? dated[dated.length - 1].releasedOn : null;
