@@ -354,17 +354,18 @@ export default function ThemesPage() {
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Feature Availability</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Every feature in the catalog, per theme — a{" "}
-              <span className="inline-flex items-center gap-1 font-medium text-status-pass-text">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-pass-icon" /> green check
-              </span>{" "}
-              means it was detected in that theme&apos;s latest audit (directly, or confirmed via its Shopify Theme Store listing); an{" "}
-              <span className="inline-flex items-center gap-1 font-medium text-status-warning-text">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-warning-icon" /> orange check
-              </span>{" "}
-              means the Theme Store listing names it but our own code check didn&apos;t detect it — worth a second look.
-            </p>
+            <p className="mt-1 text-sm text-zinc-500">Every feature in the catalog, per theme, from each theme&apos;s latest audit and its Shopify Theme Store listing.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Available (detected in the code, or confirmed by the Theme Store listing)
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-700 ring-1 ring-amber-500/40 dark:text-amber-300">
+                <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> Listed on the Theme Store but not found in the code: worth a second look
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-500/10 px-2.5 py-1 font-medium text-zinc-600 ring-1 ring-zinc-500/20 dark:text-zinc-300">
+                <span className="inline-block h-1 w-1 rounded-full bg-zinc-400" /> Not available
+              </span>
+            </div>
           </div>
           <FeatureMatrixTable rows={rows} />
         </div>
