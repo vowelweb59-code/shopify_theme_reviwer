@@ -78,3 +78,13 @@ describe("looksLikeReport: chatter and blank templates", () => {
     expect(looksLikeReport("Theme Name:- Flaunt | Clothing\nMemo:- x")).toBe(true);
   });
 });
+
+describe("looksLikeReport: the how-to-report posts", () => {
+  it("does not treat the format guide as a report", () => {
+    expect(looksLikeReport("Date:- (DD-MM-YYYY) Theme Name:- Theme Name | Work Category Memo:- Description of work completed Timer:- H hrs There are 3 types of work reports.")).toBe(false);
+    expect(looksLikeReport("Date is mandatory. Always use DD-MM-YYYY format. Use exact theme names. Do not rename fields. Always use Date, Theme Name, Memo and Timer.")).toBe(false);
+  });
+  it("still reads a real report that mentions a date", () => {
+    expect(looksLikeReport("Date:- (24-10-2026)\nTheme Name:- Soft | Beauty\nMemo:- Fixed header\nTimer:- 2 hrs")).toBe(true);
+  });
+});

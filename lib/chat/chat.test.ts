@@ -241,7 +241,7 @@ describe("flagged-report fixes", () => {
   ];
   it("finds the theme from a preset only one theme has ('Clear Preset', 'Automobile Theme')", () => {
     expect(resolveTheme({ themeParts: ["Clear Preset", "Latest Version Demo Update"] }, t)).toMatchObject({ ok: true, themeId: "f", kind: "preset", preset: "Clear" });
-    expect(resolveTheme({ themeParts: ["Automobile Theme"] }, t)).toMatchObject({ ok: true, themeId: "n", kind: "preset", preset: "Automobile" });
+    expect(resolveTheme({ themeParts: ["Gemstone Theme"] }, t)).toMatchObject({ ok: true, themeId: "n", kind: "preset", preset: "Gemstone" });
     expect(resolveTheme({ themeParts: ["Sundrift"] }, t)).toMatchObject({ themeId: "f", preset: "Sundrift" });
   });
   it("does not guess when two themes share the preset or no theme has it", () => {
@@ -290,5 +290,16 @@ describe("owner decisions on flagged reports (2026-11-12)", () => {
   it("keeps a 'Theme Development' memo as new-theme work on an unfinished theme, even if it says 'content update'", () => {
     expect(resolveTheme({ themeParts: ["Kombat - Kombat", "Gaming"], memo: "Theme Development - Worked on the contact form and content update." }, t)).toMatchObject({ ok: true, themeId: "k", kind: "theme" });
     expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Updating product page" }, t)).toMatchObject({ kind: "update" });
+  });
+});
+
+describe("Automobile is its own theme (alias to Auto)", () => {
+  const t: ThemeRef[] = [
+    { id: "a", name: "Auto", presets: [], building: true },
+    { id: "n", name: "Noble", presets: ["Noble", "Automobile"] },
+  ];
+  it("reads Automobile and Automobile Theme as the theme Auto, not as a Noble preset", () => {
+    expect(resolveTheme({ themeParts: ["Automobile", "New Theme"], memo: "Theme Design - Worked on landing page" }, t)).toMatchObject({ ok: true, themeId: "a" });
+    expect(resolveTheme({ themeParts: ["Automobile Theme"], memo: "Theme Development - Worked on homepage section development." }, t)).toMatchObject({ ok: true, themeId: "a", kind: "theme" });
   });
 });

@@ -42,7 +42,7 @@ export type FoundTheme =
   | { ok: false; reason: string };
 
 /** Other names a theme goes by in reports (lower case): "Pearl" is Pretty. */
-const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty", space: "home décor" };
+const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty", space: "home décor", automobile: "auto" };
 
 /** A second part that names the kind of work (update work), not a preset. Extend it as new wordings appear. */
 const UPDATE_PART_RE = /^(theme[\s-]*(updates?|support)|featured images?)$/i;

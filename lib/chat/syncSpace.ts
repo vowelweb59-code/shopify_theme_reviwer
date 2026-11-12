@@ -37,6 +37,8 @@ export async function chatAccessToken(connection: ConnectionDoc): Promise<string
 
 /** A message is a time report when it has a filled-in Theme Name line; other chatter (and the blank template) is ignored. */
 export function looksLikeReport(text: string): boolean {
+  // The posts that explain how to write a report (the format guide with its "DD-MM-YYYY" and example lines) are not reports.
+  if (/\bDD-MM-YYYY\b|types of work reports|do not rename fields|description of work completed/i.test(text)) return false;
   return /theme\s*name\s*[:\-–—][\s:\-–—]*(?!memo\b|timer?\b)[^\s:\-–—]/i.test(text);
 }
 
