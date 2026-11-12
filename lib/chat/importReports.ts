@@ -5,7 +5,7 @@ import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TimeEntry } from "@/models/time-entry";
 import { parseReport, splitReports, splitThemes } from "./parseReport";
-import { resolveMember, resolveTheme, type ThemeRef } from "./resolve";
+import { isIgnoredThemeLine, resolveMember, resolveTheme, type ThemeRef } from "./resolve";
 
 export type ImportInput = {
   /** Team member the reports belong to, when the importer already knows who posted them (a paste). */
@@ -23,7 +23,13 @@ export type ImportSummary = {
   alreadyImported: number;
   needsReview: { text: string; reason: string }[];
 };
-export type ReprocessSummary = { checked: number; fixed: number; stillNeedsReview: { text: string; reason: string }[] };
+export type ReprocessSummary = {
+  checked: number;
+  fixed: number;
+  stillNeedsReview: { text: string; reason: string }[];
+  /** Only on a dry run: where each report that would be fixed goes. */
+  wouldFix?: { sender: string; date: string; hours: number; line: string; to: string }[];
+};
 
 /** Puts each poster on the team of the Theme Update project their hours are logged on (once; nobody is added twice). */
 async function addPostersToTeams(adds: { projectId: unknown; memberId: string }[]): Promise<void> {
@@ -95,6 +101,32 @@ type Built = {
 function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context, postedOn?: string, postedAt?: string): Built | { error: string } {
   const parsed = parseReport(text, postedOn);
   if (!parsed.ok) return { error: parsed.error };
+
+  // Not theme work (client work, Webflow, the portals, one-off tasks): kept for the record, ignored everywhere.
+  if (isIgnoredThemeLine(parsed.value.themeParts)) {
+    return {
+      addToTeam: null,
+      doc: {
+        key,
+        sender,
+        memberId,
+        date: new Date(`${parsed.value.date}T00:00:00.000Z`),
+        postedAt: postedAt ? new Date(postedAt) : null,
+        themeName: parsed.value.themeParts[0],
+        themeId: null,
+        kind: null,
+        preset: null,
+        memo: parsed.value.memo,
+        minutes: parsed.value.minutes,
+        projectId: null,
+        status: "ignored",
+        reason: "Not theme work, so it isn't counted.",
+        rawText: text,
+      },
+      entry: null,
+      reasons: [],
+    };
+  }
   const theme = resolveTheme(parsed.value, ctx.themeRefs, { updatesAndPresetsOnly: memberId !== null && ctx.updatesOnly.has(memberId) });
   const reasons = [theme.ok ? "" : theme.reason, memberId ? "" : `Could not match "${sender || "the poster"}" to a team member.`].filter(Boolean);
 
@@ -201,7 +233,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
  * reading the space again. Reports that now resolve become ok, and update work that
  * can now be logged gets its hours entry.
  */
-export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
+export async function reprocessFlaggedReports(options: { dryRun?: boolean } = {}): Promise<ReprocessSummary> {
   const ctx = await loadContext();
   // The flagged ones, plus preset reports not yet logged as hours (a preset update on a finished theme is logged on its Update project).
   const flagged = await ChatReport.find({ locked: { $ne: true }, $or: [{ status: "needs_review" }, { kind: "preset", projectId: null }] }).lean();
@@ -209,7 +241,7 @@ export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
   const operations: Record<string, unknown>[] = [];
   const entries: Record<string, unknown>[] = [];
   const teamAdds: { projectId: unknown; memberId: string }[] = [];
-  const summary: ReprocessSummary = { checked: flagged.length, fixed: 0, stillNeedsReview: [] };
+  const summary: ReprocessSummary = { checked: flagged.length, fixed: 0, stillNeedsReview: [], ...(options.dryRun ? { wouldFix: [] } : {}) };
 
   for (const report of flagged) {
     // The poster may have been matched since (a renamed team member).
@@ -224,10 +256,22 @@ export async function reprocessFlaggedReports(): Promise<ReprocessSummary> {
     operations.push({ updateOne: { filter: { _id: report._id }, update: { $set: fields } } });
     if (built.entry) entries.push(built.entry);
     if (built.addToTeam) teamAdds.push(built.addToTeam);
+    if (built.reasons.length === 0 && report.status === "needs_review" && summary.wouldFix) {
+      const d = built.doc as { themeName: string; kind: string | null; preset: string | null };
+      const theme = ctx.themeRefs.find((t) => t.id === String(built.doc.themeId))?.name ?? d.themeName;
+      summary.wouldFix.push({
+        sender: report.sender ?? "",
+        date: report.date ? new Date(report.date).toISOString().slice(0, 10) : "",
+        hours: Math.round((report.minutes / 60) * 10) / 10,
+        line: d.themeName,
+        to: built.doc.status === "ignored" ? "ignored (not theme work, not counted)" : `${theme} | ${d.kind ?? "?"}${d.preset ? " | " + d.preset : ""}${built.entry ? " (hours logged on its Update project)" : ""}`,
+      });
+    }
     if (built.reasons.length === 0) summary.fixed += report.status === "needs_review" ? 1 : 0;
     else summary.stillNeedsReview.push({ text: report.rawText, reason: built.reasons.join(" ") });
   }
 
+  if (options.dryRun) return summary;
   if (operations.length > 0) await ChatReport.bulkWrite(operations as never, { ordered: false });
   await addPostersToTeams(teamAdds);
   // A hours entry per report key, once: the unique chatReportKey index rejects a repeat.

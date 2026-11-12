@@ -5,7 +5,8 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 // same report twice (pasted again, or re-synced from the space) a no-op.
 // A report that couldn't be matched to a team member or a theme is still
 // stored, with status "needs_review" and the reason, so nothing is silently lost.
-export const CHAT_REPORT_STATUSES = ["ok", "needs_review"] as const;
+// "ignored": not theme work (client work, Webflow, the portals); kept for the record, counted nowhere and never flagged.
+export const CHAT_REPORT_STATUSES = ["ok", "needs_review", "ignored"] as const;
 
 const chatReportSchema = new Schema(
   {

@@ -1,9 +1,11 @@
 /**
- * Adds a theme's main project: a Theme Design & Development project named after the theme (like "Soft" and "Gravity").
+ * Adds a theme's main project: a Theme Design & Development project named after the theme (like "Soft" and "Gravity"),
+ * or with --update its Theme Update project, "<Theme> Update" (no status; where its update hours are logged).
  *
  *   npx tsx --env-file=.env.production.local scripts/add-project.ts Rare                                   # dry run
  *   npx tsx --env-file=.env.production.local scripts/add-project.ts Rare --apply                           # writes (owner runs it)
  *   npx tsx --env-file=.env.production.local scripts/add-project.ts Rare --portal Themeshopy --status live --apply
+ *   npx tsx --env-file=.env.production.local scripts/add-project.ts Voltix --update --apply
  *
  * Defaults: portal Themeshopy, status live. Members, design/development days and deadline are left empty (set them on the project).
  * The theme must exist (npm run theme:add adds one); a project with the same name on the same theme is left alone.
@@ -16,6 +18,7 @@ import { Theme } from "../models/theme";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
+const isUpdate = args.includes("--update");
 
 function option(name: string): string | undefined {
   const i = args.indexOf(`--${name}`);
@@ -35,17 +38,20 @@ async function main() {
 
   const theme = await Theme.findOne({ name: themeName }).select("_id name").lean<{ _id: unknown; name: string }>();
   if (!theme) throw new Error(`Theme "${themeName}" not found. Add it first with: npm run theme:add -- "${themeName}" --apply`);
-  if (await Project.exists({ themeId: theme._id, name: theme.name })) {
-    console.log(`A project named "${theme.name}" already exists on this theme. Nothing to do.`);
+  const projectName = isUpdate ? `${theme.name} Update` : theme.name;
+  const type = isUpdate ? "theme_update" : "theme_development";
+  const projectStatus = isUpdate ? null : status;
+  if (isUpdate ? await Project.exists({ themeId: theme._id, type: "theme_update" }) : await Project.exists({ themeId: theme._id, name: projectName })) {
+    console.log(`${isUpdate ? "A Theme Update project" : `A project named "${projectName}"`} already exists on this theme. Nothing to do.`);
     return;
   }
-  console.log(`${apply ? "Creating" : "Would create"} project "${theme.name}": Theme Design & Development, portal ${portal}, status ${status}.`);
+  console.log(`${apply ? "Creating" : "Would create"} project "${projectName}": ${isUpdate ? "Theme Update" : "Theme Design & Development"}, portal ${portal}, status ${projectStatus ?? "none"}.`);
   if (!apply) {
     console.log("\nDry run: nothing written. Pass --apply to create.");
     return;
   }
-  await Project.create({ themeId: theme._id, name: theme.name, type: "theme_development", status, portal });
-  await AdminAudit.create({ action: "projects.add", detail: { themeId: String(theme._id), themeName: theme.name, portal, status } });
+  await Project.create({ themeId: theme._id, name: projectName, type, status: projectStatus, portal });
+  await AdminAudit.create({ action: "projects.add", detail: { themeId: String(theme._id), themeName: theme.name, project: projectName, type, portal, status: projectStatus } });
   console.log("\nCreated.");
 }
 

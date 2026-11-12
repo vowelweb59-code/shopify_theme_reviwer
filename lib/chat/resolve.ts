@@ -17,11 +17,13 @@ export type Resolved =
   | { ok: true; themeId: string; themeName: string; kind: "theme" | "preset" | "update"; preset: string | null }
   | { ok: false; reason: string };
 
-const lower = (s: string) => s.trim().toLowerCase();
+/** Accents are ignored when comparing names: "Home Décor" and "Home Decor" are the same name. */
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const lower = (s: string) => fold(s.trim().toLowerCase());
 /** "Noble Theme" is the theme "Noble": a trailing "theme" is dropped when comparing names. */
 const nameKey = (s: string) => lower(s).replace(/\s+theme$/, "");
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const hasWord = (text: string, word: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(word)}($|[^\\p{L}\\p{N}])`, "iu").test(text);
+const hasWord = (text: string, word: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(fold(word))}($|[^\\p{L}\\p{N}])`, "iu").test(fold(text));
 
 /** A memo about updating the theme means the hours belong to its Theme Update project, not to design or development. */
 export function isUpdateMemo(memo: string): boolean {
@@ -40,10 +42,24 @@ export type FoundTheme =
   | { ok: false; reason: string };
 
 /** Other names a theme goes by in reports (lower case): "Pearl" is Pretty. */
-const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty" };
+const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty", space: "home décor" };
+
+/** A second part that names the kind of work (update work), not a preset. Extend it as new wordings appear. */
+const UPDATE_PART_RE = /^(theme[\s-]*(updates?|support)|featured images?)$/i;
+
+/**
+ * Theme lines that are not theme work at all (owner, 2026-11-12: client work, days spread over several themes, Webflow, the portals,
+ * one-off tasks). A report with such a line is ignored, not flagged and not counted anywhere.
+ */
+const IGNORED_THEME_LINES: RegExp[] = [/^clients?\s+work$/i, /^multiple\s+themes?$/i, /\bwebflow\b/i, /\bportal$/i, /^\(?\s*task\s*\)?\s*[:\-]/i, /supplement and investment/i];
+export function isIgnoredThemeLine(themeParts: string[]): boolean {
+  const first = (themeParts[0] ?? "").trim();
+  return IGNORED_THEME_LINES.some((re) => re.test(first));
+}
 
 export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
-  const alias = THEME_NAME_ALIASES[nameKey(rawParts[0] ?? "")];
+  // "Space I Home Theme I Themeshopy": a capital I is sometimes typed for the pipe, so the theme is what comes before it.
+  const alias = THEME_NAME_ALIASES[nameKey(rawParts[0] ?? "").split(/\s+[i|]\s+/)[0]];
   const parts = alias ? [alias, ...rawParts.slice(1)] : rawParts;
   const [name] = parts;
   const line = parts.join(" | ");
@@ -55,7 +71,29 @@ export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
     matches = themes.filter((t) => hasWord(line, t.name));
     fuzzy = matches.length > 0;
   }
-  if (matches.length === 0) return { ok: false, reason: `No theme named "${name}".` };
+  if (matches.length === 0) {
+    // "Rare - Rare | Jewellery": a dash can join the theme name to a second name.
+    const dashed = name.split(/\s+[-–—]\s+/).map((p) => p.trim()).filter(Boolean);
+    if (dashed.length > 1) {
+      const viaDash = findTheme([...dashed, ...parts.slice(1)], themes);
+      if (viaDash.ok) return viaDash;
+    }
+    // "Clear Preset", "Automobile Theme": no theme named, but a preset that only one of our themes has.
+    const presetName = lower(name).replace(/\s+(preset|theme)$/, "");
+    const owners = themes.filter((t) => t.presets.some((preset) => lower(preset) === presetName && lower(preset) !== lower(t.name)));
+    if (owners.length === 1) {
+      const known = owners[0].presets.find((preset) => lower(preset) === presetName);
+      return { ok: true, theme: owners[0], others: [name], known, saysPreset: true };
+    }
+    if (owners.length > 1) return { ok: false, reason: `"${name}" is a preset of more than one theme: ${owners.map((t) => t.name).join(", ")}. Say which theme.` };
+    return { ok: false, reason: `No theme named "${name}".` };
+  }
+  // "Dynamic and Voltix": two themes named together, joined by "and", "&" or a comma; the first one named takes the report.
+  // Only when the line says the work is update work ("Dynamic and Voltix | Theme Support"); otherwise two themes stay flagged.
+  if (matches.length > 1 && fuzzy && /\s(and|&)\s|,/i.test(name) && parts.slice(1).some((p) => UPDATE_PART_RE.test(p.trim()))) {
+    const at = (t: ThemeRef) => lower(line).indexOf(lower(t.name));
+    matches = [[...matches].sort((a, b) => at(a) - at(b))[0]];
+  }
   if (matches.length > 1) return { ok: false, reason: `More than one theme matches "${name}": ${matches.map((t) => t.name).join(", ")}.` };
   const theme = matches[0];
 
@@ -71,6 +109,9 @@ function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?
   const { theme, others, known, saysPreset } = found;
   const second = others[0];
 
+  // "Zeal | Theme Update", "Dynamic | Theme Support", "Zeal | Featured Images": the second part says what the work is (update work), it isn't a preset.
+  if (second && UPDATE_PART_RE.test(second.trim()) && !known) return { ok: true, themeId: theme.id, themeName: theme.name, kind: "update", preset: null };
+
   if (known || saysPreset) return { ok: true, themeId: theme.id, themeName: theme.name, kind: "preset", preset: known ?? (saysPreset ? (others.find((p) => !/\bpreset\b/i.test(p)) ?? null) : null) };
 
   // A second part that isn't a known preset: on a theme still being built it is a category ("Kombat | Gaming Theme"), so
@@ -84,7 +125,9 @@ function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?
         : `"${second}" isn't a known preset of ${theme.name}: is it a preset (add it on the theme) or new-theme work?`,
     };
   }
-  const kind = isUpdateMemo(parsed.memo ?? "") || options.updatesAndPresetsOnly ? "update" : "theme";
+  // A memo the poster labelled "Theme Development" / "Theme Design" is new-theme work even if it also says "content update".
+  const labelledAsBuild = /^\s*theme\s+(design|development)\b/i.test(parsed.memo ?? "");
+  const kind = options.updatesAndPresetsOnly || (isUpdateMemo(parsed.memo ?? "") && !labelledAsBuild) ? "update" : "theme";
   return { ok: true, themeId: theme.id, themeName: theme.name, kind, preset: null };
 }
 

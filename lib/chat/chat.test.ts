@@ -228,3 +228,67 @@ describe("mergedPresetName", () => {
     expect(mergedPresetName(MERGED_THEMES.aspire, "Collective")).toBeUndefined();
   });
 });
+
+describe("flagged-report fixes", () => {
+  const t: ThemeRef[] = [
+    { id: "n", name: "Noble", presets: ["Noble", "Fold", "Glide", "Automobile", "Gemstone"] },
+    { id: "f", name: "Flaunt", presets: ["Flaunt", "Polish", "Sundrift", "Clear", "Advance"] },
+    { id: "z", name: "Zeal", presets: ["Zeal"] },
+    { id: "r", name: "Rare", presets: ["Rare", "Touch", "Charisma"] },
+    { id: "h", name: "Home Décor", presets: [] },
+    { id: "g", name: "Gravity", presets: ["Twinkle"] },
+    { id: "s", name: "Soft", presets: ["Twinkle"] },
+  ];
+  it("finds the theme from a preset only one theme has ('Clear Preset', 'Automobile Theme')", () => {
+    expect(resolveTheme({ themeParts: ["Clear Preset", "Latest Version Demo Update"] }, t)).toMatchObject({ ok: true, themeId: "f", kind: "preset", preset: "Clear" });
+    expect(resolveTheme({ themeParts: ["Automobile Theme"] }, t)).toMatchObject({ ok: true, themeId: "n", kind: "preset", preset: "Automobile" });
+    expect(resolveTheme({ themeParts: ["Sundrift"] }, t)).toMatchObject({ themeId: "f", preset: "Sundrift" });
+  });
+  it("does not guess when two themes share the preset or no theme has it", () => {
+    expect(resolveTheme({ themeParts: ["Twinkle Preset"] }, t)).toMatchObject({ ok: false, reason: expect.stringContaining("more than one theme") });
+    expect(resolveTheme({ themeParts: ["Clients Work"] }, t)).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Noble"] }, t)).toMatchObject({ themeId: "n" }); // a theme's own name still wins over its default preset
+  });
+  it("reads 'Theme Update' in the second slot as update work", () => {
+    expect(resolveTheme({ themeParts: ["Zeal", "Theme Update"] }, t, { updatesAndPresetsOnly: true })).toMatchObject({ ok: true, themeId: "z", kind: "update", preset: null });
+    expect(resolveTheme({ themeParts: ["Zeal", "Theme Updates"] }, t)).toMatchObject({ kind: "update" });
+  });
+  it("ignores accents in theme names", () => {
+    expect(resolveTheme({ themeParts: ["Home Decor"] }, t, { updatesAndPresetsOnly: false })).toMatchObject({ ok: true, themeId: "h" });
+    expect(resolveTheme({ themeParts: ["home décor"] }, t)).toMatchObject({ themeId: "h" });
+  });
+  it("splits 'Rare - Rare | Jewellery' on the dash", () => {
+    expect(resolveTheme({ themeParts: ["Rare - Rare", "Jewellery"], memo: "Theme Updates - cross-selling" }, t)).toMatchObject({ ok: true, themeId: "r" });
+  });
+});
+
+import { isIgnoredThemeLine } from "./resolve";
+
+describe("owner decisions on flagged reports (2026-11-12)", () => {
+  it("ignores lines that are not theme work", () => {
+    for (const line of ["Clients Work", "Multiple Theme", "Webflow Template", "Themagnifico Themes Portal", "Themeshopy Portal", "( Task ) :- Asam White", "Beauty Store, Supplement And Investment Theme"]) {
+      expect(isIgnoredThemeLine([line, "x"])).toBe(true);
+    }
+    for (const line of ["Zeal", "Aspire Preset", "Home Décor", "Noble Theme"]) expect(isIgnoredThemeLine([line])).toBe(false);
+  });
+  const t: ThemeRef[] = [
+    { id: "h", name: "Home Décor", presets: [], building: true },
+    { id: "d", name: "Dynamic", presets: [] },
+    { id: "v", name: "Voltix", presets: [] },
+    { id: "z", name: "Zeal", presets: [] },
+    { id: "k", name: "Kombat", presets: [], building: true },
+  ];
+  it("reads Space as Home Décor, even with a capital I for the pipe", () => {
+    expect(resolveTheme({ themeParts: ["Space I Home Theme I Themeshopy"], memo: "Theme Design - Worked On Landing Page" }, t)).toMatchObject({ ok: true, themeId: "h", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Space"] }, t)).toMatchObject({ themeId: "h" });
+  });
+  it("puts 'Dynamic and Voltix | Theme Support' and 'Zeal | Featured Images' under update work", () => {
+    expect(resolveTheme({ themeParts: ["Dynamic and Voltix", "Theme Support"] }, t)).toMatchObject({ ok: true, themeId: "d", kind: "update" });
+    expect(resolveTheme({ themeParts: ["Dynamic and Voltix"] }, t)).toMatchObject({ ok: false });
+    expect(resolveTheme({ themeParts: ["Zeal Theme", "Featured Images", "Murtaza Sir"] }, t)).toMatchObject({ ok: true, themeId: "z", kind: "update" });
+  });
+  it("keeps a 'Theme Development' memo as new-theme work on an unfinished theme, even if it says 'content update'", () => {
+    expect(resolveTheme({ themeParts: ["Kombat - Kombat", "Gaming"], memo: "Theme Development - Worked on the contact form and content update." }, t)).toMatchObject({ ok: true, themeId: "k", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Updating product page" }, t)).toMatchObject({ kind: "update" });
+  });
+});
