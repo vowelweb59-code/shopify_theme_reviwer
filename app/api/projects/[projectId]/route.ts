@@ -89,12 +89,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
       designDays: project.designDays ?? null,
       developmentDays: project.developmentDays ?? null,
       rejectionStage: project.rejectionStage ?? null,
+      rejectionType: project.rejectionType ?? null,
       members: project.members.map((m: { memberId: unknown; role: string | null }) => ({ memberId: m.memberId, role: m.role })),
       note,
     };
     update.rounds = [...((update.rounds as unknown[] | undefined) ?? project.rounds.map((r: { toObject: () => unknown }) => r.toObject())), closed];
     update.status = "under_development";
     update.rejectionStage = null;
+    update.rejectionType = null;
     update.designDays = null;
     update.developmentDays = null;
   }

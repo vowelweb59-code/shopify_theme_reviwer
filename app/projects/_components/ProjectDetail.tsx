@@ -9,16 +9,16 @@ import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
-import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, REJECTION_STAGES, REJECTION_STAGE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType, type RejectionStage } from "@/lib/projects/constants";
+import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, REJECTION_STAGES, REJECTION_STAGE_LABELS, REJECTION_TYPES, REJECTION_TYPE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType, type RejectionStage, type RejectionType } from "@/lib/projects/constants";
 import { ProjectStatusPill } from "./ProjectStatusPill";
 import { TimeLog } from "./TimeLog";
 import { VersionTime } from "./VersionTime";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
-type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
+type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
 type Loaded = {
-  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
+  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -35,6 +35,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [portal, setPortal] = useState<Portal | "">("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [rejectionStage, setRejectionStage] = useState<RejectionStage | "">("");
+  const [rejectionType, setRejectionType] = useState<RejectionType | "">("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -48,6 +49,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     setPortal(loaded.project.portal ?? "");
     setStatus(loaded.project.status ?? "planning");
     setRejectionStage(loaded.project.rejectionStage ?? "");
+    setRejectionType(loaded.project.rejectionType ?? "");
   }
 
   useEffect(() => {
@@ -84,8 +86,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     e.preventDefault();
     setSaving(true);
     const hasStatus = data ? typeHasStatus(data.project.type) : true;
-    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "" } : { name, portal, description })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null } : {}) } } : d));
+    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "", rejectionType: status === "rejected" ? rejectionType : "" } : { name, portal, description })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null, rejectionType: status === "rejected" && rejectionType ? rejectionType : null } : {}) } } : d));
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -109,7 +111,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   async function saveRounds(rounds: RoundView[]) {
     if (!data) return;
-    const body = rounds.map((r) => ({ status: r.status, rejectionStage: r.rejectionStage, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
+    const body = rounds.map((r) => ({ status: r.status, rejectionStage: r.rejectionStage, rejectionType: r.rejectionType, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
     if (await patch({ rounds: body })) {
       const rejections = rounds.filter((r) => r.status === "rejected").length + (data.project.status === "rejected" ? 1 : 0);
       setData({ ...data, project: { ...data.project, rounds, rejections } });
@@ -199,6 +201,12 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-zinc-700 dark:text-zinc-300">Rejected at</span>
                   <StageSelect value={rejectionStage} onChange={setRejectionStage} />
+                </label>
+              )}
+              {status === "rejected" && (
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-zinc-700 dark:text-zinc-300">Rejected by</span>
+                  <TypeSelect value={rejectionType} onChange={setRejectionType} />
                 </label>
               )}
             </div>
@@ -310,6 +318,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 onNoteSave={(note) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, note } : r)))}
                 onMembersSave={(members) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, members } : r)))}
                 onStageSave={(rejectionStage) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectionStage } : r)))}
+                onTypeSave={(rejectionType) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectionType } : r)))}
                 onDelete={() => {
                   if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`)) saveRounds(project.rounds.filter((_, j) => j !== i));
                 }}
@@ -432,6 +441,20 @@ function StageSelect({ value, onChange }: { value: RejectionStage | ""; onChange
   );
 }
 
+// Internal = rejected by our own review before submission; the success rate counts it at half for a Team Lead (lib/projects/rounds.ts).
+function TypeSelect({ value, onChange }: { value: RejectionType | ""; onChange: (type: RejectionType | "") => void }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value as RejectionType | "")} className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm">
+      <option value="">Not recorded</option>
+      {REJECTION_TYPES.map((t) => (
+        <option key={t} value={t}>
+          {REJECTION_TYPE_LABELS[t]}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function RoundRow({
   index,
   round,
@@ -439,6 +462,7 @@ function RoundRow({
   onNoteSave,
   onMembersSave,
   onStageSave,
+  onTypeSave,
   onDelete,
 }: {
   index: number;
@@ -447,6 +471,7 @@ function RoundRow({
   onNoteSave: (note: string) => void;
   onMembersSave: (members: ProjectMember[]) => void;
   onStageSave: (stage: RejectionStage | null) => void;
+  onTypeSave: (type: RejectionType | null) => void;
   onDelete: () => void;
 }) {
   const [note, setNote] = useState(round.note);
@@ -462,6 +487,12 @@ function RoundRow({
           <label className="flex items-center gap-1 text-xs text-zinc-500">
             Rejected at
             <StageSelect value={round.rejectionStage ?? ""} onChange={(stage) => onStageSave(stage || null)} />
+          </label>
+        )}
+        {round.status === "rejected" && (
+          <label className="flex items-center gap-1 text-xs text-zinc-500">
+            by
+            <TypeSelect value={round.rejectionType ?? ""} onChange={(type) => onTypeSave(type || null)} />
           </label>
         )}
         <span className="text-xs text-zinc-500">

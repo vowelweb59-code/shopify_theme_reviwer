@@ -21,6 +21,12 @@ export const REJECTION_STAGES = ["design", "development"] as const;
 export type RejectionStage = (typeof REJECTION_STAGES)[number];
 export const REJECTION_STAGE_LABELS: Record<RejectionStage, string> = { design: "Design", development: "Development" };
 
+// Who turned a round down. "internal": our own review rejected it before it went to Shopify; "shopify": the Theme Store review
+// rejected it. In the success rate (lib/projects/rounds.ts) an internal rejection counts half for a Team Lead and in full for everyone else.
+export const REJECTION_TYPES = ["internal", "shopify"] as const;
+export type RejectionType = (typeof REJECTION_TYPES)[number];
+export const REJECTION_TYPE_LABELS: Record<RejectionType, string> = { internal: "Internal", shopify: "Rejected by Shopify" };
+
 // The portals (Theme Store accounts) a project belongs to; the Projects page has one tab each.
 export const PORTALS = ["Vowel Web", "Themeshopy", "Fresco Solutions", "SAMS", "Flex"] as const;
 export type Portal = (typeof PORTALS)[number];

@@ -11,7 +11,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -165,12 +165,20 @@ export default function TeamPage() {
   const [roleTab, setRoleTab] = useState<(typeof ROLE_TABS)[number]["label"]>(ROLE_TABS[0].label);
   const activeTab = ROLE_TABS.find((t) => t.label === roleTab) ?? ROLE_TABS[0];
   const successRows = members.filter((m) => activeTab.match(m) && m.approvedCount + m.decidedRejectedCount > 0);
-  const rate = (m: Member) => successRate({ approved: m.approvedCount, rejected: m.decidedRejectedCount });
+  const rate = (m: Member) => successRate({ approved: m.approvedCount, rejected: m.decidedRejectedCount, rejectedWeight: m.decidedRejectedWeight });
   const successColumns: TableColumn<Member>[] = [
     { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
     { key: "approved", header: "Approved", sortValue: (m) => m.approvedCount, render: (m) => <OutcomeButton count={m.approvedCount} label={`Approved projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — approved`, entries: m.approvedIn })} /> },
-    { key: "rejected", header: "Rejected", sortValue: (m) => m.decidedRejectedCount, render: (m) => <OutcomeButton count={m.decidedRejectedCount} label={`Rejected projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — rejected`, entries: m.rejectedIn })} /> },
+    { key: "rejected", header: "Rejected", sortValue: (m) => m.decidedRejectedCount, render: (m) => (
+        <span className="inline-flex items-baseline gap-1.5">
+          <OutcomeButton count={m.decidedRejectedCount} label={`Rejected projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — rejected`, entries: m.rejectedIn })} />
+          {m.decidedRejectedWeight !== undefined && m.decidedRejectedWeight !== m.decidedRejectedCount && (
+            <span className="text-xs text-zinc-500" title="Internal rejections count half for a Team Lead, so this many rejections count in the success rate">counts as {m.decidedRejectedWeight}</span>
+          )}
+        </span>
+      ),
+    },
     { key: "rate", header: "Success rate", sortValue: (m) => rate(m) ?? -1, render: (m) => (rate(m) === null ? <span className="text-zinc-400">—</span> : `${rate(m)}%`) },
   ];
 
@@ -191,7 +199,7 @@ export default function TeamPage() {
         <section className="flex flex-col gap-3">
           <div>
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
-            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren&apos;t counted.</p>
+            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren&apos;t counted. A rejection by Shopify counts in full for everyone; an internal rejection counts half for a Team Lead and in full for the rest.</p>
           </div>
           <div role="tablist" aria-label="Success rate by role" className="flex flex-wrap gap-1 border-b border-border-subtle">
             {ROLE_TABS.map((tab) => {
@@ -234,6 +242,12 @@ export default function TeamPage() {
                 {e.name}
               </Link>
               {e.round !== null && <span className="ml-2 text-xs text-zinc-500">round {e.round}</span>}
+              {e.rejectionType && (
+                <span className="ml-2 rounded-full bg-zinc-500/10 px-2 py-0.5 text-[11px] text-zinc-600 dark:text-zinc-300">
+                  {e.rejectionType === "internal" ? "Internal" : "Rejected by Shopify"}
+                  {e.weight !== undefined && e.weight !== 1 ? ` · counted ${e.weight}` : ""}
+                </span>
+              )}
             </li>
           ))}
         </ul>

@@ -1,5 +1,5 @@
 import { Schema, model, models, type InferSchemaType } from "mongoose";
-import { PORTALS, PROJECT_STATUSES, PROJECT_TYPES, REJECTION_STAGES } from "@/lib/projects/constants";
+import { PORTALS, PROJECT_STATUSES, PROJECT_TYPES, REJECTION_STAGES, REJECTION_TYPES } from "@/lib/projects/constants";
 
 // Work on one theme (a new build, a version update, a fix round). A theme can
 // have several projects over time, so themeId is indexed but not unique.
@@ -20,6 +20,7 @@ const roundSchema = new Schema(
   {
     status: { type: String, enum: PROJECT_STATUSES, default: "rejected" },
     rejectionStage: { type: String, enum: [...REJECTION_STAGES, null], default: null },
+    rejectionType: { type: String, enum: [...REJECTION_TYPES, null], default: null },
     designDays: { type: Number, default: null, min: 0 },
     developmentDays: { type: Number, default: null, min: 0 },
     members: { type: [projectMemberSchema], default: () => [] },
@@ -44,6 +45,8 @@ const projectSchema = new Schema(
     status: { type: String, enum: [...PROJECT_STATUSES, null], default: null },
     // Where the current round was rejected, when its status is Rejected.
     rejectionStage: { type: String, enum: [...REJECTION_STAGES, null], default: null },
+    // Who rejected it, when its status is Rejected: our own review (internal) or the Shopify Theme Store review.
+    rejectionType: { type: String, enum: [...REJECTION_TYPES, null], default: null },
     // How long the design and the development phases took, in days. Entered
     // by hand for now (themes built before this existed); null = not known.
     designDays: { type: Number, default: null, min: 0 },
