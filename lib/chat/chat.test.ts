@@ -225,6 +225,12 @@ describe("merged themes (Aspire is Rare)", () => {
     expect(resolveTheme({ themeParts: ["Rare", "Touch"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Touch" });
     expect(resolveTheme({ themeParts: ["Aspire Preset", "Collective"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Collective" });
   });
+  it("reads Jewellery as the main theme (Aspire's and Rare's own work), not a preset", () => {
+    expect(resolveTheme({ themeParts: ["Aspire", "Jewellery"] }, withAspire)).toMatchObject({ ok: true, themeId: "r", kind: "theme", preset: null });
+    expect(resolveTheme({ themeParts: ["Aspire Jewellery"] }, withAspire)).toMatchObject({ ok: true, themeId: "r", kind: "theme", preset: null });
+    expect(resolveTheme({ themeParts: ["Rare", "Jewelry Preset"] }, withAspire)).toMatchObject({ ok: true, themeId: "r", kind: "theme", preset: null });
+    expect(resolveTheme({ themeParts: ["Rare", "Touch"] }, withAspire)).toMatchObject({ kind: "preset", preset: "Touch" });
+  });
   it("keeps Aspire when Rare is not among the themes", () => {
     expect(resolveTheme({ themeParts: ["Aspire", "Beauty"] }, [withAspire[0]])).toMatchObject({ themeId: "a" });
   });
