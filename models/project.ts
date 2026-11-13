@@ -21,6 +21,8 @@ const roundSchema = new Schema(
     status: { type: String, enum: PROJECT_STATUSES, default: "rejected" },
     rejectionStage: { type: String, enum: [...REJECTION_STAGES, null], default: null },
     rejectionType: { type: String, enum: [...REJECTION_TYPES, null], default: null },
+    // The day this round was rejected, when its status is Rejected (entered by hand; the Theme Cost page uses the first one to split rework).
+    rejectedOn: { type: Date, default: null },
     designDays: { type: Number, default: null, min: 0 },
     developmentDays: { type: Number, default: null, min: 0 },
     members: { type: [projectMemberSchema], default: () => [] },
@@ -47,6 +49,8 @@ const projectSchema = new Schema(
     rejectionStage: { type: String, enum: [...REJECTION_STAGES, null], default: null },
     // Who rejected it, when its status is Rejected: our own review (internal) or the Shopify Theme Store review.
     rejectionType: { type: String, enum: [...REJECTION_TYPES, null], default: null },
+    // The day this round was rejected, when its status is Rejected (entered by hand; the Theme Cost page uses the first one to split rework).
+    rejectedOn: { type: Date, default: null },
     // How long the design and the development phases took, in days. Entered
     // by hand for now (themes built before this existed); null = not known.
     designDays: { type: Number, default: null, min: 0 },

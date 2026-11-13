@@ -20,6 +20,7 @@ type ThemeRow = {
   rejections: number;
   fixedDays: number;
   byMonth: { month: string; cost: number; hours: number }[];
+  rework: { from: string; cost: number; hours: number } | null;
 };
 type Data = {
   rate: { workingDaysPerMonth: number; hoursPerMonth: number };
@@ -69,6 +70,22 @@ export default function CostsPage() {
       sortValue: (t) => t.hours.total,
     },
     { key: "rejections", header: "Rejections", render: (t) => t.rejections, sortValue: (t) => t.rejections },
+    {
+      key: "rework",
+      header: "Rework",
+      render: (t) =>
+        t.rework ? (
+          <span className="tabular-nums" title={`Build work after the first rejection on ${t.rework.from}: ${t.rework.hours} h (already inside Build)`}>
+            {t.rework.cost > 0 ? money(t.rework.cost) : `${t.rework.hours} h`}
+            <span className="block text-xs text-zinc-500">after {t.rework.from}</span>
+          </span>
+        ) : t.rejections > 0 ? (
+          <span className="text-xs text-zinc-400">no date</span>
+        ) : (
+          dash
+        ),
+      sortValue: (t) => t.rework?.cost ?? -1,
+    },
   ];
 
   return (
@@ -78,7 +95,7 @@ export default function CostsPage() {
         <p className="mt-1 max-w-3xl text-sm text-zinc-500">
           What each theme cost to make: every hour reported on it, priced at the reporter&apos;s own hourly cost (monthly salary / {data?.rate.hoursPerMonth ?? 221} h, which is{" "}
           {data?.rate.workingDaysPerMonth ?? 26} days of 8.5 h). Build is new-theme work, presets is preset work, updates is theme-update work. Product Managers are included at their own rate.
-          Time on a round that was later rejected is in the total; reports don&apos;t say which round they belong to, so it can&apos;t be split out as rework.
+          Rework is the build work done after the theme&apos;s first rejection: enter the date in “Rejected on” on the project page (and on each earlier round) and it appears here. It is part of Build, not added on top.
         </p>
       </div>
 
@@ -173,7 +190,7 @@ export default function CostsPage() {
             <Card>
               <CardHeader
                 title={`${current.name}: who the cost is made of`}
-                description={`${money(current.cost.total)} over ${current.hours.total} h${current.fixedDays > 0 ? `. Older projects also carry ${current.fixedDays} days entered by hand with no person, which are not priced.` : "."}`}
+                description={`${money(current.cost.total)} over ${current.hours.total} h${current.rework ? `, of which ${money(current.rework.cost)} (${current.rework.hours} h) is build rework after the first rejection on ${current.rework.from}` : ""}${current.fixedDays > 0 ? `. Older projects also carry ${current.fixedDays} days entered by hand with no person, which are not priced.` : "."}`}
               />
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

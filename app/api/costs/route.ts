@@ -24,7 +24,7 @@ export async function GET() {
       .select("themeId memberId kind minutes date")
       .lean<{ themeId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
     TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
-    Project.find().select("themeId type status rounds designDays developmentDays").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rounds?: { status: string }[]; designDays?: number | null; developmentDays?: number | null }[]>(),
+    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null }[]>(),
   ]);
 
   const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null }]));
@@ -32,13 +32,23 @@ export async function GET() {
 
   const inputs: HoursInput[] = [];
   for (const r of reports) {
-    inputs.push({ themeId: String(r.themeId), memberId: String(r.memberId), line: r.kind === "theme" ? "build" : r.kind === "preset" ? "presets" : "updates", hours: r.minutes / 60, month: r.date.toISOString().slice(0, 7) });
+    inputs.push({ themeId: String(r.themeId), memberId: String(r.memberId), line: r.kind === "theme" ? "build" : r.kind === "preset" ? "presets" : "updates", hours: r.minutes / 60, month: r.date.toISOString().slice(0, 7), day: r.date.toISOString().slice(0, 10) });
   }
   for (const e of manual) {
     const themeId = themeOfProject.get(String(e.projectId));
-    if (themeId) inputs.push({ themeId, memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7) });
+    if (themeId) inputs.push({ themeId, memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7), day: e.date.toISOString().slice(0, 10) });
   }
-  const costs = computeThemeCosts(inputs, people);
+  // The first version's rejection date per theme: the earliest rejection date entered on its Theme Design & Development project(s).
+  const firstRejection = new Map<string, string>();
+  for (const p of projects) {
+    if ((p.type ?? "theme_development") !== "theme_development") continue;
+    const dates = [...(p.rounds ?? []).filter((r) => r.status === "rejected").map((r) => r.rejectedOn), p.status === "rejected" ? p.rejectedOn : null]
+      .filter((d): d is Date => Boolean(d))
+      .map((d) => new Date(d).toISOString().slice(0, 10));
+    const theme = String(p.themeId);
+    for (const d of dates) if (!firstRejection.has(theme) || d < (firstRejection.get(theme) as string)) firstRejection.set(theme, d);
+  }
+  const costs = computeThemeCosts(inputs, people, firstRejection);
 
   const rejections = new Map<string, number>();
   const fixedDays = new Map<string, number>();
@@ -57,7 +67,7 @@ export async function GET() {
         themeId: id,
         name: t.name,
         live: t.themeStoreLive !== false,
-        ...(costs.get(id) ?? { cost: { build: 0, presets: 0, updates: 0, total: 0 }, hours: { build: 0, presets: 0, updates: 0, total: 0 }, unpricedHours: 0, people: [], byMonth: [] }),
+        ...(costs.get(id) ?? { cost: { build: 0, presets: 0, updates: 0, total: 0 }, hours: { build: 0, presets: 0, updates: 0, total: 0 }, unpricedHours: 0, people: [], byMonth: [], rework: null }),
         rejections: rejections.get(id) ?? 0,
         fixedDays: Math.round((fixedDays.get(id) ?? 0) * 100) / 100,
       };

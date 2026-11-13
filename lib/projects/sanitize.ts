@@ -146,11 +146,13 @@ export function parseRounds(raw: unknown): Result<Round[]> {
     if (!rejectionStage.ok) return rejectionStage;
     const rejectionType = parseRejectionType(r.rejectionType);
     if (!rejectionType.ok) return rejectionType;
+    const rejectedOn = parseDateOnly(r.rejectedOn, "Rejection date");
+    if (!rejectedOn.ok) return rejectedOn;
     const members = parseProjectMembers(r.members ?? []);
     if (!members.ok) return members;
     const note = text(r.note, "Note", MAX_DESCRIPTION, false);
     if (!note.ok) return note;
-    rounds.push({ status: status.value, rejectionStage: rejectionStage.value, rejectionType: rejectionType.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
+    rounds.push({ status: status.value, rejectionStage: rejectionStage.value, rejectionType: rejectionType.value, rejectedOn: rejectedOn.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
   }
   return { ok: true, value: rounds };
 }
@@ -165,7 +167,7 @@ export function parseDays(raw: unknown, label: string): Result<number | null> {
   return { ok: true, value: Math.round(days * 100) / 100 };
 }
 
-type ProjectFields = { deadline?: Date | null; rejectionStage?: RejectionStage | null; rejectionType?: RejectionType | null; name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
+type ProjectFields = { deadline?: Date | null; rejectedOn?: Date | null; rejectionStage?: RejectionStage | null; rejectionType?: RejectionType | null; name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
 
 /** `partial` (PATCH) validates only the keys present; otherwise (POST) a name is required. */
 export function parseProjectFields(body: Record<string, unknown>, partial: boolean): Result<ProjectFields> {
@@ -194,6 +196,11 @@ export function parseProjectFields(body: Record<string, unknown>, partial: boole
     const deadline = parseDateOnly(body.deadline, "Deadline");
     if (!deadline.ok) return deadline;
     out.deadline = deadline.value;
+  }
+  if ("rejectedOn" in body) {
+    const rejectedOn = parseDateOnly(body.rejectedOn, "Rejection date");
+    if (!rejectedOn.ok) return rejectedOn;
+    out.rejectedOn = rejectedOn.value;
   }
   if ("rejectionStage" in body) {
     const stage = parseRejectionStage(body.rejectionStage);

@@ -64,6 +64,23 @@ describe("computeThemeCosts", () => {
     ]);
   });
 
+  it("splits out the build work done after the first rejection as rework", () => {
+    const first = new Map([["t1", "2026-10-15"]]);
+    const t = computeThemeCosts(
+      [
+        { themeId: "t1", memberId: "dev", line: "build", hours: 5, month: "2026-10", day: "2026-10-10" },
+        { themeId: "t1", memberId: "dev", line: "build", hours: 1, month: "2026-10", day: "2026-10-15" }, // the rejection day: first version
+        { themeId: "t1", memberId: "dev", line: "build", hours: 3, month: "2026-10", day: "2026-10-20" },
+        { themeId: "t1", memberId: "dev", line: "updates", hours: 2, month: "2026-10", day: "2026-10-21" }, // not build work
+      ],
+      people,
+      first
+    ).get("t1");
+    expect(t?.rework).toEqual({ from: "2026-10-15", cost: 300, hours: 3 });
+    expect(t?.cost.build).toBe(900);
+    expect(computeThemeCosts([{ themeId: "t2", memberId: "dev", line: "build", hours: 1, month: "2026-10", day: "2026-10-20" }], people).get("t2")?.rework).toBeNull();
+  });
+
   it("lists people by cost, and a removed member as unpriced", () => {
     const t = computeThemeCosts(
       [

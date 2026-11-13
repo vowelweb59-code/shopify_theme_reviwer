@@ -18,9 +18,9 @@ import { CostCard } from "./CostCard";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
-type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
+type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; rejectedOn: string | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
 type Loaded = {
-  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
+  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; rejectedOn: string | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -38,6 +38,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [rejectionStage, setRejectionStage] = useState<RejectionStage | "">("");
   const [rejectionType, setRejectionType] = useState<RejectionType | "">("");
+  const [rejectedOn, setRejectedOn] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -52,6 +53,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     setStatus(loaded.project.status ?? "planning");
     setRejectionStage(loaded.project.rejectionStage ?? "");
     setRejectionType(loaded.project.rejectionType ?? "");
+    setRejectedOn(loaded.project.rejectedOn ?? "");
   }
 
   useEffect(() => {
@@ -88,8 +90,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     e.preventDefault();
     setSaving(true);
     const hasStatus = data ? typeHasStatus(data.project.type) : true;
-    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "", rejectionType: status === "rejected" ? rejectionType : "" } : { name, portal, description })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null, rejectionType: status === "rejected" && rejectionType ? rejectionType : null } : {}) } } : d));
+    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "", rejectionType: status === "rejected" ? rejectionType : "", rejectedOn: status === "rejected" ? rejectedOn : "" } : { name, portal, description })) {
+      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null, rejectionType: status === "rejected" && rejectionType ? rejectionType : null, rejectedOn: status === "rejected" && rejectedOn ? rejectedOn : null } : {}) } } : d));
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -113,7 +115,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   async function saveRounds(rounds: RoundView[]) {
     if (!data) return;
-    const body = rounds.map((r) => ({ status: r.status, rejectionStage: r.rejectionStage, rejectionType: r.rejectionType, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
+    const body = rounds.map((r) => ({ status: r.status, rejectionStage: r.rejectionStage, rejectionType: r.rejectionType, rejectedOn: r.rejectedOn, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
     if (await patch({ rounds: body })) {
       const rejections = rounds.filter((r) => r.status === "rejected").length + (data.project.status === "rejected" ? 1 : 0);
       setData({ ...data, project: { ...data.project, rounds, rejections } });
@@ -209,6 +211,12 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-zinc-700 dark:text-zinc-300">Rejected by</span>
                   <TypeSelect value={rejectionType} onChange={setRejectionType} />
+                </label>
+              )}
+              {status === "rejected" && (
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-zinc-700 dark:text-zinc-300">Rejected on</span>
+                  <input type="date" value={rejectedOn} onChange={(e) => setRejectedOn(e.target.value)} className={INPUT} />
                 </label>
               )}
             </div>
@@ -325,6 +333,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 onMembersSave={(members) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, members } : r)))}
                 onStageSave={(rejectionStage) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectionStage } : r)))}
                 onTypeSave={(rejectionType) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectionType } : r)))}
+                onDateSave={(rejectedOn) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectedOn } : r)))}
                 onDelete={() => {
                   if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`)) saveRounds(project.rounds.filter((_, j) => j !== i));
                 }}
@@ -469,6 +478,7 @@ function RoundRow({
   onMembersSave,
   onStageSave,
   onTypeSave,
+  onDateSave,
   onDelete,
 }: {
   index: number;
@@ -478,6 +488,7 @@ function RoundRow({
   onMembersSave: (members: ProjectMember[]) => void;
   onStageSave: (stage: RejectionStage | null) => void;
   onTypeSave: (type: RejectionType | null) => void;
+  onDateSave: (date: string | null) => void;
   onDelete: () => void;
 }) {
   const [note, setNote] = useState(round.note);
@@ -499,6 +510,18 @@ function RoundRow({
           <label className="flex items-center gap-1 text-xs text-zinc-500">
             by
             <TypeSelect value={round.rejectionType ?? ""} onChange={(type) => onTypeSave(type || null)} />
+          </label>
+        )}
+        {round.status === "rejected" && (
+          <label className="flex items-center gap-1 text-xs text-zinc-500">
+            on
+            <input
+              type="date"
+              defaultValue={round.rejectedOn ?? ""}
+              key={round.rejectedOn ?? "none"}
+              onBlur={(e) => e.target.value !== (round.rejectedOn ?? "") && onDateSave(e.target.value || null)}
+              className="rounded-md border border-border-subtle bg-transparent px-1.5 py-0.5 text-xs"
+            />
           </label>
         )}
         <span className="text-xs text-zinc-500">

@@ -31,6 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
     project: {
       ...project,
       type: project.type ?? "theme_development",
+      rejectedOn: project.rejectedOn ? new Date(project.rejectedOn).toISOString().slice(0, 10) : null,
       members: resolveMembers(project.members, teamById),
       rounds: resolveRounds(project.rounds, teamById),
       rejections: rejectionCount(project),
@@ -90,6 +91,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
       developmentDays: project.developmentDays ?? null,
       rejectionStage: project.rejectionStage ?? null,
       rejectionType: project.rejectionType ?? null,
+      rejectedOn: project.rejectedOn ?? null,
       members: project.members.map((m: { memberId: unknown; role: string | null }) => ({ memberId: m.memberId, role: m.role })),
       note,
     };
@@ -97,6 +99,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
     update.status = "under_development";
     update.rejectionStage = null;
     update.rejectionType = null;
+    update.rejectedOn = null;
     update.designDays = null;
     update.developmentDays = null;
   }

@@ -11,6 +11,8 @@ export type Round = {
   rejectionStage: RejectionStage | null;
   /** Who rejected it (our own review or Shopify); null when not recorded. */
   rejectionType: RejectionType | null;
+  /** The day it was rejected (UTC midnight), when known. */
+  rejectedOn?: Date | null;
   designDays: number | null;
   developmentDays: number | null;
   members: RoundMember[];
