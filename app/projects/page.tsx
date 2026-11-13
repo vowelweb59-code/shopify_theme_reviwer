@@ -40,10 +40,14 @@ type ProjectRow = {
   /** The fixed days were one entered total, split by the average design share. */
   durationEstimated?: boolean;
   spaceHours: number;
+  /** What the hours reported on it cost (INR); null when none. `costUnpricedHours` are hours of people with no salary entered. */
+  cost: number | null;
+  costUnpricedHours: number;
   rejections: number;
   members: { memberId: string; name: string; designation: string; role: string | null }[];
 };
 
+const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const NEW_THEME = "__new__";
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
@@ -315,6 +319,20 @@ export default function ProjectsPage() {
           <span title={p.durationEstimated ? "Split from the one total entered earlier, by the average design share" : undefined}>
             {p.durationEstimated ? "~" : ""}
             {Math.round(p.developmentTotalDays)} d
+          </span>
+        ),
+    },
+    {
+      key: "cost",
+      header: "Cost",
+      sortValue: (p) => p.cost ?? -1,
+      render: (p) =>
+        p.cost === null ? (
+          <span className="text-zinc-400">—</span>
+        ) : (
+          <span className="tabular-nums" title={p.costUnpricedHours > 0 ? `${p.costUnpricedHours} h of people with no salary entered are not priced, so the real cost is higher` : "Reported hours x each person's hourly cost (monthly salary / 221 h)"}>
+            {INR.format(p.cost)}
+            {p.costUnpricedHours > 0 ? "*" : ""}
           </span>
         ),
     },
