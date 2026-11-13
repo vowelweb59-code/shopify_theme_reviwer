@@ -11,7 +11,12 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const secretProblem = (await import("./lib/auth/session")).sessionSecretProblem(process.env);
     if (secretProblem) console.warn(`[security] ${secretProblem}`);
-    const starters: [string, () => Promise<void>][] = [
+    try {
+      console.log(`[git] ${(await import("./lib/themes/gitSource")).gitTokenStatus(process.env)}`);
+    } catch (err) {
+      console.error("[git] could not report the token status:", err instanceof Error ? err.message : err);
+    }
+    const starters:[string, () => Promise<void>][] = [
       ["audit-recovery", async () => (await import("./lib/audit/recovery")).startAuditRecovery()],
       ["demo-store", async () => (await import("./lib/demoStore/scheduler")).startDemoStoreScheduler()],
       ["theme-ranking", async () => (await import("./lib/themes/rankingScheduler")).startThemeRankingScheduler()],

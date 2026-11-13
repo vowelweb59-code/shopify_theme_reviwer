@@ -32,7 +32,25 @@ function gitEnv(repoUrl: string): NodeJS.ProcessEnv {
   return env;
 }
 
-export type GitZip = { buffer: Buffer; commit: string };
+/**
+ * One line for the boot log saying whether GIT_ACCESS_TOKEN reached the app, never the token itself: only whether it is set, its
+ * kind (from GitHub's public prefix) and length, and whether it carries quotes or whitespace that would make GitHub reject it.
+ */
+export function gitTokenStatus(env: NodeJS.ProcessEnv): string {
+  const raw = env.GIT_ACCESS_TOKEN;
+  if (raw === undefined) return "GIT_ACCESS_TOKEN is not set: private repositories will fail (public ones still clone).";
+  const token = raw.trim();
+  if (!token) return "GIT_ACCESS_TOKEN is set but empty.";
+  const kind = token.startsWith("github_pat_") ? "fine-grained token" : token.startsWith("ghp_") ? "classic token" : token.startsWith("gh") ? "GitHub token" : "unrecognised format";
+  const problems = [
+    /^["']|["']$/.test(token) ? "wrapped in quotes" : "",
+    /\s/.test(token) ? "contains whitespace" : "",
+    raw !== token ? "has leading/trailing whitespace (trimmed)" : "",
+  ].filter(Boolean);
+  return `GIT_ACCESS_TOKEN is set (${kind}, ${token.length} characters${problems.length ? `; check: ${problems.join(", ")}` : ""}).`;
+}
+
+export type GitZip ={ buffer: Buffer; commit: string };
 
 /**
  * Exports the latest commit of a theme's branch as a ZIP (the form the audit and the version store already take).
