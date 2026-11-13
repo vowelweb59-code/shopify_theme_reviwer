@@ -11,7 +11,7 @@ export type ProjectCost = { cost: number; hours: number; unpricedHours: number; 
  * What each project cost (lib/projects/cost.ts prices the hours), scoped like its days and hours are in lib/projects/loadTotals.ts:
  *   Theme Design & Development: the new-theme reports of its theme;
  *   Preset Design & Development: the preset reports linked to it (a preset report not linked to a project is in the theme's cost on
- *     the Theme Cost page, but belongs to no project here);
+ *     "Cost by theme" on the Projects page, but belongs to no project here);
  *   Theme Update: the update reports of its theme plus the hours entered by hand in its hours log (the entries made from Chat reports
  *     are the same hours as those reports, so they are not added again).
  * Only projects with hours are in the map.

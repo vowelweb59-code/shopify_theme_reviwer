@@ -19,6 +19,7 @@ import {
   type ProjectStatus,
   type ProjectType,
 } from "@/lib/projects/constants";
+import { ThemeCostSection } from "./_components/ThemeCostSection";
 import { ImportReportsModal } from "./_components/ImportReportsModal";
 import { ProjectStatusPill } from "./_components/ProjectStatusPill";
 
@@ -448,6 +449,8 @@ export default function ProjectsPage() {
       ) : (
         <ResponsiveTable columns={shownColumns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
       )}
+
+      {!loading && projects.length > 0 && <ThemeCostSection />}
 
       <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} notice={chatNotice} autoSync={autoSync} />
       {modalOpen && <NewProjectModal themes={themes} defaultPortal={portalTab === "none" ? "" : portalTab} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}

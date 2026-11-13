@@ -98,7 +98,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Monthly salary, INR (optional)</span>
             <input type="number" min={0} step="1" inputMode="numeric" value={salary} onChange={(e) => setSalary(e.target.value)} className={INPUT} placeholder="e.g. 45000" />
-            <span className="text-xs text-zinc-500">Used only for the Theme Cost page: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
+            <span className="text-xs text-zinc-500">Used only for project costs: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
           </label>
         ) : (
           <div className="flex flex-col gap-1 text-sm">

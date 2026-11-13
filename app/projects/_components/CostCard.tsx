@@ -12,7 +12,7 @@ const LINE_LABELS = { build: "Theme build", presets: "Presets", updates: "Update
 
 /**
  * What this project cost: the hours reported on it, priced at each reporter's hourly cost (monthly salary / 221 h), by kind of work and
- * by person. The same number as the Cost column on the Projects list; the theme's whole cost is on the Theme Cost page.
+ * by person. The same number as the Cost column on the Projects list; the theme's whole cost is under "Cost by theme" on the Projects page.
  */
 export function CostCard({ projectId }: { projectId: string }) {
   const [state, setState] = useState<{ cost: Cost | null; hoursPerMonth: number } | null>(null);
