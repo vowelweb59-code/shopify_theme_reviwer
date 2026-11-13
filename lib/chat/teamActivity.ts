@@ -19,7 +19,7 @@ export function isTracked(m: { name: string; designation: string }): boolean {
 }
 
 export async function listTrackedMembers(): Promise<TrackedMember[]> {
-  const members = await TeamMember.find().select("name designation").sort({ name: 1 }).lean<TrackedMember[]>();
+  const members = await TeamMember.find({ inactive: { $ne: true } }).select("name designation").sort({ name: 1 }).lean<TrackedMember[]>();
   return members.filter(isTracked);
 }
 

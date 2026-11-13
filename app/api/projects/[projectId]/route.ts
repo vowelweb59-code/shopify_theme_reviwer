@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
 
   const [theme, team] = await Promise.all([
     Theme.findById(project.themeId).select("name").lean(),
-    TeamMember.find().select("name designation email").sort({ name: 1 }).lean(),
+    TeamMember.find().select("name designation email inactive").sort({ name: 1 }).lean(),
   ]);
   const teamById = new Map(team.map((m) => [String(m._id), m]));
 
@@ -38,7 +38,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
       totals: (await loadProjectTotals([project])).get(String(project._id)) ?? null,
     },
     theme,
-    team,
+    // The picker offers only current people; everyone (inactive included) still resolves on the project and its rounds above.
+    team: team.filter((m) => !m.inactive),
   });
 }
 

@@ -36,7 +36,7 @@ function text(raw: unknown, label: string, max: number, required: boolean): Resu
   return { ok: true, value };
 }
 
-type Pay = { monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null };
+type Pay = { inactive?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null };
 
 export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean } & Pay> {
   const name = text(body.name, "Name", MAX_NAME, true);
@@ -60,6 +60,7 @@ export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ na
       salary[key] = Math.round(n);
     }
   }
+  if (typeof body.inactive === "boolean") salary.inactive = body.inactive;
   if ("payModel" in body) {
     if (body.payModel !== "salary" && body.payModel !== "per_live") return { ok: false, error: "Pay type must be salary or per live." };
     salary.payModel = body.payModel;

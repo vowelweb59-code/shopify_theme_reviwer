@@ -11,7 +11,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; inactive?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -36,6 +36,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
   const [email, setEmail] = useState(member?.email ?? "");
   const [designation, setDesignation] = useState(member?.designation ?? "");
   const [updatesOnly, setUpdatesOnly] = useState(member?.updatesAndPresetsOnly ?? false);
+  const [inactive, setInactive] = useState(member?.inactive ?? false);
   const [salary, setSalary] = useState(member?.monthlySalary != null ? String(member.monthlySalary) : "");
   const [payModel, setPayModel] = useState<"salary" | "per_live">(member?.payModel ?? "salary");
   const [perTheme, setPerTheme] = useState(member?.perLiveTheme != null ? String(member.perLiveTheme) : "");
@@ -51,7 +52,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
       const res = await fetch(member ? `/api/team/${member._id}` : "/api/team", {
         method: member ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, monthlySalary: salary.trim() === "" ? null : salary, payModel, perLiveTheme: perTheme.trim() === "" ? null : perTheme, perLivePreset: perPreset.trim() === "" ? null : perPreset }),
+        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, inactive, monthlySalary: salary.trim() === "" ? null : salary, payModel, perLiveTheme: perTheme.trim() === "" ? null : perTheme, perLivePreset: perPreset.trim() === "" ? null : perPreset }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -122,6 +123,13 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
             <span className="block text-xs text-zinc-500">Never on a new theme. Their Google Chat time reports are then logged as preset work or Theme Update hours.</span>
           </span>
         </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={inactive} onChange={(e) => setInactive(e.target.checked)} className="mt-1" />
+          <span className="text-zinc-700 dark:text-zinc-300">
+            Inactive (no longer on the team)
+            <span className="block text-xs text-zinc-500">Kept instead of deleted so their projects and rounds stay on record. Hidden from this list, the project pickers, Current Work and automatic project assignment.</span>
+          </span>
+        </label>
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
@@ -141,6 +149,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Member | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function load() {
@@ -172,7 +181,7 @@ export default function TeamPage() {
   }
 
   const columns: TableColumn<Member>[] = [
-    { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
+    { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}{m.inactive && <span className="ml-2 text-xs font-normal text-zinc-500">inactive</span>}</span> },
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
     { key: "email", header: "Email", render: (m) => m.email ?? <span className="text-zinc-400">—</span> },
     { key: "projects", header: "Projects", sortValue: (m) => m.projectCount, render: (m) => m.projectCount },
@@ -263,7 +272,14 @@ export default function TeamPage() {
       ) : members.length === 0 ? (
         <EmptyState icon={Users} title="No team members yet" description="Add the people who work on your themes, with their designation." />
       ) : (
-        <ResponsiveTable columns={columns} rows={members} rowKey={(m) => m._id} />
+        <div className="flex flex-col gap-2">
+          <ResponsiveTable columns={columns} rows={members.filter((m) => showInactive || !m.inactive)} rowKey={(m) => m._id} />
+          {members.some((m) => m.inactive) && (
+            <button type="button" onClick={() => setShowInactive((v) => !v)} className="w-fit text-xs text-zinc-500 underline hover:text-zinc-800 dark:hover:text-zinc-200">
+              {showInactive ? "Hide inactive members" : `Show inactive members (${members.filter((m) => m.inactive).length})`}
+            </button>
+          )}
+        </div>
       )}
 
       <Modal open={outcomeView !== null} onOpenChange={(o) => !o && setOutcomeView(null)} title={outcomeView?.title ?? ""}>

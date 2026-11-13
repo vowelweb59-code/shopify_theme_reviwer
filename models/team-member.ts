@@ -20,6 +20,9 @@ const teamMemberSchema = new Schema(
     payModel: { type: String, enum: ["salary", "per_live"], default: "salary" },
     perLiveTheme: { type: Number, default: null, min: 0 },
     perLivePreset: { type: Number, default: null, min: 0 },
+    // Left the team (owner, 2026-11-13: kept instead of deleted so their project and round history stays). Hidden on the Team page
+    // and out of the project pickers, Current Work and automatic project assignment; their past reports and rounds still name them.
+    inactive: { type: Boolean, default: false },
     // Other spellings of the name that show up as the poster in Google Chat ("Aaqib Iqbal" for "Aaquib Iqbal").
     aliases: { type: [String], default: () => [] },
   },

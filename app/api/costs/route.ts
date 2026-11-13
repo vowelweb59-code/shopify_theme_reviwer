@@ -19,7 +19,7 @@ import { TimeEntry } from "@/models/time-entry";
 export async function GET() {
   await connectToDatabase();
   const [members, themes, reports, manual, projects] = await Promise.all([
-    TeamMember.find().select("name designation monthlySalary").lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null }[]>(),
+    TeamMember.find().select("name designation monthlySalary inactive").lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null; inactive?: boolean }[]>(),
     Theme.find().select("name themeStoreLive").lean<{ _id: unknown; name: string; themeStoreLive?: boolean | null }[]>(),
     ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null }, kind: { $in: ["theme", "preset", "update"] } })
       .select("themeId memberId kind minutes date")
@@ -77,11 +77,12 @@ export async function GET() {
     })
     .sort((a, b) => b.cost.total - a.cost.total || a.name.localeCompare(b.name));
 
-  // People who reported hours but have no salary entered: their hours are in the totals, unpriced.
+  // People who reported hours but have no salary entered: their hours are in the totals, unpriced. Inactive members are not asked for.
+  const inactiveIds = new Set(members.filter((m) => m.inactive).map((m) => String(m._id)));
   const missing = new Map<string, { name: string; designation: string; hours: number }>();
   for (const row of rows) {
     for (const p of row.people) {
-      if (p.cost !== null || !people.has(p.memberId)) continue;
+      if (p.cost !== null || !people.has(p.memberId) || inactiveIds.has(p.memberId)) continue;
       const entry = missing.get(p.memberId) ?? { name: p.name, designation: p.designation, hours: 0 };
       entry.hours = Math.round((entry.hours + p.hours) * 10) / 10;
       missing.set(p.memberId, entry);
