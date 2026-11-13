@@ -56,9 +56,10 @@ export async function fetchGitZip(repoUrl: string, branch: string | null): Promi
   } catch (err) {
     const e = err as NodeJS.ErrnoException & { stderr?: string };
     if (e.code === "ENOENT") throw new Error("git is not installed on the server.");
-    // git's own message, without the URL (it can contain a token-less but private repo name) beyond the first line.
-    const reason = String(e.stderr ?? e.message).split("\n").find((l) => l.trim()) ?? "unknown error";
-    throw new Error(`Could not read the Git repository: ${reason.slice(0, 200)}`);
+    // git's own reason: its first line is only "Cloning into '/tmp/...'...", the cause is on a "fatal:" / "error:" line.
+    const lines = String(e.stderr ?? e.message).split("\n").map((l) => l.trim()).filter(Boolean);
+    const reason = lines.filter((l) => /^(fatal|error|remote):/i.test(l)).join(" ") || lines[lines.length - 1] || "unknown error";
+    throw new Error(`Could not read the Git repository: ${reason.slice(0, 300)}`);
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }
