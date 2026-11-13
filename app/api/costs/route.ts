@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/db/connect";
+import { computeThemeCosts, HOURS_PER_MONTH, WORKING_DAYS_PER_MONTH, type HoursInput, type Person } from "@/lib/projects/cost";
+import { rejectionCount } from "@/lib/projects/rounds";
+import { ChatReport } from "@/models/chat-report";
+import { Project } from "@/models/project";
+import { TeamMember } from "@/models/team-member";
+import { Theme } from "@/models/theme";
+import { TimeEntry } from "@/models/time-entry";
+
+/**
+ * What each theme cost to make (lib/projects/cost.ts): every reported hour on the theme priced at its reporter's hourly cost
+ * (monthly salary / 221 h), split into build, presets and updates. Hours come from the Chat time reports (status ok, matched member)
+ * plus hours entered by hand in Theme Update hours logs (the ones made from Chat reports are the same hours as those reports, so only
+ * entries without a chatReportKey are added). The days entered by hand on older projects have no person, so they are listed as
+ * `fixedDays` and are not priced.
+ */
+export async function GET() {
+  await connectToDatabase();
+  const [members, themes, reports, manual, projects] = await Promise.all([
+    TeamMember.find().select("name designation monthlySalary").lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null }[]>(),
+    Theme.find().select("name themeStoreLive").lean<{ _id: unknown; name: string; themeStoreLive?: boolean | null }[]>(),
+    ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null }, kind: { $in: ["theme", "preset", "update"] } })
+      .select("themeId memberId kind minutes")
+      .lean<{ themeId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number }[]>(),
+    TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours").lean<{ projectId: unknown; memberId: unknown; hours: number }[]>(),
+    Project.find().select("themeId type status rounds designDays developmentDays").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rounds?: { status: string }[]; designDays?: number | null; developmentDays?: number | null }[]>(),
+  ]);
+
+  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null }]));
+  const themeOfProject = new Map(projects.map((p) => [String(p._id), String(p.themeId)]));
+
+  const inputs: HoursInput[] = [];
+  for (const r of reports) {
+    inputs.push({ themeId: String(r.themeId), memberId: String(r.memberId), line: r.kind === "theme" ? "build" : r.kind === "preset" ? "presets" : "updates", hours: r.minutes / 60 });
+  }
+  for (const e of manual) {
+    const themeId = themeOfProject.get(String(e.projectId));
+    if (themeId) inputs.push({ themeId, memberId: String(e.memberId), line: "updates", hours: e.hours });
+  }
+  const costs = computeThemeCosts(inputs, people);
+
+  const rejections = new Map<string, number>();
+  const fixedDays = new Map<string, number>();
+  for (const p of projects) {
+    if (p.type === "theme_update") continue;
+    const theme = String(p.themeId);
+    rejections.set(theme, (rejections.get(theme) ?? 0) + rejectionCount(p));
+    fixedDays.set(theme, (fixedDays.get(theme) ?? 0) + (p.designDays ?? 0) + (p.developmentDays ?? 0));
+  }
+
+  const rows = themes
+    .filter((t) => costs.has(String(t._id)) || (fixedDays.get(String(t._id)) ?? 0) > 0)
+    .map((t) => {
+      const id = String(t._id);
+      return {
+        themeId: id,
+        name: t.name,
+        live: t.themeStoreLive !== false,
+        ...(costs.get(id) ?? { cost: { build: 0, presets: 0, updates: 0, total: 0 }, hours: { build: 0, presets: 0, updates: 0, total: 0 }, unpricedHours: 0, people: [] }),
+        rejections: rejections.get(id) ?? 0,
+        fixedDays: Math.round((fixedDays.get(id) ?? 0) * 100) / 100,
+      };
+    })
+    .sort((a, b) => b.cost.total - a.cost.total || a.name.localeCompare(b.name));
+
+  // People who reported hours but have no salary entered: their hours are in the totals, unpriced.
+  const missing = new Map<string, { name: string; designation: string; hours: number }>();
+  for (const row of rows) {
+    for (const p of row.people) {
+      if (p.cost !== null || !people.has(p.memberId)) continue;
+      const entry = missing.get(p.memberId) ?? { name: p.name, designation: p.designation, hours: 0 };
+      entry.hours = Math.round((entry.hours + p.hours) * 10) / 10;
+      missing.set(p.memberId, entry);
+    }
+  }
+
+  return NextResponse.json({
+    rate: { workingDaysPerMonth: WORKING_DAYS_PER_MONTH, hoursPerMonth: HOURS_PER_MONTH },
+    totals: { cost: rows.reduce((n, r) => n + r.cost.total, 0), hours: Math.round(rows.reduce((n, r) => n + r.hours.total, 0) * 10) / 10 },
+    missingSalary: [...missing.values()].sort((a, b) => b.hours - a.hours),
+    themes: rows,
+  });
+}

@@ -1,9 +1,10 @@
-import { Activity, Briefcase, BarChart3, CalendarCheck, CalendarClock, DollarSign, FolderKanban, Palette, ShieldCheck, Store, Settings, Users } from "lucide-react";
+import { Activity, BadgeIndianRupee, Briefcase, BarChart3, CalendarCheck, CalendarClock, DollarSign, FolderKanban, Palette, ShieldCheck, Store, Settings, Users } from "lucide-react";
 
 export const NAV_ITEMS = [
   { href: "/themes", label: "Themes", icon: Palette },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/deadlines", label: "Deadlines", icon: CalendarClock },
+  { href: "/costs", label: "Theme Cost", icon: BadgeIndianRupee },
   { href: "/team", label: "Team", icon: Users },
   { href: "/current-work", label: "Current Work", icon: Activity },
   { href: "/service", label: "Service Team", icon: Briefcase },

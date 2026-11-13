@@ -11,6 +11,9 @@ const teamMemberSchema = new Schema(
     designation: { type: String, required: true, trim: true },
     // Never works on a new theme: their time reports (lib/chat/resolve.ts) are preset work or theme updates.
     updatesAndPresetsOnly: { type: Boolean, default: false },
+    // Monthly salary in INR, used only to cost the hours a person reports on each theme (lib/projects/cost.ts). Null = not entered:
+    // that person's hours are counted but not costed.
+    monthlySalary: { type: Number, default: null, min: 0 },
     // Other spellings of the name that show up as the poster in Google Chat ("Aaqib Iqbal" for "Aaquib Iqbal").
     aliases: { type: [String], default: () => [] },
   },

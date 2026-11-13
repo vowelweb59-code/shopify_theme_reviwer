@@ -36,7 +36,7 @@ function text(raw: unknown, label: string, max: number, required: boolean): Resu
   return { ok: true, value };
 }
 
-export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean }> {
+export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null }> {
   const name = text(body.name, "Name", MAX_NAME, true);
   if (!name.ok) return name;
   const designation = text(body.designation, "Designation", MAX_TEXT, true);
@@ -46,7 +46,18 @@ export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ na
   if (email.value && !EMAIL_RE.test(email.value)) return { ok: false, error: "Email is not a valid address." };
   // Only when sent, so an older client's save doesn't reset it.
   const flag = typeof body.updatesAndPresetsOnly === "boolean" ? { updatesAndPresetsOnly: body.updatesAndPresetsOnly } : {};
-  return { ok: true, value: { name: name.value, email: email.value ? email.value.toLowerCase() : null, designation: designation.value, ...flag } };
+  // Monthly salary (INR): only when sent; blank / null clears it.
+  let salary: { monthlySalary: number | null } | Record<string, never> = {};
+  if ("monthlySalary" in body) {
+    const raw = body.monthlySalary;
+    if (raw === null || raw === "" || raw === undefined) salary = { monthlySalary: null };
+    else {
+      const n = typeof raw === "number" ? raw : Number(String(raw).replace(/,/g, ""));
+      if (!Number.isFinite(n) || n < 0 || n > 10_000_000) return { ok: false, error: "Monthly salary must be a number between 0 and 10,000,000." };
+      salary = { monthlySalary: Math.round(n) };
+    }
+  }
+  return { ok: true, value: { name: name.value, email: email.value ? email.value.toLowerCase() : null, designation: designation.value, ...flag, ...salary } };
 }
 
 /** "YYYY-MM-DD" (or empty -> null) to a UTC-midnight Date, so a date picked in any time zone round-trips unchanged. */

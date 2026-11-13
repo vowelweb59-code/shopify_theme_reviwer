@@ -11,7 +11,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -36,6 +36,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
   const [email, setEmail] = useState(member?.email ?? "");
   const [designation, setDesignation] = useState(member?.designation ?? "");
   const [updatesOnly, setUpdatesOnly] = useState(member?.updatesAndPresetsOnly ?? false);
+  const [salary, setSalary] = useState(member?.monthlySalary != null ? String(member.monthlySalary) : "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +48,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
       const res = await fetch(member ? `/api/team/${member._id}` : "/api/team", {
         method: member ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly }),
+        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, monthlySalary: salary.trim() === "" ? null : salary }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -82,6 +83,11 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Email (optional)</span>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={INPUT} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-700 dark:text-zinc-300">Monthly salary, INR (optional)</span>
+          <input type="number" min={0} step="1" inputMode="numeric" value={salary} onChange={(e) => setSalary(e.target.value)} className={INPUT} placeholder="e.g. 45000" />
+          <span className="text-xs text-zinc-500">Used only for the Theme cost page: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
         </label>
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={updatesOnly} onChange={(e) => setUpdatesOnly(e.target.checked)} className="mt-1" />

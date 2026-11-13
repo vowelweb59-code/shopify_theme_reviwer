@@ -116,3 +116,19 @@ describe("parseTimeEntryInput", () => {
     expect(parseTimeEntryInput({ ...base, date: "" }).ok).toBe(false);
   });
 });
+
+describe("parseTeamMemberInput monthly salary", () => {
+  const base = { name: "Asha", designation: "QA" };
+  it("leaves the salary alone when it is not sent, clears it when blank, and reads a number", () => {
+    expect(parseTeamMemberInput(base)).toMatchObject({ ok: true, value: { name: "Asha" } });
+    expect(parseTeamMemberInput(base)).not.toHaveProperty("value.monthlySalary");
+    expect(parseTeamMemberInput({ ...base, monthlySalary: "" })).toMatchObject({ ok: true, value: { monthlySalary: null } });
+    expect(parseTeamMemberInput({ ...base, monthlySalary: null })).toMatchObject({ ok: true, value: { monthlySalary: null } });
+    expect(parseTeamMemberInput({ ...base, monthlySalary: "45,000" })).toMatchObject({ ok: true, value: { monthlySalary: 45000 } });
+    expect(parseTeamMemberInput({ ...base, monthlySalary: 45000.4 })).toMatchObject({ ok: true, value: { monthlySalary: 45000 } });
+  });
+  it("rejects a negative or non-numeric salary", () => {
+    expect(parseTeamMemberInput({ ...base, monthlySalary: -1 }).ok).toBe(false);
+    expect(parseTeamMemberInput({ ...base, monthlySalary: "abc" }).ok).toBe(false);
+  });
+});
