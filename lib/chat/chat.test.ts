@@ -37,6 +37,18 @@ describe("parseReport", () => {
     expect(splitReports("=====\nTimer Report (01-07-2026)\nTheme Name: A\nTimer: 1:00:hr\n=====\nTimer Report (02-07-2026)\nTheme Name: B\nTimer: 2:00:hr")).toHaveLength(2);
   });
 
+  it("adds the minutes of '2 hours 30 minutes' (they used to be dropped)", () => {
+    const m = (timer: string) => parseReport(`Date: 12-11-2026
+Theme Name: A
+Timer: ${timer}`);
+    expect(m("2 hours 30 minutes")).toMatchObject({ ok: true, value: { minutes: 150 } });
+    expect(m("4 hours 0 minutes")).toMatchObject({ ok: true, value: { minutes: 240 } });
+    expect(m("1 hr and 15 mins")).toMatchObject({ ok: true, value: { minutes: 75 } });
+    expect(m("3 hours")).toMatchObject({ ok: true, value: { minutes: 180 } });
+    expect(m("45 minutes")).toMatchObject({ ok: true, value: { minutes: 45 } });
+    expect(m("2 hours 75 minutes")).toMatchObject({ ok: false });
+  });
+
   it("reads whole hours and rejects bad input with a reason", () => {
     expect(parseReport("Date: 1-2-2026\nTheme Name: A\nTimer: 6 hrs")).toMatchObject({ ok: true, value: { date: "2026-02-01", minutes: 360 } });
     expect(parseReport("Theme Name: A\nTimer: 6 hrs")).toEqual({ ok: false, error: "No date found." });

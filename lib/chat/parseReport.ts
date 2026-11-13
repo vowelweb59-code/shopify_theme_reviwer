@@ -55,7 +55,11 @@ export function parseReport(text: string, postedOn?: string): Result<ParsedRepor
   const inMinutes = /^min/i.test(timer[3] ?? "");
   const mins = timer[2] === undefined || inMinutes ? 0 : Number(timer[2].length === 1 ? `${timer[2]}0` : timer[2]);
   if (mins >= 60) return { ok: false, error: `Timer "${timer[0].trim()}" has more than 59 minutes.` };
-  const minutes = inMinutes ? Number(timer[1]) : Number(timer[1]) * 60 + mins;
+  // "2 hours 30 minutes": whole hours followed by a separate minutes figure. Without this the 30 minutes were dropped.
+  const after = /^\s*(?:and\s+)?(\d{1,2})\s*(?:mins?|minutes?)\b/i.exec(text.slice(timer.index + timer[0].length));
+  const extra = after && !inMinutes && timer[2] === undefined && /^(hrs?|hours?)$/i.test(timer[3] ?? "") ? Number(after[1]) : 0;
+  if (extra >= 60) return { ok: false, error: `Timer "${timer[0].trim()} ${after?.[0].trim()}" has more than 59 minutes.` };
+  const minutes = (inMinutes ? Number(timer[1]) : Number(timer[1]) * 60 + mins) + extra;
   if (minutes <= 0 || minutes > 24 * 60) return { ok: false, error: `Timer "${timer[0].trim()}" is not a plausible day.` };
 
   return { ok: true, value: { date: iso, themeParts, memo: (MEMO_RE.exec(text)?.[1] ?? "").trim(), minutes } };
