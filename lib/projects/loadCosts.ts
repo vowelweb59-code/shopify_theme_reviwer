@@ -1,3 +1,4 @@
+import { loadPerLive } from "./loadPerLive";
 import { computeThemeCosts, type HoursInput, type Person, type PersonCost, type ThemeCost } from "./cost";
 import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
@@ -36,7 +37,8 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
       .lean<{ themeId: unknown; projectId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
     TimeEntry.find({ projectId: { $in: updateIds }, chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
   ]);
-  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null }]));
+  const { payments, perLiveIds } = await loadPerLive();
+  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) }]));
 
   const inputs: HoursInput[] = [];
   for (const r of reports) {
@@ -51,6 +53,8 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
 
   const out = new Map<string, ProjectCost>();
   // computeThemeCosts groups by the key it is given: here the project id.
-  for (const [projectId, c] of computeThemeCosts(inputs, people)) out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours, lines: c.cost, people: c.people });
+  const ids = new Set(projects.map((p) => String(p._id)));
+  const projectPayments = payments.filter((p) => ids.has(p.projectId)).map((p) => ({ themeId: p.projectId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month }));
+  for (const [projectId, c] of computeThemeCosts(inputs, people, new Map(), projectPayments)) out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours, lines: c.cost, people: c.people });
   return out;
 }

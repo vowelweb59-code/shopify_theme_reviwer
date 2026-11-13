@@ -14,6 +14,12 @@ const teamMemberSchema = new Schema(
     // Monthly salary in INR, used only to cost the hours a person reports on each theme (lib/projects/cost.ts). Null = not entered:
     // that person's hours are counted but not costed.
     monthlySalary: { type: Number, default: null, min: 0 },
+    // How the person is paid (owner, 2026-11-13): "salary" (monthlySalary prices their reported hours), or "per_live": a fixed amount
+    // for each Theme Design & Development project (perLiveTheme) and each Preset project (perLivePreset) that goes Live and that they
+    // are on (assigned or reported). A per-live person's hours are not priced by the hour.
+    payModel: { type: String, enum: ["salary", "per_live"], default: "salary" },
+    perLiveTheme: { type: Number, default: null, min: 0 },
+    perLivePreset: { type: Number, default: null, min: 0 },
     // Other spellings of the name that show up as the poster in Google Chat ("Aaqib Iqbal" for "Aaquib Iqbal").
     aliases: { type: [String], default: () => [] },
   },

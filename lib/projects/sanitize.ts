@@ -36,7 +36,9 @@ function text(raw: unknown, label: string, max: number, required: boolean): Resu
   return { ok: true, value };
 }
 
-export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null }> {
+type Pay = { monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null };
+
+export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean } & Pay> {
   const name = text(body.name, "Name", MAX_NAME, true);
   if (!name.ok) return name;
   const designation = text(body.designation, "Designation", MAX_TEXT, true);
@@ -46,16 +48,21 @@ export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ na
   if (email.value && !EMAIL_RE.test(email.value)) return { ok: false, error: "Email is not a valid address." };
   // Only when sent, so an older client's save doesn't reset it.
   const flag = typeof body.updatesAndPresetsOnly === "boolean" ? { updatesAndPresetsOnly: body.updatesAndPresetsOnly } : {};
-  // Monthly salary (INR): only when sent; blank / null clears it.
-  let salary: { monthlySalary: number | null } | Record<string, never> = {};
-  if ("monthlySalary" in body) {
-    const raw = body.monthlySalary;
-    if (raw === null || raw === "" || raw === undefined) salary = { monthlySalary: null };
+  // Pay (INR), each only when sent; blank / null clears an amount.
+  const salary: Pay = {};
+  for (const [key, label] of [["monthlySalary", "Monthly salary"], ["perLiveTheme", "Amount per live theme"], ["perLivePreset", "Amount per live preset"]] as const) {
+    if (!(key in body)) continue;
+    const raw = body[key];
+    if (raw === null || raw === "" || raw === undefined) salary[key] = null;
     else {
       const n = typeof raw === "number" ? raw : Number(String(raw).replace(/,/g, ""));
-      if (!Number.isFinite(n) || n < 0 || n > 10_000_000) return { ok: false, error: "Monthly salary must be a number between 0 and 10,000,000." };
-      salary = { monthlySalary: Math.round(n) };
+      if (!Number.isFinite(n) || n < 0 || n > 10_000_000) return { ok: false, error: `${label} must be a number between 0 and 10,000,000.` };
+      salary[key] = Math.round(n);
     }
+  }
+  if ("payModel" in body) {
+    if (body.payModel !== "salary" && body.payModel !== "per_live") return { ok: false, error: "Pay type must be salary or per live." };
+    salary.payModel = body.payModel;
   }
   return { ok: true, value: { name: name.value, email: email.value ? email.value.toLowerCase() : null, designation: designation.value, ...flag, ...salary } };
 }

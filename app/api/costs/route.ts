@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { computeThemeCosts, HOURS_PER_MONTH, WORKING_DAYS_PER_MONTH, type HoursInput, type Person } from "@/lib/projects/cost";
 import { rejectionCount } from "@/lib/projects/rounds";
+import { loadPerLive } from "@/lib/projects/loadPerLive";
 import { ChatReport } from "@/models/chat-report";
 import { Project } from "@/models/project";
 import { TeamMember } from "@/models/team-member";
@@ -27,7 +28,8 @@ export async function GET() {
     Project.find().select("themeId type status rejectedOn rounds designDays developmentDays").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null }[]>(),
   ]);
 
-  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null }]));
+  const { payments, perLiveIds } = await loadPerLive();
+  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) }]));
   const themeOfProject = new Map(projects.map((p) => [String(p._id), String(p.themeId)]));
 
   const inputs: HoursInput[] = [];
@@ -48,7 +50,8 @@ export async function GET() {
     const theme = String(p.themeId);
     for (const d of dates) if (!firstRejection.has(theme) || d < (firstRejection.get(theme) as string)) firstRejection.set(theme, d);
   }
-  const costs = computeThemeCosts(inputs, people, firstRejection);
+  // Per-live commission, keyed by the theme its project belongs to.
+  const costs = computeThemeCosts(inputs, people, firstRejection, payments.map((p) => ({ themeId: p.themeId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month })));
 
   const rejections = new Map<string, number>();
   const fixedDays = new Map<string, number>();

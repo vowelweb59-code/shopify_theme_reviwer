@@ -81,6 +81,30 @@ describe("computeThemeCosts", () => {
     expect(computeThemeCosts([{ themeId: "t2", memberId: "dev", line: "build", hours: 1, month: "2026-10", day: "2026-10-20" }], people).get("t2")?.rework).toBeNull();
   });
 
+  it("adds per-live payments and does not price a per-live person's hours", () => {
+    const withLead = new Map(people).set("lead", { name: "Lead", designation: "Product Manager", monthlySalary: null, perLive: true });
+    const t = computeThemeCosts(
+      [
+        { themeId: "t1", memberId: "dev", line: "build", hours: 1, month: "2026-10" },
+        { themeId: "t1", memberId: "lead", line: "build", hours: 40, month: "2026-10" },
+      ],
+      withLead,
+      new Map(),
+      [
+        { themeId: "t1", memberId: "lead", line: "build", amount: 10000, month: "2026-11" },
+        { themeId: "t1", memberId: "lead", line: "presets", amount: 5000, month: null },
+      ]
+    ).get("t1");
+    expect(t?.cost).toEqual({ build: 10100, presets: 5000, updates: 0, total: 15100 });
+    expect(t?.unpricedHours).toBe(0);
+    expect(t?.people.find((p) => p.name === "Lead")).toMatchObject({ hours: 40, cost: 15000, perLive: 15000 });
+    expect(t?.byMonth).toEqual([
+      { month: "undated", cost: 5000, hours: 0 },
+      { month: "2026-10", cost: 100, hours: 41 },
+      { month: "2026-11", cost: 10000, hours: 0 },
+    ]);
+  });
+
   it("lists people by cost, and a removed member as unpriced", () => {
     const t = computeThemeCosts(
       [

@@ -11,7 +11,7 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -37,6 +37,9 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
   const [designation, setDesignation] = useState(member?.designation ?? "");
   const [updatesOnly, setUpdatesOnly] = useState(member?.updatesAndPresetsOnly ?? false);
   const [salary, setSalary] = useState(member?.monthlySalary != null ? String(member.monthlySalary) : "");
+  const [payModel, setPayModel] = useState<"salary" | "per_live">(member?.payModel ?? "salary");
+  const [perTheme, setPerTheme] = useState(member?.perLiveTheme != null ? String(member.perLiveTheme) : "");
+  const [perPreset, setPerPreset] = useState(member?.perLivePreset != null ? String(member.perLivePreset) : "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +51,7 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
       const res = await fetch(member ? `/api/team/${member._id}` : "/api/team", {
         method: member ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, monthlySalary: salary.trim() === "" ? null : salary }),
+        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, monthlySalary: salary.trim() === "" ? null : salary, payModel, perLiveTheme: perTheme.trim() === "" ? null : perTheme, perLivePreset: perPreset.trim() === "" ? null : perPreset }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -85,10 +88,33 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={INPUT} />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">Monthly salary, INR (optional)</span>
-          <input type="number" min={0} step="1" inputMode="numeric" value={salary} onChange={(e) => setSalary(e.target.value)} className={INPUT} placeholder="e.g. 45000" />
-          <span className="text-xs text-zinc-500">Used only for the Theme cost page: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
+          <span className="text-zinc-700 dark:text-zinc-300">Paid by</span>
+          <select value={payModel} onChange={(e) => setPayModel(e.target.value as "salary" | "per_live")} className={INPUT}>
+            <option value="salary">Monthly salary</option>
+            <option value="per_live">Commission per live theme / preset</option>
+          </select>
         </label>
+        {payModel === "salary" ? (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Monthly salary, INR (optional)</span>
+            <input type="number" min={0} step="1" inputMode="numeric" value={salary} onChange={(e) => setSalary(e.target.value)} className={INPUT} placeholder="e.g. 45000" />
+            <span className="text-xs text-zinc-500">Used only for the Theme Cost page: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
+          </label>
+        ) : (
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="flex gap-3">
+              <label className="flex flex-1 flex-col gap-1">
+                <span className="text-zinc-700 dark:text-zinc-300">Per live theme, INR</span>
+                <input type="number" min={0} step="1" inputMode="numeric" value={perTheme} onChange={(e) => setPerTheme(e.target.value)} className={INPUT} placeholder="e.g. 10000" />
+              </label>
+              <label className="flex flex-1 flex-col gap-1">
+                <span className="text-zinc-700 dark:text-zinc-300">Per live preset, INR</span>
+                <input type="number" min={0} step="1" inputMode="numeric" value={perPreset} onChange={(e) => setPerPreset(e.target.value)} className={INPUT} placeholder="e.g. 5000" />
+              </label>
+            </div>
+            <span className="text-xs text-zinc-500">Earned for each Theme / Preset Design &amp; Development project that goes Live and that this person is on (assigned or reported). Their hours are not priced by the hour.</span>
+          </div>
+        )}
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={updatesOnly} onChange={(e) => setUpdatesOnly(e.target.checked)} className="mt-1" />
           <span className="text-zinc-700 dark:text-zinc-300">

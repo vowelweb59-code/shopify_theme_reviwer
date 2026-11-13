@@ -10,7 +10,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { csvCell as cell } from "@/lib/export/csvUtil";
 
 type Lines = { build: number; presets: number; updates: number; total: number };
-type PersonRow = { memberId: string; name: string; designation: string; hours: number; cost: number | null; byLine: { build: number; presets: number; updates: number } };
+type PersonRow = { memberId: string; name: string; designation: string; hours: number; cost: number | null; byLine: { build: number; presets: number; updates: number }; perLive: number };
 type ThemeRow = {
   themeId: string;
   name: string;
@@ -35,7 +35,7 @@ type Data = {
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const money = (n: number) => inr.format(n);
 /** "2026-10" -> "Oct 2026" (a calendar month, no time zone shift). */
-const monthLabel = (m: string) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
+const monthLabel = (m: string) => (m === "undated" ? "No date" : new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" }));
 const dash = <span className="text-zinc-400">—</span>;
 const amount = (n: number) => (n > 0 ? money(n) : dash);
 
@@ -79,8 +79,8 @@ function exportThemes(data: Data) {
 
 /** One row per theme and person: hours by kind of work and the cost (empty when the person has no salary entered). */
 function exportPeople(data: Data) {
-  const header = ["Theme", "Person", "Designation", "Build hours", "Preset hours", "Update hours", "Hours", "Cost (INR)"];
-  const rows = data.themes.flatMap((t) => t.people.map((p) => [t.name, p.name, p.designation, p.byLine.build, p.byLine.presets, p.byLine.updates, p.hours, p.cost ?? ""]));
+  const header = ["Theme", "Person", "Designation", "Build hours", "Preset hours", "Update hours", "Hours", "Cost (INR)", "Of which commission (INR)"];
+  const rows = data.themes.flatMap((t) => t.people.map((p) => [t.name, p.name, p.designation, p.byLine.build, p.byLine.presets, p.byLine.updates, p.hours, p.cost ?? "", p.perLive]));
   download(`theme-cost-by-person-${new Date().toISOString().slice(0, 10)}.csv`, header, rows);
 }
 
@@ -153,7 +153,7 @@ export default function CostsPage() {
         </div>
         <p className="mt-1 max-w-3xl text-sm text-zinc-500">
           What each theme cost to make: every hour reported on it, priced at the reporter&apos;s own hourly cost (monthly salary / {data?.rate.hoursPerMonth ?? 221} h, which is{" "}
-          {data?.rate.workingDaysPerMonth ?? 26} days of 8.5 h). Build is new-theme work, presets is preset work, updates is theme-update work. Product Managers are included at their own rate.
+          {data?.rate.workingDaysPerMonth ?? 26} days of 8.5 h). Build is new-theme work, presets is preset work, updates is theme-update work. Product Managers are included at their own rate. People paid a commission per live theme / preset cost that commission on each live project they are on (dated to its last report; “No date” when it has none), not their hours.
           Rework is the build work done after the theme&apos;s first rejection: enter the date in “Rejected on” on the project page (and on each earlier round) and it appears here. It is part of Build, not added on top.
         </p>
       </div>
@@ -273,7 +273,7 @@ export default function CostsPage() {
                         <td className="py-2 pr-3 tabular-nums">{p.byLine.presets || dash}</td>
                         <td className="py-2 pr-3 tabular-nums">{p.byLine.updates || dash}</td>
                         <td className="py-2 pr-3 tabular-nums">{p.hours}</td>
-                        <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : money(p.cost)}</td>
+                        <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : money(p.cost)}{p.perLive > 0 && <span className="block text-xs text-zinc-500">commission per live theme / preset</span>}</td>
                       </tr>
                     ))}
                   </tbody>

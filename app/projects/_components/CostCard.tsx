@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 
-type Person = { memberId: string; name: string; designation: string; hours: number; cost: number | null };
+type Person = { memberId: string; name: string; designation: string; hours: number; cost: number | null; perLive: number };
 type Cost = { cost: number; hours: number; unpricedHours: number; lines: { build: number; presets: number; updates: number; total: number }; people: Person[] };
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
@@ -86,7 +86,7 @@ export function CostCard({ projectId }: { projectId: string }) {
                       {p.name} <span className="text-xs text-zinc-500">{p.designation}</span>
                     </td>
                     <td className="py-2 pr-3 tabular-nums">{p.hours}</td>
-                    <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : INR.format(p.cost)}</td>
+                    <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : INR.format(p.cost)}{p.perLive > 0 && <span className="block text-xs text-zinc-500">commission (project is Live)</span>}</td>
                   </tr>
                 ))}
               </tbody>
