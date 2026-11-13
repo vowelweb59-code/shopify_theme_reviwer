@@ -19,13 +19,16 @@ import type { EnhancementDetectionRecord } from "@/lib/audit/enhancementReport";
  * uploads a version for it — comes back with latestVersion: null rather
  * than a fabricated placeholder; the UI shows "no version tracked yet".
  */
-export async function GET() {
+export async function GET(request: Request) {
   await connectToDatabase();
 
   // Only themes live on the Theme Store. A theme whose status isn't known yet (never synced) is still shown; if any is
   // unknown, decide it now from the catalog the daily read already stored.
   if (await Theme.exists({ themeStoreLive: null })) await syncThemesFromCatalog().catch(() => undefined);
-  const themes = await Theme.find({ themeStoreLive: { $ne: false } }).sort({ name: 1 }).lean();
+  // ?unreleased=1 also lists the themes that are not on the Theme Store (yet): themes under development, whose Theme Store
+  // readiness the owner wants to check before they are submitted.
+  const unreleased = new URL(request.url).searchParams.get("unreleased") === "1";
+  const themes = await Theme.find(unreleased ? {} : { themeStoreLive: { $ne: false } }).sort({ name: 1 }).lean();
   const themeIds = themes.map((t) => t._id);
   const versions = await ThemeVersion.find({ themeId: { $in: themeIds } }).lean();
 
