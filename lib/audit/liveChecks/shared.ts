@@ -1,4 +1,7 @@
-export type PresetLink = { label: string; url: string };
+import type { StorefrontSession } from "../storefrontPassword";
+
+/** `session` / `passwordNote` exist only in memory during an audit (lib/themes/demoPasswords.ts), never stored. */
+export type PresetLink = { label: string; url: string; session?: StorefrontSession; passwordNote?: string };
 export type PresetLiveCheckError = { label: string; url: string; error: string };
 
 // fetch()-based checks (page-fact extraction, PSI calls) have a near-zero

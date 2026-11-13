@@ -438,6 +438,13 @@ export async function runPageSpeedChecksForPresets(
   // throttled (PSI_CONCURRENCY_LIMIT), not fully unbounded — see its own
   // comment for why.
   await mapWithConcurrency(presets, PSI_CONCURRENCY_LIMIT, async (preset, index) => {
+    // Google's servers can't log in to a password-protected store (they would measure its password page), so no speed score
+    // is taken for it; the rest of the audit still reads it with the saved password.
+    if (preset.session) {
+      errors.push({ label: preset.label, url: preset.url, error: "Speed and Core Web Vitals were not measured: this demo store is password-protected and Google's PageSpeed Insights cannot log in. Remove the store password to measure it." });
+      onItemComplete?.();
+      return;
+    }
     const isBaseline = index === 0;
     const homeCategories = ["performance", "accessibility"];
 

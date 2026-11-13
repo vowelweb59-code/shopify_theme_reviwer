@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
+import { DemoStorePasswords } from "@/app/_components/DemoStorePasswords";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { AUDIT_STAGES, percentForStage, type AuditStageKey } from "@/lib/audit/progress";
@@ -145,6 +146,7 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
               <PresetLinksEditor presets={presets} onChange={setPresets} />
               <p className="text-xs text-zinc-500">The live-store checks (speed, demo content, features) read these. Without one, only the code is checked.</p>
             </div>
+            <DemoStorePasswords themeId={theme._id} presets={presets} />
             {running && (
               <div className="flex items-center gap-3">
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin text-status-info-icon" aria-hidden />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Pencil } from "lucide-react";
 import { PresetLinksEditor, type DemoStorePreset } from "@/app/_components/PresetLinksEditor";
+import { DemoStorePasswords } from "@/app/_components/DemoStorePasswords";
 import { MAX_PRESETS } from "@/lib/themes/presets";
 import { SeverityBadge } from "@/app/_components/findings";
 import { Button } from "@/app/_components/ui/Button";
@@ -290,6 +291,7 @@ function PresetsSection({
       />
       <div className="flex flex-col gap-3">
         <PresetLinksEditor presets={draft} onChange={setDraft} />
+        <DemoStorePasswords themeId={themeId} presets={draft} />
         {autofetchWarning && (
           <div className="rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">
             {autofetchWarning}

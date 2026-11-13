@@ -99,7 +99,13 @@ export type PublicFetchOptions = {
   maxBytes?: number;
   maxRedirects?: number;
   resolve?: Lookup;
+  /** A login cookie for a password-protected store; sent only to requests for that exact host (never to a redirect elsewhere). */
+  session?: { host: string; cookie: string };
 };
+
+function sessionHeaders(url: URL, session: PublicFetchOptions["session"]): Record<string, string> {
+  return session && url.hostname === session.host ? { Cookie: session.cookie } : {};
+}
 
 async function readCapped(res: Response, maxBytes: number): Promise<string> {
   if (!res.body) return res.text(); // test doubles and bodiless responses
@@ -130,14 +136,14 @@ export async function fetchPublicText(raw: string, options: PublicFetchOptions):
 
 /** Same as fetchPublicText, plus the final URL after redirects. */
 export async function fetchPublicPage(raw: string, options: PublicFetchOptions): Promise<{ url: string; text: string }> {
-  const { timeoutMs, maxBytes = 5 * 1024 * 1024, maxRedirects = 5, resolve } = options;
+  const { timeoutMs, maxBytes = 5 * 1024 * 1024, maxRedirects = 5, resolve, session } = options;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     let current = raw;
     for (let hop = 0; ; hop++) {
       const url = await assertPublicUrl(current, resolve);
-      const res = await fetch(url, { signal: controller.signal, redirect: "manual" });
+      const res = await fetch(url, { signal: controller.signal, redirect: "manual", headers: sessionHeaders(url, session) });
       if (REDIRECT_STATUSES.has(res.status)) {
         const location = res.headers?.get("location");
         if (!location) throw new HttpStatusError(res.status);

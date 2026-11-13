@@ -1,5 +1,6 @@
 import type { ExecutedFinding } from "../runRules";
 import { fetchPageFacts, type PageFacts } from "./fetchPageFacts";
+import { PasswordProtectedError, type StorefrontSession } from "../storefrontPassword";
 import { homepageFindings, productPageFindings } from "./structuralFindings";
 import { demoRealismFindings, imageProbeFindings, presetOverlapFindings } from "./demoRealism";
 import { probeImages } from "./imageProbe";
@@ -30,8 +31,8 @@ async function realismImageFindings(content: NonNullable<PageFacts["content"]>, 
   }
 }
 
-async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<PresetCheckOutcome> {
-  const homeFacts = await fetchPageFacts(demoStoreUrl);
+async function runChecksForPreset(label: string, demoStoreUrl: string, session?: StorefrontSession): Promise<PresetCheckOutcome> {
+  const homeFacts = await fetchPageFacts(demoStoreUrl, session);
   const findings = homepageFindings(homeFacts).map((f) => ({ ...f, presetLabel: label }));
   const liveFeatures = new Set(homeFacts.liveFeatures ?? []);
   // Demo realism (real copy, products and pictures) from the same page loads; skipped when a page has no content read.
@@ -43,7 +44,7 @@ async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<
   let productFacts: PageFacts | undefined;
   if (homeFacts.firstProductLink) {
     try {
-      productFacts = await fetchPageFacts(homeFacts.firstProductLink);
+      productFacts = await fetchPageFacts(homeFacts.firstProductLink, session);
       for (const id of productFacts.liveFeatures ?? []) liveFeatures.add(id);
       findings.push(...productPageFindings(productFacts).map((f) => ({ ...f, presetLabel: label })));
       if (productFacts.content) {
@@ -60,7 +61,7 @@ async function runChecksForPreset(label: string, demoStoreUrl: string): Promise<
   const collectionLink = homeFacts.content?.firstCollectionLink;
   if (collectionLink) {
     try {
-      const collectionFacts = await fetchPageFacts(collectionLink);
+      const collectionFacts = await fetchPageFacts(collectionLink, session);
       for (const id of collectionFacts.liveFeatures ?? []) liveFeatures.add(id);
       if (collectionFacts.content) findings.push(...demoRealismFindings(collectionFacts.content, "collection", collectionFacts.url).map((f) => ({ ...f, presetLabel: label })));
     } catch {
@@ -91,10 +92,12 @@ export async function runLiveChecksForPresets(
 
   const results = await mapWithConcurrency(presets, FETCH_CONCURRENCY_LIMIT, async (preset) => {
     try {
-      const outcome = await runChecksForPreset(preset.label, preset.url);
+      const outcome = await runChecksForPreset(preset.label, preset.url, preset.session);
       return { ok: true as const, preset, outcome };
     } catch (err) {
-      return { ok: false as const, preset, error: err instanceof Error ? err.message : String(err) };
+      // A saved password that stopped working is the more useful thing to tell than "password-protected".
+      const message = err instanceof PasswordProtectedError && preset.passwordNote ? preset.passwordNote : err instanceof Error ? err.message : String(err);
+      return { ok: false as const, preset, error: message };
     } finally {
       onItemComplete?.();
     }

@@ -1,6 +1,7 @@
 import { Parser } from "htmlparser2";
 import { extractLiteralJsonLdTypes } from "@/lib/theme-parser/liquidJson";
 import { fetchPublicText } from "@/lib/net/publicUrl";
+import { isPasswordPage, PasswordProtectedError, type StorefrontSession } from "../storefrontPassword";
 import { extractDemoContent, type DemoContent } from "./demoContent";
 import { detectLiveFeatures } from "../liveFeatures";
 
@@ -36,8 +37,8 @@ function isAbortError(err: unknown): boolean {
 
 // These URLs come from users (preset demo URLs) and from the fetched page
 // itself (its first product link), so they go through the SSRF guard.
-function fetchOnce(url: string): Promise<string> {
-  return fetchPublicText(url, { timeoutMs: FETCH_TIMEOUT_MS });
+function fetchOnce(url: string, session?: StorefrontSession): Promise<string> {
+  return fetchPublicText(url, { timeoutMs: FETCH_TIMEOUT_MS, session });
 }
 
 /**
@@ -46,12 +47,12 @@ function fetchOnce(url: string): Promise<string> {
  * store's first hit can be slow, but a URL that's genuinely unreachable
  * will just fail the same way again).
  */
-export async function fetchHtml(url: string): Promise<string> {
+export async function fetchHtml(url: string, session?: StorefrontSession): Promise<string> {
   try {
-    return await fetchOnce(url);
+    return await fetchOnce(url, session);
   } catch (err) {
     if (!isAbortError(err)) throw err;
-    return fetchOnce(url);
+    return fetchOnce(url, session);
   }
 }
 
@@ -124,7 +125,9 @@ export function extractPageFactsFromHtml(html: string, baseUrl: string): Omit<Pa
   return { jsonLdTypes: [...jsonLdTypes], canonical, metaDescription, sectionIds, firstProductLink };
 }
 
-export async function fetchPageFacts(url: string): Promise<PageFacts> {
-  const html = await fetchHtml(url);
+export async function fetchPageFacts(url: string, session?: StorefrontSession): Promise<PageFacts> {
+  const html = await fetchHtml(url, session);
+  // A password-protected store answers every page with its password page: that is not the theme, so don't audit it.
+  if (isPasswordPage(html)) throw new PasswordProtectedError();
   return { url, ...extractPageFactsFromHtml(html, url), content: extractDemoContent(html, url), liveFeatures: detectLiveFeatures(html) };
 }

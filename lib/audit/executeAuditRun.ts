@@ -15,6 +15,7 @@ import { detectEnhancementPoints, type EnhancementDetectionResult } from "@/lib/
 import { computeAuditDiagnostics } from "@/lib/audit/diagnostics";
 import { summarizeFindings, type ExecutedFinding } from "@/lib/audit/runRules";
 import { runLiveChecksForPresets } from "@/lib/audit/liveChecks/runLiveChecks";
+import { attachStorefrontSessions } from "@/lib/themes/demoPasswords";
 import type { PresetLink } from "@/lib/audit/liveChecks/shared";
 import { runPageSpeedChecksForPresets, type PageSpeedMetric } from "@/lib/audit/pageSpeed";
 import { classifyFindingHistory, type CarriedFinding, type HistoryClassification } from "@/lib/audit/findingHistory";
@@ -245,11 +246,13 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
       // that constraint drove real OOM kills on a 512MB deployment when
       // this was last tried with two live Chromium instances; neither phase
       // launches one anymore.
+      // Stores with a saved password are logged in to here; the cookie lives only in memory for this run.
+      const livePresets = await attachStorefrontSessions(theme._id, demoStorePresets).catch(() => demoStorePresets);
       const liveCheckStart = Date.now();
       const pageSpeedStart = Date.now();
       const [liveResult, pageSpeedResult] = await Promise.all([
-        runLiveChecksForPresets(demoStorePresets, bumpProgress),
-        runPageSpeedChecksForPresets(demoStorePresets, bumpProgress),
+        runLiveChecksForPresets(livePresets, bumpProgress),
+        runPageSpeedChecksForPresets(livePresets, bumpProgress),
       ]);
       timer.record("liveChecks", Date.now() - liveCheckStart);
       timer.record("pageSpeedChecks", Date.now() - pageSpeedStart);

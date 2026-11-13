@@ -3,6 +3,7 @@ import { invalidIdResponse, isValidObjectId } from "@/lib/api/validation";
 import { connectToDatabase } from "@/lib/db/connect";
 import { isPsiConfigured } from "@/lib/audit/psi";
 import { measurePresetHome } from "@/lib/audit/pageSpeed";
+import { hostOf, savedPasswordHosts } from "@/lib/themes/demoPasswords";
 import { AuditRun } from "@/models/audit-run";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
@@ -27,6 +28,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ the
   if (!theme) return NextResponse.json({ error: "Theme not found." }, { status: 404 });
   const preset = (theme.demoStorePresets ?? []).find((p) => p.url === url);
   if (!preset) return NextResponse.json({ error: "That URL is not one of this theme's saved presets." }, { status: 400 });
+
+  // Google's PageSpeed Insights can't log in, so a store with a saved password would be measured as its password page.
+  const protectedHost = hostOf(preset.url);
+  if (protectedHost && (await savedPasswordHosts(themeId)).includes(protectedHost)) {
+    return NextResponse.json({ error: "This demo store is password-protected and Google's PageSpeed Insights cannot log in, so its speed can't be measured. Remove the store password to measure it." }, { status: 400 });
+  }
 
   const versionIds = (await ThemeVersion.find({ themeId }).select("_id").lean()).map((v) => v._id);
   const run = versionIds.length
