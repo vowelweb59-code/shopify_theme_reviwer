@@ -19,16 +19,20 @@ type ThemeRow = {
   people: PersonRow[];
   rejections: number;
   fixedDays: number;
+  byMonth: { month: string; cost: number; hours: number }[];
 };
 type Data = {
   rate: { workingDaysPerMonth: number; hoursPerMonth: number };
   totals: { cost: number; hours: number };
+  months: { month: string; cost: number; hours: number }[];
   missingSalary: { name: string; designation: string; hours: number }[];
   themes: ThemeRow[];
 };
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const money = (n: number) => inr.format(n);
+/** "2026-10" -> "Oct 2026" (a calendar month, no time zone shift). */
+const monthLabel = (m: string) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
 const dash = <span className="text-zinc-400">—</span>;
 const amount = (n: number) => (n > 0 ? money(n) : dash);
 
@@ -112,6 +116,58 @@ export default function CostsPage() {
             theadClassName="bg-primary-tint text-primary-tint-text"
             emptyMessage="No hours have been reported on any theme yet."
           />
+
+          {data.months.length > 0 && (
+            <Card>
+              <CardHeader title="Cost by month" description="What was worked each month, priced the same way: the month a report's day falls in. Newest month last." />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-zinc-500">
+                      <th className="sticky left-0 bg-surface py-1 pr-4 font-medium">Theme</th>
+                      {data.months.map((m) => (
+                        <th key={m.month} className="whitespace-nowrap py-1 pr-4 text-right font-medium">
+                          {monthLabel(m.month)}
+                        </th>
+                      ))}
+                      <th className="whitespace-nowrap py-1 text-right font-medium">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.themes
+                      .filter((t) => t.byMonth.length > 0)
+                      .map((t) => {
+                        const byMonth = new Map(t.byMonth.map((m) => [m.month, m]));
+                        return (
+                          <tr key={t.themeId} className="border-t border-border-subtle">
+                            <td className="sticky left-0 bg-surface py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">{t.name}</td>
+                            {data.months.map((m) => {
+                              const cell = byMonth.get(m.month);
+                              return (
+                                <td key={m.month} className="whitespace-nowrap py-2 pr-4 text-right tabular-nums" title={cell ? `${cell.hours} h` : undefined}>
+                                  {cell && cell.cost > 0 ? money(cell.cost) : cell ? <span className="text-zinc-400">{cell.hours} h</span> : dash}
+                                </td>
+                              );
+                            })}
+                            <td className="whitespace-nowrap py-2 text-right font-semibold tabular-nums">{money(t.cost.total)}</td>
+                          </tr>
+                        );
+                      })}
+                    <tr className="border-t-2 border-border-subtle font-semibold">
+                      <td className="sticky left-0 bg-surface py-2 pr-4">All themes</td>
+                      {data.months.map((m) => (
+                        <td key={m.month} className="whitespace-nowrap py-2 pr-4 text-right tabular-nums" title={`${m.hours} h`}>
+                          {money(m.cost)}
+                        </td>
+                      ))}
+                      <td className="whitespace-nowrap py-2 text-right tabular-nums">{money(data.totals.cost)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">A grey “N h” means hours were reported that month but nobody on them has a salary entered yet. Hover a cell for the hours.</p>
+            </Card>
+          )}
 
           {current && (
             <Card>

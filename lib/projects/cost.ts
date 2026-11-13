@@ -16,7 +16,9 @@ export const HOURS_PER_MONTH = WORKING_DAYS_PER_MONTH * HOURS_PER_DAY;
 export const COST_LINES = ["build", "presets", "updates"] as const;
 export type CostLine = (typeof COST_LINES)[number];
 
-export type HoursInput = { themeId: string; memberId: string; line: CostLine; hours: number };
+/** `month` is the month the hours were worked, "YYYY-MM" (from the report's day). */
+export type HoursInput = { themeId: string; memberId: string; line: CostLine; hours: number; month: string };
+export type MonthCost = { month: string; cost: number; hours: number };
 export type Person = { name: string; designation: string; monthlySalary: number | null };
 
 export type PersonCost = { memberId: string; name: string; designation: string; hours: number; cost: number | null; byLine: Record<CostLine, number> };
@@ -26,6 +28,8 @@ export type ThemeCost = {
   /** Hours of people with no salary entered (counted in `hours`, not in `cost`). */
   unpricedHours: number;
   people: PersonCost[];
+  /** Cost and hours per month worked, oldest first. */
+  byMonth: MonthCost[];
 };
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -37,10 +41,14 @@ export function hourlyCost(monthlySalary: number | null | undefined): number | n
 }
 
 export function computeThemeCosts(inputs: HoursInput[], people: Map<string, Person>): Map<string, ThemeCost> {
-  const raw = new Map<string, { hours: Record<CostLine, number>; cost: Record<CostLine, number>; unpriced: number; people: Map<string, { hours: number; cost: number; priced: boolean; byLine: Record<CostLine, number> }> }>();
+  const raw = new Map<string, { hours: Record<CostLine, number>; cost: Record<CostLine, number>; unpriced: number; months: Map<string, { cost: number; hours: number }>; people: Map<string, { hours: number; cost: number; priced: boolean; byLine: Record<CostLine, number> }> }>();
   for (const input of inputs) {
     const rate = hourlyCost(people.get(input.memberId)?.monthlySalary);
-    const theme = raw.get(input.themeId) ?? { hours: zeroLines(), cost: zeroLines(), unpriced: 0, people: new Map() };
+    const theme = raw.get(input.themeId) ?? { hours: zeroLines(), cost: zeroLines(), unpriced: 0, months: new Map(), people: new Map() };
+    const month = theme.months.get(input.month) ?? { cost: 0, hours: 0 };
+    month.hours += input.hours;
+    if (rate !== null) month.cost += input.hours * rate;
+    theme.months.set(input.month, month);
     theme.hours[input.line] += input.hours;
     const who = theme.people.get(input.memberId) ?? { hours: 0, cost: 0, priced: rate !== null, byLine: zeroLines() };
     who.hours += input.hours;
@@ -63,6 +71,7 @@ export function computeThemeCosts(inputs: HoursInput[], people: Map<string, Pers
       cost,
       hours,
       unpricedHours: round1(t.unpriced),
+      byMonth: [...t.months.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([month, m]) => ({ month, cost: Math.round(m.cost), hours: round1(m.hours) })),
       people: [...t.people.entries()]
         .map(([memberId, w]) => ({
           memberId,

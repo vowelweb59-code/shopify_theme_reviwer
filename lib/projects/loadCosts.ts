@@ -32,21 +32,22 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
   const [members, reports, manual] = await Promise.all([
     TeamMember.find().select("name designation monthlySalary").lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null }[]>(),
     ChatReport.find({ status: "ok", memberId: { $ne: null }, kind: { $in: ["theme", "preset", "update"] } })
-      .select("themeId projectId memberId kind minutes")
-      .lean<{ themeId: unknown; projectId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number }[]>(),
-    TimeEntry.find({ projectId: { $in: updateIds }, chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours").lean<{ projectId: unknown; memberId: unknown; hours: number }[]>(),
+      .select("themeId projectId memberId kind minutes date")
+      .lean<{ themeId: unknown; projectId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
+    TimeEntry.find({ projectId: { $in: updateIds }, chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
   ]);
   const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null }]));
 
   const inputs: HoursInput[] = [];
   for (const r of reports) {
     const hours = r.minutes / 60;
+    const month = r.date.toISOString().slice(0, 7);
     const memberId = String(r.memberId);
-    if (r.kind === "theme" && r.themeId) for (const id of devByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "build", hours });
-    else if (r.kind === "preset" && r.projectId) inputs.push({ themeId: String(r.projectId), memberId, line: "presets", hours });
-    else if (r.kind === "update" && r.themeId) for (const id of updateByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "updates", hours });
+    if (r.kind === "theme" && r.themeId) for (const id of devByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "build", hours, month });
+    else if (r.kind === "preset" && r.projectId) inputs.push({ themeId: String(r.projectId), memberId, line: "presets", hours, month });
+    else if (r.kind === "update" && r.themeId) for (const id of updateByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "updates", hours, month });
   }
-  for (const e of manual) inputs.push({ themeId: String(e.projectId), memberId: String(e.memberId), line: "updates", hours: e.hours });
+  for (const e of manual) inputs.push({ themeId: String(e.projectId), memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7) });
 
   const out = new Map<string, ProjectCost>();
   // computeThemeCosts groups by the key it is given: here the project id.

@@ -20,11 +20,11 @@ describe("computeThemeCosts", () => {
   it("prices each line at the reporter's own rate and totals them", () => {
     const result = computeThemeCosts(
       [
-        { themeId: "t1", memberId: "dev", line: "build", hours: 10 },
-        { themeId: "t1", memberId: "designer", line: "build", hours: 5 },
-        { themeId: "t1", memberId: "dev", line: "presets", hours: 2 },
-        { themeId: "t1", memberId: "dev", line: "updates", hours: 1 },
-        { themeId: "t2", memberId: "designer", line: "build", hours: 1 },
+        { themeId: "t1", memberId: "dev", line: "build", hours: 10, month: "2026-10" },
+        { themeId: "t1", memberId: "designer", line: "build", hours: 5, month: "2026-10" },
+        { themeId: "t1", memberId: "dev", line: "presets", hours: 2, month: "2026-10" },
+        { themeId: "t1", memberId: "dev", line: "updates", hours: 1, month: "2026-10" },
+        { themeId: "t2", memberId: "designer", line: "build", hours: 1, month: "2026-10" },
       ],
       people
     );
@@ -36,8 +36,8 @@ describe("computeThemeCosts", () => {
   it("counts a person with no salary in the hours but not the cost, and says how many hours that is", () => {
     const result = computeThemeCosts(
       [
-        { themeId: "t1", memberId: "dev", line: "build", hours: 1 },
-        { themeId: "t1", memberId: "new", line: "build", hours: 4.5 },
+        { themeId: "t1", memberId: "dev", line: "build", hours: 1, month: "2026-10" },
+        { themeId: "t1", memberId: "new", line: "build", hours: 4.5, month: "2026-10" },
       ],
       people
     );
@@ -48,12 +48,28 @@ describe("computeThemeCosts", () => {
     expect(t1?.people.find((p) => p.name === "New hire")).toMatchObject({ hours: 4.5, cost: null });
   });
 
+  it("splits cost and hours by the month they were worked, oldest first", () => {
+    const t = computeThemeCosts(
+      [
+        { themeId: "t1", memberId: "dev", line: "build", hours: 2, month: "2026-11" },
+        { themeId: "t1", memberId: "dev", line: "build", hours: 1, month: "2026-10" },
+        { themeId: "t1", memberId: "designer", line: "updates", hours: 1, month: "2026-11" },
+        { themeId: "t1", memberId: "new", line: "build", hours: 3, month: "2026-10" },
+      ],
+      people
+    ).get("t1");
+    expect(t?.byMonth).toEqual([
+      { month: "2026-10", cost: 100, hours: 4 },
+      { month: "2026-11", cost: 400, hours: 3 },
+    ]);
+  });
+
   it("lists people by cost, and a removed member as unpriced", () => {
     const t = computeThemeCosts(
       [
-        { themeId: "t1", memberId: "dev", line: "build", hours: 1 },
-        { themeId: "t1", memberId: "designer", line: "build", hours: 1 },
-        { themeId: "t1", memberId: "gone", line: "updates", hours: 2 },
+        { themeId: "t1", memberId: "dev", line: "build", hours: 1, month: "2026-10" },
+        { themeId: "t1", memberId: "designer", line: "build", hours: 1, month: "2026-10" },
+        { themeId: "t1", memberId: "gone", line: "updates", hours: 2, month: "2026-10" },
       ],
       people
     ).get("t1");
