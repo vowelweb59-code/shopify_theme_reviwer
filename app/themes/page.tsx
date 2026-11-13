@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/_components/ui/EmptyState";
 import { AddThemeModal } from "./_components/AddThemeModal";
 import { FeatureMatrixTable } from "./_components/FeatureMatrixTable";
 import { FeatureSuggestions } from "./_components/FeatureSuggestions";
+import { UnderDevelopmentSection, type DevThemeRow } from "./_components/UnderDevelopmentSection";
 import type { ScoreCard } from "@/lib/themes/computeScoreboard";
 import { computeUpdatePriority, type UpdatePriorityResult } from "@/lib/themes/updatePriority";
 import { formatDateOnly as formatDate } from "@/app/_components/formatDate";
@@ -95,16 +96,15 @@ function withPriority(row: ThemeRow): PrioritizedThemeRow {
 }
 
 export default function ThemesPage() {
-  const [rows, setRows] = useState<PrioritizedThemeRow[]>([]);
+  const [allRows, setAllRows] = useState<PrioritizedThemeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [checkingAll, setCheckingAll] = useState(false);
   const [checkAllProgress, setCheckAllProgress] = useState<{ done: number; total: number } | null>(null);
-  const [showUnreleased, setShowUnreleased] = useState(false);
   const [auditAll, setAuditAll] = useState<{ message: string; error: boolean } | null>(null);
 
   function load() {
-    fetch(showUnreleased ? "/api/themes?unreleased=1" : "/api/themes")
+    fetch("/api/themes?unreleased=1")
       .then((res) => res.json())
       .then((data) => {
         const prioritized = ((data.themes ?? []) as ThemeRow[]).map(withPriority);
@@ -117,15 +117,18 @@ export default function ThemesPage() {
           if (b.priority.score === null) return -1;
           return b.priority.score - a.priority.score;
         });
-        setRows(prioritized);
+        setAllRows(prioritized);
         setLoading(false);
       });
   }
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showUnreleased]);
+  }, []);
+
+  // Themes on the Theme Store (or not decided yet) fill the main table; themes known not to be there yet are the "Under development" section.
+  const rows = allRows.filter((r) => r.theme.themeStoreLive !== false);
+  const devRows = allRows.filter((r) => r.theme.themeStoreLive === false) as unknown as DevThemeRow[];
 
   // "Last Update"/version-mismatch data only exists for a theme once its
   // Theme Store listing has been checked (a per-theme, on-request action —
@@ -188,11 +191,6 @@ export default function ThemesPage() {
       render: (r) => (
         <Link href={`/themes/${r.theme._id}`} className="font-medium text-zinc-950 hover:text-primary hover:underline dark:text-zinc-50">
           {r.theme.name}
-          {r.theme.themeStoreLive === false && (
-            <span className="ml-2 rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" title="Not on the Shopify Theme Store (yet): shown because the option above is on.">
-              Not on Theme Store
-            </span>
-          )}
         </Link>
       ),
       sortValue: (r) => r.theme.name,
@@ -334,7 +332,7 @@ export default function ThemesPage() {
 
       {loading && <p className="text-sm text-zinc-500">Loading…</p>}
 
-      {!loading && rows.length === 0 && (
+      {!loading && allRows.length === 0 && (
         <EmptyState
           icon={Palette}
           title="No themes yet"
@@ -359,10 +357,6 @@ export default function ThemesPage() {
               haven&apos;t had a Theme Store release in over {STALE_THRESHOLD_DAYS} days.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-                <input type="checkbox" checked={showUnreleased} onChange={(e) => setShowUnreleased(e.target.checked)} />
-                Also show themes not on the Theme Store yet
-              </label>
               <Button variant="secondary" size="sm" onClick={handleAuditAll} loading={Boolean(auditAll && /^(Starting|Auditing)/.test(auditAll.message))}>
                 Pull from Git and audit all
               </Button>
@@ -386,6 +380,8 @@ export default function ThemesPage() {
           />
         </div>
       )}
+
+      {!loading && <UnderDevelopmentSection rows={devRows} onChanged={load} />}
 
       {!loading && rows.length > 0 && (
         <div className="flex flex-col gap-2">
