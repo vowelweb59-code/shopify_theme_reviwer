@@ -50,7 +50,53 @@ export function gitTokenStatus(env: NodeJS.ProcessEnv): string {
   return `GIT_ACCESS_TOKEN is set (${kind}, ${token.length} characters${problems.length ? `; check: ${problems.join(", ")}` : ""}).`;
 }
 
-export type GitZip ={ buffer: Buffer; commit: string };
+/** git's reason for a failure: its first stderr line is only "Cloning into ...", the cause is on a "fatal:" / "error:" line. */
+function gitFailureReason(err: unknown): string {
+  const e = err as NodeJS.ErrnoException & { stderr?: string };
+  if (e.code === "ENOENT") return "git is not installed on the server.";
+  const lines = String(e.stderr ?? e.message).split("\n").map((l) => l.trim()).filter(Boolean);
+  return (lines.filter((l) => /^(fatal|error|remote):/i.test(l)).join(" ") || lines[lines.length - 1] || "unknown error").slice(0, 300);
+}
+
+export type GitTestResult = { ok: true; branch: string; commit: string; hasThemeRoot: boolean; tokenSent: boolean } | { ok: false; error: string; tokenSent: boolean };
+
+/**
+ * Checks a repository the way the audit will read it, without downloading the files: `git ls-remote` (URL, access, branch), then a
+ * file-less clone to see whether the theme's folders (sections/, layout/, config/) are at the repository root.
+ */
+export async function testGitSource(repoUrl: string, branch: string | null): Promise<GitTestResult> {
+  const tokenSent = Boolean(process.env.GIT_ACCESS_TOKEN?.trim());
+  if (!isValidGitUrl(repoUrl)) return { ok: false, error: "The Git URL is not a valid https:// address.", tokenSent };
+  const env = gitEnv(repoUrl);
+  let commit = "";
+  let resolved = branch ?? "default branch";
+  try {
+    const ref = branch ? `refs/heads/${branch}` : "HEAD";
+    const { stdout } = await run("git", ["ls-remote", "--", repoUrl, ref], { env, timeout: 60_000 });
+    const first = stdout.split("\n").find((l) => l.trim());
+    if (!first) return { ok: false, error: `The repository was reached, but it has no branch "${branch}".`, tokenSent };
+    commit = first.split(/\s+/)[0];
+  } catch (err) {
+    return { ok: false, error: gitFailureReason(err), tokenSent };
+  }
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "theme-git-test-"));
+  try {
+    await run("git", ["clone", "--depth", "1", "--filter=blob:none", "--no-checkout", ...(branch ? ["--branch", branch] : []), "--", repoUrl, dir], { env, timeout: 120_000 });
+    const { stdout } = await run("git", ["-C", dir, "ls-tree", "--name-only", "HEAD"], { env });
+    const names = new Set(stdout.split("\n").map((l) => l.trim()));
+    if (!branch) {
+      const { stdout: head } = await run("git", ["-C", dir, "rev-parse", "--abbrev-ref", "HEAD"], { env });
+      resolved = head.trim() || resolved;
+    }
+    return { ok: true, branch: resolved, commit: commit.slice(0, 7), hasThemeRoot: ["sections", "layout", "config"].every((d) => names.has(d)), tokenSent };
+  } catch (err) {
+    return { ok: false, error: gitFailureReason(err), tokenSent };
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
+export type GitZip = { buffer: Buffer; commit: string };
 
 /**
  * Exports the latest commit of a theme's branch as a ZIP (the form the audit and the version store already take).
@@ -72,12 +118,7 @@ export async function fetchGitZip(repoUrl: string, branch: string | null): Promi
     });
     return { buffer: stdout as unknown as Buffer, commit: sha.trim() };
   } catch (err) {
-    const e = err as NodeJS.ErrnoException & { stderr?: string };
-    if (e.code === "ENOENT") throw new Error("git is not installed on the server.");
-    // git's own reason: its first line is only "Cloning into '/tmp/...'...", the cause is on a "fatal:" / "error:" line.
-    const lines = String(e.stderr ?? e.message).split("\n").map((l) => l.trim()).filter(Boolean);
-    const reason = lines.filter((l) => /^(fatal|error|remote):/i.test(l)).join(" ") || lines[lines.length - 1] || "unknown error";
-    throw new Error(`Could not read the Git repository: ${reason.slice(0, 300)}`);
+    throw new Error(`Could not read the Git repository: ${gitFailureReason(err)}`);
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }

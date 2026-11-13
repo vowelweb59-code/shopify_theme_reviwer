@@ -448,6 +448,32 @@ function GitSourceSection({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [test, setTest] = useState<{ ok: boolean; message: string; warn?: boolean } | null>(null);
+
+  // Checks the URL and branch as typed (saved or not) with the server's token and shows git's real reason when it fails.
+  async function handleTest() {
+    setTesting(true);
+    setTest(null);
+    try {
+      const res = await fetch(`/api/themes/${themeId}/git-test`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url, branch }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setTest({ ok: false, message: data.error ?? "The test failed." });
+      else if (!data.ok) setTest({ ok: false, message: `${data.error}${data.tokenSent ? "" : " (No GIT_ACCESS_TOKEN is set on the server, so only public repositories can be read.)"}` });
+      else {
+        const root = data.hasThemeRoot ? "Theme folders found at the repository root." : "But sections/, layout/ and config/ are not all at the repository root, so the audit will not find the theme files.";
+        setTest({ ok: true, warn: !data.hasThemeRoot, message: `Connected. Branch ${data.branch}, latest commit ${data.commit}. ${root}` });
+      }
+    } catch {
+      setTest({ ok: false, message: "Lost connection to the server. Try again." });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -494,9 +520,19 @@ function GitSourceSection({
         {autoAuditError && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{autoAuditError}</div>}
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
         {saved && <p className="text-xs text-status-pass-text">Saved.</p>}
-        <Button size="sm" onClick={handleSave} loading={saving} className="w-fit">
-          {saving ? "Saving…" : "Save"}
-        </Button>
+        {test && (
+          <div className={`rounded-md border px-3 py-2 text-xs ${test.ok && !test.warn ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}>
+            {test.message}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button size="sm" onClick={handleSave} loading={saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={handleTest} loading={testing} disabled={!url.trim()}>
+            {testing ? "Testing…" : "Test connection"}
+          </Button>
+        </div>
       </div>
     </Card>
   );
