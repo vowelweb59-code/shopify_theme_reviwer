@@ -451,6 +451,36 @@ function GitSourceSection({
   const [testing, setTesting] = useState(false);
   const [test, setTest] = useState<{ ok: boolean; message: string; warn?: boolean } | null>(null);
 
+  const [auditing, setAuditing] = useState(false);
+  const [auditMsg, setAuditMsg] = useState<{ ok: boolean; message: string } | null>(null);
+
+  // Starts the automatic audit for this theme now (saved URL and branch), then waits for it to finish and reloads the page data.
+  async function handleAuditNow() {
+    setAuditing(true);
+    setAuditMsg(null);
+    try {
+      const res = await fetch(`/api/themes/${themeId}/audit-from-git`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAuditMsg({ ok: false, message: data.error ?? "Could not start the audit." });
+        setAuditing(false);
+        return;
+      }
+      setAuditMsg({ ok: true, message: "Audit started: it pulls the latest commit and audits the live demo stores. This takes several minutes; this page updates when it finishes." });
+      for (let i = 0; i < 180; i++) {
+        await new Promise((r) => setTimeout(r, 10_000));
+        const state = await fetch(`/api/themes/${themeId}/audit-from-git`).then((r) => r.json()).catch(() => null);
+        if (state && state.running === false) break;
+      }
+      setAuditMsg({ ok: true, message: "The audit finished. Any error is shown above." });
+      onSaved();
+    } catch {
+      setAuditMsg({ ok: false, message: "Lost connection to the server. The audit may still be running; reload in a few minutes." });
+    } finally {
+      setAuditing(false);
+    }
+  }
+
   // Checks the URL and branch as typed (saved or not) with the server's token and shows git's real reason when it fails.
   async function handleTest() {
     setTesting(true);
@@ -525,12 +555,18 @@ function GitSourceSection({
             {test.message}
           </div>
         )}
-        <div className="flex gap-2">
+        {auditMsg && (
+          <div className={`rounded-md border px-3 py-2 text-xs ${auditMsg.ok ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}>{auditMsg.message}</div>
+        )}
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={handleSave} loading={saving}>
             {saving ? "Saving…" : "Save"}
           </Button>
           <Button variant="secondary" size="sm" onClick={handleTest} loading={testing} disabled={!url.trim()}>
             {testing ? "Testing…" : "Test connection"}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={handleAuditNow} loading={auditing} disabled={!initialUrl}>
+            {auditing ? "Auditing…" : "Pull from Git and audit now"}
           </Button>
         </div>
       </div>

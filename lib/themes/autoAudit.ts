@@ -2,6 +2,7 @@ import "server-only";
 import { connectToDatabase } from "@/lib/db/connect";
 import { withLease } from "@/lib/jobs/lease";
 import { executeAuditRun } from "@/lib/audit/executeAuditRun";
+import { JobLease } from "@/models/job-lease";
 import { Theme } from "@/models/theme";
 import { ThemeVersion } from "@/models/theme-version";
 import { ThemeZip } from "@/models/theme-zip";
@@ -16,6 +17,7 @@ import { uploadThemeVersion } from "./uploadThemeVersion";
 import { pickNextDueTheme } from "./autoAuditPlan";
 
 const LEASE_TTL_MS = 90 * 60 * 1000;
+const LEASE_KEY = "theme-auto-audit";
 const SEVERITY_ORDER: Record<string, number> = { blocker: 0, high: 1, medium: 2, low: 3 };
 
 type ThemeRow = {
@@ -42,13 +44,49 @@ export async function runNextAutoAudit(now: Date = new Date()): Promise<string |
   const next = pickNextDueTheme(themes, now);
   if (!next) return null;
 
-  const outcome = await withLease("theme-auto-audit", LEASE_TTL_MS, async () => {
-    // Marked first: a theme that fails or crashes the server waits its 48 hours instead of being retried in a tight loop.
-    await Theme.updateOne({ _id: next._id }, { $set: { autoAuditAt: new Date(), autoAuditError: null } });
-    const error = await auditTheme(next).catch((err) => (err instanceof Error ? err.message : String(err)));
-    await Theme.updateOne({ _id: next._id }, { $set: { autoAuditError: error } });
-  });
+  const outcome = await withLease(LEASE_KEY, LEASE_TTL_MS, () => auditAndRecord(next));
   return outcome.ran ? next.name : null;
+}
+
+/** Marked first: a theme that fails or crashes the server waits its 48 hours instead of being retried in a tight loop. */
+async function auditAndRecord(theme: ThemeRow): Promise<void> {
+  await Theme.updateOne({ _id: theme._id }, { $set: { autoAuditAt: new Date(), autoAuditError: null } });
+  const error = await auditTheme(theme).catch((err) => (err instanceof Error ? err.message : String(err)));
+  await Theme.updateOne({ _id: theme._id }, { $set: { autoAuditError: error } });
+}
+
+/** True while an automatic or manual Git audit holds the lease (one runs at a time, across server instances). */
+export async function isAutoAuditRunning(): Promise<boolean> {
+  await connectToDatabase();
+  return Boolean(await JobLease.exists({ _id: LEASE_KEY, expiresAt: { $gt: new Date() } }));
+}
+
+export type StartNow = { started: true } | { started: false; reason: "no-theme" | "no-repo" | "busy" };
+
+/**
+ * The "Pull from Git and audit now" button: the same audit as the automatic one, for this theme, without waiting its 48 hours.
+ * Returns as soon as the run has begun (an audit takes minutes; the result lands in the theme's autoAuditError / audit runs).
+ * Refuses while another Git audit is running. It restarts the theme's 48 hour clock.
+ */
+export async function startAutoAuditNow(themeId: string): Promise<StartNow> {
+  await connectToDatabase();
+  const theme = await Theme.findById(themeId).lean<ThemeRow>();
+  if (!theme) return { started: false, reason: "no-theme" };
+  if (!theme.gitRepoUrl) return { started: false, reason: "no-repo" };
+  let begin: (ran: boolean) => void = () => undefined;
+  const begun = new Promise<boolean>((resolve) => (begin = resolve));
+  withLease(LEASE_KEY, LEASE_TTL_MS, async () => {
+    begin(true);
+    await auditAndRecord(theme);
+  })
+    .then((outcome) => {
+      if (!outcome.ran) begin(false);
+    })
+    .catch((err) => {
+      console.error("[auto-audit] manual run failed:", err instanceof Error ? err.message : err);
+      begin(false);
+    });
+  return (await begun) ? { started: true } : { started: false, reason: "busy" };
 }
 
 /** Returns an error message, or null when the audit completed. */
