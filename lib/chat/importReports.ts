@@ -56,6 +56,8 @@ type Context = {
   updateByTheme: Map<string, { _id: unknown; memberIds: Set<string> }[]>;
   /** Themes with a preset-development project that isn't Live: their preset hours are new development, not updates. */
   presetDev: Set<string>;
+  /** theme id -> its Theme Design & Development projects that aren't Live (a new-theme report puts its poster on the team when there is exactly one). */
+  devProjectsByTheme: Map<string, unknown[]>;
 };
 
 async function loadContext(): Promise<Context> {
@@ -68,6 +70,11 @@ async function loadContext(): Promise<Context> {
   ]);
   const building = new Set(buildProjects.filter((p) => p.type !== "preset_development").map((p) => String(p.themeId)));
   const presetDev = new Set(buildProjects.filter((p) => p.type === "preset_development").map((p) => String(p.themeId)));
+  const devProjectsByTheme = new Map<string, unknown[]>();
+  for (const p of buildProjects) {
+    if (p.type === "preset_development") continue;
+    devProjectsByTheme.set(String(p.themeId), [...(devProjectsByTheme.get(String(p.themeId)) ?? []), p._id]);
+  }
   const updateByTheme = new Map<string, { _id: unknown; memberIds: Set<string> }[]>();
   for (const p of updateProjects) {
     const list = updateByTheme.get(String(p.themeId)) ?? [];
@@ -85,6 +92,7 @@ async function loadContext(): Promise<Context> {
     updatesOnly: new Set(members.filter((m) => m.updatesAndPresetsOnly).map((m) => String(m._id))),
     updateByTheme,
     presetDev,
+    devProjectsByTheme,
   };
 }
 
@@ -142,6 +150,12 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
       updateProject = projects[0];
       if (!projects[0].memberIds.has(memberId)) addToTeam = { projectId: projects[0]._id, memberId };
     }
+  }
+
+  // New-theme work: whoever reports on a theme being built joins that theme's design & development project (when it is the only one).
+  if (!addToTeam && theme.ok && theme.kind === "theme" && memberId) {
+    const dev = ctx.devProjectsByTheme.get(theme.themeId) ?? [];
+    if (dev.length === 1) addToTeam = { projectId: dev[0], memberId };
   }
 
   const date = new Date(`${parsed.value.date}T00:00:00.000Z`);
