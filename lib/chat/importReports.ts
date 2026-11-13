@@ -56,6 +56,8 @@ type Context = {
   updateByTheme: Map<string, { _id: unknown; memberIds: Set<string> }[]>;
   /** Themes with a preset-development project that isn't Live: their preset hours are new development, not updates. */
   presetDev: Set<string>;
+  /** Product Managers (designation contains "manager"): never assigned to a project automatically, the owner adds them by hand. */
+  managers: Set<string>;
   /** theme id -> its Theme Design & Development projects that aren't Live (a new-theme report puts its poster on the team when there is exactly one). */
   devProjectsByTheme: Map<string, unknown[]>;
 };
@@ -63,7 +65,7 @@ type Context = {
 async function loadContext(): Promise<Context> {
   const [themes, members, updateProjects, buildProjects] = await Promise.all([
     Theme.find().select("name themeStorePresets demoStorePresets").lean(),
-    TeamMember.find().select("name aliases updatesAndPresetsOnly").lean(),
+    TeamMember.find().select("name aliases updatesAndPresetsOnly designation").lean(),
     Project.find({ type: "theme_update" }).select("themeId members").lean(),
     // Projects saved before types existed have no type and are Theme Design & Development.
     Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $ne: "live" } }).select("themeId type").lean(),
@@ -90,6 +92,7 @@ async function loadContext(): Promise<Context> {
     })),
     memberRefs: members.map((m) => ({ id: String(m._id), name: m.name as string, aliases: (m.aliases ?? []) as string[] })),
     updatesOnly: new Set(members.filter((m) => m.updatesAndPresetsOnly).map((m) => String(m._id))),
+    managers: new Set(members.filter((m) => /manager/i.test(String(m.designation ?? ""))).map((m) => String(m._id))),
     updateByTheme,
     presetDev,
     devProjectsByTheme,
@@ -148,12 +151,12 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
     if (projects.length !== 1) reasons.push(projects.length === 0 ? `${theme.themeName} has no Theme Update project to log the hours on.` : `${theme.themeName} has more than one Theme Update project.`);
     else if (memberId) {
       updateProject = projects[0];
-      if (!projects[0].memberIds.has(memberId)) addToTeam = { projectId: projects[0]._id, memberId };
+      if (!projects[0].memberIds.has(memberId) && !ctx.managers.has(memberId)) addToTeam = { projectId: projects[0]._id, memberId };
     }
   }
 
   // New-theme work: whoever reports on a theme being built joins that theme's design & development project (when it is the only one).
-  if (!addToTeam && theme.ok && theme.kind === "theme" && memberId) {
+  if (!addToTeam && theme.ok && theme.kind === "theme" && memberId && !ctx.managers.has(memberId)) {
     const dev = ctx.devProjectsByTheme.get(theme.themeId) ?? [];
     if (dev.length === 1) addToTeam = { projectId: dev[0], memberId };
   }

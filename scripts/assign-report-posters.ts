@@ -5,7 +5,7 @@
  *   - a new-theme report (kind "theme") joins the theme's Theme Design & Development project, when the theme has exactly one that is
  *     not Live (several would be a guess, so those are listed and skipped);
  *   - a preset report linked to a Preset Development project (projectId) joins that project.
- * Theme Update projects are already handled at import. Nobody is added twice, existing members and roles are untouched.
+ * Product Managers (designation contains "manager") are skipped: the owner adds them by hand. Theme Update projects are already handled at import. Nobody is added twice, existing members and roles are untouched.
  *
  *   npx tsx --env-file=.env.production.local scripts/assign-report-posters.ts           # dry run
  *   npx tsx --env-file=.env.production.local scripts/assign-report-posters.ts --apply   # writes (owner runs it)
@@ -30,7 +30,9 @@ async function main() {
     if (p.type === "preset_development" || p.status === "live") continue;
     devByTheme.set(String(p.themeId), [...(devByTheme.get(String(p.themeId)) ?? []), p]);
   }
-  const names = new Map((await TeamMember.find().select("name").lean<{ _id: unknown; name: string }[]>()).map((m) => [String(m._id), m.name]));
+  const people = await TeamMember.find().select("name designation").lean<{ _id: unknown; name: string; designation?: string }[]>();
+  const names = new Map(people.map((m) => [String(m._id), m.name]));
+  const managers = new Set(people.filter((m) => /manager/i.test(m.designation ?? "")).map((m) => String(m._id)));
 
   const reports = await ChatReport.find({ status: "ok", memberId: { $ne: null }, kind: { $in: ["theme", "preset"] } }).select("memberId themeId kind projectId themeName").lean<{ memberId: unknown; themeId: unknown; kind: string; projectId: unknown; themeName: string }[]>();
   const adds = new Map<string, { project: P; memberId: string }>();
@@ -47,6 +49,7 @@ async function main() {
     }
     if (!project) continue;
     const memberId = String(r.memberId);
+    if (managers.has(memberId)) continue;
     if (project.members.some((m) => String(m.memberId) === memberId)) continue;
     adds.set(`${String(project._id)}:${memberId}`, { project, memberId });
   }
