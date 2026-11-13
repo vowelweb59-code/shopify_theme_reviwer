@@ -1,10 +1,10 @@
-import { computeThemeCosts, type HoursInput, type Person } from "./cost";
+import { computeThemeCosts, type HoursInput, type Person, type PersonCost, type ThemeCost } from "./cost";
 import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
 import { TimeEntry } from "@/models/time-entry";
 
 type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null };
-export type ProjectCost = { cost: number; hours: number; unpricedHours: number };
+export type ProjectCost = { cost: number; hours: number; unpricedHours: number; lines: ThemeCost["cost"]; people: PersonCost[] };
 
 /**
  * What each project cost (lib/projects/cost.ts prices the hours), scoped like its days and hours are in lib/projects/loadTotals.ts:
@@ -50,6 +50,6 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
 
   const out = new Map<string, ProjectCost>();
   // computeThemeCosts groups by the key it is given: here the project id.
-  for (const [projectId, c] of computeThemeCosts(inputs, people)) out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours });
+  for (const [projectId, c] of computeThemeCosts(inputs, people)) out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours, lines: c.cost, people: c.people });
   return out;
 }
