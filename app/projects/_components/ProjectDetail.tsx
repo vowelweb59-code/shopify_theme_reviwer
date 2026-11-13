@@ -13,6 +13,7 @@ import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, 
 import { ProjectStatusPill } from "./ProjectStatusPill";
 import { TimeLog } from "./TimeLog";
 import { VersionTime } from "./VersionTime";
+import { DeadlineCard } from "./DeadlineCard";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
@@ -248,6 +249,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </p>
         )}
       </Card>
+
+      {hasStatus && (project.type === "theme_development" || project.type === "preset_development") && <DeadlineCard projectId={project._id} projectType={project.type} />}
 
       {days.length > 0 && (
         <Card>

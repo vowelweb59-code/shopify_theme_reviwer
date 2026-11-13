@@ -8,6 +8,7 @@ import { useApi } from "@/app/analytics/_components/useApi";
 import { ProjectStatusPill } from "@/app/projects/_components/ProjectStatusPill";
 import { PROJECT_TYPE_LABELS, type ProjectStatus, type ProjectType } from "@/lib/projects/constants";
 import type { DeadlineInfo } from "@/lib/projects/deadlines";
+import { day, TimingLabel } from "@/app/projects/_components/deadlineFormat";
 
 type Row = DeadlineInfo & {
   _id: string;
@@ -31,25 +32,7 @@ type Benchmark = { days: number; sample: number } | null;
 type Data = { today: string; benchmarks: { theme_development: Benchmark; preset_development: Benchmark }; projects: Row[] };
 type Filter = "all" | "open" | "finished";
 
-// "2026-10-29" -> "Oct 29, 2026"; the stored day is a calendar date, so no time zone shift.
-const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
-const plural = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
 const dash = <span className="text-zinc-400">—</span>;
-
-function stateLabel(r: Row) {
-  switch (r.state) {
-    case "overdue":
-      return <span className="font-medium text-status-fail-text">Overdue by {plural(-(r.daysLeft ?? 0))}</span>;
-    case "due_soon":
-      return <span className="font-medium text-status-warning-text">{r.daysLeft === 0 ? "Due today" : `Due in ${plural(r.daysLeft ?? 0)}`}</span>;
-    case "on_track":
-      return <span className="text-zinc-600 dark:text-zinc-400">{plural(r.daysLeft ?? 0)} left</span>;
-    case "finished":
-      return r.lateByDays ? <span className="text-status-fail-text">Finished {plural(r.lateByDays)} late</span> : <span className="font-medium text-status-pass-text">{r.deadline ? "Finished on time" : "Finished"}</span>;
-    default:
-      return <span className="text-zinc-400">No deadline set</span>;
-  }
-}
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm";
 
@@ -129,7 +112,7 @@ export default function DeadlinesPage() {
         ),
       sortValue: (r) => r.extraDays ?? -1,
     },
-    { key: "state", header: "Timing", render: stateLabel, sortValue: (r) => (r.daysLeft ?? 99999) },
+    { key: "state", header: "Timing", render: (r) => <TimingLabel r={r} />, sortValue: (r) => (r.daysLeft ?? 99999) },
   ];
 
   return (
