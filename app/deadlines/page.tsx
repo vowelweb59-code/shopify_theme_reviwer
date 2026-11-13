@@ -18,8 +18,17 @@ type Row = DeadlineInfo & {
   status: ProjectStatus | null;
   deadline: string | null;
   lastReportOn: string | null;
+  startedOn: string | null;
+  /** Average working days of the finished projects of this type, how many that is, the days this project has used, and the excess. */
+  budgetDays: number | null;
+  budgetSample: number | null;
+  usedDays: number;
+  extraDays: number | null;
+  averageDeadline: string | null;
+  deadlineBasis: "set" | "average" | null;
 };
-type Data = { today: string; projects: Row[] };
+type Benchmark = { days: number; sample: number } | null;
+type Data = { today: string; benchmarks: { theme_development: Benchmark; preset_development: Benchmark }; projects: Row[] };
 type Filter = "all" | "open" | "finished";
 
 // "2026-10-29" -> "Oct 29, 2026"; the stored day is a calendar date, so no time zone shift.
@@ -93,12 +102,32 @@ export default function DeadlinesPage() {
         r.state === "finished" ? (
           <div>
             {r.date ? <span className="tabular-nums">{day(r.date)}</span> : <span className="text-zinc-400">No report yet</span>}
-            <div className="text-xs text-zinc-500">{r.date ? "last report" : ""}{r.deadline ? `${r.date ? " · " : ""}due ${day(r.deadline)}` : ""}</div>
+            <div className="text-xs text-zinc-500">
+              {r.date ? "last report" : ""}
+              {r.deadline || r.averageDeadline ? `${r.date ? " · " : ""}due ${day((r.deadline ?? r.averageDeadline) as string)}${r.deadline ? "" : " (average)"}` : ""}
+            </div>
           </div>
         ) : (
-          <input type="date" aria-label={`Deadline for ${r.name}`} className={INPUT} defaultValue={r.deadline ?? ""} key={r.deadline ?? "none"} onBlur={(e) => e.target.value !== (r.deadline ?? "") && saveDeadline(r._id, e.target.value)} />
+          <div className="flex flex-col gap-1">
+            <input type="date" aria-label={`Deadline for ${r.name}`} className={INPUT} defaultValue={r.deadline ?? ""} key={r.deadline ?? "none"} onBlur={(e) => e.target.value !== (r.deadline ?? "") && saveDeadline(r._id, e.target.value)} />
+            {!r.deadline && r.averageDeadline && <span className="text-xs text-zinc-500">Average-based: {day(r.averageDeadline)}</span>}
+          </div>
         ),
       sortValue: (r) => r.date ?? "~",
+    },
+    {
+      key: "days",
+      header: "Working days",
+      render: (r) =>
+        r.budgetDays === null ? (
+          r.type === "theme_update" ? dash : <span className="tabular-nums text-zinc-600 dark:text-zinc-400">{r.usedDays} d used</span>
+        ) : (
+          <div>
+            <span className="tabular-nums">{r.usedDays}</span> <span className="text-zinc-500">of {r.budgetDays} d</span>
+            {r.extraDays ? <div className="text-xs font-medium text-status-fail-text">{r.extraDays} days extra</div> : r.usedDays > 0 ? <div className="text-xs text-status-pass-text">within the average</div> : null}
+          </div>
+        ),
+      sortValue: (r) => r.extraDays ?? -1,
     },
     { key: "state", header: "Timing", render: stateLabel, sortValue: (r) => (r.daysLeft ?? 99999) },
   ];
@@ -109,7 +138,7 @@ export default function DeadlinesPage() {
         <div>
           <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Deadlines</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-            When each project is due. Pick a date to set or change it. Once a project is Live or Completed, its last report date is shown instead.
+            When each project is due. A project without a date set by hand is due its first report plus the average working days of the finished projects of its type (Sundays off); “days extra” is the time used beyond that average. Pick a date to set your own. Once a project is Live or Completed, its last report date is shown instead.
             {data ? ` ${overdue} overdue, ${dueSoon} due within a week.` : ""}
           </p>
         </div>
@@ -122,6 +151,26 @@ export default function DeadlinesPage() {
           </select>
         </label>
       </div>
+
+      {data && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(["theme_development", "preset_development"] as const).map((type) => {
+            const b = data.benchmarks[type];
+            return (
+              <div key={type} className="rounded-lg border border-border-subtle p-3">
+                <div className="text-xs text-zinc-500">{PROJECT_TYPE_LABELS[type]}: average working time</div>
+                {b ? (
+                  <div className="mt-1 text-sm">
+                    <span className="text-xl font-semibold tabular-nums">{b.days} days</span> <span className="text-zinc-500">across {b.sample} finished project{b.sample === 1 ? "" : "s"}</span>
+                  </div>
+                ) : (
+                  <div className="mt-1 text-sm text-zinc-500">No finished project has hours yet, so there is no average to measure against.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {(error || saveError) && <p className="text-sm text-status-fail-text">{saveError ?? error}</p>}
       {loading && !data ? <p className="text-sm text-zinc-500">Loading…</p> : <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r._id} theadClassName="bg-primary-tint text-primary-tint-text" emptyMessage="No projects here." />}
