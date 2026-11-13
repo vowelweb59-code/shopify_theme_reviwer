@@ -99,6 +99,7 @@ export default function ThemesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [checkingAll, setCheckingAll] = useState(false);
   const [checkAllProgress, setCheckAllProgress] = useState<{ done: number; total: number } | null>(null);
+  const [auditAll, setAuditAll] = useState<{ message: string; error: boolean } | null>(null);
 
   function load() {
     fetch("/api/themes")
@@ -143,6 +144,38 @@ export default function ThemesPage() {
     setCheckingAll(false);
     setCheckAllProgress(null);
     load();
+  }
+
+  // Pulls every live theme's repository and audits it, one theme at a time on the server (minutes each); this page polls the progress.
+  async function handleAuditAll() {
+    setAuditAll({ message: "Starting…", error: false });
+    try {
+      const res = await fetch("/api/themes/audit-all-from-git", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAuditAll({ message: data.error ?? "Could not start the audits.", error: true });
+        return;
+      }
+      for (let i = 0; i < 1000; i++) {
+        await new Promise((r) => setTimeout(r, 10_000));
+        const state = await fetch("/api/themes/audit-all-from-git").then((r) => r.json()).catch(() => null);
+        if (!state) continue;
+        const p = state.progress as { total: number; done: number; current: string | null; failed: { name: string; error: string }[] } | null;
+        if (state.running === false) {
+          const failed = p?.failed ?? [];
+          setAuditAll({
+            message: `Finished${p ? ` ${p.done}/${p.total}` : ""}.${failed.length ? ` Problems: ${failed.map((f) => `${f.name} (${f.error})`).join("; ")}` : " No errors."}`,
+            error: failed.length > 0,
+          });
+          load();
+          return;
+        }
+        if (p) setAuditAll({ message: `Auditing ${p.done + 1}/${p.total}${p.current ? `: ${p.current}` : ""}…`, error: false });
+      }
+      setAuditAll({ message: "Still running after a long time; reload later to see the results.", error: false });
+    } catch {
+      setAuditAll({ message: "Lost connection to the server. The audits may still be running.", error: true });
+    }
   }
 
   const columns: TableColumn<PrioritizedThemeRow>[] = [
@@ -317,10 +350,18 @@ export default function ThemesPage() {
               </span>{" "}
               haven&apos;t had a Theme Store release in over {STALE_THRESHOLD_DAYS} days.
             </p>
-            <Button variant="secondary" size="sm" onClick={handleCheckAllThemeStores} loading={checkingAll}>
-              {checkingAll ? `Checking ${checkAllProgress?.done ?? 0}/${checkAllProgress?.total ?? rows.length}…` : "Check All Theme Stores"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" size="sm" onClick={handleAuditAll} loading={Boolean(auditAll && /^(Starting|Auditing)/.test(auditAll.message))}>
+                Pull from Git and audit all
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleCheckAllThemeStores} loading={checkingAll}>
+                {checkingAll ? `Checking ${checkAllProgress?.done ?? 0}/${checkAllProgress?.total ?? rows.length}…` : "Check All Theme Stores"}
+              </Button>
+            </div>
           </div>
+          {auditAll && (
+            <div className={`rounded-md border px-3 py-2 text-xs ${auditAll.error ? "border-red-300 bg-status-fail-bg text-status-fail-text" : "border-green-300 text-status-pass-text"}`}>{auditAll.message}</div>
+          )}
           <ResponsiveTable
             columns={columns}
             rows={rows}

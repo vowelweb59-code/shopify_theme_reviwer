@@ -61,6 +61,50 @@ export async function isAutoAuditRunning(): Promise<boolean> {
   return Boolean(await JobLease.exists({ _id: LEASE_KEY, expiresAt: { $gt: new Date() } }));
 }
 
+export type BatchProgress = { total: number; done: number; current: string | null; failed: { name: string; error: string }[] };
+let batch: BatchProgress | null = null; // this server process only; another instance's batch shows as "running" without numbers
+
+/** Progress of the "audit all" batch started in this process (kept after it ends, until the next one), else null. */
+export function auditAllProgress(): BatchProgress | null {
+  return batch;
+}
+
+const BATCH_LEASE_TTL_MS = 8 * 60 * 60 * 1000;
+
+/**
+ * "Audit all themes with a repository now": every live theme that has a Git URL, one after another (never two at once, same lease
+ * as the automatic audit), each pulled from Git and audited, ignoring the 48-hour wait. Returns once the batch has begun.
+ */
+export async function startAuditAllNow(): Promise<{ started: true; total: number } | { started: false; reason: "none" | "busy" }> {
+  await connectToDatabase();
+  const themes = await Theme.find({ themeStoreLive: { $ne: false }, gitRepoUrl: { $nin: [null, ""] } })
+    .sort({ name: 1 })
+    .lean<ThemeRow[]>();
+  if (themes.length === 0) return { started: false, reason: "none" };
+  let begin: (ran: boolean) => void = () => undefined;
+  const begun = new Promise<boolean>((resolve) => (begin = resolve));
+  withLease(LEASE_KEY, BATCH_LEASE_TTL_MS, async () => {
+    batch = { total: themes.length, done: 0, current: null, failed: [] };
+    begin(true);
+    for (const theme of themes) {
+      batch.current = theme.name;
+      await auditAndRecord(theme);
+      const row = await Theme.findById(theme._id).select("autoAuditError").lean<{ autoAuditError?: string | null }>();
+      if (row?.autoAuditError) batch.failed.push({ name: theme.name, error: row.autoAuditError });
+      batch.done += 1;
+    }
+    batch.current = null;
+  })
+    .then((outcome) => {
+      if (!outcome.ran) begin(false);
+    })
+    .catch((err) => {
+      console.error("[auto-audit] batch failed:", err instanceof Error ? err.message : err);
+      begin(false);
+    });
+  return (await begun) ? { started: true, total: themes.length } : { started: false, reason: "busy" };
+}
+
 export type StartNow = { started: true } | { started: false; reason: "no-theme" | "no-repo" | "busy" };
 
 /**
