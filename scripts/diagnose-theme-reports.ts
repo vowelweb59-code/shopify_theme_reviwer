@@ -3,7 +3,8 @@
  * projects, and every stored Theme Status Group report that mentions the name (by theme, by name or by text), with the status,
  * reason, matched member and designation: the things that decide whether a report counts (lib/projects/loadTotals.ts).
  *
- *   npx tsx --env-file=.env.production.local scripts/diagnose-theme-reports.ts Velocity
+ *   npx tsx --env-file=.env.production.local scripts/diagnose-theme-reports.ts Velocity [--limit=200]
+ * Each report is shown with its own Theme Name line, its kind, preset and whether it is linked to a project.
  */
 import { connectToDatabase } from "../lib/db/connect";
 import { ChatReport } from "../models/chat-report";
@@ -29,12 +30,13 @@ async function main() {
   const themeIds = themes.map((t) => t._id);
   const reports = await ChatReport.find({ $or: [{ themeName: re }, { themeId: { $in: themeIds } }, { rawText: re }] })
     .sort({ date: -1 })
-    .lean<{ date: Date; sender: string; memberId: unknown; themeName: string; themeId: unknown; kind: string | null; status: string; reason: string | null; minutes: number; projectId: unknown }[]>();
+    .lean<{ date: Date; sender: string; memberId: unknown; themeName: string; themeId: unknown; kind: string | null; preset: string | null; status: string; reason: string | null; minutes: number; projectId: unknown; rawText: string }[]>();
   console.log(`\nReports mentioning "${name}": ${reports.length}`);
   const members = new Map((await TeamMember.find().select("name designation").lean<{ _id: unknown; name: string; designation: string }[]>()).map((m) => [String(m._id), m]));
-  for (const r of reports.slice(0, 40)) {
+  const limit = Number(process.argv.find((a) => a.startsWith("--limit="))?.slice(8)) || 40;
+  for (const r of reports.slice(0, limit)) {
     const m = r.memberId ? members.get(String(r.memberId)) : null;
-    console.log(`  ${new Date(r.date).toISOString().slice(0, 10)} ${r.sender || "?"} [${m ? `member ok, "${m.designation}"` : "NO MEMBER"}] theme="${r.themeName}" themeId=${r.themeId ?? "none"} kind=${r.kind} status=${r.status} ${r.minutes}min${r.reason ? ` reason: ${r.reason}` : ""}`);
+    console.log(`  ${new Date(r.date).toISOString().slice(0, 10)} ${r.sender || "?"} [${m ? `member ok, "${m.designation}"` : "NO MEMBER"}] line="${/theme\s*name\s*[:\-–—]*\s*(.+)/i.exec(r.rawText)?.[1]?.trim() ?? r.themeName}" kind=${r.kind}${r.preset ? ` preset=${r.preset}` : ""}${r.projectId ? " linked" : ""} status=${r.status} ${r.minutes}min${r.reason ? ` reason: ${r.reason}` : ""}`);
   }
 }
 
