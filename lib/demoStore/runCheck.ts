@@ -4,6 +4,7 @@ import { DemoStoreCheckState } from "@/models/demo-store-check-state";
 import { fetchLiveDemoStoreTheme, type LiveThemeResult } from "./fetchLiveTheme";
 import { checkPendingThemeStoreListings } from "./checkThemeStoreListings";
 import { DEFAULT_DEMO_STORE, DEMO_STORES } from "./stores";
+import { syncReviewStatuses } from "@/lib/projects/syncReviewStatuses";
 
 export type StoreCheckState = { store: string; lastCheckedAt: Date | null; lastError: string | null };
 
@@ -110,5 +111,7 @@ export async function runDemoStoreCheck({ manual = false }: { manual?: boolean }
     results.push({ store, result: await checkStore(store, previous.find((p) => p.store === store)) });
   }
   await checkPendingThemeStoreListings({ force: manual });
+  // A theme now on an ops store is Under Review, one now on the Theme Store is Live (lib/projects/reviewStatus.ts).
+  await syncReviewStatuses().catch((err) => console.error("[demo-store] review status sync failed:", err instanceof Error ? err.message : err));
   return results;
 }

@@ -1,4 +1,5 @@
 import { detectBuildStatus } from "./buildStatus";
+import { themesPastBuild } from "./syncReviewStatuses";
 import { ChatReport } from "@/models/chat-report";
 import { Project } from "@/models/project";
 import { TeamMember } from "@/models/team-member";
@@ -15,9 +16,14 @@ export async function syncBuildStatuses(options: { dryRun?: boolean } = {}): Pro
     .select("name themeId type status")
     .lean<{ _id: unknown; name: string; themeId: unknown; type?: string | null; status: string }[]>();
   if (projects.length === 0) return [];
+  // A theme already on an ops demo store or live on the Theme Store is past building: the review rule owns its project's status.
+  // (A new preset of such a theme is still being built, so preset projects always follow this rule.)
+  const past = await themesPastBuild();
+  const building = projects.filter((p) => p.type === "preset_development" || !past.has(String(p.themeId)));
+  if (building.length === 0) return [];
 
-  const themeIds = projects.filter((p) => p.type !== "preset_development").map((p) => p.themeId);
-  const presetIds = projects.filter((p) => p.type === "preset_development").map((p) => p._id);
+  const themeIds = building.filter((p) => p.type !== "preset_development").map((p) => p.themeId);
+  const presetIds = building.filter((p) => p.type === "preset_development").map((p) => p._id);
   const reports = await ChatReport.find({
     status: "ok",
     memberId: { $ne: null },
@@ -32,7 +38,7 @@ export async function syncBuildStatuses(options: { dryRun?: boolean } = {}): Pro
   const designation = new Map(members.map((m) => [String(m._id), m.designation]));
 
   const changes: StatusChange[] = [];
-  for (const p of projects) {
+  for (const p of building) {
     const preset = p.type === "preset_development";
     const who = reports
       .filter((r) => (preset ? r.kind === "preset" && String(r.projectId) === String(p._id) : r.kind === "theme" && String(r.themeId) === String(p.themeId)))

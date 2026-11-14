@@ -3,6 +3,7 @@ import { Theme } from "@/models/theme";
 import { ThemeStoreTheme } from "@/models/theme-store-theme";
 import { deriveThemeStoreSlug } from "./themeStoreFeatures";
 import { ensureDemoPresets } from "./ensurePresets";
+import { syncReviewStatuses } from "@/lib/projects/syncReviewStatuses";
 
 /**
  * Copies what the daily Theme Store catalog read (ThemeStoreTheme) knows onto our own Theme rows, so the Themes page needs no
@@ -62,5 +63,7 @@ export async function syncThemesFromCatalog({ dryRun = false }: { dryRun?: boole
       }
     }
   }
+  // A theme that has just gone live on the Theme Store is Live (lib/projects/reviewStatus.ts).
+  if (!dryRun) await syncReviewStatuses().catch((err) => console.error("[themes] review status sync failed:", err instanceof Error ? err.message : err));
   return { live, notLive, notLiveThemes };
 }
