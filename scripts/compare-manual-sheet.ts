@@ -40,7 +40,6 @@ const SHEET: Row[] = [
   R("Themeshopy", "Aspire", ["Pranay"], ["Ehtesham", "Shailesh"], null, "Under Review", 48, 24),
   R("Themeshopy", "Kombat", ["Pranay"], ["Aarti"], null, "Under Development", 27, 11),
   R("Themeshopy", "Pretty", ["Mussadique", "Pranay"], [], null, "Under Designing", 0, 18),
-  R("Themeshopy", "Silver", ["Dharmandra"], [], null, "Under Designing", null, null),
   R("SAMS", "Nexus", ["Mussadique"], ["Ehtesham"], 2, "Live", 38, null),
   R("SAMS", "Loyal", ["Mussadique"], ["Ehtesham"], 1, "Rejected", 32, 22),
   R("SAMS", "Apollo", ["Junaid"], ["Shailesh"], 1, "Rejected", 41, 13),
