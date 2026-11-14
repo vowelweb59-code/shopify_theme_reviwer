@@ -61,6 +61,7 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
   const tone = health === null ? "" : health >= 90 ? "text-status-pass-text" : health >= 70 ? "text-status-warning-text" : "text-status-fail-text";
 
   async function handleRun() {
+    if (running) return;
     setError(null);
     setDone(false);
     if (!file && !latestVersion) {
@@ -146,7 +147,7 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
               <PresetLinksEditor presets={presets} onChange={setPresets} />
               <p className="text-xs text-zinc-500">The live-store checks (speed, demo content, features) read these. Without one, only the code is checked.</p>
             </div>
-            <DemoStorePasswords themeId={theme._id} presets={presets} />
+            <DemoStorePasswords themeId={theme._id} presets={presets} onSaved={() => void handleRun()} saveHint="Scanning the store now…" />
             {running && (
               <div className="flex items-center gap-3">
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin text-status-info-icon" aria-hidden />
