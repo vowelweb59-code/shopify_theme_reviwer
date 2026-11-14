@@ -30,7 +30,7 @@ type Row = DeadlineInfo & {
 };
 type Benchmark = { days: number; sample: number } | null;
 type Data = { today: string; benchmarks: { theme_development: Benchmark; preset_development: Benchmark }; projects: Row[] };
-type Filter = "all" | "open" | "finished";
+type Filter = "all" | "open" | "finished" | "rejected";
 
 const dash = <span className="text-zinc-400">—</span>;
 
@@ -54,9 +54,9 @@ export default function DeadlinesPage() {
 
   const rows = useMemo(() => {
     const all = data?.projects ?? [];
-    const shown = all.filter((r) => filter === "all" || (filter === "finished") === (r.state === "finished"));
+    const shown = all.filter((r) => filter === "all" || (filter === "open" ? r.state !== "finished" && r.state !== "rejected" : r.state === filter));
     // Open work by date (overdue first, no deadline last), then what's finished, latest first.
-    const rank = (r: Row) => (r.state === "finished" ? 2 : r.date ? 0 : 1);
+    const rank = (r: Row) => (r.state === "finished" || r.state === "rejected" ? 2 : r.date ? 0 : 1);
     return [...shown].sort((a, b) => rank(a) - rank(b) || (rank(a) === 2 ? (b.date ?? "").localeCompare(a.date ?? "") : (a.date ?? "").localeCompare(b.date ?? "")));
   }, [data, filter]);
 
@@ -82,7 +82,9 @@ export default function DeadlinesPage() {
       key: "deadline",
       header: "Deadline",
       render: (r) =>
-        r.state === "finished" ? (
+        r.state === "rejected" ? (
+          dash
+        ) : r.state === "finished" ? (
           <div>
             {r.date ? <span className="tabular-nums">{day(r.date)}</span> : <span className="text-zinc-400">No report yet</span>}
             <div className="text-xs text-zinc-500">
@@ -130,6 +132,7 @@ export default function DeadlinesPage() {
           <select className={INPUT} value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
             <option value="open">Open projects</option>
             <option value="finished">Finished projects</option>
+            <option value="rejected">Rejected projects</option>
             <option value="all">All projects</option>
           </select>
         </label>

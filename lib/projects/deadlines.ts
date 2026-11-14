@@ -7,7 +7,8 @@ const DUE_SOON_DAYS = 7;
 
 export const FINISHED_STATUSES: readonly ProjectStatus[] = ["live", "completed"];
 
-export type DeadlineState = "finished" | "overdue" | "due_soon" | "on_track" | "no_deadline";
+// "rejected": turned down and no longer being worked on (owner, 2026-11-13), so it has no deadline and is never overdue.
+export type DeadlineState = "finished" | "rejected" | "overdue" | "due_soon" | "on_track" | "no_deadline";
 
 export type DeadlineInfo = {
   /** The date shown: the last report for a finished project, otherwise the deadline set by hand (YYYY-MM-DD). */
@@ -24,6 +25,7 @@ const daysBetween = (from: string, to: string) => Math.round((new Date(to).getTi
 
 /** Dates are "YYYY-MM-DD" strings; `today` is the day in IST (todayInIst). */
 export function deadlineInfo(input: { status: ProjectStatus | null; deadline: string | null; lastReportOn: string | null; today: string }): DeadlineInfo {
+  if (input.status === "rejected") return { date: null, source: null, state: "rejected", daysLeft: null, lateByDays: null };
   const finished = input.status !== null && FINISHED_STATUSES.includes(input.status);
   if (finished) {
     if (!input.lastReportOn) return { date: null, source: null, state: "finished", daysLeft: null, lateByDays: null };

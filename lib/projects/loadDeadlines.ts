@@ -50,7 +50,9 @@ export async function loadDeadlines() {
     const startedOn = (type === "preset_development" ? firstReport.get(`preset:${String(p._id)}`) : firstReport.get(`theme:${String(p.themeId)}`)) ?? null;
     const benchmark = type === "theme_development" || type === "preset_development" ? benchmarks[type as BenchmarkType] : null;
     const usedDays = usedDaysOf(p._id);
-    const averageDeadline = benchmark && startedOn ? addWorkingDays(startedOn, benchmark.days) : null;
+    // A rejected project is closed: no average-based date, no budget to measure against.
+    const rejected = status === "rejected";
+    const averageDeadline = !rejected && benchmark && startedOn ? addWorkingDays(startedOn, benchmark.days) : null;
     const handDeadline = p.deadline ? dayKey(p.deadline) : null;
     const effectiveDeadline = handDeadline ?? averageDeadline;
     return {
@@ -64,10 +66,10 @@ export async function loadDeadlines() {
       lastReportOn,
       startedOn,
       // Budget = the average days of finished projects of this type (null for a Theme Update, or when none has finished with hours).
-      budgetDays: benchmark?.days ?? null,
+      budgetDays: rejected ? null : (benchmark?.days ?? null),
       budgetSample: benchmark?.sample ?? null,
       usedDays,
-      extraDays: extraDays(usedDays, benchmark?.days ?? null),
+      extraDays: rejected ? null : extraDays(usedDays, benchmark?.days ?? null),
       averageDeadline,
       deadlineBasis: handDeadline ? "set" : averageDeadline ? "average" : null,
       ...deadlineInfo({ status, deadline: effectiveDeadline, lastReportOn, today }),

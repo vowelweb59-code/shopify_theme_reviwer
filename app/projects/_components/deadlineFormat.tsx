@@ -22,6 +22,8 @@ export function TimingLabel({ r }: { r: Timing }) {
       ) : (
         <span className="font-medium text-status-pass-text">{r.deadline || r.averageDeadline ? "Finished on time" : "Finished"}</span>
       );
+    case "rejected":
+      return <span className="text-zinc-500">Rejected, no deadline</span>;
     default:
       return <span className="text-zinc-400">No deadline set</span>;
   }

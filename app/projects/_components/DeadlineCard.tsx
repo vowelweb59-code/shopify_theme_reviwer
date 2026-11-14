@@ -94,7 +94,7 @@ export function DeadlineCard({ projectId, projectType }: { projectId: string; pr
                 {row.budgetDays !== null && <span className="font-normal text-zinc-500"> of {row.budgetDays} d</span>}
               </div>
               <div className="text-xs text-zinc-500">
-                {row.budgetDays !== null ? `average of ${row.budgetSample} finished project${row.budgetSample === 1 ? "" : "s"}` : "no finished project has hours yet, so no average"}
+                {row.state === "rejected" ? "rejected: no longer being worked on" : row.budgetDays !== null ? `average of ${row.budgetSample} finished project${row.budgetSample === 1 ? "" : "s"}` : "no finished project has hours yet, so no average"}
               </div>
             </div>
             <div>
@@ -109,7 +109,7 @@ export function DeadlineCard({ projectId, projectType }: { projectId: string; pr
               <div className="text-xs text-zinc-500">{row.startedOn ? `started ${day(row.startedOn)}` : "no report yet"}</div>
             </div>
           </div>
-          {row.state !== "finished" && (
+          {row.state !== "finished" && row.state !== "rejected" && (
             <div className="flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2">
                 <span className="text-zinc-700 dark:text-zinc-300">Set the deadline</span>

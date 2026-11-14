@@ -10,6 +10,11 @@ describe("deadlineInfo", () => {
     expect(deadlineInfo({ status: "live", deadline: null, lastReportOn: "2026-10-25", today })).toMatchObject({ date: "2026-10-25", lateByDays: null });
   });
 
+  it("gives a rejected project no deadline, even one set by hand, and never calls it overdue", () => {
+    expect(deadlineInfo({ status: "rejected", deadline: "2026-09-01", lastReportOn: "2026-07-20", today })).toEqual({ date: null, source: null, state: "rejected", daysLeft: null, lateByDays: null });
+    expect(deadlineInfo({ status: "rejected", deadline: null, lastReportOn: null, today }).state).toBe("rejected");
+  });
+
   it("has no date for a finished project that never reported", () => {
     expect(deadlineInfo({ status: "live", deadline: "2026-10-20", lastReportOn: null, today })).toMatchObject({ date: null, state: "finished" });
   });
