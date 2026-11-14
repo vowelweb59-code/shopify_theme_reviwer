@@ -14,7 +14,7 @@ the sections further down.
 2. Owner to answer: **"Salony" = Saloni Shende?** **Neha, Adnan, Mustufa** match nobody in the old data (new joiners, or written
    differently?). Then fix `DM_MEMBERS` in `scripts/migrate-upwork-postgres.ts`.
 3. Dry run (Claude can run it; reads the URL from the old app's `.env` without printing it):
-   `UPWORK_DATABASE_URL=$(grep -E '^DATABASE_URL=' "../Upwork Project-Management/apps/api/.env" | cut -d= -f2- | tr -d '"' | tr -d '') npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts --digital-marketing`
+   `UPWORK_DATABASE_URL=$(grep -E '^DATABASE_URL=' "../Upwork Project-Management/apps/api/.env" | cut -d= -f2- | tr -d '"' | tr -d '\r') npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts --digital-marketing`
    Last result (2026-11-14): 306 of 1,728 projects, 12,230 of 44,651 hours entries, 307 of 1,631 clients, 10,578 of 47,037 messages.
 4. Owner runs the same with `--apply --replace` (replaces the 1,577 entries the live Chat sync wrote; the current month is re-read).
 5. Open decision: should the live TIMER STATUS sync also import only Digital Marketing people? (Today everyone's new hours arrive,
