@@ -20,7 +20,27 @@ import { ServiceUser } from "@/models/service-user";
 // from the env file given.
 //   UPWORK_DATABASE_URL=postgresql://... npx tsx --env-file=.env.local scripts/migrate-upwork-postgres.ts
 //   UPWORK_DATABASE_URL=postgresql://... npx tsx --env-file=.env.local scripts/migrate-upwork-postgres.ts --apply [--replace]
+//
+// --digital-marketing (owner, 2026-11-14: "keep only Digital Marketing projects"): copies only the projects one of the Digital
+// Marketing people is on (as a BA/BD/executive, an assigned manager or employee, or the poster of hours on it), their clients and
+// Upwork contract-list rows, the hours entries on those projects plus the unplaced entries those people posted, and the Chat
+// messages behind them. Users, senders, Upwork accounts/profiles, departments, spaces, checkpoints and the audit log (a hash chain,
+// kept whole) are copied in full. The dry run lists who each name matched and any name that matched nobody.
 const apply = process.argv.includes("--apply");
+const digitalMarketing = process.argv.includes("--digital-marketing");
+// First names match the first word of a person's name; a two-word entry must match the whole start of the name.
+const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", "Rupali", "Hamza", "Neha", "Priyanka Raut", "Kunal", "Adnan", "Mustufa", "Salony", "Alefiya", "Batul"];
+const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+/** The list entry this name matches, or null. */
+function dmMatch(name: string | null | undefined): string | null {
+  const n = normName(name);
+  if (!n) return null;
+  for (const entry of DM_MEMBERS) {
+    const e = normName(entry);
+    if (e.includes(" ") ? n === e || n.startsWith(`${e} `) : n.split(" ")[0] === e) return entry;
+  }
+  return null;
+}
 const replace = process.argv.includes("--replace");
 const SOURCE = process.env.UPWORK_DATABASE_URL ?? "";
 if (!SOURCE) {
@@ -50,6 +70,56 @@ async function main() {
   await client.end();
 
   const contractProject = new Map(contracts.map((c) => [c.id, c.project_id as string]));
+  if (digitalMarketing) {
+    // Who is a Digital Marketing person: users and senders by name.
+    const matched = new Map<string, Set<string>>(); // list entry -> full names seen
+    const note = (name: string) => {
+      const hit = dmMatch(name);
+      if (hit) matched.set(hit, (matched.get(hit) ?? new Set()).add(name));
+      return Boolean(hit);
+    };
+    const dmUsers = new Set(users.filter((u) => note(u.display_name)).map((u) => u.id as string));
+    const dmSenders = new Set(senders.filter((x) => note(x.display_name)).map((x) => x.external_id as string));
+    const senderOfMsg = new Map(messages.map((m) => [m.id, m.sender_external_id as string]));
+    const entrySender = (e: Row) => senderOfMsg.get(e.source_message_id) ?? null;
+    const isDmEntry = (e: Row) => (e.user_id && dmUsers.has(e.user_id)) || dmSenders.has(entrySender(e) ?? "");
+    const allocOf = new Map<string, Row[]>();
+    for (const a of allocations) allocOf.set(a.entry_id, [...(allocOf.get(a.entry_id) ?? []), a]);
+    const entryProjects = (e: Row) => [e.contract_id ? contractProject.get(e.contract_id) : null, ...(allocOf.get(e.id) ?? []).map((a) => contractProject.get(a.contract_id))].filter(Boolean) as string[];
+
+    const keep = new Set<string>();
+    const dmSenderIds = new Set(senders.filter((x) => dmSenders.has(x.external_id)).map((x) => x.id as string));
+    for (const x of people) if (note(x.name) || (x.sender_id && dmSenderIds.has(x.sender_id))) keep.add(x.project_id);
+    for (const a of assignments) if (dmUsers.has(a.user_id)) keep.add(a.project_id);
+    for (const e of entries) if (isDmEntry(e)) for (const pid of entryProjects(e)) keep.add(pid);
+
+    const keptEntries = entries.filter((e) => entryProjects(e).some((pid) => keep.has(pid)) || (entryProjects(e).length === 0 && isDmEntry(e)));
+    const keptEntryIds = new Set(keptEntries.map((e) => e.id));
+    const msgIds = new Set(keptEntries.flatMap((e) => [e.source_message_id, e.start_message_id]).filter(Boolean));
+    const keptMessages = messages.filter((m) => msgIds.has(m.id) || dmSenders.has(m.sender_external_id));
+    const keptProjects = projects.filter((p) => keep.has(p.id));
+    const keptClientIds = new Set([...keptProjects.map((p) => p.client_id), ...keptEntries.map((e) => e.client_id)].filter(Boolean));
+
+    console.log(`Digital Marketing filter: ${keptProjects.length} of ${projects.length} projects, ${keptEntries.length} of ${entries.length} hours entries, ${keptMessages.length} of ${messages.length} Chat messages, ${keptClientIds.size} of ${clients.length} clients.`);
+    for (const entry of DM_MEMBERS) console.log(`  ${entry.padEnd(14)} -> ${[...(matched.get(entry) ?? [])].join(", ") || "MATCHED NOBODY (check the spelling)"}`);
+    console.log("");
+
+    const keepRows = <T extends Row>(rows: T[], ok: (r: T) => boolean) => rows.splice(0, rows.length, ...rows.filter(ok));
+    keepRows(projects, (p) => keep.has(p.id));
+    keepRows(contracts, (c) => keep.has(c.project_id));
+    keepRows(people, (x) => keep.has(x.project_id));
+    keepRows(assignments, (a) => keep.has(a.project_id));
+    keepRows(history, (h) => keep.has(h.project_id));
+    keepRows(entries, (e) => keptEntryIds.has(e.id));
+    keepRows(allocations, (a) => keptEntryIds.has(a.entry_id) && keep.has(contractProject.get(a.contract_id) ?? ""));
+    const keptMessageSet = new Set(keptMessages);
+    keepRows(messages, (m) => keptMessageSet.has(m));
+    keepRows(clients, (c) => keptClientIds.has(c.id));
+    keepRows(upworkContracts, (c) => (c.project_id && keep.has(c.project_id)) || (!c.project_id && keptClientIds.has(c.client_id)));
+    // Entries pointing at a project that is not copied (a split with a non-DM project) keep only their DM share; a single
+    // project that is not kept is cleared so the entry is unplaced rather than pointing at nothing.
+    for (const e of entries) if (e.contract_id && !keep.has(contractProject.get(e.contract_id) ?? "")) e.contract_id = null;
+  }
   const contractByProject = new Map(contracts.map((c) => [c.project_id as string, c]));
   const group = <T extends Row>(rows: T[], key: string) => rows.reduce((m, r) => m.set(r[key], [...(m.get(r[key]) ?? []), r]), new Map<string, T[]>());
   const peopleBy = group(people, "project_id");

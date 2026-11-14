@@ -97,6 +97,13 @@ Open, in order:
    `https://shopify-theme-reviwer.onrender.com/api/service/chat/google/callback`. The account that connects must be a
    member of TIMER STATUS (and a test user if the consent screen is in Testing).
 4. Production data (owner runs it): `UPWORK_DATABASE_URL=<old app DATABASE_URL> npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts`, then add `--apply`. Needs the old app's Docker Postgres running.
+   2026-11-14 (owner): **only Digital Marketing projects go to the live site.** `--digital-marketing` copies only the projects one of
+   the Digital Marketing people is on (Himanshi, Aman, Pranjal, Bhavesh, Trishul, Rupali, Hamza, Neha, Priyanka Raut, Kunal, Adnan,
+   Mustufa, Salony, Alefiya, Batul; as BA/BD/executive, assigned manager/employee, or poster of hours on it), their clients and
+   contract-list rows, the hours on those projects plus those people's unplaced hours, and the Chat messages behind them; users,
+   senders, Upwork accounts/profiles, departments and the audit log in full. The dry run prints who each name matched. Run with
+   `--digital-marketing --apply --replace` (the live sync already wrote 1,577 entries). Not done: the live TIMER STATUS sync still
+   imports everyone's hours, so non-DM people's new hours arrive unplaced.
 5. Connect Chat on `/service/chat` (local and live), then Import month for the current month. Live connected
    2026-11-10 (vowelweb59@gmail.com); its auto sync now writes to the live service collections, so the production
    migration (item 4) needs `--apply --replace` (the connection itself is not emptied).
