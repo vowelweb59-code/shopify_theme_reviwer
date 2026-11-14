@@ -6,12 +6,12 @@ import { TeamMember } from "@/models/team-member";
 export type StatusChange = { projectId: string; name: string; from: string; to: string };
 
 /**
- * Moves each Theme / Preset Design & Development project that is still Planning or Under Designing to the stage its reporters show
+ * Moves each Theme / Preset Design & Development project that is Planning, Under Designing or Under Development to the stage its reporters show
  * (lib/projects/buildStatus.ts). A theme project is judged by its theme's new-theme reports, a preset project by the preset reports
  * linked to it (the same scoping as lib/projects/loadTotals.ts). Returns what changed (with `dryRun`, what would).
  */
 export async function syncBuildStatuses(options: { dryRun?: boolean } = {}): Promise<StatusChange[]> {
-  const projects = await Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $in: ["planning", "under_designing"] } })
+  const projects = await Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $in: ["planning", "under_designing", "under_development"] } })
     .select("name themeId type status")
     .lean<{ _id: unknown; name: string; themeId: unknown; type?: string | null; status: string }[]>();
   if (projects.length === 0) return [];

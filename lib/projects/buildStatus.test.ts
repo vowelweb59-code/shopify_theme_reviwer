@@ -19,8 +19,15 @@ describe("detectBuildStatus", () => {
     expect(detectBuildStatus("planning", [null, undefined])).toBeNull();
   });
 
-  it("never moves a project the owner has taken further, or backwards", () => {
-    for (const status of ["under_development", "design_completed", "theme_uploaded", "under_review", "error_given", "live", "rejected", "completed", null]) {
+  it("moves back to Under Designing when a project set to Under Development has only designer reports", () => {
+    expect(detectBuildStatus("under_development", ["UI/UX Designer"])).toBe("under_designing");
+    expect(detectBuildStatus("under_development", ["UI/UX Designer", "Shopify Developer"])).toBeNull(); // developers reported: right as it is
+    expect(detectBuildStatus("under_development", [])).toBeNull(); // nobody reported: nothing to go on
+    expect(detectBuildStatus("under_development", ["Product Manager"])).toBeNull();
+  });
+
+  it("never moves a project the owner has taken further", () => {
+    for (const status of ["design_completed", "theme_uploaded", "under_review", "error_given", "live", "rejected", "completed", null]) {
       expect(detectBuildStatus(status, ["UI/UX Designer", "Shopify Developer"])).toBeNull();
     }
   });
