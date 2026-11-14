@@ -7,6 +7,8 @@ export type DemoContent = {
   images: DemoImage[];
   /** `<svg class="placeholder…">` graphics: the empty-image slots Shopify draws when a product or section has no picture. */
   placeholderSvgCount: number;
+  /** Where each empty slot sits (its page section and the product / collection link around it), at most 8, for the finding text. */
+  placeholderSlots?: string[];
   /** Visible text with scripts, styles and templates removed, whitespace collapsed. */
   text: string;
   /** Product link text by product URL (the longest text seen for each), i.e. the product names shown on the page. */
@@ -81,11 +83,31 @@ function firstSrcsetUrl(srcset: string | undefined): string | undefined {
   return srcset?.split(",")[0]?.trim().split(/\s+/)[0] || undefined;
 }
 
+/** "section \"image-banner\", inside https://shop/products/x": where an empty image slot is on the page. */
+function describeSlot(stack: { id?: string; href?: string; cls?: string }[], baseUrl: string): string {
+  const parts: string[] = [];
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const e = stack[i];
+    if (!parts.some((p) => p.startsWith("inside")) && e.href && /\/(products|collections)\//.test(e.href)) {
+      parts.push(`inside ${resolveUrl(e.href, baseUrl)?.split(/[?#]/)[0] ?? e.href}`);
+    }
+    const m = e.id ? /^shopify-section-(?:template--\d+__)?(.+)$/.exec(e.id) : null;
+    if (m) {
+      parts.unshift(`section "${m[1]}"`);
+      break;
+    }
+  }
+  return parts.length > 0 ? parts.join(", ") : "a section with no id";
+}
+
 export function extractDemoContent(html: string, baseUrl: string): DemoContent {
   const images: DemoImage[] = [];
   const textParts: string[] = [];
   const productTitles: Record<string, string> = {};
   let placeholderSvgCount = 0;
+  const placeholderSlots: string[] = [];
+  // Open elements, to say where an empty slot is: its Shopify section id and the link around it.
+  const stack: { id?: string; href?: string; cls?: string }[] = [];
   let firstCollectionLink: string | null = null;
   let fallbackCollectionLink: string | null = null;
   let skipDepth = 0;
@@ -108,8 +130,12 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
         }
         const hidden = isHidden(attribs);
         openHidden.push(hidden);
+        stack.push({ id: attribs.id, href: name === "a" ? attribs.href : undefined, cls: attribs.class });
         if (hidden) hiddenCount++;
-        if (name === "svg" && hiddenCount === 0 && /placeholder/i.test(attribs.class ?? "")) placeholderSvgCount++;
+        if (name === "svg" && hiddenCount === 0 && /placeholder/i.test(attribs.class ?? "")) {
+          placeholderSvgCount++;
+          if (placeholderSlots.length < 8) placeholderSlots.push(describeSlot(stack, baseUrl));
+        }
         if (SKIP_TEXT_TAGS.has(name)) skipDepth++;
 
         if (name === "img" && hiddenCount === 0) {
@@ -148,6 +174,7 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
           product ??= productFromJsonLd(jsonLdBuffer);
         }
         if (openHidden.pop()) hiddenCount--;
+        stack.pop();
         if (SKIP_TEXT_TAGS.has(name) && skipDepth > 0) skipDepth--;
         if (name === "a" && productHref) {
           const title = productText.replace(/\s+/g, " ").trim();
@@ -164,6 +191,7 @@ export function extractDemoContent(html: string, baseUrl: string): DemoContent {
   return {
     images,
     placeholderSvgCount,
+    placeholderSlots,
     text: textParts.join(" ").replace(/\s+/g, " ").trim(),
     productTitles,
     firstCollectionLink: firstCollectionLink ?? fallbackCollectionLink,

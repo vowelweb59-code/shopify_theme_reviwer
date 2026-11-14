@@ -85,10 +85,15 @@ export function demoRealismFindings(content: DemoContent, pageType: DemoPageType
   });
   const emptySlots = content.placeholderSvgCount + placeholderImages.length;
   if (emptySlots > 0) {
+    const lines = [
+      ...(content.placeholderSlots ?? []).map((w) => `empty slot in ${w}`),
+      ...placeholderImages.slice(0, 5).map((i) => `stand-in file ${i.src}`),
+    ];
+    const where = lines.length > 0 ? ` Where: ${lines.join("; ")}.` : "";
     add(
       "LIVE-DEMO-IMG-001",
       emptySlots >= 3 ? "high" : "medium",
-      `The ${pageType} page shows ${emptySlots} placeholder image${emptySlots === 1 ? "" : "s"} (${content.placeholderSvgCount} empty image slot${content.placeholderSvgCount === 1 ? "" : "s"}, ${placeholderImages.length} stand-in image file${placeholderImages.length === 1 ? "" : "s"}).`,
+      `The ${pageType} page shows ${emptySlots} placeholder image${emptySlots === 1 ? "" : "s"} (${content.placeholderSvgCount} empty image slot${content.placeholderSvgCount === 1 ? "" : "s"}, ${placeholderImages.length} stand-in image file${placeholderImages.length === 1 ? "" : "s"}).${where}`,
       "Upload a real photo for every product, collection and section image on the demo store."
     );
   }

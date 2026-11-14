@@ -38,6 +38,12 @@ describe("demoRealismFindings", () => {
   it("does not mistake 'Add to cart' for a placeholder prompt", () => {
     expect(ids(`<button>Add to cart</button>${realHome}`)).toEqual([]);
   });
+  it("says where an empty slot is and names a stand-in file", () => {
+    const html = `<div id="shopify-section-template--123__featured"><a href="/products/linen-shirt"><svg class="placeholder-svg"></svg></a></div><img src="/files/no-image.png" alt="">${realHome}`;
+    const f = demoRealismFindings(extractDemoContent(html, BASE), "home", BASE).find((x) => x.ruleId === "LIVE-DEMO-IMG-001")!;
+    expect(f.finding).toContain('empty slot in section "featured", inside https://demo.example.com/products/linen-shirt');
+    expect(f.finding).toContain("stand-in file https://demo.example.com/files/no-image.png");
+  });
   it("flags placeholder svgs and stand-in image files", () => {
     expect(ids(`<svg class="placeholder-svg"></svg><img src="/files/no-image.png" alt="">${realHome}`)).toContain("LIVE-DEMO-IMG-001");
     expect(ids(`<img src="https://picsum.photos/200" alt="">${realHome}`)).toContain("LIVE-DEMO-IMG-001");
