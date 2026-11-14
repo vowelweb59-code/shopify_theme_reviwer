@@ -4,6 +4,40 @@ Read this first. It records **why the code is the way it is, where each part liv
 step can be decided without re-reading the project. Update it in the same change whenever a decision, a rule, a file
 location or an open item changes.
 
+## 0. Restart here (where we stopped, Fri 2026-11-14)
+
+Pick up from this list on Monday. Everything below is committed and pushed (last commit `6faf411`); the details of each item are in
+the sections further down.
+
+**A. In progress: Service section = Digital Marketing only** (section 2, item 4)
+1. Start Docker Desktop; the old app's Postgres runs from `Desktop/Claude/Upwork Project-Management` (`docker compose up -d`, port 5433).
+2. Owner to answer: **"Salony" = Saloni Shende?** **Neha, Adnan, Mustufa** match nobody in the old data (new joiners, or written
+   differently?). Then fix `DM_MEMBERS` in `scripts/migrate-upwork-postgres.ts`.
+3. Dry run (Claude can run it; reads the URL from the old app's `.env` without printing it):
+   `UPWORK_DATABASE_URL=$(grep -E '^DATABASE_URL=' "../Upwork Project-Management/apps/api/.env" | cut -d= -f2- | tr -d '"' | tr -d '') npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts --digital-marketing`
+   Last result (2026-11-14): 306 of 1,728 projects, 12,230 of 44,651 hours entries, 307 of 1,631 clients, 10,578 of 47,037 messages.
+4. Owner runs the same with `--apply --replace` (replaces the 1,577 entries the live Chat sync wrote; the current month is re-read).
+5. Open decision: should the live TIMER STATUS sync also import only Digital Marketing people? (Today everyone's new hours arrive,
+   unplaced, in the review queue.)
+
+**B. Waiting on the owner's data**
+1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
+2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).
+3. Rare "with its presets" roll-up on theme projects (also why Voltix shows Junaid 1 d: his other 11 Voltix reports are preset work);
+   and whether pre-launch "update" reports are build work.
+
+**C. Owner to do on the live site** (Claude's Chrome is on another PC and not signed in, so it cannot press buttons there)
+1. Check Render deployed the latest commit.
+2. Themes > **Pull from Git and audit all**; send the summary line (any failed theme gets looked at).
+3. Re-audit **Apollo**: the Demo Realism card now says why it was not tested, and the placeholder-image finding says where (section,
+   link, file URL); demo URLs typed on the Under development card are now saved to the theme.
+4. Chat page > **Re-check** (turns the "VowelWeb" report into ignored). Still flagged on purpose: "Envy Theme" (Aaqib, 26 Oct, 0.5 h;
+   ignore it or make a project?).
+
+**D. Done on 2026-11-14 (live database)**: manual sheet applied (`apply-manual-sheet.ts`: fixed days, one-person attribution, missing
+members, 5 rejection rounds; 19 projects), day splits (`set-day-splits.ts`, 6), Dynamic and Flaunt projects moved off the Adorn row
+(`move-projects-to-own-theme.ts`). Silver left out for now.
+
 ## 1. Environments and deployment
 
 | | Local | Live |
