@@ -5,7 +5,7 @@ import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
 import { TimeEntry } from "@/models/time-entry";
 
-type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown };
+type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; designDaysSplit?: { memberId: unknown; share: number }[]; developmentDaysSplit?: { memberId: unknown; share: number }[] };
 export type ProjectCost = { cost: number; hours: number; unpricedHours: number; lines: ThemeCost["cost"]; people: PersonCost[] };
 
 /**

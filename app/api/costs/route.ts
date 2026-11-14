@@ -26,7 +26,7 @@ export async function GET() {
       .select("themeId memberId kind minutes date")
       .lean<{ themeId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
     TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
-    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays designDaysBy developmentDaysBy").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown }[]>(),
+    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays designDaysBy developmentDaysBy designDaysSplit developmentDaysSplit").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; designDaysSplit?: { memberId: unknown; share: number }[]; developmentDaysSplit?: { memberId: unknown; share: number }[] }[]>(),
   ]);
 
   const { payments, perLiveIds } = await loadPerLive();
