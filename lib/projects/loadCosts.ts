@@ -1,10 +1,11 @@
 import { loadPerLive } from "./loadPerLive";
+import { fixedDayInputs } from "./fixedDayInputs";
 import { computeThemeCosts, type HoursInput, type Person, type PersonCost, type ThemeCost } from "./cost";
 import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
 import { TimeEntry } from "@/models/time-entry";
 
-type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null };
+type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown };
 export type ProjectCost = { cost: number; hours: number; unpricedHours: number; lines: ThemeCost["cost"]; people: PersonCost[] };
 
 /**
@@ -49,6 +50,7 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
     else if (r.kind === "preset" && r.projectId) inputs.push({ themeId: String(r.projectId), memberId, line: "presets", hours, month });
     else if (r.kind === "update" && r.themeId) for (const id of updateByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "updates", hours, month });
   }
+  inputs.push(...fixedDayInputs(projects, (p) => String(p._id)));
   for (const e of manual) inputs.push({ themeId: String(e.projectId), memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7) });
 
   const out = new Map<string, ProjectCost>();

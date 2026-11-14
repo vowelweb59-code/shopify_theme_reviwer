@@ -55,6 +55,9 @@ const projectSchema = new Schema(
     // by hand for now (themes built before this existed); null = not known.
     designDays: { type: Number, default: null, min: 0 },
     developmentDays: { type: Number, default: null, min: 0 },
+    // Who worked those fixed days, when it was one person (owner's manual sheet): prices them in the cost (lib/projects/fixedDayInputs.ts). null = not known.
+    designDaysBy: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
+    developmentDaysBy: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
     members: { type: [projectMemberSchema], default: () => [] },
     // When the project is due (UTC midnight of the picked day); null = not set. Once the project is
     // Live / Completed the Deadlines page shows its last report date instead (lib/projects/deadlines.ts).

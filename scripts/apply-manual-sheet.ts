@@ -6,7 +6,10 @@
  *     = design, other non-manager reports = development; 8.5 h = 1 day), because the project's total is fixed days PLUS reports
  *     (lib/projects/loadTotals.ts): the sheet's figure then holds exactly, and later reports add on top. Never below 0. A theme
  *     with a blank in the sheet, or 0, is left alone.
- *  2. People the sheet names that are not on the project yet are added (role empty); nobody is removed.
+ *  2. When the sheet names exactly ONE designer (developer) for a theme, that person is recorded as having worked all the fixed
+ *     design (development) days, so they are priced in the cost (designDaysBy / developmentDaysBy; owner: "the 32 days in design
+ *     were all worked by Junaid"). Two or more people: not split, the days stay unpriced until the owner gives the split.
+ *  3. People the sheet names that are not on the project yet are added (role empty); nobody is removed.
  *
  * Statuses, portals and rejection counts are NOT touched (the sheet is older than the app for those).
  * Old values are saved in admin_audit_log (projects.apply_manual_sheet).
@@ -76,8 +79,8 @@ async function main() {
     const theme = themes.find((t) => norm(t.name) === norm(themeName));
     // The project is found by its own name (a project may hang on another theme row: Dynamic and Flaunt sit on Adorn's).
     const project = await Project.findOne({ name: new RegExp(`^${projectName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"), type: { $in: ["theme_development", null] } })
-      .select("name themeId designDays developmentDays members")
-      .lean<{ _id: unknown; name: string; themeId: unknown; designDays: number | null; developmentDays: number | null; members: { memberId: unknown; role?: string | null }[] } | null>();
+      .select("name themeId designDays developmentDays designDaysBy developmentDaysBy members")
+      .lean<{ _id: unknown; name: string; themeId: unknown; designDays: number | null; developmentDays: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; members: { memberId: unknown; role?: string | null }[] } | null>();
     if (!project) {
       console.log(`${themeName}: no project "${projectName}" — skipped`);
       continue;
@@ -108,6 +111,23 @@ async function main() {
     want("design", sheetDesign, design, project.designDays ?? null, "designDays");
     want("development", sheetDev, dev, project.developmentDays ?? null, "developmentDays");
 
+    // One named person for a role = they worked all its fixed days.
+    const sole = (names: string[]) => {
+      const ids = [...new Set(names.map((n) => byName.get(PERSON[norm(n)] ?? "")).filter((m): m is NonNullable<typeof m> => Boolean(m)).map((m) => String(m._id)))];
+      return names.length === 1 && ids.length === 1 ? ids[0] : null;
+    };
+    const designBy = sole(designers);
+    const devBy = sole(developers);
+    const dayDays = { design: update.designDays ?? project.designDays ?? sheetDesign, dev: update.developmentDays ?? project.developmentDays ?? sheetDev };
+    if (designBy && dayDays.design && String(project.designDaysBy ?? "") !== designBy) {
+      update.designDaysBy = designBy;
+      console.log(`   design days worked by ${memberById.get(designBy)?.name}`);
+    }
+    if (devBy && dayDays.dev && String(project.developmentDaysBy ?? "") !== devBy) {
+      update.developmentDaysBy = devBy;
+      console.log(`   development days worked by ${memberById.get(devBy)?.name}`);
+    }
+
     const have = new Set((project.members ?? []).map((m) => String(m.memberId)));
     const add: { memberId: unknown; name: string }[] = [];
     for (const first of [...designers, ...developers]) {
@@ -125,7 +145,7 @@ async function main() {
       console.log("   nothing to change");
       continue;
     }
-    audit.push({ project: project.name, before: { designDays: project.designDays, developmentDays: project.developmentDays }, after: update, added: add.map((a) => a.name) });
+    audit.push({ project: project.name, before: { designDays: project.designDays, developmentDays: project.developmentDays, designDaysBy: project.designDaysBy ?? null, developmentDaysBy: project.developmentDaysBy ?? null }, after: update, added: add.map((a) => a.name) });
     if (apply) {
       const ops: Record<string, unknown> = {};
       if (Object.keys(update).length) ops.$set = update;

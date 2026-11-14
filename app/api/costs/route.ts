@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { computeThemeCosts, HOURS_PER_MONTH, WORKING_DAYS_PER_MONTH, type HoursInput, type Person } from "@/lib/projects/cost";
 import { rejectionCount } from "@/lib/projects/rounds";
+import { fixedDayInputs } from "@/lib/projects/fixedDayInputs";
 import { loadPerLive } from "@/lib/projects/loadPerLive";
 import { ChatReport } from "@/models/chat-report";
 import { Project } from "@/models/project";
@@ -25,7 +26,7 @@ export async function GET() {
       .select("themeId memberId kind minutes date")
       .lean<{ themeId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
     TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
-    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null }[]>(),
+    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays designDaysBy developmentDaysBy").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown }[]>(),
   ]);
 
   const { payments, perLiveIds } = await loadPerLive();
@@ -40,6 +41,8 @@ export async function GET() {
     const themeId = themeOfProject.get(String(e.projectId));
     if (themeId) inputs.push({ themeId, memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7), day: e.date.toISOString().slice(0, 10) });
   }
+  // Days entered by hand that one person worked (manual sheet): priced as undated build hours.
+  inputs.push(...fixedDayInputs(projects, (p) => String(p.themeId)));
   // The first version's rejection date per theme: the earliest rejection date entered on its Theme Design & Development project(s).
   const firstRejection = new Map<string, string>();
   for (const p of projects) {
