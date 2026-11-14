@@ -100,7 +100,7 @@ export function demoRealismScoreCard(demoRealism: DemoRealismInput | undefined):
   const id = "demo-realism";
   const label = "Demo Realism";
   if (!demoRealism || demoRealism.presetLabels.length === 0) {
-    return { id, label, score: null, detail: "Not tested — no demo store URLs were audited for this run." };
+    return { id, label, score: null, detail: `Not tested — ${demoRealism?.notTestedReason ?? "no demo store URLs were audited for this run."}` };
   }
   const scores = demoRealism.presetLabels.map((preset) => {
     const penalty = demoRealism.findings.filter((f) => f.presetLabel === preset).reduce((sum, f) => sum + (DEMO_PENALTY[f.severity] ?? 0), 0);
@@ -116,7 +116,7 @@ export function demoRealismScoreCard(demoRealism: DemoRealismInput | undefined):
   };
 }
 
-export type DemoRealismInput = { presetLabels: string[]; findings: { severity: string; presetLabel?: string | null }[] };
+export type DemoRealismInput = { presetLabels: string[]; findings: { severity: string; presetLabel?: string | null }[]; notTestedReason?: string };
 
 /**
  * The 9 Lighthouse-style scores shown on Theme Detail's Overview, computed

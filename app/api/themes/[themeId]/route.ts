@@ -102,7 +102,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
         enhancementDetections: latestAudit.enhancementDetections as EnhancementDetectionRecord[] | undefined,
         enhancementPoints,
         themeStoreFeatures: theme.themeStoreFeatures,
-        demoRealism: { presetLabels, findings: demoFindings },
+        demoRealism: {
+          presetLabels,
+          findings: demoFindings,
+          notTestedReason: (latestAudit.demoStorePresets ?? []).length === 0
+            ? "no demo store URL was given for this audit. Save it on the Overview's presets card, then audit again."
+            : `the demo store could not be read: ${(latestAudit.liveCheckErrors ?? [])[0]?.error ?? "unknown reason"}`,
+        },
         liveFeatures: latestAudit.liveFeatures,
       });
     }

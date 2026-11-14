@@ -52,6 +52,8 @@ export async function POST(
   // them from the client every time.
   // (and, when none are saved either, the demo URLs from the Theme Store listing — see ensureDemoPresets).
   const demoStorePresets = requestedPresets.length > 0 ? requestedPresets : await ensureDemoPresets(theme);
+  // URLs typed for this check are kept on the theme, so the theme page's Run Audit and the Git audit read the same stores later.
+  if (requestedPresets.length > 0) await Theme.updateOne({ _id: theme._id }, { $set: { demoStorePresets: requestedPresets } });
 
   const buffer = await localUploadSource(themeZip).getZipBuffer();
 
