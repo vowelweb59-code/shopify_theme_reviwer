@@ -4,6 +4,7 @@ import { TeamMember } from "@/models/team-member";
 import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TimeEntry } from "@/models/time-entry";
+import { syncBuildStatuses } from "@/lib/projects/syncBuildStatuses";
 import { parseReport, splitReports, splitThemes } from "./parseReport";
 import { isIgnoredThemeLine, resolveMember, resolveTheme, type ThemeRef } from "./resolve";
 
@@ -41,6 +42,15 @@ async function addPostersToTeams(adds: { projectId: unknown; memberId: string }[
     })) as never,
     { ordered: false }
   );
+}
+
+/** Moves early-stage projects to Under Designing / Under Development by who has reported (lib/projects/buildStatus.ts); never fails an import. */
+async function syncStatusesQuietly(): Promise<void> {
+  try {
+    await syncBuildStatuses();
+  } catch (err) {
+    console.error("[chat] build status sync failed:", err instanceof Error ? err.message : err);
+  }
 }
 
 /** Stable per report, so the same one imported twice is stored once. */
@@ -240,6 +250,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
   // ordered: false so one bad row (or a key stored by a concurrent run) doesn't stop the rest.
   if (reports.length > 0) await ChatReport.insertMany(reports, { ordered: false });
   await addPostersToTeams(teamAdds);
+  await syncStatusesQuietly();
   if (entries.length > 0) await TimeEntry.insertMany(entries, { ordered: false });
   return summary;
 }
@@ -291,6 +302,7 @@ export async function reprocessFlaggedReports(options: { dryRun?: boolean } = {}
   if (options.dryRun) return summary;
   if (operations.length > 0) await ChatReport.bulkWrite(operations as never, { ordered: false });
   await addPostersToTeams(teamAdds);
+  await syncStatusesQuietly();
   // A hours entry per report key, once: the unique chatReportKey index rejects a repeat.
   if (entries.length > 0) await TimeEntry.insertMany(entries, { ordered: false }).catch(() => undefined);
   return summary;
