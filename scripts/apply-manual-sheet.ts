@@ -9,7 +9,11 @@
  *  2. When the sheet names exactly ONE designer (developer) for a theme, that person is recorded as having worked all the fixed
  *     design (development) days, so they are priced in the cost (designDaysBy / developmentDaysBy; owner: "the 32 days in design
  *     were all worked by Junaid"). Two or more people: not split, the days stay unpriced until the owner gives the split.
- *  3. People the sheet names that are not on the project yet are added (role empty); nobody is removed.
+ *  3. Rejections (owner, 2026-11-14: "yes"): where the sheet shows MORE rejections than the app counts, earlier rejected rounds are
+ *     added until they agree (Noble, Grocery, Nexus: 2; Velocity, Apollo: 1). A round added this way has no date, stage or type, and
+ *     its members are the sheet's people for that theme (so their rejection counts rise). Never removes a round: the sheet is older
+ *     than the app (Adorn: sheet 0, app 2; Legacy: sheet 0, app 1, rejected after 12 Oct).
+ *  4. People the sheet names that are not on the project yet are added (role empty); nobody is removed.
  *
  * Statuses, portals and rejection counts are NOT touched (the sheet is older than the app for those).
  * Old values are saved in admin_audit_log (projects.apply_manual_sheet).
@@ -20,6 +24,7 @@
 import { connectToDatabase } from "../lib/db/connect";
 import { AdminAudit } from "../models/admin-audit";
 import { ChatReport } from "../models/chat-report";
+import { rejectionCount } from "../lib/projects/rounds";
 import { Project } from "../models/project";
 import { TeamMember } from "../models/team-member";
 import { Theme } from "../models/theme";
@@ -53,6 +58,9 @@ const SHEET: [string, string, string[], string[], number | null, number | null][
 ];
 
 // The sheet's first names to the team member (Pranay is Pranay Nimje, the designer; the other Pranay is not on these themes).
+// Rejections the sheet shows per theme (as of 12 Oct); only themes where it is higher than the app are acted on.
+const REJECTIONS: Record<string, number> = { Noble: 2, Grocery: 2, Nexus: 2, Velocity: 1, Apollo: 1 };
+
 const PERSON: Record<string, string> = {
   noman: "noaman ather",
   mussadique: "musaddique afsar",
@@ -79,8 +87,8 @@ async function main() {
     const theme = themes.find((t) => norm(t.name) === norm(themeName));
     // The project is found by its own name (a project may hang on another theme row: Dynamic and Flaunt sit on Adorn's).
     const project = await Project.findOne({ name: new RegExp(`^${projectName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"), type: { $in: ["theme_development", null] } })
-      .select("name themeId designDays developmentDays designDaysBy developmentDaysBy members")
-      .lean<{ _id: unknown; name: string; themeId: unknown; designDays: number | null; developmentDays: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; members: { memberId: unknown; role?: string | null }[] } | null>();
+      .select("name themeId status rounds designDays developmentDays designDaysBy developmentDaysBy members")
+      .lean<{ _id: unknown; name: string; themeId: unknown; designDays: number | null; developmentDays: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; status?: string | null; rounds?: { status: string }[]; members: { memberId: unknown; role?: string | null }[] } | null>();
     if (!project) {
       console.log(`${themeName}: no project "${projectName}" — skipped`);
       continue;
@@ -141,15 +149,25 @@ async function main() {
     }
     if (add.length) console.log(`   add to the team: ${add.map((a) => a.name).join(", ")}`);
 
-    if (Object.keys(update).length === 0 && add.length === 0) {
+    // Rejected rounds the sheet shows that the app does not count.
+    const missingRounds = Math.max(0, (REJECTIONS[themeName] ?? 0) - rejectionCount({ status: project.status ?? null, rounds: project.rounds }));
+    const roundMembers = [...new Set([...designers, ...developers].map((n) => byName.get(PERSON[norm(n)] ?? "")).filter((m): m is NonNullable<typeof m> => Boolean(m) && !m!.inactive).map((m) => String(m._id)))];
+    if (missingRounds > 0) console.log(`   rejections: sheet ${REJECTIONS[themeName]}, app ${rejectionCount({ status: project.status ?? null, rounds: project.rounds })} -> add ${missingRounds} earlier rejected round(s) with ${roundMembers.length} people`);
+
+    if (Object.keys(update).length === 0 && add.length === 0 && missingRounds === 0) {
       console.log("   nothing to change");
       continue;
     }
-    audit.push({ project: project.name, before: { designDays: project.designDays, developmentDays: project.developmentDays, designDaysBy: project.designDaysBy ?? null, developmentDaysBy: project.developmentDaysBy ?? null }, after: update, added: add.map((a) => a.name) });
+    audit.push({ project: project.name, before: { designDays: project.designDays, developmentDays: project.developmentDays, designDaysBy: project.designDaysBy ?? null, developmentDaysBy: project.developmentDaysBy ?? null }, after: update, added: add.map((a) => a.name), roundsAdded: missingRounds });
     if (apply) {
       const ops: Record<string, unknown> = {};
       if (Object.keys(update).length) ops.$set = update;
-      if (add.length) ops.$push = { members: { $each: add.map((a) => ({ memberId: a.memberId, role: null })) } };
+      const push: Record<string, unknown> = {};
+      if (add.length) push.members = { $each: add.map((a) => ({ memberId: a.memberId, role: null })) };
+      if (missingRounds > 0) {
+        push.rounds = { $each: Array.from({ length: missingRounds }, () => ({ status: "rejected", rejectionStage: null, rejectionType: null, rejectedOn: null, designDays: null, developmentDays: null, members: roundMembers.map((id) => ({ memberId: id, role: null })), note: "Added from the owner's manual sheet (rejection count up to 12 Oct 2026)." })), $position: 0 };
+      }
+      if (Object.keys(push).length) ops.$push = push;
       await Project.updateOne({ _id: project._id }, ops);
     }
   }
