@@ -5,6 +5,7 @@ import { Project } from "@/models/project";
 import { Theme } from "@/models/theme";
 import { TimeEntry } from "@/models/time-entry";
 import { syncBuildStatuses } from "@/lib/projects/syncBuildStatuses";
+import { supersededReports } from "./superseded";
 import { parseReport, splitReports, splitThemes } from "./parseReport";
 import { isIgnoredThemeLine, resolveMember, resolveTheme, type ThemeRef } from "./resolve";
 
@@ -18,9 +19,13 @@ export type ImportInput = {
   postedOn?: string;
   /** The exact time the message was posted (ISO), kept on the report. */
   postedAt?: string;
+  /** The Chat message's id; with it, an edited message replaces the reports its old text made. */
+  messageId?: string;
 };
 export type ImportSummary = {
   created: number;
+  /** Reports removed because their message was edited and its new text made new ones. */
+  replaced?: number;
   alreadyImported: number;
   needsReview: { text: string; reason: string }[];
 };
@@ -51,6 +56,38 @@ async function syncStatusesQuietly(): Promise<void> {
   } catch (err) {
     console.error("[chat] build status sync failed:", err instanceof Error ? err.message : err);
   }
+}
+
+type Candidate = { sender: string; postedAt?: string; messageId?: string; key: string; wholeKey: string };
+
+/**
+ * For each Chat message read again: removes the stored reports (and the Theme Update hours made from them) that the message's current
+ * text no longer makes, and records the message id on the ones it still makes. Returns how many were replaced.
+ */
+async function replaceEditedReports(candidates: Candidate[]): Promise<number> {
+  const messages = new Map<string, { id: string; sender: string; postedAt?: string; keys: Set<string> }>();
+  for (const c of candidates) {
+    if (!c.messageId) continue;
+    const m = messages.get(c.messageId) ?? { id: c.messageId, sender: c.sender, postedAt: c.postedAt, keys: new Set<string>() };
+    m.keys.add(c.key);
+    m.keys.add(c.wholeKey);
+    messages.set(c.messageId, m);
+  }
+  if (messages.size === 0) return 0;
+
+  const postedAts = [...messages.values()].flatMap((m) => (m.postedAt ? [new Date(m.postedAt)] : []));
+  const existing = await ChatReport.find({ $or: [{ messageId: { $in: [...messages.keys()] } }, { messageId: null, postedAt: { $in: postedAts } }] })
+    .select("key messageId sender postedAt locked")
+    .lean<{ _id: unknown; key: string; messageId?: string | null; sender: string; postedAt?: Date | null; locked?: boolean }[]>();
+
+  const stale = [...messages.values()].flatMap((m) => supersededReports(existing, m));
+  if (stale.length > 0) {
+    await TimeEntry.deleteMany({ chatReportKey: { $in: stale.map((r) => r.key) } });
+    await ChatReport.deleteMany({ _id: { $in: stale.map((r) => r._id) } });
+  }
+  // The reports a message still makes remember where they came from, so a later edit finds them by id.
+  for (const m of messages.values()) await ChatReport.updateMany({ key: { $in: [...m.keys] }, messageId: null }, { $set: { messageId: m.id } });
+  return stale.length;
 }
 
 /** Stable per report, so the same one imported twice is stored once. */
@@ -217,18 +254,21 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     // A message listing several themes is stored per theme, unless it was already stored whole (an earlier import): then it is left as it is.
     return splitReports(input.text).flatMap((chunk) => {
       const wholeKey = reportKey(memberId ?? sender, chunk);
-      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, postedAt: input.postedAt, key: reportKey(memberId ?? sender, text), wholeKey }));
+      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, postedAt: input.postedAt, messageId: input.messageId, key: reportKey(memberId ?? sender, text), wholeKey }));
     });
   });
   const stored = new Set((await ChatReport.find({ key: { $in: candidates.flatMap((c) => [c.key, c.wholeKey]) } }).select("key").lean()).map((r) => r.key as string));
 
-  const summary: ImportSummary = { created: 0, alreadyImported: 0, needsReview: [] };
+  // Edited messages: the reports their old text made are replaced by what the current text makes.
+  const replaced = await replaceEditedReports(candidates);
+
+  const summary: ImportSummary = { created: 0, replaced, alreadyImported: 0, needsReview: [] };
   const reports: Record<string, unknown>[] = [];
   const entries: Record<string, unknown>[] = [];
   const teamAdds: { projectId: unknown; memberId: string }[] = [];
   const seen = new Set<string>();
 
-  for (const { text, memberId, sender, key, postedOn, postedAt, wholeKey } of candidates) {
+  for (const { text, memberId, sender, key, postedOn, postedAt, wholeKey, messageId } of candidates) {
     if (stored.has(key) || stored.has(wholeKey) || seen.has(key)) {
       summary.alreadyImported++;
       continue;
@@ -240,7 +280,7 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
       summary.needsReview.push({ text, reason: built.error });
       continue;
     }
-    reports.push(built.doc);
+    reports.push({ ...built.doc, messageId: messageId ?? null });
     if (built.entry) entries.push(built.entry);
     if (built.addToTeam) teamAdds.push(built.addToTeam);
     summary.created++;

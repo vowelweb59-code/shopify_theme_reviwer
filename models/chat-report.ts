@@ -15,6 +15,9 @@ const chatReportSchema = new Schema(
     sender: { type: String, default: "", trim: true },
     memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
     date: { type: Date, required: true },
+    // The Google Chat message the report came from (spaces/.../messages/...); null for pasted reports and ones stored before this was kept.
+    // An edited message makes new reports and replaces these (lib/chat/superseded.ts).
+    messageId: { type: String, default: null },
     // When the message was posted in the space (null for pasted reports and ones imported before this was kept); orders a person's reports within a day.
     postedAt: { type: Date, default: null },
     themeName: { type: String, default: "", trim: true },

@@ -35,6 +35,9 @@ export async function chatAccessToken(connection: ConnectionDoc): Promise<string
   return accessToken;
 }
 
+/** How far back each sync re-reads, to catch edited messages (importing is idempotent, so unchanged ones cost nothing). */
+const EDIT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+
 /** A message is a time report when it has a filled-in Theme Name line; other chatter (and the blank template) is ignored. */
 export function looksLikeReport(text: string): boolean {
   // The posts that explain how to write a report (the format guide with its "DD-MM-YYYY" and example lines) are not reports.
@@ -66,10 +69,12 @@ async function readSpace(options: { all?: boolean }): Promise<SyncResult> {
     const space = getChatSpace();
     // Names are a convenience (the sender usually carries one); without the memberships permission they are just empty.
     const memberNames = await listMemberNames(space, accessToken).catch(() => new Map<string, string>());
-    const messages = await listSpaceMessages(space, accessToken, options.all ? null : (connection.lastMessageAt ?? null), memberNames);
+    // Messages are read from a few days before the last one seen, so a message edited since it was imported is read again.
+    const since = options.all || !connection.lastMessageAt ? null : new Date(new Date(connection.lastMessageAt).getTime() - EDIT_WINDOW_MS);
+    const messages = await listSpaceMessages(space, accessToken, since, memberNames);
     const reports = messages.filter((m) => looksLikeReport(m.text));
 
-    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: istDay(new Date(m.createTime)), postedAt: m.createTime })));
+    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: istDay(new Date(m.createTime)), postedAt: m.createTime, messageId: m.id })));
 
     const newest = messages.reduce<Date | null>((latest, m) => {
       const at = new Date(m.createTime);
