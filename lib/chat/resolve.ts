@@ -51,7 +51,7 @@ const UPDATE_PART_RE = /^(theme[\s-]*(updates?|support)|featured images?)$/i;
  * Theme lines that are not theme work at all (owner, 2026-11-12: client work, days spread over several themes, Webflow, the portals,
  * one-off tasks). A report with such a line is ignored, not flagged and not counted anywhere.
  */
-const IGNORED_THEME_LINES: RegExp[] = [/^clients?\s+work$/i, /^multiple\s+themes?$/i, /\bwebflow\b/i, /\bportal$/i, /^\(?\s*task\s*\)?\s*[:\-]/i, /supplement and investment/i];
+const IGNORED_THEME_LINES: RegExp[] = [/^clients?\s+work$/i, /^multiple\s+themes?$/i, /\bwebflow\b/i, /\bportal$/i, /^(vowel\s*web|themeshopy|fresco\s+solutions)$/i, /^\(?\s*task\s*\)?\s*[:\-]/i, /supplement and investment/i];
 export function isIgnoredThemeLine(themeParts: string[]): boolean {
   const first = (themeParts[0] ?? "").trim();
   return IGNORED_THEME_LINES.some((re) => re.test(first));

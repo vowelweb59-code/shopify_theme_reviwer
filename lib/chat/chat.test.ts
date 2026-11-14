@@ -282,6 +282,12 @@ describe("flagged-report fixes", () => {
 
 import { isIgnoredThemeLine } from "./resolve";
 
+describe("portal names are not theme work", () => {
+  it("ignores a line that is just a portal, however it is spelled", () => {
+    for (const line of ["VowelWeb", "Vowel Web", "vowel web", "Themeshopy", "Fresco Solutions", "Vowel Web Portal"]) expect(isIgnoredThemeLine([line])).toBe(true);
+    expect(isIgnoredThemeLine(["Velocity", "Vowel Web"])).toBe(false);
+  });
+});
 describe("owner decisions on flagged reports (2026-11-12)", () => {
   it("ignores lines that are not theme work", () => {
     for (const line of ["Clients Work", "Multiple Theme", "Webflow Template", "Themagnifico Themes Portal", "Themeshopy Portal", "( Task ) :- Asam White", "Beauty Store, Supplement And Investment Theme"]) {
