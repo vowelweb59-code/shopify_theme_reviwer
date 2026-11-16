@@ -135,6 +135,10 @@ fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per
 (`VISIBLE` in `app/service/_components/ServiceNav.tsx`); the pages still exist and open by URL (Chat sync too: `/service/chat`). Bring
 them back one at a time by adding their path to `VISIBLE`. The old dashboard's components remain in `app/service/_dashboard/*`;
 its page is in git history. Live data 2026-11-16: 369 projects, 309 hourly (212 with a rate, 50 with a weekly quote), 60 fixed.
+The owner's "1,200+" was checked against the old app (1,728 projects: 1,577 Completed, 93 Active, 58 On hold); the owner then
+confirmed **Digital Marketing only is right**. The 8 old projects tied to no one (no people, assignment or hours; created 26-27 Oct
+2026: CrawlHunt, Shopify Marketplace, Matthew Harper – Mohammed, Akshay Sharma – Sapana, Alex Smith, Bob Maydonik, Catherine
+Robert, Chris Hammond) are **not brought** (owner, 2026-11-16).
 
 ### Status (2026-11-10)
 
