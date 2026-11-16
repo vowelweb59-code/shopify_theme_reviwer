@@ -6,7 +6,8 @@ import { recordServiceAudit } from "../audit/record";
 import { persistPlan } from "../import/persist";
 import { planImport, type SpaceInput } from "../import/plan";
 import { loadClientRegistry } from "../import/rematch";
-import { dmMatch } from "../dm-members";
+import { filterPlanToDigitalMarketing } from "../import/dm-filter";
+import { ServiceProject } from "@/models/service-project";
 import { listServiceMessages, serviceChatSpace } from "./google";
 import { istMonth, istMonthWindow } from "./months";
 import { ServiceChatConnection } from "@/models/service-chat";
@@ -44,13 +45,13 @@ export async function syncServiceMonth(month: string, trigger: "manual" | "auto"
 async function runServiceMonth(month: string, trigger: "manual" | "auto") {
   const space = serviceChatSpace();
   try {
-    const all = await listServiceMessages(await serviceRefreshToken(), space, istMonthWindow(month));
-    // Owner, 2026-11-16: the live site keeps only Digital Marketing people's hours (timer pairs share a sender, so none is split).
-    const messages = all.filter((m) => dmMatch(m.senderName));
+    const messages = await listServiceMessages(await serviceRefreshToken(), space, istMonthWindow(month));
     const spaces: SpaceInput[] = [{ externalId: space, name: "Timer Status", type: "TIMER_STATUS", messages }];
-    const plan = planImport({ month, spaces, clients: await loadClientRegistry() });
+    // Owner, 2026-11-16: keep the Digital Marketing people's hours plus anyone's hours on a client the team has a project for.
+    const dmClientIds = new Set((await ServiceProject.distinct("clientId")).filter((c): c is string => typeof c === "string"));
+    const plan = filterPlanToDigitalMarketing(planImport({ month, spaces, clients: await loadClientRegistry() }), dmClientIds);
     const saved = await persistPlan(plan, spaces);
-    const result = { month, fetched: all.length, summary: plan.summary, saved };
+    const result = { month, fetched: messages.length, summary: plan.summary, saved };
     await ServiceChatConnection.updateOne({ key: "service-chat" }, { $set: { lastSyncAt: new Date(), lastResult: { month, fetched: messages.length, ...saved }, lastError: null } });
     await recordServiceAudit(trigger === "manual" ? "chat.sync" : "chat.auto_sync", { month, fetched: messages.length, ...saved });
     return result;

@@ -18,9 +18,13 @@ the sections further down.
    Last result (2026-11-16, with Saloni): 369 of 1,728 projects, 13,554 of 44,651 hours entries, 373 of 1,631 clients, 12,053 of 47,037 messages.
 4. DONE 2026-11-16: `--digital-marketing --apply --replace` ran on the live database (369 projects, 13,554 entries, 373 clients,
    12,053 messages, no errors). Still to check: `/service/chat` on the live site still shows Chat connected; the dashboard shows the DM data.
-5. DONE 2026-11-16 (owner: yes): the TIMER STATUS sync (`runServiceMonth`, `lib/service/chat/sync.ts`) keeps only messages whose sender
-   matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with the migration script). Side effect: a non-DM person's new hours
-   on a DM project are no longer imported (the migration did keep their old ones). It applies locally too. Needs deploy.
+5. DONE 2026-11-16 (owner: yes, and "anyone working on a project with my team on it" is kept too): the TIMER STATUS sync
+   (`runServiceMonth`, `lib/service/chat/sync.ts`) plans the whole month, then `filterPlanToDigitalMarketing`
+   (`lib/service/import/dm-filter.ts`) keeps an entry if its sender matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with
+   the migration script) OR its client has at least one project in `service_projects` (after the migration those are the DM
+   projects, so anyone's hours on those clients come in). Granularity is the client, not the project: a non-DM person's hours on a
+   client where the team has one project but they work another project of it also come in. Hours with no client from a non-DM
+   person are dropped. Applies locally too (local has all projects, so it keeps nearly everything). Needs deploy.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
