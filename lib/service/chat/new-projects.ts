@@ -8,10 +8,11 @@ import { listServiceMessages } from "./google";
 import { serviceRefreshToken } from "./sync";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
+import { ServiceTimeEntry } from "@/models/service-time-entry";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
 
 // Reads the Chat space "New Project Update" (owner, 2026-11-16) and acts on its two kinds of post: "Accepted the project of ..."
-// creates the client (if new) and an Active hourly project; "Contract ended of ..." completes the client's one open project with
+// creates the client (if new) and an Active hourly project, unless the client already has an open one; "Contract ended of ..." completes the client's one open project with
 // its star rating. Idempotent: a created project remembers its message in `contractRef`. Posts it can't read cleanly, or an ended
 // contract that doesn't point at exactly one open project, are returned in `skipped` and left for a person.
 export const NEW_PROJECT_SPACE = process.env.SERVICE_NEW_PROJECT_SPACE?.trim() || "spaces/AAAAVIeFrm4";
@@ -27,11 +28,17 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
   const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, { from: new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000), to: new Date(now.getTime() + 60_000) });
   const clients = await ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const byName = new Map<string, string>();
+  // The live site is Digital Marketing only and a post names only the BD and BA, so a post counts only when its client is one we
+  // already have, or a Digital Marketing person has reported hours for that name (entries are filtered to the team on import).
+  const reported = new Set(
+    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null } }) as string[]).map((r) => key(r.split("|")[0])),
+  );
   for (const c of clients) for (const n of [c.name, ...c.aliases]) byName.set(key(n), c._id);
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const profileByName = new Map<string, string>();
   for (const p of profiles) for (const n of [p.name, ...p.aliases]) profileByName.set(key(n), p._id);
 
+  const known = new Set(byName.keys());
   for (const m of msgs) {
     const posted = new Date(m.postedAt);
     const post = parseNewProjectPost(m.text, posted);
@@ -41,6 +48,10 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
 
     if (post.kind === "accepted") {
       if (await ServiceProject.exists({ contractRef: ref })) continue;
+      if (!known.has(key(post.client)) && !reported.has(key(post.client))) { out.skipped.push({ text: m.text.slice(0, 120), why: "not a Digital Marketing client (no team hours reported for it)" }); continue; }
+      // A client who already has an open project is not given a second one (owner, 2026-11-16: Pramesh Baskota showed twice).
+      const open = clientId ? await ServiceProject.findOne({ clientId, status: { $in: OPEN } }).select("name").lean<{ name: string } | null>() : null;
+      if (open) { out.skipped.push({ text: m.text.slice(0, 120), why: `client already has an open project (${open.name})` }); continue; }
       if (!opts.dryRun) {
         if (!clientId) {
           clientId = randomUUID();
