@@ -147,6 +147,10 @@ the migration cut, then runs the follow-ups and logs `chat.clean_november`. Dry 
 would go, 107 entries get their project. `loadDmProjects` lives in `lib/service/import/dm-projects.ts` (shared with the sync).
 Command: `npx tsx --env-file=.env.production.local scripts/service-clean-november.ts [--apply]`.
 
+### New project posts (owner, 2026-11-16; parser built, not connected yet)
+
+The Chat space **New Project Update** (`spaces/AAAAVIeFrm4`, read through the same Service Chat connection; the connected account must be a member) announces new and ended projects. `lib/service/import/new-project-post.ts` (tests beside it) reads: `Accepted the project of <client> - <Upwork profile> - $<rate> hr - <BD> | <BA> | <start date>` and `Contract ended of <client> with <n>-star ratings on <person>`. Anything else returns null (for a "couldn't read" list). Not built yet: creating the client and project (hourly, rate, profile, BD and BA as people, start date), closing a project with its rating on "ended", flagging TIMER STATUS clients with no project, re-matching hours already reported (`rematchClients`). Open: what "on Rahul" means in an ended post; runs in the Render sync or as an owner-run script (`--apply`; local machines lack the key to decrypt the Chat login).
+
 ### What is shown (owner, 2026-11-16)
 
 Only a projects overview for now: `/service` (`app/service/page.tsx`) shows three tabs with their counts, **Timer projects**
