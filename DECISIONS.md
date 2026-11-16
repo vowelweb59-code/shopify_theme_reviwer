@@ -122,13 +122,10 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
   person's placement is never moved.
 - Department follows the project manager; others go to the default department. 45 days without hours puts a project On
   hold; new hours lift only an automatic hold.
-- Auto sync: this month every 15 minutes (`SERVICE_CHAT_SYNC_MINUTES`), last month once per IST day; skipped until
-  Chat is connected.
-- New posts within about a minute (owner, 2026-11-16: "update every time someone posts in TIMER STATUS"): `startServiceChatWatcher`
-  (`lib/service/chat/scheduler.ts`, started in `instrumentation.ts`) asks Chat every minute (`SERVICE_CHAT_WATCH_MINUTES`) for the
-  newest message only (`newestServiceMessage`, `google.ts`) and syncs this month when it changed. Not true push: that would need a
-  Google Chat app or Workspace Events + Pub/Sub. Edits are still picked up by the 15-minute sync. Runs only while the Render
-  instance is awake. Not yet run against the real space.
+- Auto sync: this month **every hour** (`SERVICE_CHAT_SYNC_MINUTES`, default 60; owner 2026-11-16, was 15: "a 1-minute check
+  puts unnecessary pressure on the system, make it one hour"), last month once per IST day; skipped until Chat is connected.
+  A new post shows within the hour; the Sync button on `/service/chat` reads at once. A 1-minute new-message check was built and
+  reverted the same day. If `SERVICE_CHAT_SYNC_MINUTES` is set on Render, it overrides this default.
 
 ### Status (2026-11-10)
 
