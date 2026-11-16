@@ -5,10 +5,11 @@ import { ServiceChatConnection } from "@/models/service-chat";
 import { istDay, istMonth } from "./months";
 import { syncServiceMonth } from "./sync";
 
-// Service team (TIMER STATUS) auto sync: this IST month every hour (owner, 2026-11-16: less load on the system; was 15 minutes),
-// and on the first round of each IST day also last month (late posts). Skipped while Chat is not connected. Separate from the
-// theme team's lib/chat/scheduler.ts. The Sync button on /service/chat still reads at once.
-const INTERVAL_MS = intervalMs(process.env.SERVICE_CHAT_SYNC_MINUTES, 60);
+// Service team (TIMER STATUS) auto sync: this IST month every 15 minutes (owner, 2026-11-16: fully automatic, no manual sync; a
+// 1-minute check and an hourly interval were tried and dropped the same day), and on the first round of each IST day also last
+// month (late posts). Starts on server boot, runs again 15 minutes after each run ends, skipped while Chat is not connected.
+// Separate from the theme team's lib/chat/scheduler.ts.
+const INTERVAL_MS = intervalMs(process.env.SERVICE_CHAT_SYNC_MINUTES, 15);
 
 let lastBackfillDay = "";
 

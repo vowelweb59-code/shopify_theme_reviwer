@@ -131,10 +131,11 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
   again; other people's hours do not count for this one (`holdReason`, `DM_IDLE_DAYS`, `activity-rules.ts`). A project that began
   inside the 60 days is not touched. Dry run on live data before deploy: 10 Active projects would move, none resume
   (`applyActivityRules(now, { dryRun: true })`).
-- Auto sync: this month **every hour** (`SERVICE_CHAT_SYNC_MINUTES`, default 60; owner 2026-11-16, was 15: "a 1-minute check
-  puts unnecessary pressure on the system, make it one hour"), last month once per IST day; skipped until Chat is connected.
-  A new post shows within the hour; the Sync button on `/service/chat` reads at once. A 1-minute new-message check was built and
-  reverted the same day. If `SERVICE_CHAT_SYNC_MINUTES` is set on Render, it overrides this default.
+- Auto sync: this month **every 15 minutes** (`SERVICE_CHAT_SYNC_MINUTES`, default 15; owner 2026-11-16: "automated every 15
+  minutes, no manual sync"), last month once per IST day; skipped until Chat is connected. It starts with the server
+  (`instrumentation.ts`) and nobody has to press anything; the Chat sync tab is hidden. Tried and dropped the same day: a 1-minute
+  new-message check (too much load) and an hourly interval. If `SERVICE_CHAT_SYNC_MINUTES` is set on Render it overrides this
+  default (remove it or set 15). It runs only while the Render instance is awake: a sleeping instance syncs nothing until woken.
 
 ### November clean-up (owner runs it)
 
