@@ -25,6 +25,7 @@ export async function register() {
       ["shopify-apps", async () => (await import("./lib/shopifyApps/scheduler")).startShopifyAppsScheduler()],
       ["chat-sync", async () => (await import("./lib/chat/scheduler")).startChatSyncScheduler()],
       ["service-chat-sync", async () => (await import("./lib/service/chat/scheduler")).startServiceChatScheduler()],
+      ["service-chat-watch", async () => (await import("./lib/service/chat/scheduler")).startServiceChatWatcher()],
       ["attendance-sync", async () => (await import("./lib/attendance/scheduler")).startAttendanceScheduler()],
       ["ga4-sync", async () => (await import("./lib/analytics/sync/scheduler")).startGa4SyncScheduler()],
     ];

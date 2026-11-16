@@ -129,6 +129,14 @@ export async function listServiceMessages(refreshToken: string, space: string, {
   throw new Error("Chat returned too many pages; stopping");
 }
 
+/** The newest message in the space (any sender, edits not seen): one small request, for the 1-minute "anything new?" check. */
+export async function newestServiceMessage(refreshToken: string, space: string): Promise<string | null> {
+  const token = await accessToken(refreshToken);
+  const params = new URLSearchParams({ pageSize: "1", orderBy: "createTime DESC" });
+  const r = await getJson<{ messages?: Array<{ name?: string }> }>(token, `${API}/${space}/messages?${params}`);
+  return r.messages?.[0]?.name ?? null;
+}
+
 // Shared with the attendance page (lib/attendance/chat.ts), which reads its own space through this same connection.
 export const serviceChatToken = accessToken;
 export const serviceChatGet = getJson;

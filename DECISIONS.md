@@ -124,6 +124,11 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
   hold; new hours lift only an automatic hold.
 - Auto sync: this month every 15 minutes (`SERVICE_CHAT_SYNC_MINUTES`), last month once per IST day; skipped until
   Chat is connected.
+- New posts within about a minute (owner, 2026-11-16: "update every time someone posts in TIMER STATUS"): `startServiceChatWatcher`
+  (`lib/service/chat/scheduler.ts`, started in `instrumentation.ts`) asks Chat every minute (`SERVICE_CHAT_WATCH_MINUTES`) for the
+  newest message only (`newestServiceMessage`, `google.ts`) and syncs this month when it changed. Not true push: that would need a
+  Google Chat app or Workspace Events + Pub/Sub. Edits are still picked up by the 15-minute sync. Runs only while the Render
+  instance is awake. Not yet run against the real space.
 
 ### Status (2026-11-10)
 
