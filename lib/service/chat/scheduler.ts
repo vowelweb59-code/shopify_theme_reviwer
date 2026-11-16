@@ -3,6 +3,7 @@ import { intervalMs } from "@/lib/jobs/intervalMinutes";
 import { createRepeatingJob } from "@/lib/jobs/repeatingJob";
 import { ServiceChatConnection } from "@/models/service-chat";
 import { istDay, istMonth } from "./months";
+import { syncNewProjects } from "./new-projects";
 import { syncServiceMonth } from "./sync";
 
 // Service team (TIMER STATUS) auto sync: this IST month every 15 minutes (owner, 2026-11-16: fully automatic, no manual sync; a
@@ -27,4 +28,11 @@ export const startServiceChatScheduler = createRepeatingJob("service-chat-sync",
     if (r.saved.entriesCreated > 0) console.log(`[service-chat] ${m}: read ${r.fetched} messages, ${r.saved.entriesCreated} new entries`);
   }
   lastBackfillDay = day;
+  // New Project Update space: new clients/projects and ended contracts (owner, 2026-11-16). A failure here never stops the hours sync.
+  try {
+    const r = await syncNewProjects();
+    if (r.created.length || r.completed.length) console.log(`[service-chat] new projects: created ${r.created.join(", ") || "none"}; ended ${r.completed.join(", ") || "none"}`);
+  } catch (err) {
+    console.error("[service-chat] new project posts failed:", err instanceof Error ? err.message : err);
+  }
 });

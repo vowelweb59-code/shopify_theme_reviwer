@@ -10,7 +10,7 @@ describe('parseNewProjectPost', () => {
     });
   });
   it('reads an ended contract with its rating', () => {
-    expect(parseNewProjectPost('Contract ended of Danisa with 3-star ratings on Rahul', posted)).toEqual({ kind: 'ended', client: 'Danisa', rating: 3, person: 'Rahul' });
+    expect(parseNewProjectPost('Contract ended of Danisa with 3-star ratings on Rahul', posted)).toEqual({ kind: 'ended', client: 'Danisa', rating: 3, profile: 'Rahul' });
   });
   it('returns null for anything else', () => {
     expect(parseNewProjectPost('Good morning team', posted)).toBeNull();
