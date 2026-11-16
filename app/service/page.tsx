@@ -14,6 +14,7 @@ type Row = {
   _id: string;
   name: string;
   clientId: string | null;
+  status: string;
   contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null } | null;
 };
 
@@ -32,34 +33,59 @@ const TABS = [
   { id: "all", label: "All projects", match: () => true },
 ] as const;
 
-export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+// Owner, 2026-11-16: a second row by status, combined with the type tab above. Active = still running (incl. not started, blocked,
+// waiting for the client); Closed = completed, cancelled or archived; On hold. "All statuses" (the default) applies no filter.
+const STATUS_TABS = [
+  { id: "", label: "All statuses", match: () => true },
+  { id: "active", label: "Active projects", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT"].includes(p.status) },
+  { id: "closed", label: "Projects closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
+  { id: "on_hold", label: "Projects on hold", match: (p: Row) => p.status === "ON_HOLD" },
+] as const;
+
+const href = (tab: string, status: string) => {
+  const q = new URLSearchParams();
+  if (tab !== "timer") q.set("tab", tab);
+  if (status) q.set("status", status);
+  return q.size ? `/service?${q}` : "/service";
+};
+
+function Card({ to, active, label, count }: { to: string; active: boolean; label: string; count: number }) {
+  return (
+    <Link
+      href={to}
+      aria-current={active ? "page" : undefined}
+      className={`rounded-lg border px-4 py-3 transition-colors ${active ? "border-primary bg-primary-tint" : "border-border-subtle bg-surface hover:bg-surface-muted"}`}
+    >
+      <div className={`text-sm ${active ? "font-medium text-primary-tint-text" : "text-zinc-500"}`}>{label}</div>
+      <div className="mt-0.5 text-2xl font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">{count.toLocaleString("en-IN")}</div>
+    </Link>
+  );
+}
+
+export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string }> }) {
   const sp = await searchParams;
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
+  const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
   const [all, clients] = await Promise.all([
-    ServiceProject.find().select("name clientId contract").sort({ name: 1 }).lean<Row[]>(),
+    ServiceProject.find().select("name clientId status contract").sort({ name: 1 }).lean<Row[]>(),
     ServiceClient.find().select("name").lean<Array<{ _id: string; name: string }>>(),
   ]);
   const clientName = new Map(clients.map((c) => [c._id, c.name]));
-  const projects = all.filter(tab.match);
+  const ofType = all.filter(tab.match);
+  const projects = ofType.filter(status.match);
 
   return (
     <div className="space-y-5">
       <nav aria-label="Project type" className="flex flex-wrap gap-2">
-        {TABS.map((t) => {
-          const active = t.id === tab.id;
-          return (
-            <Link
-              key={t.id}
-              href={t.id === "timer" ? "/service" : `/service?tab=${t.id}`}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-lg border px-4 py-3 transition-colors ${active ? "border-primary bg-primary-tint" : "border-border-subtle bg-surface hover:bg-surface-muted"}`}
-            >
-              <div className={`text-sm ${active ? "font-medium text-primary-tint-text" : "text-zinc-500"}`}>{t.label}</div>
-              <div className="mt-0.5 text-2xl font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">{all.filter(t.match).length.toLocaleString("en-IN")}</div>
-            </Link>
-          );
-        })}
+        {TABS.map((t) => (
+          <Card key={t.id} to={href(t.id, status.id)} active={t.id === tab.id} label={t.label} count={all.filter((p) => t.match(p) && status.match(p)).length} />
+        ))}
+      </nav>
+      <nav aria-label="Project status" className="flex flex-wrap gap-2">
+        {STATUS_TABS.map((s) => (
+          <Card key={s.id || "any"} to={href(tab.id, s.id)} active={s.id === status.id} label={s.label} count={ofType.filter(s.match).length} />
+        ))}
       </nav>
 
       <div className="overflow-x-auto rounded-lg border border-border-subtle">

@@ -133,7 +133,10 @@ Only a projects overview for now: `/service` (`app/service/page.tsx`) shows thre
 (hourly contracts, the default), **Fixed projects** and **All projects** (`?tab=fixed|all`; projects with no contract appear only
 under All), and one table. Every contract the old app created defaulted to HOURLY, so an hourly contract with **no rate and no
 weekly quote** shows **"Not set"** and appears only under All (`kindOf` in the page; owner 2026-11-16, after "Aadhar Layouts", a
-$172 fixed project, showed Hourly). Live 2026-11-16: 214 timer, 60 fixed, 95 not set. Project names link to
+$172 fixed project, showed Hourly). Live 2026-11-16: 214 timer, 60 fixed, 95 not set. A second row filters by status, combined
+with the type tab (`?status=active|closed|on_hold`, default All statuses): **Active** = Not started, Active, Blocked, Waiting for
+client; **Closed** = Completed, Cancelled, Archived; **On hold**. Each card counts within the other row's choice. Live: 40 active,
+311 closed, 18 on hold. Project names link to
 `/service/projects/[id]`, whose contract editor sets the type, rate, quote or fixed price (the owner corrects them there). Table:
 project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
 fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
