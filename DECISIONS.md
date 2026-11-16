@@ -168,7 +168,7 @@ rate, `loadAttribution` / `projectOf` as everywhere; fixed: the fixed price, or,
 closed projects have one), with a total above the table. Reported hours, not Upwork-verified billing. The default status is Active. Project names link to
 `/service/projects/[id]`, whose contract editor sets the type, rate, quote or fixed price (the owner corrects them there). Table:
 project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
-fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
+fixed projects have one), weekly quota, header "Weekly quota" (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
 (`VISIBLE` in `app/service/_components/ServiceNav.tsx`); the pages still exist and open by URL (Chat sync too: `/service/chat`). Bring
 them back one at a time by adding their path to `VISIBLE`. The old dashboard's components remain in `app/service/_dashboard/*`;
 its page is in git history. Live data 2026-11-16: 369 projects, 309 hourly (212 with a rate, 50 with a weekly quote), 60 fixed.

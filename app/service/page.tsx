@@ -136,7 +136,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               <th className="px-3 py-2 font-medium">BD name</th>
               <th className="px-3 py-2 font-medium">Project type</th>
               <th className="px-3 py-2 text-right font-medium">Hourly rate</th>
-              <th className="px-3 py-2 text-right font-medium">Weekly quote</th>
+              <th className="px-3 py-2 text-right font-medium">Weekly quota</th>
               {showMoney && <th className="px-3 py-2 text-right font-medium">Closing review</th>}
               {showMoney && <th className="px-3 py-2 text-right font-medium">Taken from client</th>}
             </tr>
