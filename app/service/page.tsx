@@ -96,7 +96,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const takenCents = (p: Row): number | null => {
     const c = p.contract;
     if (!c) return null;
-    if (c.type === "FIXED") return c.fixedPriceCents ?? null;
+    // A fixed project with a price: the price. A fixed project with only an hourly rate is invoiced by the hours worked (owner,
+    // 2026-11-16: "we work on it, then raise an invoice at $15 an hour"): hours x rate, like an hourly one.
+    if (c.type === "FIXED" && c.fixedPriceCents != null) return c.fixedPriceCents;
     return c.hourlyRateCents != null ? Math.round(((minutes.get(p._id) ?? 0) / 60) * c.hourlyRateCents) : null;
   };
   const totalTaken = showMoney ? projects.reduce((n, p) => n + (takenCents(p) ?? 0), 0) : 0;

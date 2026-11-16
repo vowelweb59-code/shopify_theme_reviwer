@@ -158,7 +158,7 @@ with the type tab (`?status=closed|on_hold|all`; **default Active**, owner 2026-
 client; **Closed** = Completed, Cancelled, Archived; **On hold**. Each card counts within the other row's choice. Live: 40 active,
 311 closed, 18 on hold. On the **Closed** tab two more columns show (owner, 2026-11-16): **Closing review**
 (`reviewRating`, a star out of 5; 169 of the 311 closed have one) and **Taken from client** (hourly: reported hours x the hourly
-rate, `loadAttribution` / `projectOf` as everywhere; fixed: the fixed price; "—" with no rate or price: 176 hourly and 39 fixed
+rate, `loadAttribution` / `projectOf` as everywhere; fixed: the fixed price, or, for a fixed project with no price but an hourly rate (invoiced by the hours worked, e.g. Mahogany Monet at $15/h), hours x rate; "—" with no rate or price: 176 hourly and 39 fixed
 closed projects have one), with a total above the table. Reported hours, not Upwork-verified billing. The default status is Active. Project names link to
 `/service/projects/[id]`, whose contract editor sets the type, rate, quote or fixed price (the owner corrects them there). Table:
 project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
