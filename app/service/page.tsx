@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { connectToDatabase } from "@/lib/db/connect";
+import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
+import { fmtUsd } from "@/lib/service/ui/format";
 import { ServiceProject } from "@/models/service-project";
+import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +19,8 @@ type Row = {
   reviewRating: number | null;
   contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null } | null;
 };
+
+const hours = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
 // Every contract made in the old app defaulted to HOURLY, so an hourly contract with no rate and no weekly quote has a type nobody
 // chose (owner, 2026-11-16: "Aadhar Layouts" showed Hourly but was a $172 fixed project). It shows "Not set", only under All.
@@ -68,6 +73,31 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const ofType = all.filter(tab.match);
   const projects = ofType.filter(status.match);
 
+  // Closed projects also show the closing review and what we took from the client (owner, 2026-11-16): hourly = reported hours x the
+  // hourly rate, fixed = the fixed price. Reported hours (TIMER STATUS), not Upwork-verified billable hours.
+  const showMoney = status.id === "closed";
+  const minutes = new Map<string, number>();
+  if (showMoney) {
+    const att = await loadAttribution();
+    const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
+      .select("projectId clientId minutes allocations")
+      .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }> }>>();
+    for (const e of expandAllocations(entries)) {
+      const pid = projectOf(e, att.owner);
+      if (pid) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
+    }
+  }
+  /** Cents taken from the client, or null when it cannot be worked out (no rate / no price entered). */
+  const takenCents = (p: Row): number | null => {
+    const c = p.contract;
+    if (!c) return null;
+    // A fixed project with a price: the price. A fixed project with only an hourly rate is invoiced by the hours worked (owner,
+    // 2026-11-16: "we work on it, then raise an invoice at $15 an hour"): hours x rate, like an hourly one.
+    if (c.type === "FIXED" && c.fixedPriceCents != null) return c.fixedPriceCents;
+    return c.hourlyRateCents != null ? Math.round(((minutes.get(p._id) ?? 0) / 60) * c.hourlyRateCents) : null;
+  };
+  const totalTaken = showMoney ? projects.reduce((n, p) => n + (takenCents(p) ?? 0), 0) : 0;
+
   return (
     <div className="space-y-5">
       <nav aria-label="Project type" className="flex flex-wrap gap-2">
@@ -81,21 +111,55 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
         ))}
       </nav>
 
+      {showMoney && (
+        <p className="text-sm text-zinc-500">
+          Taken from clients across these {projects.length.toLocaleString("en-IN")} projects: <span className="font-semibold text-zinc-900 dark:text-zinc-100">{fmtUsd(totalTaken)}</span>
+          {" "}(hourly: reported hours × hourly rate; fixed: the fixed price; projects with no rate or price entered count as nothing).
+        </p>
+      )}
+
       <div className="overflow-x-auto rounded-lg border border-border-subtle">
         <table className="w-full text-sm">
           <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-3 py-2 font-medium">Project</th>
+              <th className="px-3 py-2 font-medium">Project type</th>
+              <th className="px-3 py-2 text-right font-medium">Hourly rate</th>
+              <th className="px-3 py-2 text-right font-medium">Weekly quote</th>
+              {showMoney && <th className="px-3 py-2 text-right font-medium">Closing review</th>}
+              {showMoney && <th className="px-3 py-2 text-right font-medium">Taken from client</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
-            {projects.map((p) => (
-              <tr key={p._id}>
-                <td className="px-3 py-2">
-                  <Link href={`/service/projects/${p._id}`} className="text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
-                </td>
-              </tr>
-            ))}
+            {projects.map((p) => {
+              const c = p.contract;
+              return (
+                <tr key={p._id}>
+                  <td className="px-3 py-2">
+                    <Link href={`/service/projects/${p._id}`} className="text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
+                  </td>
+                  <td className="px-3 py-2">
+                    {!c ? (
+                      <span className="text-zinc-400">No contract</span>
+                    ) : kindOf(p) === "fixed" ? (
+                      `Fixed${c.fixedPriceCents != null ? ` (${fmtUsd(c.fixedPriceCents)})` : ""}`
+                    ) : kindOf(p) === "hourly" ? (
+                      "Hourly"
+                    ) : (
+                      <span className="text-amber-700 dark:text-amber-400" title="No rate or weekly quote entered: open the project to set Fixed or Hourly">Not set</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">{c?.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "—"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{c?.weeklyLimitMinutes != null ? `${hours(c.weeklyLimitMinutes)} h/week` : "—"}</td>
+                  {showMoney && (
+                    <td className="px-3 py-2 text-right tabular-nums">
+                      {p.reviewRating != null ? <span title={`${p.reviewRating.toFixed(1)} out of 5`}><span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}</span> : "—"}
+                    </td>
+                  )}
+                  {showMoney && <td className="px-3 py-2 text-right tabular-nums">{takenCents(p) != null ? fmtUsd(takenCents(p)!) : "—"}</td>}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
