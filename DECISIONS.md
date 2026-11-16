@@ -139,7 +139,10 @@ weekly quote** shows **"Not set"** and appears only under All (`kindOf` in the p
 $172 fixed project, showed Hourly). Live 2026-11-16: 214 timer, 60 fixed, 95 not set. A second row filters by status, combined
 with the type tab (`?status=closed|on_hold|all`; **default Active**, owner 2026-11-16, so `/service` opens on Timer + Active): **Active** = Not started, Active, Blocked, Waiting for
 client; **Closed** = Completed, Cancelled, Archived; **On hold**. Each card counts within the other row's choice. Live: 40 active,
-311 closed, 18 on hold. Project names link to
+311 closed, 18 on hold. On the **Closed** tab two more columns show (owner, 2026-11-16): **Closing review**
+(`reviewRating`, a star out of 5; 169 of the 311 closed have one) and **Taken from client** (hourly: reported hours x the hourly
+rate, `loadAttribution` / `projectOf` as everywhere; fixed: the fixed price; "—" with no rate or price: 176 hourly and 39 fixed
+closed projects have one), with a total above the table. Reported hours, not Upwork-verified billing. The default status is Active. Project names link to
 `/service/projects/[id]`, whose contract editor sets the type, rate, quote or fixed price (the owner corrects them there). Table:
 project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
 fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
