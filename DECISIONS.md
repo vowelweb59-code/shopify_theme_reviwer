@@ -125,10 +125,26 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
   working days up to and including today, IST (`workingDaysCutoff`, `lib/service/projects/activity-rules.ts`). New hours lift
   only an automatic hold (old "45 days" holds included, `isAutoHold`). Runs after every import, so the first hourly sync after
   the deploy applies it to the live projects; how many move was not counted beforehand.
+  **Second rule (owner 2026-11-16, "for DM"):** an Active project that has a Digital Marketing team member on it (a person, an
+  assigned user or a linked sender whose name matches `DM_MEMBERS`) and **no report by a team member in the last 60 days**
+  (calendar, IST) is also put On hold, reason "Automatic: no Digital Marketing team report for 60 days", until a team member reports
+  again; other people's hours do not count for this one (`holdReason`, `DM_IDLE_DAYS`, `activity-rules.ts`). A project that began
+  inside the 60 days is not touched. Dry run on live data before deploy: 10 Active projects would move, none resume
+  (`applyActivityRules(now, { dryRun: true })`).
 - Auto sync: this month **every hour** (`SERVICE_CHAT_SYNC_MINUTES`, default 60; owner 2026-11-16, was 15: "a 1-minute check
   puts unnecessary pressure on the system, make it one hour"), last month once per IST day; skipped until Chat is connected.
   A new post shows within the hour; the Sync button on `/service/chat` reads at once. A 1-minute new-message check was built and
   reverted the same day. If `SERVICE_CHAT_SYNC_MINUTES` is set on Render, it overrides this default.
+
+### November clean-up (owner runs it)
+
+The live sync imported everyone's hours until the filter went in. `scripts/service-clean-november.ts` (dry run by default; the owner
+runs `--apply`) re-plans the messages stored after the migration (after 2026-11-02T11:47:55Z, the old app's last message), applies
+the same rule as the sync (`dm-filter.ts`) and removes the entries and Chat messages of people outside the team that are not tied to a
+team project, writes the project on the outsider entries that stay, never touches a person's approved/rejected entry or anything up to
+the migration cut, then runs the follow-ups and logs `chat.clean_november`. Dry run 2026-11-16: 138 entries (527.6 h) of 12 people
+would go, 107 entries get their project. `loadDmProjects` lives in `lib/service/import/dm-projects.ts` (shared with the sync).
+Command: `npx tsx --env-file=.env.production.local scripts/service-clean-november.ts [--apply]`.
 
 ### What is shown (owner, 2026-11-16)
 

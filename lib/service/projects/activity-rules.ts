@@ -3,7 +3,12 @@
 // app); the window is the 30 most recent working days up to and including today, IST. Only holds this rule placed are lifted by it:
 // a project a person put on hold stays on hold. Runs after every import. Closed projects and projects that began inside the window
 // are never touched.
+// Second rule (owner, 2026-11-16): an Active project with a Digital Marketing team member on it whose team members have not reported
+// on it for 60 days (calendar) is also put On hold "for DM", until one of them reports again. Others' hours do not count for this one.
+import { dmMatch } from "../dm-members";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
+import { loadDmProjects } from "../import/dm-projects";
+import { ServiceChatSender } from "@/models/service-chat";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 import { ServiceUpworkContract } from "@/models/service-upwork";
@@ -12,9 +17,11 @@ import { istDay } from "@/lib/time/ist";
 export const IDLE_WORKING_DAYS = 30;
 export const AUTO_HOLD_REASON = `Automatic: no hours for ${IDLE_WORKING_DAYS} working days`;
 export const AUTO_RESUME_REASON = "Automatic: hours reported again";
+export const DM_IDLE_DAYS = 60;
+export const AUTO_HOLD_DM_REASON = `Automatic: no Digital Marketing team report for ${DM_IDLE_DAYS} days`;
 const DAY_MS = 86_400_000;
-/** Holds placed by this rule, under the current or an earlier wording ("... for 45 days"). */
-export const isAutoHold = (reason: string | null | undefined) => !!reason && reason.startsWith("Automatic: no hours for ");
+/** Holds placed by these rules, under the current or an earlier wording ("... for 45 days"). */
+export const isAutoHold = (reason: string | null | undefined) => !!reason && (reason.startsWith("Automatic: no hours for ") || reason === AUTO_HOLD_DM_REASON);
 
 /** The first day (UTC midnight of an IST date, as entry dates are stored) of the `n` most recent working days up to today. */
 export function workingDaysCutoff(now: Date, n = IDLE_WORKING_DAYS): Date {
@@ -32,20 +39,45 @@ export interface ActivityResult {
   resumed: string[];
 }
 
-export async function applyActivityRules(now = new Date()): Promise<ActivityResult> {
+export interface HoldInput {
+  /** Newest reported day by anyone / by a Digital Marketing team member on the project, if any. */
+  lastAny: Date | undefined;
+  lastDm: Date | undefined;
+  /** A Digital Marketing person is on the project's team. */
+  hasDmMember: boolean;
+  /** The earliest known date of the project. */
+  began: Date;
+  cutoff: Date;
+  dmCutoff: Date;
+}
+
+/** Why an Active project should be On hold now, or null. The two rules are independent; the first that applies names the hold. */
+export function holdReason(i: HoldInput): string | null {
+  if (!(i.lastAny && i.lastAny >= i.cutoff) && i.began < i.cutoff) return AUTO_HOLD_REASON;
+  if (i.hasDmMember && !(i.lastDm && i.lastDm >= i.dmCutoff) && i.began < i.dmCutoff) return AUTO_HOLD_DM_REASON;
+  return null;
+}
+
+/** `dryRun` only reports what would change (name and reason) and writes nothing. */
+export async function applyActivityRules(now = new Date(), opts: { dryRun?: boolean } = {}): Promise<ActivityResult & { reasons: Record<string, string> }> {
   const cutoff = workingDaysCutoff(now);
+  const dmCutoff = new Date(new Date(`${istDay(now)}T00:00:00Z`).getTime() - (DM_IDLE_DAYS - 1) * DAY_MS);
   const att = await loadAttribution();
+  const senderName = new Map((await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).map((x) => [x.externalId, x.displayName]));
   const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
-    .select("projectId clientId minutes entryDate allocations")
-    .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }> }>>();
+    .select("projectId clientId minutes entryDate allocations senderExternalId")
+    .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
   const last = new Map<string, Date>();
+  const lastDm = new Map<string, Date>();
   const first = new Map<string, Date>();
   for (const e of expandAllocations(entries)) {
     const pid = projectOf(e, att.owner);
     if (!pid) continue;
     if (!last.get(pid) || last.get(pid)! < e.entryDate) last.set(pid, e.entryDate);
+    if (dmMatch(senderName.get(e.senderExternalId)) !== null && (!lastDm.get(pid) || lastDm.get(pid)! < e.entryDate)) lastDm.set(pid, e.entryDate);
     if (!first.get(pid) || first.get(pid)! > e.entryDate) first.set(pid, e.entryDate);
   }
+  const dmMembers = new Set((await loadDmProjects()).filter((p) => p.teamNames.some((n) => dmMatch(n) !== null)).map((p) => p.id));
 
   const projects = await ServiceProject.find({ status: { $in: ["ACTIVE", "ON_HOLD"] } })
     .select("name status createdAt startDate history")
@@ -55,21 +87,21 @@ export async function applyActivityRules(now = new Date()): Promise<ActivityResu
     contractStarts.set(c.projectId, [...(contractStarts.get(c.projectId) ?? []), c.startDate]);
   }
 
-  const out: ActivityResult = { held: [], resumed: [] };
+  const out: ActivityResult & { reasons: Record<string, string> } = { held: [], resumed: [], reasons: {} };
   for (const p of projects) {
-    const lastWork = last.get(p._id);
-    const recent = !!lastWork && lastWork >= cutoff;
     const latest = [...p.history].sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
+    // A project that only just began has had no time to report yet. Its beginning is the earliest known date; the day it was
+    // created here only when nothing else is known (projects imported from history were created long after they began).
+    const known = [p.startDate, first.get(p._id), ...(contractStarts.get(p._id) ?? [])].filter((d): d is Date => !!d);
+    const began = known.length ? new Date(Math.min(...known.map((d) => new Date(d).getTime()))) : p.createdAt;
+    const reason = holdReason({ lastAny: last.get(p._id), lastDm: lastDm.get(p._id), hasDmMember: dmMembers.has(p._id), began, cutoff, dmCutoff });
     if (p.status === "ACTIVE") {
-      // A project that only just began has had no time to report yet. Its beginning is the earliest known date; the day it was
-      // created here only when nothing else is known (projects imported from history were created long after they began).
-      const known = [p.startDate, first.get(p._id), ...(contractStarts.get(p._id) ?? [])].filter((d): d is Date => !!d);
-      const began = known.length ? new Date(Math.min(...known.map((d) => new Date(d).getTime()))) : p.createdAt;
-      if (recent || began >= cutoff) continue;
-      await ServiceProject.updateOne({ _id: p._id, status: "ACTIVE" }, { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason: AUTO_HOLD_REASON, at: now } } });
+      if (!reason) continue;
+      out.reasons[p.name] = reason;
+      if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ACTIVE" }, { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason, at: now } } });
       out.held.push(p.name);
-    } else if (recent && isAutoHold(latest?.reason)) {
-      await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
+    } else if (!reason && isAutoHold(latest?.reason)) {
+      if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
       out.resumed.push(p.name);
     }
   }

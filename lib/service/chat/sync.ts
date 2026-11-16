@@ -6,13 +6,11 @@ import { recordServiceAudit } from "../audit/record";
 import { persistPlan } from "../import/persist";
 import { planImport, type SpaceInput } from "../import/plan";
 import { loadClientRegistry } from "../import/rematch";
-import { filterPlanToDigitalMarketing, type DmProject } from "../import/dm-filter";
-import { ServiceProject } from "@/models/service-project";
-import { ServiceClient } from "@/models/service-client";
-import { ServiceUser } from "@/models/service-user";
+import { filterPlanToDigitalMarketing } from "../import/dm-filter";
+import { loadDmProjects } from "../import/dm-projects";
 import { listServiceMessages, serviceChatSpace } from "./google";
 import { istMonth, istMonthWindow } from "./months";
-import { ServiceChatConnection, ServiceChatSender } from "@/models/service-chat";
+import { ServiceChatConnection } from "@/models/service-chat";
 
 // Reads one IST month of TIMER STATUS through the pure planner and the idempotent persist step. Used by the Sync button and the
 // scheduler (this month every 15 minutes; once per IST day also last month, for late posts).
@@ -62,32 +60,6 @@ async function runServiceMonth(month: string, trigger: "manual" | "auto") {
     if (!lost) await ServiceChatConnection.updateOne({ key: "service-chat" }, { $set: { lastError: message } });
     throw lost ? new Error(lost) : err;
   }
-}
-
-/** The projects on this site (after the 2026-11-16 migration, the Digital Marketing team's) with what ties an entry to each. */
-async function loadDmProjects(): Promise<DmProject[]> {
-  const [projects, clients, users, senders] = await Promise.all([
-    ServiceProject.find({ clientId: { $ne: null } }).select("clientId chatKeywords people assignments")
-      .lean<Array<{ _id: string; clientId: string; chatKeywords: string[]; people: Array<{ name: string; senderId: string | null }>; assignments: Array<{ userId: string }> }>>(),
-    ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
-    ServiceUser.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
-    ServiceChatSender.find().select("displayName userId").lean<Array<{ _id: string; displayName: string; userId: string | null }>>(),
-  ]);
-  const clientNames = new Map(clients.map((c) => [c._id, [c.name, ...c.aliases]]));
-  const userName = new Map(users.map((u) => [u._id, u.displayName]));
-  const senderName = new Map(senders.map((s) => [s._id, s.displayName]));
-  const sendersOfUser = new Map<string, string[]>();
-  for (const s of senders) if (s.userId) sendersOfUser.set(s.userId, [...(sendersOfUser.get(s.userId) ?? []), s.displayName]);
-  return projects.map((p) => ({
-    id: p._id,
-    clientId: p.clientId,
-    clientNames: clientNames.get(p.clientId) ?? [],
-    keywords: p.chatKeywords,
-    teamNames: [
-      ...p.people.flatMap((x) => [x.name, x.senderId ? senderName.get(x.senderId) : undefined]),
-      ...p.assignments.flatMap((a) => [userName.get(a.userId), ...(sendersOfUser.get(a.userId) ?? [])]),
-    ].filter((n): n is string => !!n),
-  }));
 }
 
 export { istMonth };
