@@ -19,10 +19,16 @@ type Row = {
 
 const hours = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
+// Every contract made in the old app defaulted to HOURLY, so an hourly contract with no rate and no weekly quote has a type nobody
+// chose (owner, 2026-11-16: "Aadhar Layouts" showed Hourly but was a $172 fixed project). It shows "Not set", only under All.
+type Kind = "hourly" | "fixed" | "unset";
+const kindOf = (p: Row): Kind =>
+  p.contract?.type === "FIXED" ? "fixed" : p.contract && (p.contract.hourlyRateCents != null || p.contract.weeklyLimitMinutes != null) ? "hourly" : "unset";
+
 // Owner, 2026-11-16: tabs instead of the total card; Timer (hourly contracts) opens by default, then Fixed, then All.
 const TABS = [
-  { id: "timer", label: "Timer projects", match: (p: Row) => p.contract?.type === "HOURLY" },
-  { id: "fixed", label: "Fixed projects", match: (p: Row) => p.contract?.type === "FIXED" },
+  { id: "timer", label: "Timer projects", match: (p: Row) => kindOf(p) === "hourly" },
+  { id: "fixed", label: "Fixed projects", match: (p: Row) => kindOf(p) === "fixed" },
   { id: "all", label: "All projects", match: () => true },
 ] as const;
 
@@ -72,10 +78,20 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               const c = p.contract;
               return (
                 <tr key={p._id}>
-                  <td className="px-3 py-2 text-zinc-900 dark:text-zinc-100">{p.name}</td>
+                  <td className="px-3 py-2">
+                    <Link href={`/service/projects/${p._id}`} className="text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
+                  </td>
                   <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{(p.clientId && clientName.get(p.clientId)) || "—"}</td>
                   <td className="px-3 py-2">
-                    {!c ? <span className="text-zinc-400">No contract</span> : c.type === "FIXED" ? `Fixed${c.fixedPriceCents != null ? ` (${fmtUsd(c.fixedPriceCents)})` : ""}` : "Hourly"}
+                    {!c ? (
+                      <span className="text-zinc-400">No contract</span>
+                    ) : kindOf(p) === "fixed" ? (
+                      `Fixed${c.fixedPriceCents != null ? ` (${fmtUsd(c.fixedPriceCents)})` : ""}`
+                    ) : kindOf(p) === "hourly" ? (
+                      "Hourly"
+                    ) : (
+                      <span className="text-amber-700 dark:text-amber-400" title="No rate or weekly quote entered: open the project to set Fixed or Hourly">Not set</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{c?.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{c?.weeklyLimitMinutes != null ? `${hours(c.weeklyLimitMinutes)} h/week` : "—"}</td>
