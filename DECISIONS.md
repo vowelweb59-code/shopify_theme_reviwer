@@ -129,7 +129,9 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
 
 ### What is shown (owner, 2026-11-16)
 
-Only a projects overview for now: `/service` (`app/service/page.tsx`) shows the total projects (hourly / fixed split) and one table:
+Only a projects overview for now: `/service` (`app/service/page.tsx`) shows three tabs with their counts, **Timer projects**
+(hourly contracts, the default), **Fixed projects** and **All projects** (`?tab=fixed|all`; projects with no contract appear only
+under All), and one table:
 project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
 fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
 (`VISIBLE` in `app/service/_components/ServiceNav.tsx`); the pages still exist and open by URL (Chat sync too: `/service/chat`). Bring

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { connectToDatabase } from "@/lib/db/connect";
 import { fmtUsd } from "@/lib/service/ui/format";
 import { ServiceClient } from "@/models/service-client";
@@ -18,28 +19,42 @@ type Row = {
 
 const hours = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
-export default async function ServiceOverviewPage() {
+// Owner, 2026-11-16: tabs instead of the total card; Timer (hourly contracts) opens by default, then Fixed, then All.
+const TABS = [
+  { id: "timer", label: "Timer projects", match: (p: Row) => p.contract?.type === "HOURLY" },
+  { id: "fixed", label: "Fixed projects", match: (p: Row) => p.contract?.type === "FIXED" },
+  { id: "all", label: "All projects", match: () => true },
+] as const;
+
+export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const sp = await searchParams;
+  const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
   await connectToDatabase();
-  const [projects, clients] = await Promise.all([
+  const [all, clients] = await Promise.all([
     ServiceProject.find().select("name clientId contract").sort({ name: 1 }).lean<Row[]>(),
     ServiceClient.find().select("name").lean<Array<{ _id: string; name: string }>>(),
   ]);
   const clientName = new Map(clients.map((c) => [c._id, c.name]));
-  const hourly = projects.filter((p) => p.contract?.type === "HOURLY").length;
-  const fixed = projects.filter((p) => p.contract?.type === "FIXED").length;
+  const projects = all.filter(tab.match);
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-3">
-        <div className="rounded-lg border border-border-subtle bg-surface px-5 py-4">
-          <div className="text-sm text-zinc-500">Total projects</div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">{projects.length.toLocaleString("en-IN")}</div>
-          <div className="mt-1 text-xs text-zinc-500">
-            {hourly.toLocaleString("en-IN")} hourly · {fixed.toLocaleString("en-IN")} fixed
-            {projects.length - hourly - fixed > 0 ? ` · ${(projects.length - hourly - fixed).toLocaleString("en-IN")} no contract` : ""}
-          </div>
-        </div>
-      </div>
+      <nav aria-label="Project type" className="flex flex-wrap gap-2">
+        {TABS.map((t) => {
+          const active = t.id === tab.id;
+          return (
+            <Link
+              key={t.id}
+              href={t.id === "timer" ? "/service" : `/service?tab=${t.id}`}
+              aria-current={active ? "page" : undefined}
+              className={`rounded-lg border px-4 py-3 transition-colors ${active ? "border-primary bg-primary-tint" : "border-border-subtle bg-surface hover:bg-surface-muted"}`}
+            >
+              <div className={`text-sm ${active ? "font-medium text-primary-tint-text" : "text-zinc-500"}`}>{t.label}</div>
+              <div className="mt-0.5 text-2xl font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">{all.filter(t.match).length.toLocaleString("en-IN")}</div>
+            </Link>
+          );
+        })}
+      </nav>
 
       <div className="overflow-x-auto rounded-lg border border-border-subtle">
         <table className="w-full text-sm">
