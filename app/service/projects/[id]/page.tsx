@@ -29,7 +29,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/service/projects" className="text-sm text-primary hover:underline">← Projects</Link>
+        <Link href="/service" className="text-sm text-primary hover:underline">← Projects</Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h2>
           <ServiceStatusBadge status={project.status} />

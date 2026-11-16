@@ -153,6 +153,8 @@ The Chat space **New Project Update** (`spaces/AAAAVIeFrm4`, override `SERVICE_N
 
 ### What is shown (owner, 2026-11-16)
 
+**Old projects list hidden (2026-11-16):** `/service/projects` redirects to `/service`, and the "← Projects" link on a project page and on New project goes to `/service`. Only pages inside `app/service/*` changed; nothing outside the Service section was touched.
+
 **Update 2026-11-16 (later): the Client column is no longer shown** (owner: the project name already carries it); every other column stays as described below. **Added the same day: Profile name** (`upworkProfileId` -> Upwork profile), **BA name** and **BD name** (`people`, by role; several are joined by commas), after Project.
 
 Only a projects overview for now: `/service` (`app/service/page.tsx`) shows three tabs with their counts, **Timer projects**
