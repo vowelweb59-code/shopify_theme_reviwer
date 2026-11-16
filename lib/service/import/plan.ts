@@ -71,6 +71,8 @@ export interface PlannedEntry {
   reportedOnTimerMinutes: number | null;
   reconciliation: string | null;
   isLate: boolean;
+  /** Set only by `filterPlanToDigitalMarketing` (dm-filter.ts) for someone outside the team; written when the entry is created. */
+  projectId?: string | null;
 }
 
 export interface ImportPlan {

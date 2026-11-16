@@ -131,7 +131,7 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
     planned.add(k);
     const existing = byKey.get(k);
     if (!existing) {
-      entryOps.push({ insertOne: { document: { _id: randomUUID(), sourceMessageId, source: e.source, ordinal: e.ordinal, projectId: null, allocations: [], ...fields(e) } } });
+      entryOps.push({ insertOne: { document: { _id: randomUUID(), sourceMessageId, source: e.source, ordinal: e.ordinal, projectId: e.projectId ?? null, allocations: [], ...fields(e) } } });
       out.entriesCreated++;
     } else if (humanDecided(existing)) {
       out.entriesKeptAsReviewed++;

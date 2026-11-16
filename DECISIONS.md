@@ -20,11 +20,16 @@ the sections further down.
    12,053 messages, no errors). Still to check: `/service/chat` on the live site still shows Chat connected; the dashboard shows the DM data.
 5. DONE 2026-11-16 (owner: yes, and "anyone working on a project with my team on it" is kept too): the TIMER STATUS sync
    (`runServiceMonth`, `lib/service/chat/sync.ts`) plans the whole month, then `filterPlanToDigitalMarketing`
-   (`lib/service/import/dm-filter.ts`) keeps an entry if its sender matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with
-   the migration script) OR its client has at least one project in `service_projects` (after the migration those are the DM
-   projects, so anyone's hours on those clients come in). Granularity is the client, not the project: a non-DM person's hours on a
-   client where the team has one project but they work another project of it also come in. Hours with no client from a non-DM
-   person are dropped. Applies locally too (local has all projects, so it keeps nearly everything). Needs deploy.
+   (`lib/service/import/dm-filter.ts`) keeps every entry whose sender matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with
+   the migration script). Someone outside the team is kept **per project, not per client** (owner: Andrew Johnson has an HR website
+   project and a marketing project; only the team's one counts): only when the entry is tied to one of the team's projects (the only
+   projects on the live site) by a project keyword written in the client field (a keyword equal to the client's own name or alias
+   does not count) or by the poster being on exactly one of that client's team projects (BA/BD/executive, assigned user, linked
+   sender). That project is written on the entry when it is created (`PlannedEntry.projectId`, used by `persist.ts`), so it never
+   falls to the "client's only project" rule. Otherwise dropped, with its message. Limits: an outsider on both the team's project
+   and the other one, writing no keyword, counts on the team's; a keyword written after the other project's word still wins.
+   Applies locally too (local has all projects). Needs deploy. After deploy: entries the old sync wrote between the migration
+   and the deploy (non-DM people's hours) stay until removed; a clean-up script is not written yet.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
