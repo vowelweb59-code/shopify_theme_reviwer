@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { baMatch } from "../ba-members";
+import { bdMatch } from "../bd-members";
 import { runFollowUps } from "../import/persist";
 import { rematchClients } from "../import/rematch";
 import { parseNewProjectPost } from "../import/new-project-post";
@@ -60,7 +61,7 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
           byName.set(key(post.client), clientId);
         }
         const people = [
-          ...(post.businessDeveloper ? [{ role: "BUSINESS_DEVELOPER", name: post.businessDeveloper }] : []),
+          ...(bdMatch(post.businessDeveloper) ? [{ role: "BUSINESS_DEVELOPER", name: bdMatch(post.businessDeveloper)!.name }] : []),
           ...(baMatch(post.businessAnalyst) ? [{ role: "BUSINESS_ANALYST", name: baMatch(post.businessAnalyst)!.name }] : []),
         ];
         await ServiceProject.create({
