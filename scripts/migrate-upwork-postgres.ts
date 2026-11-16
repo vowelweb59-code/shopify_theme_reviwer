@@ -1,6 +1,7 @@
 import pg from "pg";
 import type { Model } from "mongoose";
 import { connectToDatabase } from "@/lib/db/connect";
+import { DM_MEMBERS, dmMatch } from "@/lib/service/dm-members";
 import { ServiceAuditLog } from "@/models/service-audit-log";
 import { ServiceChatMessage, ServiceChatSender, ServiceChatSpace, ServiceSyncCheckpoint } from "@/models/service-chat";
 import { ServiceClient } from "@/models/service-client";
@@ -28,19 +29,6 @@ import { ServiceUser } from "@/models/service-user";
 // kept whole) are copied in full. The dry run lists who each name matched and any name that matched nobody.
 const apply = process.argv.includes("--apply");
 const digitalMarketing = process.argv.includes("--digital-marketing");
-// First names match the first word of a person's name; a two-word entry must match the whole start of the name.
-const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", "Rupali", "Hamza", "Neha", "Priyanka Raut", "Kunal", "Adnan", "Mustufa", "Salony", "Alefiya", "Batul"];
-const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
-/** The list entry this name matches, or null. */
-function dmMatch(name: string | null | undefined): string | null {
-  const n = normName(name);
-  if (!n) return null;
-  for (const entry of DM_MEMBERS) {
-    const e = normName(entry);
-    if (e.includes(" ") ? n === e || n.startsWith(`${e} `) : n.split(" ")[0] === e) return entry;
-  }
-  return null;
-}
 const replace = process.argv.includes("--replace");
 const SOURCE = process.env.UPWORK_DATABASE_URL ?? "";
 if (!SOURCE) {

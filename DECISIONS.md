@@ -11,14 +11,16 @@ the sections further down.
 
 **A. In progress: Service section = Digital Marketing only** (section 2, item 4)
 1. Start Docker Desktop; the old app's Postgres runs from `Desktop/Claude/Upwork Project-Management` (`docker compose up -d`, port 5433).
-2. Owner to answer: **"Salony" = Saloni Shende?** **Neha, Adnan, Mustufa** match nobody in the old data (new joiners, or written
-   differently?). Then fix `DM_MEMBERS` in `scripts/migrate-upwork-postgres.ts`.
+2. Answered 2026-11-16 (owner): "Salony" is Saloni Shinde (old data spells her "Saloni Shende"; `DM_MEMBERS` now says "Saloni").
+   Neha has left the country (no history expected); Adnan and Mustufa joined recently (no old history). All three stay in the list.
 3. Dry run (Claude can run it; reads the URL from the old app's `.env` without printing it):
    `UPWORK_DATABASE_URL=$(grep -E '^DATABASE_URL=' "../Upwork Project-Management/apps/api/.env" | cut -d= -f2- | tr -d '"' | tr -d '\r') npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts --digital-marketing`
-   Last result (2026-11-14): 306 of 1,728 projects, 12,230 of 44,651 hours entries, 307 of 1,631 clients, 10,578 of 47,037 messages.
-4. Owner runs the same with `--apply --replace` (replaces the 1,577 entries the live Chat sync wrote; the current month is re-read).
-5. Open decision: should the live TIMER STATUS sync also import only Digital Marketing people? (Today everyone's new hours arrive,
-   unplaced, in the review queue.)
+   Last result (2026-11-16, with Saloni): 369 of 1,728 projects, 13,554 of 44,651 hours entries, 373 of 1,631 clients, 12,053 of 47,037 messages.
+4. DONE 2026-11-16: `--digital-marketing --apply --replace` ran on the live database (369 projects, 13,554 entries, 373 clients,
+   12,053 messages, no errors). Still to check: `/service/chat` on the live site still shows Chat connected; the dashboard shows the DM data.
+5. DONE 2026-11-16 (owner: yes): the TIMER STATUS sync (`runServiceMonth`, `lib/service/chat/sync.ts`) keeps only messages whose sender
+   matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with the migration script). Side effect: a non-DM person's new hours
+   on a DM project are no longer imported (the migration did keep their old ones). It applies locally too. Needs deploy.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
@@ -133,11 +135,11 @@ Open, in order:
 4. Production data (owner runs it): `UPWORK_DATABASE_URL=<old app DATABASE_URL> npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts`, then add `--apply`. Needs the old app's Docker Postgres running.
    2026-11-14 (owner): **only Digital Marketing projects go to the live site.** `--digital-marketing` copies only the projects one of
    the Digital Marketing people is on (Himanshi, Aman, Pranjal, Bhavesh, Trishul, Rupali, Hamza, Neha, Priyanka Raut, Kunal, Adnan,
-   Mustufa, Salony, Alefiya, Batul; as BA/BD/executive, assigned manager/employee, or poster of hours on it), their clients and
+   Mustufa, Saloni, Alefiya, Batul; as BA/BD/executive, assigned manager/employee, or poster of hours on it), their clients and
    contract-list rows, the hours on those projects plus those people's unplaced hours, and the Chat messages behind them; users,
    senders, Upwork accounts/profiles, departments and the audit log in full. The dry run prints who each name matched. Run with
-   `--digital-marketing --apply --replace` (the live sync already wrote 1,577 entries). Not done: the live TIMER STATUS sync still
-   imports everyone's hours, so non-DM people's new hours arrive unplaced.
+   `--digital-marketing --apply --replace` (the live sync already wrote 1,577 entries). Ran 2026-11-16. The TIMER STATUS sync now imports
+   only DM people too (see section 0, A5).
 5. Connect Chat on `/service/chat` (local and live), then Import month for the current month. Live connected
    2026-11-10 (vowelweb59@gmail.com); its auto sync now writes to the live service collections, so the production
    migration (item 4) needs `--apply --replace` (the connection itself is not emptied).
