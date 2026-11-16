@@ -1,15 +1,31 @@
-// Owner rule (27 Oct 2026): a project nobody has reported hours on for 45 days is put On hold; as soon as hours arrive again it
-// goes back to Active. Only holds this rule placed are lifted by it: a project a person put on hold stays on hold. Runs after
-// every import. Closed projects and projects that began less than 45 days ago are never touched.
+// Owner rule: a project nobody has reported hours on in the last 30 WORKING days is put On hold (2026-11-16; was 45 calendar days,
+// 27 Oct 2026); as soon as hours arrive again it goes back to Active. Working days skip Sundays (the owner's rule elsewhere in this
+// app); the window is the 30 most recent working days up to and including today, IST. Only holds this rule placed are lifted by it:
+// a project a person put on hold stays on hold. Runs after every import. Closed projects and projects that began inside the window
+// are never touched.
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 import { ServiceUpworkContract } from "@/models/service-upwork";
+import { istDay } from "@/lib/time/ist";
 
-export const IDLE_DAYS = 45;
-export const AUTO_HOLD_REASON = `Automatic: no hours for ${IDLE_DAYS} days`;
+export const IDLE_WORKING_DAYS = 30;
+export const AUTO_HOLD_REASON = `Automatic: no hours for ${IDLE_WORKING_DAYS} working days`;
 export const AUTO_RESUME_REASON = "Automatic: hours reported again";
 const DAY_MS = 86_400_000;
+/** Holds placed by this rule, under the current or an earlier wording ("... for 45 days"). */
+export const isAutoHold = (reason: string | null | undefined) => !!reason && reason.startsWith("Automatic: no hours for ");
+
+/** The first day (UTC midnight of an IST date, as entry dates are stored) of the `n` most recent working days up to today. */
+export function workingDaysCutoff(now: Date, n = IDLE_WORKING_DAYS): Date {
+  let d = new Date(`${istDay(now)}T00:00:00Z`);
+  let counted = d.getUTCDay() === 0 ? 0 : 1;
+  while (counted < n) {
+    d = new Date(d.getTime() - DAY_MS);
+    if (d.getUTCDay() !== 0) counted++;
+  }
+  return d;
+}
 
 export interface ActivityResult {
   held: string[];
@@ -17,7 +33,7 @@ export interface ActivityResult {
 }
 
 export async function applyActivityRules(now = new Date()): Promise<ActivityResult> {
-  const cutoff = new Date(now.getTime() - IDLE_DAYS * DAY_MS);
+  const cutoff = workingDaysCutoff(now);
   const att = await loadAttribution();
   const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
     .select("projectId clientId minutes entryDate allocations")
@@ -52,7 +68,7 @@ export async function applyActivityRules(now = new Date()): Promise<ActivityResu
       if (recent || began >= cutoff) continue;
       await ServiceProject.updateOne({ _id: p._id, status: "ACTIVE" }, { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason: AUTO_HOLD_REASON, at: now } } });
       out.held.push(p.name);
-    } else if (recent && latest?.reason === AUTO_HOLD_REASON) {
+    } else if (recent && isAutoHold(latest?.reason)) {
       await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
       out.resumed.push(p.name);
     }

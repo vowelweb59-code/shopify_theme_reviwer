@@ -120,8 +120,11 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
 - Placement for a client with several projects: first keyword written, then Upwork profile, then the only project
   listing the poster, then (if the client is set to split) equal shares over projects active in the last 14 days. A
   person's placement is never moved.
-- Department follows the project manager; others go to the default department. 45 days without hours puts a project On
-  hold; new hours lift only an automatic hold.
+- Department follows the project manager; others go to the default department. **No hours in the last 30 working days** puts
+  an Active project On hold (owner 2026-11-16; was 45 calendar days): working days skip Sundays, the window is the 30 most recent
+  working days up to and including today, IST (`workingDaysCutoff`, `lib/service/projects/activity-rules.ts`). New hours lift
+  only an automatic hold (old "45 days" holds included, `isAutoHold`). Runs after every import, so the first hourly sync after
+  the deploy applies it to the live projects; how many move was not counted beforehand.
 - Auto sync: this month **every hour** (`SERVICE_CHAT_SYNC_MINUTES`, default 60; owner 2026-11-16, was 15: "a 1-minute check
   puts unnecessary pressure on the system, make it one hour"), last month once per IST day; skipped until Chat is connected.
   A new post shows within the hour; the Sync button on `/service/chat` reads at once. A 1-minute new-message check was built and
