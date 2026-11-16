@@ -153,6 +153,8 @@ The Chat space **New Project Update** (`spaces/AAAAVIeFrm4`, override `SERVICE_N
 
 ### What is shown (owner, 2026-11-16)
 
+**Update 2026-11-16 (later): the table shows only the Project column** (name, linking to the project page); client, type, rate, weekly quote, closing review and "Taken from client" are no longer shown (the tabs and status row stay). The column descriptions below are the earlier layout; restore from git (before this change) to bring them back.
+
 Only a projects overview for now: `/service` (`app/service/page.tsx`) shows three tabs with their counts, **Timer projects**
 (hourly contracts, the default), **Fixed projects** and **All projects** (`?tab=fixed|all`; projects with no contract appear only
 under All), and one table. Every contract the old app created defaulted to HOURLY, so an hourly contract with **no rate and no
