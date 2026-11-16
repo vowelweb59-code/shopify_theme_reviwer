@@ -4,8 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // The Service Team section's own tab strip: every page under /service sits behind it, apart from the theme team's pages.
-const TABS = [
-  { href: "/service", label: "Dashboard", exact: true },
+// Owner, 2026-11-16: only the projects overview is shown for now; the other tabs are hidden (their pages still exist and open by
+// URL) and will be brought back one at a time by moving them into VISIBLE.
+const VISIBLE = new Set(["/service"]);
+const ALL_TABS = [
+  { href: "/service", label: "Projects", exact: true },
   { href: "/service/projects", label: "Projects" },
   { href: "/service/team", label: "Team" },
   { href: "/service/departments", label: "Departments" },
@@ -15,6 +18,7 @@ const TABS = [
   { href: "/service/review/senders", label: "Chat senders" },
   { href: "/service/chat", label: "Chat sync" },
 ];
+const TABS = ALL_TABS.filter((t) => VISIBLE.has(t.href));
 
 export function ServiceNav() {
   const pathname = usePathname();

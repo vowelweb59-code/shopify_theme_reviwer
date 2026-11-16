@@ -1,53 +1,75 @@
-import Link from "next/link";
-import { resolvePeriod } from "@/lib/service/ui/period";
-import { DepartmentsTab } from "./_dashboard/departments-tab";
-import { dashHref, PeriodBar, type TabId } from "./_dashboard/period-bar";
-import { KIND_TABS, ProjectsTab } from "./_dashboard/projects-tab";
-import { TeamsTab } from "./_dashboard/teams-tab";
+import { connectToDatabase } from "@/lib/db/connect";
+import { fmtUsd } from "@/lib/service/ui/format";
+import { ServiceClient } from "@/models/service-client";
+import { ServiceProject } from "@/models/service-project";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { tab?: string; g?: string; d?: string; from?: string; to?: string; all?: string; view?: string; kind?: string };
+// Owner, 2026-11-16: the Service section shows only the total projects and one table (hourly rate, weekly quote, Fixed/Hourly) for
+// now; the rest is hidden and will be shown step by step. The former dashboard lives on in app/service/_dashboard/* (unused for now;
+// restore it from git, commit before "Service: show only total projects", to bring it back).
 
-const TABS: Array<{ id: TabId; label: string }> = [
-  { id: "projects", label: "Projects" },
-  { id: "teams", label: "Teams" },
-  { id: "departments", label: "Department wise report" },
-];
+type Row = {
+  _id: string;
+  name: string;
+  clientId: string | null;
+  contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null } | null;
+};
 
-// Service Team dashboard (ported from the Upwork app's dashboard): Projects, Teams and Departments for any period.
-export default async function ServiceDashboardPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const sp = await searchParams;
-  const tab = TABS.find((t) => t.id === sp.tab)?.id ?? "projects";
-  const period = resolvePeriod(sp);
-  const showAll = sp.all === "1";
-  const flat = sp.view === "all";
-  const kind = KIND_TABS.find((k) => k.id === sp.kind)?.id ?? "direct";
+const hours = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
+
+export default async function ServiceOverviewPage() {
+  await connectToDatabase();
+  const [projects, clients] = await Promise.all([
+    ServiceProject.find().select("name clientId contract").sort({ name: 1 }).lean<Row[]>(),
+    ServiceClient.find().select("name").lean<Array<{ _id: string; name: string }>>(),
+  ]);
+  const clientName = new Map(clients.map((c) => [c._id, c.name]));
+  const hourly = projects.filter((p) => p.contract?.type === "HOURLY").length;
+  const fixed = projects.filter((p) => p.contract?.type === "FIXED").length;
 
   return (
     <div className="space-y-5">
-      <nav aria-label="Dashboard sections" className="flex flex-wrap gap-1.5">
-        {TABS.map((t) => (
-          <Link
-            key={t.id}
-            href={dashHref(t.id, period)}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={`rounded-full px-3 py-1 text-sm ${tab === t.id ? "bg-primary-tint font-medium text-primary-tint-text" : "text-zinc-500 hover:bg-surface-muted hover:text-zinc-800 dark:hover:text-zinc-300"}`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="flex flex-wrap gap-3">
+        <div className="rounded-lg border border-border-subtle bg-surface px-5 py-4">
+          <div className="text-sm text-zinc-500">Total projects</div>
+          <div className="mt-1 text-3xl font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">{projects.length.toLocaleString("en-IN")}</div>
+          <div className="mt-1 text-xs text-zinc-500">
+            {hourly.toLocaleString("en-IN")} hourly · {fixed.toLocaleString("en-IN")} fixed
+            {projects.length - hourly - fixed > 0 ? ` · ${(projects.length - hourly - fixed).toLocaleString("en-IN")} no contract` : ""}
+          </div>
+        </div>
+      </div>
 
-      <PeriodBar
-        tab={tab}
-        period={period}
-        extra={(tab === "projects" ? `&kind=${kind}` : "") + (showAll && tab === "projects" ? "&all=1" : "") + (flat && tab === "teams" ? "&view=all" : "")}
-      />
-
-      {tab === "projects" && <ProjectsTab period={period} showAll={showAll} kind={kind} />}
-      {tab === "teams" && <TeamsTab period={period} flat={flat} />}
-      {tab === "departments" && <DepartmentsTab period={period} />}
+      <div className="overflow-x-auto rounded-lg border border-border-subtle">
+        <table className="w-full text-sm">
+          <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
+            <tr>
+              <th className="px-3 py-2 font-medium">Project</th>
+              <th className="px-3 py-2 font-medium">Client</th>
+              <th className="px-3 py-2 font-medium">Project type</th>
+              <th className="px-3 py-2 text-right font-medium">Hourly rate</th>
+              <th className="px-3 py-2 text-right font-medium">Weekly quote</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-subtle">
+            {projects.map((p) => {
+              const c = p.contract;
+              return (
+                <tr key={p._id}>
+                  <td className="px-3 py-2 text-zinc-900 dark:text-zinc-100">{p.name}</td>
+                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{(p.clientId && clientName.get(p.clientId)) || "—"}</td>
+                  <td className="px-3 py-2">
+                    {!c ? <span className="text-zinc-400">No contract</span> : c.type === "FIXED" ? `Fixed${c.fixedPriceCents != null ? ` (${fmtUsd(c.fixedPriceCents)})` : ""}` : "Hourly"}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">{c?.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "—"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{c?.weeklyLimitMinutes != null ? `${hours(c.weeklyLimitMinutes)} h/week` : "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -127,6 +127,15 @@ space **TIMER STATUS**; they are reported hours, not Upwork-verified billable ho
   A new post shows within the hour; the Sync button on `/service/chat` reads at once. A 1-minute new-message check was built and
   reverted the same day. If `SERVICE_CHAT_SYNC_MINUTES` is set on Render, it overrides this default.
 
+### What is shown (owner, 2026-11-16)
+
+Only a projects overview for now: `/service` (`app/service/page.tsx`) shows the total projects (hourly / fixed split) and one table:
+project, client, project type (Fixed with its price, or Hourly; "No contract" when none), hourly rate (whenever one is entered; 9
+fixed projects have one), weekly quote (`contract.weeklyLimitMinutes`, hours per week). Every other tab is hidden from the tab strip
+(`VISIBLE` in `app/service/_components/ServiceNav.tsx`); the pages still exist and open by URL (Chat sync too: `/service/chat`). Bring
+them back one at a time by adding their path to `VISIBLE`. The old dashboard's components remain in `app/service/_dashboard/*`;
+its page is in git history. Live data 2026-11-16: 369 projects, 309 hourly (212 with a rate, 50 with a weekly quote), 60 fixed.
+
 ### Status (2026-11-10)
 
 Done: models, import pipeline, Chat connection and sync, all pages and routes, migration. Local database migrated
