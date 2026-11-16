@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { fmtUsd } from "@/lib/service/ui/format";
 import { ServiceProject } from "@/models/service-project";
+import { ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ type Row = {
   clientId: string | null;
   status: string;
   reviewRating: number | null;
+  upworkProfileId: string | null;
+  people: Array<{ role: string; name: string }>;
   contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null } | null;
 };
 
@@ -69,7 +72,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
-  const all = await ServiceProject.find().select("name clientId status reviewRating contract").sort({ name: 1 }).lean<Row[]>();
+  const [all, profiles] = await Promise.all([
+    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people").sort({ name: 1 }).lean<Row[]>(),
+    ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
+  ]);
+  const profileName = new Map(profiles.map((x) => [x._id, x.name]));
+  const who = (p: Row, role: string) => p.people.filter((x) => x.role === role).map((x) => x.name).join(", ") || "—";
   const ofType = all.filter(tab.match);
   const projects = ofType.filter(status.match);
 
@@ -123,6 +131,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-3 py-2 font-medium">Project</th>
+              <th className="px-3 py-2 font-medium">Profile name</th>
+              <th className="px-3 py-2 font-medium">BA name</th>
+              <th className="px-3 py-2 font-medium">BD name</th>
               <th className="px-3 py-2 font-medium">Project type</th>
               <th className="px-3 py-2 text-right font-medium">Hourly rate</th>
               <th className="px-3 py-2 text-right font-medium">Weekly quote</th>
@@ -138,6 +149,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                   <td className="px-3 py-2">
                     <Link href={`/service/projects/${p._id}`} className="text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
                   </td>
+                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "—"}</td>
+                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{who(p, "BUSINESS_ANALYST")}</td>
+                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{who(p, "BUSINESS_DEVELOPER")}</td>
                   <td className="px-3 py-2">
                     {!c ? (
                       <span className="text-zinc-400">No contract</span>

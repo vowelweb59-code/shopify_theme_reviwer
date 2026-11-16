@@ -153,7 +153,7 @@ The Chat space **New Project Update** (`spaces/AAAAVIeFrm4`, override `SERVICE_N
 
 ### What is shown (owner, 2026-11-16)
 
-**Update 2026-11-16 (later): the Client column is no longer shown** (owner: the project name already carries it); every other column stays as described below.
+**Update 2026-11-16 (later): the Client column is no longer shown** (owner: the project name already carries it); every other column stays as described below. **Added the same day: Profile name** (`upworkProfileId` -> Upwork profile), **BA name** and **BD name** (`people`, by role; several are joined by commas), after Project.
 
 Only a projects overview for now: `/service` (`app/service/page.tsx`) shows three tabs with their counts, **Timer projects**
 (hourly contracts, the default), **Fixed projects** and **All projects** (`?tab=fixed|all`; projects with no contract appear only
