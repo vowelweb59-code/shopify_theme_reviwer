@@ -34,18 +34,18 @@ const TABS = [
 ] as const;
 
 // Owner, 2026-11-16: a second row by status, combined with the type tab above. Active = still running (incl. not started, blocked,
-// waiting for the client); Closed = completed, cancelled or archived; On hold. "All statuses" (the default) applies no filter.
+// waiting for the client); Closed = completed, cancelled or archived; On hold; All statuses = no filter. Active is the default.
 const STATUS_TABS = [
-  { id: "", label: "All statuses", match: () => true },
   { id: "active", label: "Active projects", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT"].includes(p.status) },
   { id: "closed", label: "Projects closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
   { id: "on_hold", label: "Projects on hold", match: (p: Row) => p.status === "ON_HOLD" },
+  { id: "all", label: "All statuses", match: () => true },
 ] as const;
 
 const href = (tab: string, status: string) => {
   const q = new URLSearchParams();
   if (tab !== "timer") q.set("tab", tab);
-  if (status) q.set("status", status);
+  if (status !== "active") q.set("status", status);
   return q.size ? `/service?${q}` : "/service";
 };
 
@@ -84,7 +84,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       </nav>
       <nav aria-label="Project status" className="flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
-          <Card key={s.id || "any"} to={href(tab.id, s.id)} active={s.id === status.id} label={s.label} count={ofType.filter(s.match).length} />
+          <Card key={s.id} to={href(tab.id, s.id)} active={s.id === status.id} label={s.label} count={ofType.filter(s.match).length} />
         ))}
       </nav>
 
