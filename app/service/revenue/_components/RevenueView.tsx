@@ -132,7 +132,7 @@ export function RevenueView({ input, rangeId, statusId }: { input: { taken: Take
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Revenue: what we took vs what the hours were worth</h2>
           <p className="mt-1 max-w-3xl text-sm text-zinc-500">
             <strong className="font-medium text-zinc-700 dark:text-zinc-300">We took</strong> = money in your sales sheet.{" "}
-            <strong className="font-medium text-zinc-700 dark:text-zinc-300">Hours were worth</strong> = hours reported × the hourly rate.{" "}
+            <strong className="font-medium text-zinc-700 dark:text-zinc-300">Hours were worth</strong> = hours reported by your Digital Marketing team × the hourly rate (other teams&apos; hours on the same projects are left out, as the sheet is your team&apos;s revenue only).{" "}
             {monthLabel(from)} to {monthLabel(last)}.
           </p>
         </div>
@@ -179,7 +179,7 @@ export function RevenueView({ input, rangeId, statusId }: { input: { taken: Take
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi accent="border-l-status-pass-icon" label="We took" value={usd(taken)} note="money in the sales sheet" />
-            <Kpi accent="border-l-primary" label="Hours were worth" value={usd(should)} note="hours reported × hourly rate" />
+            <Kpi accent="border-l-primary" label="Hours were worth" value={usd(should)} note="your team's hours × hourly rate" />
             <Kpi accent={gap < 0 ? "border-l-status-fail-icon" : "border-l-status-info-icon"} label={gap < 0 ? "We took less by" : "We took more by"} value={usd(Math.abs(gap))} note={should > 0 ? `we took ${Math.round((taken / should) * 100)}% of what the hours were worth` : undefined} />
             <Kpi accent="border-l-status-warning-icon" label="Clients" value={clients.length.toLocaleString("en-IN")} note={`${clients.filter((c) => c.takenCents < c.shouldCents * 0.95).length} took less · ${clients.filter((c) => c.takenCents > c.shouldCents * 1.05).length} took more`} />
           </div>
