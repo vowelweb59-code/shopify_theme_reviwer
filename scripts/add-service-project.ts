@@ -13,7 +13,7 @@ import { ServiceUpworkProfile } from "@/models/service-upwork";
 // new, an Active hourly (Timer) project named "<Client> – <Profile>", then re-matches the waiting entries to it.
 //
 // A dry run unless --apply (the owner runs it; it writes to the live database):
-//   npx tsx --env-file=.env.production.local scripts/add-service-project.ts "Janell Saverin" --profile Burhan [--ba Harsha] [--bd Pranit] [--rate 15] [--limit-hours 10] [--apply]
+//   npx tsx --env-file=.env.production.local scripts/add-service-project.ts "Janell Saverin" --profile Burhan [--ba Harsha] [--bd Pranit] [--rate 15] [--limit-hours 10] [--name "<Project name>"] [--apply]
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");
 const flag = (name: string) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : undefined; };
@@ -29,7 +29,8 @@ async function main() {
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const profile = profileName ? profiles.find((p) => [p.name, ...p.aliases].some((n) => key(n) === key(profileName))) : undefined;
   if (profileName && !profile) throw new Error(`No Upwork profile called "${profileName}". Known: ${profiles.map((p) => p.name).join(", ")}`);
-  const name = `${client}${profile ? ` – ${profile.name}` : ""}`;
+  // --name sets the project name when the default "<Client> – <Profile>" is already taken (a second project for the same client).
+  const name = flag("name") ?? `${client}${profile ? ` – ${profile.name}` : ""}`;
   const clientId = found?._id ?? randomUUID();
   const open = found ? await ServiceProject.find({ clientId }).select("name status").lean<Array<{ name: string; status: string }>>() : [];
   const waiting = await ServiceTimeEntry.find({ clientId: null, clientRaw: new RegExp(`^${client.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") }).select("minutes").lean<Array<{ minutes: number }>>();
