@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { connectToDatabase } from "@/lib/db/connect";
+import { senderNames } from "@/lib/service/api/hours";
+import { dmMatch } from "@/lib/service/dm-members";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { fmtUsd } from "@/lib/service/ui/format";
 import { ServiceProject } from "@/models/service-project";
@@ -47,10 +49,11 @@ const STATUS_TABS = [
   { id: "all", label: "All statuses", match: () => true },
 ] as const;
 
-const href = (tab: string, status: string) => {
+const href = (tab: string, status: string, teamOnly = false) => {
   const q = new URLSearchParams();
   if (tab !== "timer") q.set("tab", tab);
   if (status !== "active") q.set("status", status);
+  if (teamOnly) q.set("hours", "team");
   return q.size ? `/service?${q}` : "/service";
 };
 
@@ -67,8 +70,9 @@ function Card({ to, active, label, count }: { to: string; active: boolean; label
   );
 }
 
-export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string }> }) {
+export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string }> }) {
   const sp = await searchParams;
+  const teamOnly = sp.hours === "team";
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
@@ -88,9 +92,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   if (showMoney) {
     const att = await loadAttribution();
     const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
-      .select("projectId clientId minutes allocations")
-      .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }> }>>();
+      .select("projectId clientId minutes allocations senderExternalId")
+      .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
+    // "My team only" (owner, 2026-11-17): leave out the hours of people outside the Digital Marketing list.
+    const names = teamOnly ? await senderNames() : null;
     for (const e of expandAllocations(entries)) {
+      if (names && dmMatch(names.get(e.senderExternalId)) === null) continue;
       const pid = projectOf(e, att.owner);
       if (pid) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
     }
@@ -110,15 +117,22 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
     <div className="space-y-5">
       <nav aria-label="Project type" className="flex flex-wrap gap-2">
         {TABS.map((t) => (
-          <Card key={t.id} to={href(t.id, status.id)} active={t.id === tab.id} label={t.label} count={all.filter((p) => t.match(p) && status.match(p)).length} />
+          <Card key={t.id} to={href(t.id, status.id, teamOnly)} active={t.id === tab.id} label={t.label} count={all.filter((p) => t.match(p) && status.match(p)).length} />
         ))}
       </nav>
       <nav aria-label="Project status" className="flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
-          <Card key={s.id} to={href(tab.id, s.id)} active={s.id === status.id} label={s.label} count={ofType.filter(s.match).length} />
+          <Card key={s.id} to={href(tab.id, s.id, teamOnly)} active={s.id === status.id} label={s.label} count={ofType.filter(s.match).length} />
         ))}
       </nav>
 
+      {showMoney && (
+        <p className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-zinc-500">Count hours of:</span>
+          <Link href={href(tab.id, status.id, false)} aria-current={!teamOnly ? "true" : undefined} className={`rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted ${!teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>Everyone</Link>
+          <Link href={href(tab.id, status.id, true)} aria-current={teamOnly ? "true" : undefined} className={`rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted ${teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>My team only</Link>
+        </p>
+      )}
       {showMoney && (
         <p className="text-sm text-zinc-500">
           Taken from clients across these {projects.length.toLocaleString("en-IN")} projects: <span className="font-semibold text-zinc-900 dark:text-zinc-100">{fmtUsd(totalTaken)}</span>

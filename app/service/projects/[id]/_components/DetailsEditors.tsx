@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ProjectDetails } from "@/lib/service/api/projects";
+import { BA_MEMBERS } from "@/lib/service/ba-members";
+import { BD_MEMBERS } from "@/lib/service/bd-members";
 import { mutate } from "@/lib/service/ui/client";
 
 const input = "rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm";
@@ -38,7 +40,7 @@ function Outcome({ saved, error }: { saved: boolean; error: string | null }) {
   );
 }
 
-/** Business analysts, developers and executives: names separated by commas; known Chat senders are suggested while typing. */
+/** Business analysts, developers and executives: names separated by commas; BA and BD suggest only the company's own lists (`ba-members.ts`, `bd-members.ts`); executives suggest known Chat senders. */
 export function PeopleEditor({ projectId, details }: { projectId: string; details: ProjectDetails }) {
   const { busy, error, saved, save } = useSave();
   const [ba, setBa] = useState(details.businessAnalysts.map((p) => p.name).join(", "));
@@ -52,14 +54,16 @@ export function PeopleEditor({ projectId, details }: { projectId: string; detail
         void save(`/projects/${projectId}/people`, { businessAnalysts: split(ba), executives: split(ex), businessDevelopers: split(bd) });
       }}
     >
+      <datalist id="ba-names">{BA_MEMBERS.filter((b) => !b.left).map((b) => <option key={b.name} value={b.name} />)}</datalist>
+      <datalist id="bd-names">{BD_MEMBERS.map((b) => <option key={b.name} value={b.name} />)}</datalist>
       <datalist id="team-names">{details.suggestions.map((n) => <option key={n} value={n} />)}</datalist>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Business analyst (BA)</span>
-        <input list="team-names" value={ba} onChange={(e) => setBa(e.target.value)} className={`${input} w-64`} placeholder="Name" />
+        <input list="ba-names" value={ba} onChange={(e) => setBa(e.target.value)} className={`${input} w-64`} placeholder="Name" />
       </label>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Business developer (BD)</span>
-        <input list="team-names" value={bd} onChange={(e) => setBd(e.target.value)} className={`${input} w-56`} placeholder="Name" />
+        <input list="bd-names" value={bd} onChange={(e) => setBd(e.target.value)} className={`${input} w-56`} placeholder="Name" />
       </label>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Executives (comma separated)</span>

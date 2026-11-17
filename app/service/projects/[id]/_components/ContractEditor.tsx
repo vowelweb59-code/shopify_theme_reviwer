@@ -20,6 +20,8 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
   const [tracking, setTracking] = useState<"" | "TIMER" | "MANUAL">(contract?.trackingMode ?? "");
   const [ref, setRef] = useState(contract?.externalRef ?? "");
   const [status, setStatus] = useState<Contract["status"]>(contract?.status ?? "ACTIVE");
+  const [why, setWhy] = useState<"" | "correction" | "scope">("");
+  const [from, setFrom] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -33,6 +35,10 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
     if (!blank && (total <= 0 || total > 168 * 60 || Number(mins) > 59)) return setError("Enter weekly hours between 1 minute and 168 hours (minutes 0–59).");
     if (rate !== "" && !(Number(rate) >= 0 && Number(rate) <= 10000)) return setError("Enter the hourly rate in dollars, for example 15 or 12.50.");
     if (type === "FIXED" && fixedPrice !== "" && !(Number(fixedPrice) >= 0 && Number(fixedPrice) <= 1000000)) return setError("Enter the fixed price in dollars, for example 900.");
+    // Changing an existing limit: say whether the original value was wrong or the client changed the scope (and from when).
+    const changing = limit !== null && total > 0 && total !== limit;
+    if (changing && !why) return setError("You are changing the weekly hours: choose whether you are correcting the original value or the client changed the scope.");
+    if (changing && why === "scope" && !/^\d{4}-\d{2}-\d{2}$/.test(from)) return setError("Enter the date the new weekly hours apply from.");
     setBusy(true);
     const r = await mutate("PUT", `/projects/${projectId}/contract`, {
       type,
@@ -40,12 +46,15 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
       externalRef: ref.trim() || null,
       trackingMode: tracking || null,
       weeklyLimitMinutes: total > 0 ? total : null,
+      ...(changing ? { limitChange: why, ...(why === "scope" ? { limitFrom: from } : {}) } : {}),
       hourlyRateCents: rate === "" ? null : Math.round(Number(rate) * 100),
       ...(type === "FIXED" ? { fixedPriceCents: fixedPrice === "" ? null : Math.round(Number(fixedPrice) * 100) } : {}),
     });
     setBusy(false);
     if (!r.ok) return setError(r.error);
     setSaved(true);
+    setWhy("");
+    setFrom("");
     router.refresh();
   }
 
@@ -68,6 +77,29 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
           <span>m</span>
         </div>
       </fieldset>
+      {limit !== null && (Number(hours) || 0) * 60 + (Number(mins) || 0) > 0 && (Number(hours) || 0) * 60 + (Number(mins) || 0) !== limit && (
+        <fieldset className="basis-full rounded-md border border-border-subtle p-3 text-sm">
+          <legend className="px-1 text-zinc-500">Weekly hours are changing. Why?</legend>
+          <label className="mr-4 inline-flex items-center gap-2">
+            <input type="radio" name="why" checked={why === "correction"} onChange={() => setWhy("correction")} /> I am correcting the original value (it was entered wrongly)
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input type="radio" name="why" checked={why === "scope"} onChange={() => setWhy("scope")} /> The client changed the scope
+          </label>
+          {why === "scope" && (
+            <label className="mt-2 flex items-center gap-2">
+              <span className="text-zinc-500">New hours apply from</span>
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={input} />
+              <span className="text-xs text-zinc-500">Weeks before this date keep {Math.floor(limit / 60)}h{limit % 60 ? ` ${limit % 60}m` : ""}; the week containing it and later use the new hours.</span>
+            </label>
+          )}
+        </fieldset>
+      )}
+      {contract && contract.weeklyLimitHistory.length > 0 && (
+        <p className="basis-full text-xs text-zinc-500">
+          Weekly hours history: {contract.weeklyLimitHistory.map((s) => `${s.from ? `from ${s.from}` : "originally"} ${Math.floor(s.minutes / 60)}h${s.minutes % 60 ? ` ${s.minutes % 60}m` : ""}`).join(" · ")}
+        </p>
+      )}
       {type === "FIXED" && (
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Fixed price (USD)</span>

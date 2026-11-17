@@ -28,8 +28,8 @@ the sections further down.
    sender). That project is written on the entry when it is created (`PlannedEntry.projectId`, used by `persist.ts`), so it never
    falls to the "client's only project" rule. Otherwise dropped, with its message. Limits: an outsider on both the team's project
    and the other one, writing no keyword, counts on the team's; a keyword written after the other project's word still wins.
-   Applies locally too (local has all projects). Needs deploy. After deploy: entries the old sync wrote between the migration
-   and the deploy (non-DM people's hours) stay until removed; a clean-up script is not written yet.
+   Applies locally too (local has all projects). Deployed 2026-11-17. After deploy: entries the old sync wrote between the migration
+   and the deploy (non-DM people's hours) stay until removed; the clean-up script (`service-clean-november.ts`) was applied 2026-11-17.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
@@ -146,6 +146,10 @@ team project, writes the project on the outsider entries that stay, never touche
 the migration cut, then runs the follow-ups and logs `chat.clean_november`. Dry run 2026-11-16: 138 entries (527.6 h) of 12 people
 would go, 107 entries get their project. `loadDmProjects` lives in `lib/service/import/dm-projects.ts` (shared with the sync).
 Command: `npx tsx --env-file=.env.production.local scripts/service-clean-november.ts [--apply]`.
+**Rule widened 2026-11-17 (owner; built, not deployed):** an outsider is kept when they are on ANY of the client's team projects' people list (before: exactly one); the project is written on the entry only when it is exactly one, else the normal placement rules choose (`projectForOutsider`, `dm-filter.ts`). The clean-up script uses the same rule, so re-run its dry run after deploy (it may keep more than the 104 it removed). On a project's page a `*` stands before the name of anyone outside `DM_MEMBERS` ("By person" and "Who worked how much"). The BA and BD fields in Settings suggest only `BA_MEMBERS` (not left) and `BD_MEMBERS`; executives still suggest all known senders.
+**Everyone / My team only switch (owner, 2026-11-17; built, not deployed):** a project's hours are everyone's by default (people on the project count). `?hours=team` counts only `DM_MEMBERS` senders: on a project page it covers the week hours, amount, "By person" and "Who worked how much" (`projectWeek` / `teamHours` take `teamOnly`); on the overview it covers "Taken from client" on the Closed tab. Buttons "Count hours of: Everyone | My team only". Example project that prompted it: "Ateeq Chowdhrie – Batul" (project name = client – Upwork profile; the client is spelled "Chowdhrie" in the data, five outside people report on it).
+**Weekly limit changes ask why (owner, 2026-11-17):** saving a different weekly limit on a project that already has one asks "correcting the original value" or "the client changed the scope" (`ContractEditor.tsx`; the server refuses without it: `limitChange`, `limitFrom` in `putContract`). A scope change needs a date and is stored as a dated step in `contract.weeklyLimitHistory` (the old value becomes the first step); a week uses the step in force on its LAST day, so the week containing the date already uses the new limit (`lib/service/hours/limit-history.ts`, tests beside it). A correction edits the step in force today (no history = just the value). Only the project page's week figures use the history (`projectWeek`); the overview's "Weekly quota" shows the current value; `reports.ts` and the bulk edit in `projects.ts` (page hidden) still read/write the plain value.
+**Applied on the live database 2026-11-17 (owner):** removed 104 entries (422.2 h, 12 people) and 120 messages, wrote the project on 130 entries. `service-remove-new-project-duplicates.ts` dry run the same day found 0 left to remove (already clean), so it is finished. Latest push (`e632971`) confirmed deployed by the owner the same day.
 
 ### New project posts (owner, 2026-11-16; built, not deployed)
 

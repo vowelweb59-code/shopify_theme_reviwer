@@ -2,6 +2,8 @@ import "server-only";
 // Contracts and Upwork-style weekly hours (ported from the Upwork app's hours.controller.ts). One shared login: everyone
 // signed in sees rates and fixed prices too (owner decision for this port).
 import { badRequest, day, int, isoDay, notFound, oneOf, str } from "./http";
+import { dmMatch } from "../dm-members";
+import { limitForWeek, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { istDate } from "../import/text";
 import { weekOf, type Week } from "../import/week";
@@ -23,6 +25,8 @@ export type Contract = {
   projectId: string;
   type: "HOURLY" | "FIXED";
   weeklyLimitMinutes: number | null;
+  /** Dated limit steps from client scope changes; empty when the limit never changed that way. */
+  weeklyLimitHistory: LimitStep[];
   hourlyRateCents: number | null;
   fixedPriceCents: number | null;
   trackingMode: "TIMER" | "MANUAL" | null;
@@ -82,7 +86,7 @@ function shape(p: ProjectRow): Contract | null {
   const c = p.contract;
   if (!c) return null;
   return {
-    projectId: p._id, type: c.type, weeklyLimitMinutes: c.weeklyLimitMinutes ?? null, hourlyRateCents: c.hourlyRateCents ?? null, fixedPriceCents: c.fixedPriceCents ?? null,
+    projectId: p._id, type: c.type, weeklyLimitMinutes: c.weeklyLimitMinutes ?? null, weeklyLimitHistory: c.weeklyLimitHistory ?? [], hourlyRateCents: c.hourlyRateCents ?? null, fixedPriceCents: c.fixedPriceCents ?? null,
     trackingMode: c.trackingMode ?? null, externalRef: c.externalRef ?? null, startDate: day(c.startDate), endDate: day(c.endDate), status: c.status,
   };
 }
@@ -93,12 +97,28 @@ export async function getContract(id: string) {
 
 export async function putContract(id: string, body: Record<string, unknown>) {
   const p = await project(id);
-  const allowed = new Set(["type", "weeklyLimitMinutes", "hourlyRateCents", "fixedPriceCents", "trackingMode", "externalRef", "startDate", "endDate", "status"]);
+  const allowed = new Set(["type", "weeklyLimitMinutes", "limitChange", "limitFrom", "hourlyRateCents", "fixedPriceCents", "trackingMode", "externalRef", "startDate", "endDate", "status"]);
   for (const k of Object.keys(body)) if (!allowed.has(k)) throw badRequest(`Unknown field: ${k}`);
   const cur = p.contract;
+  // Owner, 2026-11-17: changing an existing weekly limit must say whether it is a correction of the original value or the client
+  // changing the scope; a scope change needs the date it applies from and is kept as a dated step.
+  const nextLimit = "weeklyLimitMinutes" in body ? int(body.weeklyLimitMinutes, "weeklyLimitMinutes", { min: 1, max: 168 * 60, optional: true }) : cur?.weeklyLimitMinutes ?? null;
+  const prevLimit = cur?.weeklyLimitMinutes ?? null;
+  let history: LimitStep[] = cur?.weeklyLimitHistory ?? [];
+  if (nextLimit !== prevLimit) {
+    if (nextLimit === null) history = [];
+    else if (prevLimit !== null) {
+      const kind = oneOf(body.limitChange, "limitChange", ["correction", "scope"] as const);
+      if (kind === "scope") {
+        const from = isoDay(body.limitFrom, "limitFrom", { optional: false });
+        history = withScopeChange(history, prevLimit, nextLimit, day(from)!);
+      } else history = withCorrection(history, istDate(new Date()), nextLimit);
+    }
+  }
   const next = {
+    weeklyLimitHistory: history,
     type: oneOf(body.type ?? cur?.type ?? "HOURLY", "type", ["HOURLY", "FIXED"] as const),
-    weeklyLimitMinutes: "weeklyLimitMinutes" in body ? int(body.weeklyLimitMinutes, "weeklyLimitMinutes", { min: 1, max: 168 * 60, optional: true }) : cur?.weeklyLimitMinutes ?? null,
+    weeklyLimitMinutes: nextLimit,
     hourlyRateCents: "hourlyRateCents" in body ? int(body.hourlyRateCents, "hourlyRateCents", { max: 1_000_000, optional: true }) : cur?.hourlyRateCents ?? null,
     fixedPriceCents: "fixedPriceCents" in body ? int(body.fixedPriceCents, "fixedPriceCents", { max: 100_000_000, optional: true }) : cur?.fixedPriceCents ?? null,
     trackingMode: "trackingMode" in body ? (body.trackingMode === null ? null : oneOf(body.trackingMode, "trackingMode", ["TIMER", "MANUAL"] as const)) : cur?.trackingMode ?? null,
@@ -124,7 +144,8 @@ export type ProjectWeek = {
   needsReview?: number;
 };
 
-export async function projectWeek(id: string, weekRaw?: string | null): Promise<ProjectWeek> {
+/** `teamOnly` (owner, 2026-11-17): count only the Digital Marketing team's own reports (`dmMatch`), not everyone on the project. */
+export async function projectWeek(id: string, weekRaw?: string | null, teamOnly = false): Promise<ProjectWeek> {
   const p = await project(id);
   const week = weekParam(weekRaw);
   const contract = shape(p);
@@ -132,9 +153,9 @@ export async function projectWeek(id: string, weekRaw?: string | null): Promise<
   const [{ owner, shared }, names] = await Promise.all([loadAttribution(), senderNames()]);
   const all = await entriesFor({ clientId: p.clientId, projectId: id }, week);
   // Entries of a client with several projects count here only when they were placed on this one.
-  const entries = all.filter((e) => projectOf(e, owner) === id);
+  const entries = all.filter((e) => projectOf(e, owner) === id && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
   const hourEntries: HourEntry[] = entries.map((e) => ({ date: day(e.entryDate)!, minutes: e.minutes, source: e.source, confirmed: isConfirmed(e) }));
-  const hours = weeklyHours(hourEntries, contract.weeklyLimitMinutes, week.start);
+  const hours = weeklyHours(hourEntries, limitForWeek(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.end), week.start);
   const byDay = Array.from({ length: 7 }, (_, i) => {
     const d = shiftDays(week.start, i);
     return { date: d, minutes: hourEntries.filter((e) => e.date === d && e.confirmed).reduce((n, e) => n + e.minutes, 0) };
@@ -145,21 +166,21 @@ export async function projectWeek(id: string, weekRaw?: string | null): Promise<
     bySender.set(n, (bySender.get(n) ?? 0) + e.minutes);
   }
   return {
-    week, contract, reason: null, sharedClient: !!p.clientId && shared.has(p.clientId), unassignedEntries: all.length - entries.length, hours, byDay,
+    week, contract, reason: null, sharedClient: !!p.clientId && shared.has(p.clientId), unassignedEntries: all.filter((e) => projectOf(e, owner) !== id).length, hours, byDay,
     bySender: [...bySender].map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes),
     needsReview: entries.filter(isPending).length,
   };
 }
 
 /** Who worked how much on a project: hours per person for the chosen week, the last 30 days and everything reported. */
-export async function teamHours(id: string, weekRaw?: string | null) {
+export async function teamHours(id: string, weekRaw?: string | null, teamOnly = false) {
   const p = await project(id);
   const week = weekParam(weekRaw);
   if (!p.contract) return { week, rows: [] as Array<{ name: string; week: number; last30: number; total: number; lastReport: string }> };
   const [{ owner }, names] = await Promise.all([loadAttribution(), senderNames()]);
   const today = istDate(new Date());
   const since = shiftDays(today, -29);
-  const all = (await entriesFor({ clientId: p.clientId, projectId: id }, { start: "2000-01-01", end: "2100-01-01" })).filter((e) => projectOf(e, owner) === id && e.minutes > 0);
+  const all = (await entriesFor({ clientId: p.clientId, projectId: id }, { start: "2000-01-01", end: "2100-01-01" })).filter((e) => projectOf(e, owner) === id && e.minutes > 0 && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
   const people = new Map<string, { name: string; week: number; last30: number; total: number; lastReport: string }>();
   for (const e of all) {
     const name = names.get(e.senderExternalId) ?? "Unknown sender";

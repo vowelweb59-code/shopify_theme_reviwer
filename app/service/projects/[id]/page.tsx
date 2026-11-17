@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { dmMatch } from "@/lib/service/dm-members";
 import { load } from "@/lib/service/api/http";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
 import { assignableUsers, getAssignments, getDetails, getProject, type AssignmentView } from "@/lib/service/api/projects";
@@ -13,17 +14,19 @@ export const dynamic = "force-dynamic";
 
 const SECTION = "rounded-lg border border-border-subtle bg-surface p-4";
 
-export default async function ServiceProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; view?: string }> }) {
+export default async function ServiceProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; view?: string; hours?: string }> }) {
   const { id } = await params;
-  const { week, view } = await searchParams;
+  const { week, view, hours: scope } = await searchParams;
+  const teamOnly = scope === "team";
   const settings = view === "settings";
   const wk = week && /^\d{4}-\d{2}-\d{2}$/.test(week) ? week : null;
   const [project, assignments, pw, details, team_, users] = await load(() =>
-    Promise.all([getProject(id), getAssignments(id), projectWeek(id, wk), getDetails(id), teamHours(id, wk), assignableUsers()])
+    Promise.all([getProject(id), getAssignments(id), projectWeek(id, wk, teamOnly), getDetails(id), teamHours(id, wk, teamOnly), assignableUsers()])
   );
   const managers = assignments.filter((a) => a.assignmentRole === "MANAGER");
   const team = assignments.filter((a) => a.assignmentRole === "EMPLOYEE");
   const base = `/service/projects/${project.id}`;
+  const q = (w?: string, h = teamOnly) => { const p = new URLSearchParams(); if (w) p.set("week", w); if (h) p.set("hours", "team"); return p.size ? `?${p}` : ""; };
   const navBtn = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
 
   return (
@@ -75,11 +78,16 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id="hours" className="font-medium">Hours <span className="font-normal text-zinc-500">· {weekLabel(pw.week)}</span></h3>
               <nav aria-label="Week" className="flex gap-2 text-sm">
-                <Link href={`${base}?week=${shiftWeek(pw.week.start, -1)}`} className={navBtn}>← Previous</Link>
-                <Link href={base} className={navBtn}>This week</Link>
-                <Link href={`${base}?week=${shiftWeek(pw.week.start, 1)}`} className={navBtn}>Next →</Link>
+                <Link href={`${base}${q(shiftWeek(pw.week.start, -1))}`} className={navBtn}>← Previous</Link>
+                <Link href={`${base}${q()}`} className={navBtn}>This week</Link>
+                <Link href={`${base}${q(shiftWeek(pw.week.start, 1))}`} className={navBtn}>Next →</Link>
               </nav>
             </div>
+            <p className="mt-2 flex items-center gap-2 text-sm">
+              <span className="text-zinc-500">Count hours of:</span>
+              <Link href={`${base}${q(wk ?? undefined, false)}`} aria-current={!teamOnly ? "true" : undefined} className={`${navBtn} ${!teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>Everyone</Link>
+              <Link href={`${base}${q(wk ?? undefined, true)}`} aria-current={teamOnly ? "true" : undefined} className={`${navBtn} ${teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>My team only</Link>
+            </p>
             {pw.hours ? (
               <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
@@ -109,7 +117,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                     ))}
                   </ul>
                 )}
-                {pw.bySender && pw.bySender.length > 0 && <p className="text-sm text-zinc-500">By person: {pw.bySender.map((s) => `${s.name} ${fmtMinutes(s.minutes)}`).join(" · ")}</p>}
+                {pw.bySender && pw.bySender.length > 0 && <p className="text-sm text-zinc-500">By person: {pw.bySender.map((s) => `${outsider(s.name)}${s.name} ${fmtMinutes(s.minutes)}`).join(" · ")}</p>}
                 <p className="text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified.</p>
               </div>
             ) : (
@@ -124,7 +132,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
             <NamesRow label="BD" names={details.businessDevelopers.map((x) => x.name)} />
             <NamesRow label="Executives" names={details.executives.map((x) => x.name)} />
             {team.length > 0 && <PeopleRow label="Team" people={team} />}
-            <h4 className="mb-2 mt-4 text-sm font-medium">Who worked how much</h4>
+            <h4 className="mb-2 mt-4 text-sm font-medium">Who worked how much <span className="font-normal text-zinc-500">· * = not in the Digital Marketing team</span></h4>
             {team_.rows.length === 0 ? (
               <p className="text-sm text-zinc-500">No reports on this project yet.</p>
             ) : (
@@ -142,7 +150,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                   <tbody className="divide-y divide-border-subtle">
                     {team_.rows.map((r) => (
                       <tr key={r.name}>
-                        <td className="py-2 pr-3 font-medium">{r.name}</td>
+                        <td className="py-2 pr-3 font-medium">{outsider(r.name)}{r.name}</td>
                         <td className="py-2 pr-3 text-right tabular-nums">{r.week ? fmtMinutes(r.week) : <span className="text-zinc-400">—</span>}</td>
                         <td className="py-2 pr-3 text-right tabular-nums">{r.last30 ? fmtMinutes(r.last30) : <span className="text-zinc-400">—</span>}</td>
                         <td className="py-2 pr-3 text-right font-medium tabular-nums">{fmtMinutes(r.total)}</td>
@@ -244,6 +252,9 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
     </div>
   );
 }
+
+/** "*" before the name of someone outside the Digital Marketing team (their hours count because they are on this project). */
+const outsider = (name: string) => (dmMatch(name) ? "" : "*");
 
 function PeopleRow({ label, people }: { label: string; people: AssignmentView[] }) {
   return (

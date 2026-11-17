@@ -38,6 +38,13 @@ describe('filterPlanToDigitalMarketing', () => {
     expect(out.entries).toHaveLength(0);
   });
 
+  it('keeps an outsider on several team projects of the client, with no project written', () => {
+    const second: DmProject = { ...marketing, id: 'p-second', keywords: ['Andrew Johnson', 'Ads'] };
+    const out = filterPlanToDigitalMarketing(plan([msg('1', 'Ravi Kumar')], [entry('1', 'Ravi Kumar', 'andrew', 'Andrew Johnson')]), [marketing, second]);
+    expect(out.entries).toHaveLength(1);
+    expect(out.entries[0]!.projectId).toBeUndefined();
+  });
+
   it('keeps the start message of a timer pair that is kept', () => {
     const p = plan([msg('on', 'Ravi Kumar'), msg('off', 'Ravi Kumar')], [entry('off', 'Ravi Kumar', 'andrew', 'Andrew Johnson', 'on')]);
     expect(filterPlanToDigitalMarketing(p, [marketing]).messages.map((m) => m.externalId)).toEqual(['on', 'off']);

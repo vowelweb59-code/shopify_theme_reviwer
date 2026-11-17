@@ -2,9 +2,10 @@
 // team works on ("Andrew Johnson has 2 projects: an HR website front end and marketing; both should be separated").
 // Only the team's projects exist on the live site, so a client whose other project is not ours looks like it has one project and
 // would take every unplaced hour. Hence, for someone outside the team, an entry is kept only when it is tied to one of the team's
-// projects by (1) a project keyword written in the client field (not just the client's name), or (2) the poster being on exactly
-// one of the client's team projects (BA/BD/executive or assigned). The project is then written on the entry. Anything else from
-// outside the team is dropped. Pure: takes the full plan and the team's projects.
+// projects by (1) a project keyword written in the client field (not just the client's name), or (2) the poster being on one of the
+// client's team projects (BA/BD/executive or assigned; owner 2026-11-17: anyone on the project's people list counts). The project is
+// written on the entry when it is exactly one; a poster on several of the client's team projects is kept with no project written
+// (the normal placement rules choose). Anything else from outside the team is dropped. Pure: takes the full plan and the team's projects.
 import { dmMatch } from "../dm-members";
 import { pickProjectByKeywords } from "../hours/auto-assign";
 import { normalizeName } from "./text";
@@ -29,7 +30,8 @@ function samePerson(sender: string, member: string): boolean {
   return !m.includes(" ") && s.split(" ")[0] === m;
 }
 
-export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): string | null {
+/** `null` = drop; `{ projectId: null }` = keep, placement left to the normal rules; otherwise keep and write the project. */
+export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): { projectId: string | null } | null {
   if (!e.clientId) return null;
   const projects = byClient.get(e.clientId);
   if (!projects?.length) return null;
@@ -38,9 +40,10 @@ export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw
     return { projectId: p.id, keywords: p.keywords.filter((k) => !own.has(normalizeName(k))) };
   });
   const byKeyword = pickProjectByKeywords(e.clientRaw, candidates);
-  if (byKeyword) return byKeyword;
+  if (byKeyword) return { projectId: byKeyword };
   const onTeam = projects.filter((p) => p.teamNames.some((n) => samePerson(e.senderName, n)));
-  return onTeam.length === 1 ? onTeam[0]!.id : null;
+  if (!onTeam.length) return null;
+  return { projectId: onTeam.length === 1 ? onTeam[0]!.id : null };
 }
 
 export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: readonly DmProject[]): ImportPlan {
@@ -53,8 +56,8 @@ export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: reado
       entries.push(e);
       continue;
     }
-    const projectId = projectForOutsider(e, byClient);
-    if (projectId) entries.push({ ...e, projectId });
+    const placed = projectForOutsider(e, byClient);
+    if (placed) entries.push(placed.projectId ? { ...e, projectId: placed.projectId } : e);
   }
   const needed = new Set<string>();
   for (const e of entries) {
