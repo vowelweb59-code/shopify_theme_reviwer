@@ -106,12 +106,13 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Fixed price (USD)</span>
           <input inputMode="decimal" value={fixedPrice} onChange={(e) => setFixedPrice(e.target.value.replace(/[^\d.]/g, ""))} className={`${input} w-28`} placeholder="e.g. 900" />
-          {workableMinutes(Math.round(Number(fixedPrice) * 100)) !== null && <span className="mt-1 block text-xs text-zinc-500">= {Math.floor(workableMinutes(Math.round(Number(fixedPrice) * 100))! / 60)}h workable at $15/h</span>}
+          {rate === "" && workableMinutes(Math.round(Number(fixedPrice) * 100)) !== null && <span className="mt-1 block text-xs text-zinc-500">= {Math.floor(workableMinutes(Math.round(Number(fixedPrice) * 100))! / 60)}h workable at $15/h</span>}
         </label>
       )}
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Hourly rate (USD)</span>
         <input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))} className={`${input} w-24`} placeholder="e.g. 15.00" />
+        {type === "FIXED" && rate !== "" && <span className="mt-1 block text-xs text-zinc-500">Fixed + hourly rate = billed by the hours, no hours cap</span>}
       </label>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Time tracking</span>

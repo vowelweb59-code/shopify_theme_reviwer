@@ -212,13 +212,16 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const activeOfType = ofType.filter(STATUS_TABS[0].match);
   const weekMinutes = projects.reduce((n, p) => n + (thisWeek.get(p._id) ?? 0), 0);
   // Fixed-price projects: workable hours = price / $15; hourly projects: this week's quota.
-  const fixedBudget = (p: Row) => (kindOf(p) === "fixed" ? workableMinutes(p.contract?.fixedPriceCents) : null);
+  // A fixed project that also has an hourly rate is billed by the hours worked (owner, 2026-11-17: Richard Mintz started at $250, the
+  // scope grew and it is now charged at $15/h): no workable-hours cap, revenue = hours x that rate.
+  const billedByHours = (p: Row) => kindOf(p) === "fixed" && p.contract?.hourlyRateCents != null;
+  const fixedBudget = (p: Row) => (kindOf(p) === "fixed" && !billedByHours(p) ? workableMinutes(p.contract?.fixedPriceCents) : null);
   const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? limitOf(p) ?? 0 : 0), 0);
   // Amounts (owner, 2026-11-17: "revenue generated, total scope of work in amount and how much achieved, like the hours"):
   // hourly = this week's hours x the hourly rate against the weekly quota x the rate; fixed = hours used x $15 against the fixed price.
-  const rateOf = (p: Row) => (kindOf(p) === "fixed" ? STANDARD_RATE_CENTS : p.contract?.hourlyRateCents ?? null);
+  const rateOf = (p: Row) => (kindOf(p) === "fixed" && !billedByHours(p) ? STANDARD_RATE_CENTS : p.contract?.hourlyRateCents ?? null);
   const scopeCents = (p: Row): number | null => {
-    if (kindOf(p) === "fixed") return p.contract?.fixedPriceCents ?? null;
+    if (kindOf(p) === "fixed") return billedByHours(p) ? null : p.contract?.fixedPriceCents ?? null;
     const l = limitOf(p);
     const r = rateOf(p);
     return l !== null && r !== null ? Math.round((l / 60) * r) : null;
@@ -232,7 +235,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const hourlyInView = projects.filter((p) => kindOf(p) === "hourly");
   const revenueWeek = hourlyInView.reduce((n, p) => n + achievedCents(p), 0);
   const scopeWeek = hourlyInView.reduce((n, p) => n + (scopeCents(p) ?? 0), 0);
-  const fixedWeekCents = projects.filter((p) => kindOf(p) === "fixed").reduce((n, p) => n + Math.round(((thisWeek.get(p._id) ?? 0) / 60) * STANDARD_RATE_CENTS), 0);
+  const fixedWeekCents = projects.filter((p) => kindOf(p) === "fixed").reduce((n, p) => n + Math.round(((thisWeek.get(p._id) ?? 0) / 60) * (rateOf(p) ?? 0)), 0);
   const overQuota = projects.filter((p) => {
     const f = fixedBudget(p);
     if (f !== null) return (minutes.get(p._id) ?? 0) > f;
@@ -280,7 +283,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             accent="info"
             label="Revenue this week"
             value={fmtUsd(revenueWeek)}
-            note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} weekly scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)} at $15/h` : ""}`}
+            note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} weekly scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)}` : ""}`}
           />
           <Kpi accent={overQuota ? "fail" : "pass"} label="Over limit" value={overQuota.toLocaleString("en-IN")} note={overQuota ? "past the weekly quota (hourly) or the workable hours (fixed)" : "none"} />
         </div>
@@ -326,7 +329,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     ) : kind === "fixed" ? (
                       <>
                         <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">Fixed</span>
-                        <div className="mt-0.5 text-xs text-zinc-500">{c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}</div>
+                        <div className="mt-0.5 text-xs text-zinc-500">{billedByHours(p) ? `billed ${fmtUsd(c.hourlyRateCents!)}/h` : c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}</div>
                       </>
                     ) : kind === "hourly" ? (
                       <>
@@ -338,7 +341,13 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
-                    {fixedBudget(p) !== null ? <WeekCell minutes={minutes.get(p._id) ?? 0} limit={fixedBudget(p)} unit="total" /> : <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />}
+                    {billedByHours(p) ? (
+                      <div className="tabular-nums">{fmtMinutes(minutes.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">total, billed by hours</span></div>
+                    ) : fixedBudget(p) !== null ? (
+                      <WeekCell minutes={minutes.get(p._id) ?? 0} limit={fixedBudget(p)} unit="total" />
+                    ) : (
+                      <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />
+                    )}
                   </td>
                   {!showMoney && <td className="px-4 py-2.5 text-right"><MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} /></td>}
                   {showMoney && (

@@ -55,7 +55,23 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
 
       {!settings && (
         <>
-          {pw.contract?.type === "FIXED" && workableMinutes(pw.contract.fixedPriceCents) !== null && (() => {
+          {pw.contract?.type === "FIXED" && pw.contract.hourlyRateCents != null && (() => {
+            // Fixed price with an hourly rate: billed by the hours worked, no cap (scope grew past the first price).
+            const used = team_.rows.reduce((n, r) => n + r.total, 0);
+            return (
+              <section aria-labelledby="budget" className={`${SECTION} border-l-4 border-l-status-info-icon`}>
+                <h3 id="budget" className="mb-3 font-medium">Billed by the hours</h3>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
+                  <Fact label="Hours worked" value={fmtMinutes(used)} />
+                  <Fact label="Rate" value={`${fmtUsd(pw.contract.hourlyRateCents!)}/h`} />
+                  <Fact label="Revenue so far" value={fmtUsd(Math.round((used / 60) * pw.contract.hourlyRateCents!))} />
+                  <Fact label="First fixed price" value={pw.contract.fixedPriceCents != null ? fmtUsd(pw.contract.fixedPriceCents) : "—"} />
+                </dl>
+                <p className="mt-2 text-xs text-zinc-500">The scope grew past the first fixed price, so the hours are billed at the hourly rate and there is no workable-hours limit.</p>
+              </section>
+            );
+          })()}
+          {pw.contract?.type === "FIXED" && pw.contract.hourlyRateCents == null && workableMinutes(pw.contract.fixedPriceCents) !== null && (() => {
             const total = workableMinutes(pw.contract.fixedPriceCents)!;
             const used = team_.rows.reduce((n, r) => n + r.total, 0);
             const over = used > total;
