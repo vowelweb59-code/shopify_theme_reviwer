@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Contract } from "@/lib/service/api/hours";
+import { workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { mutate } from "@/lib/service/ui/client";
 
 /**
@@ -105,6 +106,7 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Fixed price (USD)</span>
           <input inputMode="decimal" value={fixedPrice} onChange={(e) => setFixedPrice(e.target.value.replace(/[^\d.]/g, ""))} className={`${input} w-28`} placeholder="e.g. 900" />
+          {workableMinutes(Math.round(Number(fixedPrice) * 100)) !== null && <span className="mt-1 block text-xs text-zinc-500">= {Math.floor(workableMinutes(Math.round(Number(fixedPrice) * 100))! / 60)}h workable at $15/h</span>}
         </label>
       )}
       <label className="text-sm">

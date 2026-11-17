@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames, weekParam } from "@/lib/service/api/hours";
 import { dmMatch } from "@/lib/service/dm-members";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
+import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { limitForWeek, type LimitStep } from "@/lib/service/hours/limit-history";
 import { fmtMinutes, fmtUsd, weekLabel } from "@/lib/service/ui/format";
 import type { ServiceProjectStatus } from "@/models/service-shared";
@@ -120,7 +121,7 @@ function Kpi({ label, value, note, accent }: { label: string; value: ReactNode; 
 }
 
 /** This week's hours against the weekly quota: figures plus a thin bar (red once over). */
-function WeekCell({ minutes, limit }: { minutes: number; limit: number | null }) {
+function WeekCell({ minutes, limit, unit = "wk" }: { minutes: number; limit: number | null; unit?: "wk" | "total" }) {
   if (limit === null) return <span className="tabular-nums">{minutes ? fmtMinutes(minutes) : "—"}</span>;
   const pct = limit ? Math.min(100, (minutes / limit) * 100) : 0;
   const over = minutes > limit;
@@ -129,7 +130,26 @@ function WeekCell({ minutes, limit }: { minutes: number; limit: number | null })
     <div className="ml-auto w-36">
       <div className="flex justify-between text-xs tabular-nums">
         <span className={over ? "font-medium text-status-fail-text" : undefined}>{fmtMinutes(minutes)}</span>
-        <span className="text-zinc-500">of {h1(limit)}h</span>
+        <span className="text-zinc-500">of {h1(limit)}h{unit === "total" ? " total" : ""}</span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
+        <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+/** Revenue achieved against the scope of work, in dollars, with the same thin bar as the hours. */
+function MoneyCell({ cents, scope }: { cents: number; scope: number | null }) {
+  if (scope === null) return <span className="tabular-nums">{cents ? fmtUsd(cents) : "—"}</span>;
+  const pct = scope ? Math.min(100, (cents / scope) * 100) : 0;
+  const over = cents > scope;
+  const bar = over ? "bg-status-fail-icon" : pct >= 80 ? "bg-status-warning-icon" : "bg-status-pass-icon";
+  return (
+    <div className="ml-auto w-36">
+      <div className="flex justify-between text-xs tabular-nums">
+        <span className={over ? "font-medium text-status-fail-text" : undefined}>{fmtUsd(cents)}</span>
+        <span className="text-zinc-500">of {fmtUsd(scope)}</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
         <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
@@ -169,7 +189,8 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Closed projects: what we took from the client, from all reported hours.
   const showMoney = status.id === "closed";
   const minutes = new Map<string, number>();
-  if (showMoney) {
+  // All-time hours are needed for Closed (money) and for fixed-price projects (hours used against the workable total).
+  if (showMoney || projects.some((p) => kindOf(p) === "fixed")) {
     const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
       .select("projectId clientId minutes allocations senderExternalId")
       .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
@@ -190,8 +211,34 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Headline numbers.
   const activeOfType = ofType.filter(STATUS_TABS[0].match);
   const weekMinutes = projects.reduce((n, p) => n + (thisWeek.get(p._id) ?? 0), 0);
-  const quotaMinutes = projects.reduce((n, p) => n + (limitOf(p) ?? 0), 0);
-  const overQuota = projects.filter((p) => { const l = limitOf(p); return l !== null && (thisWeek.get(p._id) ?? 0) > l; }).length;
+  const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? limitOf(p) ?? 0 : 0), 0);
+  // Fixed-price projects: workable hours = price / $15; hourly projects: this week's quota.
+  const fixedBudget = (p: Row) => (kindOf(p) === "fixed" ? workableMinutes(p.contract?.fixedPriceCents) : null);
+  // Amounts (owner, 2026-11-17: "revenue generated, total scope of work in amount and how much achieved, like the hours"):
+  // hourly = this week's hours x the hourly rate against the weekly quota x the rate; fixed = hours used x $15 against the fixed price.
+  const rateOf = (p: Row) => (kindOf(p) === "fixed" ? STANDARD_RATE_CENTS : p.contract?.hourlyRateCents ?? null);
+  const scopeCents = (p: Row): number | null => {
+    if (kindOf(p) === "fixed") return p.contract?.fixedPriceCents ?? null;
+    const l = limitOf(p);
+    const r = rateOf(p);
+    return l !== null && r !== null ? Math.round((l / 60) * r) : null;
+  };
+  const achievedCents = (p: Row): number => {
+    const r = rateOf(p);
+    if (r === null) return 0;
+    const m = kindOf(p) === "fixed" ? minutes.get(p._id) ?? 0 : thisWeek.get(p._id) ?? 0;
+    return Math.round((m / 60) * r);
+  };
+  const hourlyInView = projects.filter((p) => kindOf(p) === "hourly");
+  const revenueWeek = hourlyInView.reduce((n, p) => n + achievedCents(p), 0);
+  const scopeWeek = hourlyInView.reduce((n, p) => n + (scopeCents(p) ?? 0), 0);
+  const fixedWeekCents = projects.filter((p) => kindOf(p) === "fixed").reduce((n, p) => n + Math.round(((thisWeek.get(p._id) ?? 0) / 60) * STANDARD_RATE_CENTS), 0);
+  const overQuota = projects.filter((p) => {
+    const f = fixedBudget(p);
+    if (f !== null) return (minutes.get(p._id) ?? 0) > f;
+    const l = limitOf(p);
+    return l !== null && (thisWeek.get(p._id) ?? 0) > l;
+  }).length;
   const totalTaken = showMoney ? projects.reduce((n, p) => n + (takenCents(p) ?? 0), 0) : 0;
   const rated = projects.filter((p) => p.reviewRating != null);
   const avgReview = rated.length ? rated.reduce((n, p) => n + p.reviewRating!, 0) / rated.length : null;
@@ -222,15 +269,20 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} />
-          <Kpi accent="warn" label="On hold" value={counts(STATUS_TABS[2]).toLocaleString("en-IN")} />
+          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} note={`${counts(STATUS_TABS[2])} on hold`} />
           <Kpi
             accent="primary"
             label={`Hours this week · ${weekLabel(week)}`}
             value={fmtMinutes(weekMinutes)}
             note={quotaMinutes ? `of ${h1(quotaMinutes)}h weekly quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%` : "No weekly quota set"}
           />
-          <Kpi accent={overQuota ? "fail" : "pass"} label="Over weekly quota" value={overQuota.toLocaleString("en-IN")} note={overQuota ? "projects past their quota this week" : "none this week"} />
+          <Kpi
+            accent="info"
+            label="Revenue this week"
+            value={fmtUsd(revenueWeek)}
+            note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} weekly scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)} at $15/h` : ""}`}
+          />
+          <Kpi accent={overQuota ? "fail" : "pass"} label="Over limit" value={overQuota.toLocaleString("en-IN")} note={overQuota ? "past the weekly quota (hourly) or the workable hours (fixed)" : "none"} />
         </div>
       )}
 
@@ -241,7 +293,8 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               <th className={th}>Project</th>
               <th className={th}>BA / BD</th>
               <th className={th}>Type</th>
-              <th className={`${th} text-right`}>This week</th>
+              <th className={`${th} text-right`}>Hours</th>
+              {!showMoney && <th className={`${th} text-right`}>Revenue</th>}
               {showMoney && <th className={`${th} text-right`}>Review</th>}
               {showMoney && <th className={`${th} text-right`}>Taken</th>}
             </tr>
@@ -249,7 +302,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <tbody className="divide-y divide-border-subtle">
             {projects.length === 0 && (
               <tr>
-                <td colSpan={showMoney ? 6 : 4} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
+                <td colSpan={showMoney ? 6 : 5} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
               </tr>
             )}
             {projects.map((p) => {
@@ -284,7 +337,10 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                       <span className="rounded-full bg-status-warning-bg px-2 py-0.5 text-xs font-medium text-status-warning-text" title="No rate or weekly quota entered: open the project to set Fixed or Hourly">Not set</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right"><WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} /></td>
+                  <td className="px-4 py-2.5 text-right">
+                    {fixedBudget(p) !== null ? <WeekCell minutes={minutes.get(p._id) ?? 0} limit={fixedBudget(p)} unit="total" /> : <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />}
+                  </td>
+                  {!showMoney && <td className="px-4 py-2.5 text-right"><MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} /></td>}
                   {showMoney && (
                     <td className="px-4 py-2.5 text-right tabular-nums">
                       {p.reviewRating != null ? <span title={`${p.reviewRating.toFixed(1)} out of 5`}><span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}</span> : "—"}

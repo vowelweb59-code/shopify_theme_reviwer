@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { dmMatch } from "@/lib/service/dm-members";
+import { workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { load } from "@/lib/service/api/http";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
 import { assignableUsers, getAssignments, getDetails, getProject, type AssignmentView } from "@/lib/service/api/projects";
@@ -54,6 +55,26 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
 
       {!settings && (
         <>
+          {pw.contract?.type === "FIXED" && workableMinutes(pw.contract.fixedPriceCents) !== null && (() => {
+            const total = workableMinutes(pw.contract.fixedPriceCents)!;
+            const used = team_.rows.reduce((n, r) => n + r.total, 0);
+            const over = used > total;
+            return (
+              <section aria-labelledby="budget" className={`${SECTION} border-l-4 ${over ? "border-l-status-fail-icon" : "border-l-status-info-icon"}`}>
+                <h3 id="budget" className="mb-3 font-medium">Fixed budget in hours</h3>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
+                  <Fact label="Total workable hours" value={`${fmtMinutes(total)} (${fmtUsd(pw.contract.fixedPriceCents!)} ÷ $15)`} />
+                  <Fact label="Hours used" value={fmtMinutes(used)} />
+                  <Fact label={over ? "Over the budget by" : "Hours left"} value={fmtMinutes(Math.abs(total - used))} />
+                  <Fact label="Revenue so far" value={`${fmtUsd(Math.round((used / 60) * 1500))} of ${fmtUsd(pw.contract.fixedPriceCents!)} (${Math.round((used / total) * 100)}%)`} />
+                </dl>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
+                  <div className={`h-full ${over ? "bg-status-fail-icon" : used / total >= 0.8 ? "bg-status-warning-icon" : "bg-status-pass-icon"}`} style={{ width: `${Math.min(100, (used / total) * 100)}%` }} />
+                </div>
+                {over && <p className="mt-2 text-sm text-status-fail-text">The hours reported are past what the fixed price allows.</p>}
+              </section>
+            );
+          })()}
           <section aria-labelledby="facts" className={SECTION}>
             <h3 id="facts" className="mb-3 font-medium">Project details</h3>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
