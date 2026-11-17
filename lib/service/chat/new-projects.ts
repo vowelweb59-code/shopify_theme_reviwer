@@ -2,12 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { baMatch } from "../ba-members";
 import { bdMatch } from "../bd-members";
+import { dmMatch } from "../dm-members";
 import { runFollowUps } from "../import/persist";
 import { rematchClients } from "../import/rematch";
 import { parseNewProjectPost } from "../import/new-project-post";
 import { recordServiceAudit } from "../audit/record";
 import { listServiceMessages } from "./google";
 import { serviceRefreshToken } from "./sync";
+import { ServiceChatSender } from "@/models/service-chat";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
@@ -32,8 +34,12 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
   const byName = new Map<string, string>();
   // The live site is Digital Marketing only and a post names only the BD and BA, so a post counts only when its client is one we
   // already have, or a Digital Marketing person has reported hours for that name (entries are filtered to the team on import).
+  // Only the team's own reports count (owner, 2026-11-17: Thani Almheiri was made because a person outside the team had reported hours
+  // for that name).
+  const dmSenders = (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>())
+    .filter((x) => dmMatch(x.displayName) !== null).map((x) => x.externalId);
   const reported = new Set(
-    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null } }) as string[]).map((r) => key(r.split("|")[0])),
+    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null }, senderExternalId: { $in: dmSenders } }) as string[]).map((r) => key(r.split("|")[0])),
   );
   for (const c of clients) for (const n of [c.name, ...c.aliases]) byName.set(key(n), c._id);
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
