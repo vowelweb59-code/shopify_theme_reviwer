@@ -18,6 +18,8 @@ export const IDLE_WORKING_DAYS = 30;
 export const AUTO_HOLD_REASON = `Automatic: no hours for ${IDLE_WORKING_DAYS} working days`;
 export const AUTO_RESUME_REASON = "Automatic: hours reported again";
 export const DM_IDLE_DAYS = 60;
+/** Set by `scripts/service-hold-project.ts`: the owner holds a project until a team member reports on it. */
+export const HOLD_UNTIL_TEAM_REASON = "Hold until a Digital Marketing team report";
 export const AUTO_HOLD_DM_REASON = `Automatic: no Digital Marketing team report for ${DM_IDLE_DAYS} days`;
 const DAY_MS = 86_400_000;
 /** Holds placed by these rules, under the current or an earlier wording ("... for 45 days"). */
@@ -100,6 +102,13 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
       out.reasons[p.name] = reason;
       if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ACTIVE" }, { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason, at: now } } });
       out.held.push(p.name);
+    } else if (latest?.reason === HOLD_UNTIL_TEAM_REASON) {
+      // Held by the owner "until my team reports": resumes on the first team report dated after the day it was held.
+      const dm = lastDm.get(p._id);
+      if (dm && istDay(dm) > istDay(new Date(latest.at))) {
+        if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
+        out.resumed.push(p.name);
+      }
     } else if (!reason && isAutoHold(latest?.reason)) {
       if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
       out.resumed.push(p.name);
