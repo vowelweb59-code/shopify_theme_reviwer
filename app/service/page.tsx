@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
-import { entriesFor, senderNames, weekParam } from "@/lib/service/api/hours";
+import { entriesFor, senderNames } from "@/lib/service/api/hours";
 import { dmMatch } from "@/lib/service/dm-members";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
-import { limitForWeek, type LimitStep } from "@/lib/service/hours/limit-history";
-import { fmtMinutes, fmtUsd, weekLabel } from "@/lib/service/ui/format";
+import { limitForPeriod, type LimitStep } from "@/lib/service/hours/limit-history";
+import { istDate } from "@/lib/service/import/text";
+import { weekOf } from "@/lib/service/import/week";
+import { fmtMinutes, fmtUsd, shiftWeek, weekLabel } from "@/lib/service/ui/format";
 import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
@@ -49,13 +51,23 @@ const STATUS_TABS = [
   { id: "all", label: "All", match: () => true },
 ] as const;
 
-const href = (tab: string, status: string, teamOnly: boolean) => {
+/** The period being looked at: a Monday-to-Sunday week or a calendar month (owner, 2026-11-17: look back at any past week or month). */
+type Per = { by?: "month"; on?: string };
+const href = (tab: string, status: string, teamOnly: boolean, per: Per = {}) => {
   const q = new URLSearchParams();
   if (tab !== "timer") q.set("tab", tab);
   if (status !== "active") q.set("status", status);
   if (teamOnly) q.set("hours", "team");
+  if (per.by) q.set("by", per.by);
+  if (per.on) q.set("on", per.on);
   return q.size ? `/service?${q}` : "/service";
 };
+const isoDay = (v: string | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) ? v : null);
+const monthBounds = (anchor: string) => {
+  const [y, m] = anchor.split("-").map(Number);
+  return { start: `${anchor.slice(0, 7)}-01`, end: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10) };
+};
+const shiftMonth = (anchor: string, by: number) => { const [y, m] = anchor.split("-").map(Number); return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10); };
 
 const h1 = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
@@ -158,7 +170,7 @@ function MoneyCell({ cents, scope }: { cents: number; scope: number | null }) {
   );
 }
 
-export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string }> }) {
+export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string }> }) {
   const sp = await searchParams;
   const teamOnly = sp.hours === "team";
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
@@ -176,15 +188,26 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const projects = ofType.filter(status.match);
   const counts = (s: (typeof STATUS_TABS)[number]) => ofType.filter(s.match).length;
 
-  // Hours reported this week per project (the same placement as the project page).
-  const week = weekParam(null);
+  // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
+  // ?by=month or ?on=YYYY-MM-DD (any day inside the week / month wanted) is given.
+  const today = istDate(new Date());
+  const anchor = isoDay(sp.on) ?? today;
+  const byMonth = sp.by === "month";
+  const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
+  const isCurrent = today >= week.start && today <= week.end;
+  const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined };
+  const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
+  const unit = byMonth ? "month" : "week";
+  const prevOn = byMonth ? shiftMonth(anchor, -1) : shiftWeek(week.start, -1);
+  const nextOn = byMonth ? shiftMonth(anchor, 1) : shiftWeek(week.start, 1);
+  const h = (t: string, st: string, tm: boolean, p: Per = per) => href(t, st, tm, p);
   const countsFor = (sender: string) => !teamOnly || dmMatch(names.get(sender)) !== null;
   const thisWeek = new Map<string, number>();
   for (const e of await entriesFor("ANY", week)) {
     const pid = projectOf(e, att.owner);
     if (pid && countsFor(e.senderExternalId)) thisWeek.set(pid, (thisWeek.get(pid) ?? 0) + e.minutes);
   }
-  const limitOf = (p: Row) => (p.contract ? limitForWeek(p.contract.weeklyLimitHistory ?? [], p.contract.weeklyLimitMinutes, week.end) : null);
+  const limitOf = (p: Row) => (p.contract ? limitForPeriod(p.contract.weeklyLimitHistory ?? [], p.contract.weeklyLimitMinutes, week.start, week.end) : null);
 
   // Closed projects: what we took from the client, from all reported hours.
   const showMoney = status.id === "closed";
@@ -249,12 +272,32 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
 
   return (
     <div className="space-y-5">
+      {!showMoney && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Segments items={[{ to: h(tab.id, status.id, teamOnly, { on: per.on }), text: "Week", on: !byMonth }, { to: h(tab.id, status.id, teamOnly, { by: "month", on: per.on }), text: "Month", on: byMonth }]} />
+            <Link href={h(tab.id, status.id, teamOnly, { by: per.by, on: prevOn })} aria-label={`Previous ${unit}`} className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted">←</Link>
+            <span className="min-w-44 text-center text-sm font-medium">{periodName}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-xs text-primary-tint-text">now</span>}</span>
+            <Link href={h(tab.id, status.id, teamOnly, { by: per.by, on: nextOn })} aria-label={`Next ${unit}`} className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted">→</Link>
+            {!isCurrent && <Link href={h(tab.id, status.id, teamOnly, { by: per.by })} className="text-sm text-primary hover:underline">Back to this {unit}</Link>}
+          </div>
+          <form action="/service" method="get" className="flex items-center gap-2 text-sm">
+            {tab.id !== "timer" && <input type="hidden" name="tab" value={tab.id} />}
+            {status.id !== "active" && <input type="hidden" name="status" value={status.id} />}
+            {teamOnly && <input type="hidden" name="hours" value="team" />}
+            {byMonth && <input type="hidden" name="by" value="month" />}
+            <label className="text-zinc-500" htmlFor="jump-date">Jump to a date</label>
+            <input id="jump-date" type="date" name="on" defaultValue={anchor} max={today} className="rounded-md border border-border-subtle bg-surface px-2 py-1.5" />
+            <button className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 hover:bg-surface-muted">Go</button>
+          </form>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-border-subtle">
-        <Tabs items={STATUS_TABS.map((s) => ({ id: s.id, to: href(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
+        <Tabs items={STATUS_TABS.map((s) => ({ id: s.id, to: h(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
         <div className="flex items-center gap-3 pb-2">
-          <Segments items={TABS.map((t) => ({ to: href(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
+          <Segments items={TABS.map((t) => ({ to: h(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
           <Link
-            href={href(tab.id, status.id, !teamOnly)}
+            href={h(tab.id, status.id, !teamOnly)}
             aria-pressed={teamOnly}
             title="Count only your Digital Marketing team's hours"
             className={`rounded-md border px-3 py-1.5 text-sm ${teamOnly ? "border-primary bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle bg-surface text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`}
@@ -275,17 +318,17 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} note={`${counts(STATUS_TABS[2])} on hold`} />
           <Kpi
             accent="primary"
-            label={`Hours this week · ${weekLabel(week)}`}
+            label={`Hours ${isCurrent ? `this ${unit} ` : ""}· ${periodName}`}
             value={fmtMinutes(weekMinutes)}
-            note={quotaMinutes ? `of ${h1(quotaMinutes)}h weekly quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%` : "No weekly quota set"}
+            note={quotaMinutes ? `of ${h1(quotaMinutes)}h ${unit === "week" ? "weekly" : "monthly"} quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%` : "No weekly quota set"}
           />
           <Kpi
             accent="info"
-            label="Revenue this week"
+            label={`Revenue ${isCurrent ? `this ${unit}` : `· ${periodName}`}`}
             value={fmtUsd(revenueWeek)}
-            note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} weekly scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)}` : ""}`}
+            note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} ${unit === "week" ? "weekly" : "monthly"} scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)}` : ""}`}
           />
-          <Kpi accent={overQuota ? "fail" : "pass"} label="Over limit" value={overQuota.toLocaleString("en-IN")} note={overQuota ? "past the weekly quota (hourly) or the workable hours (fixed)" : "none"} />
+          <Kpi accent={overQuota ? "fail" : "pass"} label="Over limit" value={overQuota.toLocaleString("en-IN")} note={overQuota ? `past the ${unit === "week" ? "weekly" : "monthly"} quota (hourly) or the workable hours (fixed)` : "none"} />
         </div>
       )}
 
@@ -348,6 +391,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     ) : (
                       <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />
                     )}
+                    {kind === "fixed" && <div className="mt-1 text-xs tabular-nums text-zinc-500">{fmtMinutes(thisWeek.get(p._id) ?? 0)} {isCurrent ? `this ${unit}` : `in this ${unit}`}</div>}
                   </td>
                   {!showMoney && <td className="px-4 py-2.5 text-right"><MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} /></td>}
                   {showMoney && (

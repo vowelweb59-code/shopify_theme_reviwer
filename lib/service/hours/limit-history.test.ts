@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isMonday, limitForWeek, withCorrection, withScopeChange } from './limit-history';
+import { isMonday, limitForPeriod, limitForWeek, withCorrection, withScopeChange } from './limit-history';
 
 describe('weekly limit history', () => {
   it('uses the current value when there is no history', () => expect(limitForWeek([], 600, '2026-11-22')).toBe(600));
@@ -34,3 +34,18 @@ describe('weekly limit history', () => {
     expect(withCorrection([], '2026-11-20', 700)).toEqual([]);
   });
 });
+
+describe('limitForPeriod', () => {
+  it('is the plain weekly limit for a whole week', () => expect(limitForPeriod([], 600, '2026-11-16', '2026-11-22')).toBe(600));
+  it('adds the share of each week inside a month', () => {
+    // July 2026: Wed 1 Jul to Fri 31 Jul = 31 days -> 31/7 of a week
+    expect(limitForPeriod([], 700, '2026-07-01', '2026-07-31')).toBe(3100);
+  });
+  it('follows a limit step that starts on a Monday inside the month', () => {
+    const h = withScopeChange([], 700, 1400, '2026-07-20');
+    // 1-19 Jul (19 days) at 700/week, 20-31 Jul (12 days) at 1400/week
+    expect(limitForPeriod(h, 1400, '2026-07-01', '2026-07-31')).toBe(Math.round((700 * 19) / 7 + (1400 * 12) / 7));
+  });
+  it('is null with no limit', () => expect(limitForPeriod([], null, '2026-07-01', '2026-07-31')).toBeNull());
+});
+

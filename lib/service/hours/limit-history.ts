@@ -29,3 +29,26 @@ export function withCorrection(history: readonly LimitStep[], today: string, min
   sorted.forEach((s, i) => { if (s.from === null || s.from <= today) idx = i; });
   return sorted.map((s, i) => (i === idx ? { ...s, minutes } : s));
 }
+
+const DAY = 86_400_000;
+const toMs = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
+const toIso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/**
+ * The weekly limit over a period (a week or a month): each Monday-to-Sunday week that touches the period counts its limit in force
+ * (`limitForWeek`) times the share of its days inside the period. A whole week gives the plain weekly limit. Null when no limit applies.
+ */
+export function limitForPeriod(history: readonly LimitStep[], current: number | null, start: string, end: string): number | null {
+  let total = 0;
+  let any = false;
+  const startMs = toMs(start);
+  const endMs = toMs(end);
+  const dow = (new Date(startMs).getUTCDay() + 6) % 7; // Monday = 0
+  for (let ws = startMs - dow * DAY; ws <= endMs; ws += 7 * DAY) {
+    const we = ws + 6 * DAY;
+    const days = Math.min(we, endMs) / DAY - Math.max(ws, startMs) / DAY + 1;
+    const limit = limitForWeek(history, current, toIso(we));
+    if (limit !== null) { total += (limit * days) / 7; any = true; }
+  }
+  return any ? Math.round(total) : null;
+}
