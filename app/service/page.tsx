@@ -58,10 +58,10 @@ const href = (tab: string, status: string, teamOnly: boolean) => {
 
 const h1 = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
-function Segments({ label, items }: { label: string; items: Array<{ to: string; text: string; on: boolean; count?: number }> }) {
+/** Small segmented switch (Type). */
+function Segments({ items }: { items: Array<{ to: string; text: string; on: boolean }> }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</span>
       <div className="inline-flex overflow-hidden rounded-md border border-border-subtle">
         {items.map((i) => (
           <Link
@@ -71,11 +71,28 @@ function Segments({ label, items }: { label: string; items: Array<{ to: string; 
             className={`border-r border-border-subtle px-3 py-1.5 text-sm last:border-r-0 ${i.on ? "bg-primary-tint font-medium text-primary-tint-text" : "bg-surface text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`}
           >
             {i.text}
-            {i.count !== undefined && <span className="ml-1.5 tabular-nums text-zinc-500">{i.count}</span>}
           </Link>
         ))}
       </div>
     </div>
+  );
+}
+
+/** Underlined tabs with counts (Status): the main filter. */
+function Tabs({ items }: { items: Array<{ to: string; text: string; on: boolean; count: number }> }) {
+  return (
+    <nav aria-label="Project status" className="flex gap-5">
+      {items.map((i) => (
+        <Link
+          key={i.text}
+          href={i.to}
+          aria-current={i.on ? "page" : undefined}
+          className={`-mb-px border-b-2 pb-2 text-sm ${i.on ? "border-primary font-medium text-primary-tint-text" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+        >
+          {i.text} <span className="tabular-nums text-zinc-400">{i.count}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -168,16 +185,19 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-border-subtle bg-surface px-4 py-3">
-        <Segments label="Type" items={TABS.map((t) => ({ to: href(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
-        <Segments label="Status" items={STATUS_TABS.map((s) => ({ to: href(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
-        <Segments
-          label="Hours of"
-          items={[
-            { to: href(tab.id, status.id, false), text: "Everyone", on: !teamOnly },
-            { to: href(tab.id, status.id, true), text: "My team only", on: teamOnly },
-          ]}
-        />
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-border-subtle">
+        <Tabs items={STATUS_TABS.map((s) => ({ to: href(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
+        <div className="flex items-center gap-3 pb-2">
+          <Segments items={TABS.map((t) => ({ to: href(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
+          <Link
+            href={href(tab.id, status.id, !teamOnly)}
+            aria-pressed={teamOnly}
+            title="Count only your Digital Marketing team's hours"
+            className={`rounded-md border px-3 py-1.5 text-sm ${teamOnly ? "border-primary bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle bg-surface text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`}
+          >
+            {teamOnly ? "✓ " : ""}My team only
+          </Link>
+        </div>
       </div>
 
       {showMoney ? (
