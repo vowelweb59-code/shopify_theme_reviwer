@@ -3,7 +3,7 @@ import "server-only";
 // signed in sees rates and fixed prices too (owner decision for this port).
 import { badRequest, day, int, isoDay, notFound, oneOf, str } from "./http";
 import { dmMatch } from "../dm-members";
-import { limitForWeek, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
+import { limitForWeek, isMonday, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { istDate } from "../import/text";
 import { weekOf, type Week } from "../import/week";
@@ -111,6 +111,7 @@ export async function putContract(id: string, body: Record<string, unknown>) {
       const kind = oneOf(body.limitChange, "limitChange", ["correction", "scope"] as const);
       if (kind === "scope") {
         const from = isoDay(body.limitFrom, "limitFrom", { optional: false });
+        if (!isMonday(day(from)!)) throw badRequest("limitFrom must be a Monday: a changed limit always starts on a Monday.");
         history = withScopeChange(history, prevLimit, nextLimit, day(from)!);
       } else history = withCorrection(history, istDate(new Date()), nextLimit);
     }

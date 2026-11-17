@@ -39,6 +39,7 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
     const changing = limit !== null && total > 0 && total !== limit;
     if (changing && !why) return setError("You are changing the weekly hours: choose whether you are correcting the original value or the client changed the scope.");
     if (changing && why === "scope" && !/^\d{4}-\d{2}-\d{2}$/.test(from)) return setError("Enter the date the new weekly hours apply from.");
+    if (changing && why === "scope" && new Date(`${from}T00:00:00Z`).getUTCDay() !== 1) return setError("The new weekly hours always start on a Monday: pick a Monday.");
     setBusy(true);
     const r = await mutate("PUT", `/projects/${projectId}/contract`, {
       type,
@@ -88,9 +89,9 @@ export function ContractEditor({ projectId, contract }: { projectId: string; con
           </label>
           {why === "scope" && (
             <label className="mt-2 flex items-center gap-2">
-              <span className="text-zinc-500">New hours apply from</span>
+              <span className="text-zinc-500">New hours apply from (a Monday)</span>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={input} />
-              <span className="text-xs text-zinc-500">Weeks before this date keep {Math.floor(limit / 60)}h{limit % 60 ? ` ${limit % 60}m` : ""}; the week containing it and later use the new hours.</span>
+              <span className="text-xs text-zinc-500">Weeks before this Monday keep {Math.floor(limit / 60)}h{limit % 60 ? ` ${limit % 60}m` : ""}; that week and later use the new hours.</span>
             </label>
           )}
         </fieldset>

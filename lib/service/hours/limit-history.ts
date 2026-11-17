@@ -1,6 +1,8 @@
 // Weekly limit over time (owner, 2026-11-17: clients change their hourly limit as their work changes). A limit CORRECTION edits the
-// value in force; a SCOPE change adds a dated step, and a week uses the step in force on its last day (so the week that contains the
-// date already uses the new limit). Pure.
+// value in force; a SCOPE change adds a dated step that starts on a MONDAY the owner chooses (owner, 2026-11-17: it is always from a
+// Monday, but which Monday depends on the client). A week uses the step in force on its last day, which for a Monday start is the
+// same as on its first. Pure.
+export const isMonday = (iso: string): boolean => new Date(`${iso}T00:00:00Z`).getUTCDay() === 1;
 export type LimitStep = { from: string | null; minutes: number };
 
 /** The limit for a week ending `weekEnd` (YYYY-MM-DD): the latest step starting on or before it, else the contract's current value. */
