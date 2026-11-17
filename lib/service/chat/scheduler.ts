@@ -35,4 +35,4 @@ export const startServiceChatScheduler = createRepeatingJob("service-chat-sync",
   } catch (err) {
     console.error("[service-chat] new project posts failed:", err instanceof Error ? err.message : err);
   }
-});
+}, 60_000); // first run after boot is staggered so a wake from sleep is not one big burst

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
 import { dmMatch } from "@/lib/service/dm-members";
+import { loadAllTimeEntries } from "@/lib/service/hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { limitForPeriod, type LimitStep } from "@/lib/service/hours/limit-history";
@@ -12,7 +13,6 @@ import { fmtMinutes, fmtUsd, shiftWeek, weekLabel } from "@/lib/service/ui/forma
 import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
-import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -214,9 +214,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const minutes = new Map<string, number>();
   // All-time hours are needed for Closed (money) and for fixed-price projects (hours used against the workable total).
   if (showMoney || projects.some((p) => kindOf(p) === "fixed")) {
-    const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
-      .select("projectId clientId minutes allocations senderExternalId")
-      .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
+    const entries = await loadAllTimeEntries();
     for (const e of expandAllocations(entries)) {
       if (!countsFor(e.senderExternalId)) continue;
       const pid = projectOf(e, att.owner);

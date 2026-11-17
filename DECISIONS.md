@@ -344,6 +344,24 @@ stayed (only the Themes tab hides non-live themes), so the same day `scripts/rec
 descriptions, members, deadlines and rounds are lost). `remove-non-live-projects.ts` can no longer delete. Home Décor
 (no projects) may still be a slug mismatch, so check it if it should be live.
 
+## 5b. Speed pass 2026-11-17 (owner: "the app is very slow, optimise it in the current environment, no upgrade")
+
+Measured first (the pages and API routes rendered against the live database from the dev machine, so absolute times include the network),
+then only what the numbers pointed at was changed:
+
+| Finding | Fix |
+|---|---|
+| `GET /api/shopify-apps` took about 3.4 s and sent 4.6 MB on every visit (three analytics passes over ~10,600 apps) | The ready-made JSON is kept in memory and rebuilt only when a cheap fingerprint of the apps and categories changes (`app/api/shopify-apps/route.ts`): 3.4 s to about 40 ms |
+| Service overview and Revenue loaded about 14,000 time entries on every request (600 to 1,000 ms) | `lib/service/hours/all-time.ts` loads them once and shares them (20 s); `loadAttribution`, `senderNames` and `loadRevenueInput` are cached too; the pages now take about 110 to 230 ms |
+| Every boot or wake from sleep started the Chat, service, attendance and auto-audit jobs in the same second, competing with the first page requests | `createRepeatingJob` takes a first-run delay: 30 s (theme Chat), 60 s (service Chat), 120 s (attendance), 180 s (auto-audit) |
+
+The cache is `lib/cache/memo.ts` (a Map on `globalThis`, shared in-flight loads, a failed load is not kept, `forgetMemo("service:")` drops a
+prefix). Writers drop the Service entries at once: every audited write (`recordServiceAudit`) and `runFollowUps` call it, so a change shows
+immediately; anything else can be at most 20 to 30 s old. **Not changed, still the slowest reads:** `GET /api/themes` (about 1 s, 221 KB:
+it derives every theme's checks per request), `GET /api/available-features` (1.2 s the first time), `GET /api/projects` (0.3 to 0.5 s). Next
+candidates if it is still slow: cache those three the same way (they need a clear on audit completion), and trim the fields `/api/themes`
+returns. Whether Render's instance is the limit (CPU or memory) was not visible from here: its metrics page would say.
+
 ## 6. Code audit 2026-11-11: fixes made and what remains
 
 A read-only audit (security, stale code, duplicated mechanics) found the items below. Done on 2026-11-11 (typecheck, lint, tests pass):

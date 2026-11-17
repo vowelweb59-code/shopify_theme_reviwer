@@ -2,6 +2,7 @@ import "server-only";
 // Contracts and Upwork-style weekly hours (ported from the Upwork app's hours.controller.ts). One shared login: everyone
 // signed in sees rates and fixed prices too (owner decision for this port).
 import { badRequest, day, int, isoDay, notFound, oneOf, str } from "./http";
+import { memo } from "@/lib/cache/memo";
 import { dmMatch } from "../dm-members";
 import { limitForWeek, isMonday, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
@@ -69,7 +70,9 @@ export async function entriesFor(scope: { clientId: string | null; projectId: st
   return expandAllocations(rows);
 }
 
-export async function senderNames(): Promise<Map<string, string>> {
+export const senderNames = (): Promise<Map<string, string>> => memo("service:sender-names", 20_000, senderNamesUncached);
+
+async function senderNamesUncached(): Promise<Map<string, string>> {
   const rows = await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>();
   return new Map(rows.map((s) => [s.externalId, s.displayName]));
 }

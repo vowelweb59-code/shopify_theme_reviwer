@@ -13,4 +13,4 @@ export const startAttendanceScheduler = createRepeatingJob("attendance-sync", "a
   await connectToDatabase();
   const conn = await ServiceChatConnection.findOne({ key: "service-chat" }).select("status").lean<{ status: string } | null>();
   if (conn?.status === "active") await syncAttendance(2);
-});
+}, 120_000); // first run after boot is staggered so a wake from sleep is not one big burst

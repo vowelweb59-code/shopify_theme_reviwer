@@ -1,22 +1,23 @@
+import { memo } from "@/lib/cache/memo";
+import { loadAllTimeEntries } from "../hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import type { AppClient, ClientStatus, HoursRow, TakenRow } from "./compare";
 import { normName } from "./match";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceRevenueTaken } from "@/models/service-revenue";
-import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 /** What the Revenue tab compares: the imported sheet rows, the app's clients and the reported minutes per project and month. */
-export async function loadRevenueInput(): Promise<{ taken: TakenRow[]; clients: AppClient[]; hours: HoursRow[] }> {
+export const loadRevenueInput = () => memo("service:revenue-input", 30_000, loadRevenueInputUncached);
+
+async function loadRevenueInputUncached(): Promise<{ taken: TakenRow[]; clients: AppClient[]; hours: HoursRow[] }> {
   const [takenDocs, clientDocs, projects, att] = await Promise.all([
     ServiceRevenueTaken.find().select("month clientName amountCents").lean<Array<{ month: string; clientName: string; amountCents: number }>>(),
     ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     ServiceProject.find({ clientId: { $ne: null } }).select("clientId status contract").lean<Array<{ _id: string; clientId: string; status: string; contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null }>>(),
     loadAttribution(),
   ]);
-  const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
-    .select("projectId clientId minutes allocations entryDate")
-    .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }>; entryDate: Date }>>();
+  const entries = await loadAllTimeEntries();
   const byProject = new Map(projects.map((p) => [p._id, p]));
   const sums = new Map<string, number>();
   for (const e of expandAllocations(entries)) {

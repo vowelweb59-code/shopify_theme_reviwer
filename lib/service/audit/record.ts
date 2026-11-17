@@ -1,5 +1,6 @@
 // Appends one hash-chained row to the Service audit log. The app runs as one Node process, so writers are serialised with an
 // in-process queue; the unique `seq` index makes a racing second process fail loudly instead of forking the chain.
+import { forgetMemo } from "@/lib/cache/memo";
 import { computeHash, GENESIS_HASH } from "./hash-chain";
 import { ServiceAuditLog } from "@/models/service-audit-log";
 
@@ -14,6 +15,7 @@ export function recordServiceAudit(action: string, detail: Record<string, unknow
     const clean = JSON.parse(JSON.stringify(detail)) as Record<string, unknown>;
     const hash = computeHash(prevHash, { actorId: null, action, detail: clean, at: at.toISOString() });
     await ServiceAuditLog.create({ seq: (last?.seq ?? 0) + 1, action, detail: clean, at, prevHash, hash });
+    forgetMemo("service:"); // every write is audited, so a change shows at once instead of after the cache time
   });
   tail = run.catch(() => undefined);
   return run;

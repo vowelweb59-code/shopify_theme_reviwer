@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { computeAnalytics, type AppRow } from "@/lib/shopifyApps/analytics";
 import { DETAIL_VERSION, detailBacklog } from "@/lib/shopifyApps/crawlApps";
@@ -10,15 +9,43 @@ import { ShopifyApp, ShopifyAppCategory } from "@/models/shopify-app";
 type Row = AppRow & { tagline: string | null; lastSeenAt: Date; detailVersion: number };
 
 // GET /api/shopify-apps — every App Store app read so far, classified by lifecycle stage, with the gap analytics. Filtering happens in the tab.
+// The answer is about 4.6 MB and takes three analytics passes over ~10,600 apps (about 3 s of CPU on every visit), yet it only changes
+// when a read of the App Store changes the apps or a watched category. So it is kept as ready-made JSON and rebuilt only when this
+// cheap fingerprint (one pass over the apps, a few ms) changes.
+let cached: { fingerprint: string; json: string } | null = null;
+
+async function fingerprint(): Promise<string> {
+  const [apps, cats] = await Promise.all([
+    ShopifyApp.aggregate<{ n: number; seen: Date | null; read: number }>([
+      { $group: { _id: null, n: { $sum: 1 }, seen: { $max: "$lastSeenAt" }, read: { $sum: { $cond: [{ $gte: ["$detailVersion", DETAIL_VERSION] }, 1, 0] } } } },
+    ]),
+    ShopifyAppCategory.aggregate<{ n: number; watched: number; read: Date | null }>([
+      { $group: { _id: null, n: { $sum: 1 }, watched: { $sum: { $cond: ["$priority", 1, 0] } }, read: { $max: "$lastReadAt" } } },
+    ]),
+  ]);
+  const a = apps[0];
+  const c = cats[0];
+  return [a?.n, a?.seen?.getTime(), a?.read, c?.n, c?.watched, c?.read?.getTime()].join("|");
+}
+
 export async function GET() {
   await connectToDatabase();
+  const fp = await fingerprint();
+  if (cached && cached.fingerprint === fp) return new Response(cached.json, { headers: { "Content-Type": "application/json" } });
+  const payload = await build();
+  const json = JSON.stringify(payload);
+  cached = { fingerprint: fp, json };
+  return new Response(json, { headers: { "Content-Type": "application/json" } });
+}
+
+async function build() {
   const [rows, categories, watchedRows, backlog] = await Promise.all([
     ShopifyApp.find({}).sort({ reviewCount: -1 }).select("-_id handle name tagline rating reviewCount pricingLabel builtForShopify categories developer launchedAt ratingShares lastSeenAt detailVersion").lean<Row[]>(),
     ShopifyAppCategory.find({}).select("-_id slug label").lean<{ slug: string; label: string }[]>(),
     ShopifyAppCategory.find({ priority: true }).select("-_id slug label lastReadAt").lean<{ slug: string; label: string; lastReadAt: Date | null }[]>(),
     detailBacklog(),
   ]);
-  return NextResponse.json({
+  return {
     // Watched categories (FAQ from the start): re-read weekly and before everything else.
     watched: watchedRows.map((c) => {
       const apps = rows.filter((r) => r.categories.includes(c.slug));
@@ -46,5 +73,5 @@ export async function GET() {
       developer: r.developer,
       launchedAt: r.launchedAt,
     })),
-  });
+  };
 }

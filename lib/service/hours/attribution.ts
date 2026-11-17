@@ -1,10 +1,14 @@
 // Which project an entry counts toward: the one a person (or the auto-assign rules) chose, else its client's only project
 // with a live contract, else none. Contracts are one per project, so "contract" and "project" are the same thing here.
+import { memo } from "@/lib/cache/memo";
 import { ServiceProject } from "@/models/service-project";
 
 export type AttributionProject = { _id: string; name: string; clientId: string | null; status: string; inHouse: boolean; contract: { weeklyLimitMinutes: number | null; type: string; status: string } | null };
 
-export async function loadAttribution() {
+/** Cached for 20 s (every Service page asks for it); writers call `forgetMemo("service:")`. */
+export const loadAttribution = () => memo("service:attribution", 20_000, loadAttributionUncached);
+
+async function loadAttributionUncached() {
   const projects = await ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" } })
     .select("name clientId status inHouse contract")
     .lean<AttributionProject[]>();

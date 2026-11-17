@@ -1,5 +1,6 @@
 // Writes an ImportPlan to MongoDB. Idempotent: running the same month twice changes nothing, and an edited message (newer
 // text) replaces its own entries. Entries a person approved or rejected are never overwritten.
+import { forgetMemo } from "@/lib/cache/memo";
 import { randomUUID } from "node:crypto";
 import { autoAssignProjects } from "../hours/auto-assign";
 import { applyActivityRules } from "../projects/activity-rules";
@@ -163,4 +164,5 @@ export async function runFollowUps() {
   await autoAssignProjects();
   await syncReporters();
   await applyActivityRules();
+  forgetMemo("service:"); // hours or projects may have changed
 }

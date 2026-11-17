@@ -16,4 +16,4 @@ export const startChatSyncScheduler = createRepeatingJob("chat-sync", "chat-sync
     const summary = await syncSpace();
     if (summary.created > 0) console.log(`[chat-sync] read ${summary.fetched} messages: imported ${summary.created} reports`);
   }
-});
+}, 30_000); // first run after boot is staggered so a wake from sleep is not one big burst
