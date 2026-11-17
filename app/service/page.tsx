@@ -5,7 +5,7 @@ import { entriesFor, senderNames, weekParam } from "@/lib/service/api/hours";
 import { dmMatch } from "@/lib/service/dm-members";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { limitForWeek, type LimitStep } from "@/lib/service/hours/limit-history";
-import { fmtMinutes, fmtUsd, ServiceStatusBadge, weekLabel } from "@/lib/service/ui/format";
+import { fmtMinutes, fmtUsd, weekLabel } from "@/lib/service/ui/format";
 import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
@@ -207,14 +207,14 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               <th className={th}>BA / BD</th>
               <th className={th}>Type</th>
               <th className={`${th} text-right`}>This week</th>
-              {showMoney ? <th className={`${th} text-right`}>Review</th> : <th className={th}>Status</th>}
+              {showMoney && <th className={`${th} text-right`}>Review</th>}
               {showMoney && <th className={`${th} text-right`}>Taken</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
             {projects.length === 0 && (
               <tr>
-                <td colSpan={showMoney ? 6 : 5} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
+                <td colSpan={showMoney ? 6 : 4} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
               </tr>
             )}
             {projects.map((p) => {
@@ -250,12 +250,10 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right"><WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} /></td>
-                  {showMoney ? (
+                  {showMoney && (
                     <td className="px-4 py-2.5 text-right tabular-nums">
                       {p.reviewRating != null ? <span title={`${p.reviewRating.toFixed(1)} out of 5`}><span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}</span> : "—"}
                     </td>
-                  ) : (
-                    <td className="px-4 py-2.5"><ServiceStatusBadge status={p.status} /></td>
                   )}
                   {showMoney && <td className="px-4 py-2.5 text-right tabular-nums">{takenCents(p) != null ? fmtUsd(takenCents(p)!) : "—"}</td>}
                 </tr>
