@@ -23,6 +23,8 @@ export function matchClient(sheetName: string, clients: readonly ClientNames[]):
       if (toks.length >= 2 && at.length >= 2 && toks[0] === at[0] && toks[toks.length - 1].length === 1 && at[at.length - 1].startsWith(toks[toks.length - 1])) { found.add(c.id); break; }
       // "M Rabi" = "Mohammed Rabi": same last name, one first name is an initial.
       if (toks.length >= 2 && at.length >= 2 && toks[toks.length - 1] === at[at.length - 1] && toks[0][0] === at[0][0] && (toks[0].length === 1 || at[0].length === 1)) { found.add(c.id); break; }
+      // "Saleem Joya" = "Sal Joya": same last name, one first name starts with the other (at least 3 letters).
+      if (toks.length >= 2 && at.length >= 2 && toks[toks.length - 1] === at[at.length - 1] && Math.min(toks[0].length, at[0].length) >= 3 && (toks[0].startsWith(at[0]) || at[0].startsWith(toks[0]))) { found.add(c.id); break; }
     }
   }
   if (found.size === 1) return { clientId: [...found][0], how: "fuzzy" };

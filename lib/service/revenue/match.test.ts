@@ -19,6 +19,9 @@ describe('matchClient', () => {
     expect(matchClient('William P', clients)).toEqual({ clientId: 'william', how: 'fuzzy' });
     expect(matchClient('Julica O (Dressed To Inspire SL)', clients)).toEqual({ clientId: 'julica', how: 'fuzzy' });
   });
+  it('reads a short first name', () => {
+    expect(matchClient('Saleem Joya', [{ id: 'sal', names: ['Sal Joya'] }, { id: 'x', names: ['Sam Poon'] }])).toEqual({ clientId: 'sal', how: 'fuzzy' });
+  });
   it('does not guess between two people', () => expect(matchClient('David B', clients)).toEqual({ clientId: null, how: 'ambiguous' }));
   it('finds nothing for an unknown name', () => expect(matchClient('Nobody Known', clients)).toEqual({ clientId: null, how: 'none' }));
 });
