@@ -4,32 +4,32 @@ Read this first. It records **why the code is the way it is, where each part liv
 step can be decided without re-reading the project. Update it in the same change whenever a decision, a rule, a file
 location or an open item changes.
 
-## 0. Restart here (where we stopped, Fri 2026-11-14)
+## 0. Restart here (where we stopped, Tue 2026-11-17)
 
-Pick up from this list on Monday. Everything below is committed and pushed (last commit `6faf411`); the details of each item are in
-the sections further down.
+Everything below is committed and pushed (last commit `72b8678`); the details of each item are in the sections further down.
 
-**A. In progress: Service section = Digital Marketing only** (section 2, item 4)
-1. Start Docker Desktop; the old app's Postgres runs from `Desktop/Claude/Upwork Project-Management` (`docker compose up -d`, port 5433).
-2. Answered 2026-11-16 (owner): "Salony" is Saloni Shinde (old data spells her "Saloni Shende"; `DM_MEMBERS` now says "Saloni").
-   Neha has left the country (no history expected); Adnan and Mustufa joined recently (no old history). All three stay in the list.
-3. Dry run (Claude can run it; reads the URL from the old app's `.env` without printing it):
-   `UPWORK_DATABASE_URL=$(grep -E '^DATABASE_URL=' "../Upwork Project-Management/apps/api/.env" | cut -d= -f2- | tr -d '"' | tr -d '\r') npx tsx --env-file=.env.production.local scripts/migrate-upwork-postgres.ts --digital-marketing`
-   Last result (2026-11-16, with Saloni): 369 of 1,728 projects, 13,554 of 44,651 hours entries, 373 of 1,631 clients, 12,053 of 47,037 messages.
-4. DONE 2026-11-16: `--digital-marketing --apply --replace` ran on the live database (369 projects, 13,554 entries, 373 clients,
-   12,053 messages, no errors). Still to check: `/service/chat` on the live site still shows Chat connected; the dashboard shows the DM data.
-5. DONE 2026-11-16 (owner: yes, and "anyone working on a project with my team on it" is kept too): the TIMER STATUS sync
-   (`runServiceMonth`, `lib/service/chat/sync.ts`) plans the whole month, then `filterPlanToDigitalMarketing`
-   (`lib/service/import/dm-filter.ts`) keeps every entry whose sender matches `DM_MEMBERS` (`lib/service/dm-members.ts`, shared with
-   the migration script). Someone outside the team is kept **per project, not per client** (owner: Andrew Johnson has an HR website
-   project and a marketing project; only the team's one counts): only when the entry is tied to one of the team's projects (the only
-   projects on the live site) by a project keyword written in the client field (a keyword equal to the client's own name or alias
-   does not count) or by the poster being on exactly one of that client's team projects (BA/BD/executive, assigned user, linked
-   sender). That project is written on the entry when it is created (`PlannedEntry.projectId`, used by `persist.ts`), so it never
-   falls to the "client's only project" rule. Otherwise dropped, with its message. Limits: an outsider on both the team's project
-   and the other one, writing no keyword, counts on the team's; a keyword written after the other project's word still wins.
-   Applies locally too (local has all projects). Deployed 2026-11-17. After deploy: entries the old sync wrote between the migration
-   and the deploy (non-DM people's hours) stay until removed; the clean-up script (`service-clean-november.ts`) was applied 2026-11-17.
+**A. Service section: done on 2026-11-17** (details in section 2)
+- Digital Marketing only: migration (2026-11-16), sync filter, and the November clean-up (applied 2026-11-17: 104 entries, 120 messages).
+  The filter was widened the same day: anyone on a team project's people list counts, not only on exactly one (see section 2, "Rule widened"; the rule and its limits are in the header of `lib/service/import/dm-filter.ts`).
+- Overview `/service` redesigned like a BI dashboard (filter row, four headline numbers, one table with hours and revenue bars,
+  colour accents, "My team only" switch); hours on it are ALL-TIME for fixed projects and everyone who reported counts.
+- New **Revenue** tab (money taken from the sales sheet against hours x rate); the sheet is imported (37 months) and **new months are
+  added by the owner from the terminal** with `scripts/import-revenue-sheet.ts "<xlsx>" --months=YYYY-MM --apply`.
+- Fixed projects: workable hours = price / $15 (flagged, not blocked, when over); fixed + hourly rate = billed by the hours;
+  a changed weekly limit asks "correction or client scope change" and starts on a Monday the owner picks.
+- By-hand scripts used and applied: `add-service-project.ts` and `set-service-project.ts` (Janell Saverin, fixed $600),
+  `service-remove-project.ts` (Thani Almheiri, not Digital Marketing). The new-project sync now counts only the team's own hours.
+
+**A2. Still to check / open on the Service side**
+1. Render deployed `72b8678` (Deploys page); `/service/chat` still shows Chat connected; the first syncs applied the two automatic hold rules.
+2. Re-run the November clean-up dry run (`service-clean-november.ts`): the widened rule may now keep some entries it removed on 2026-11-17.
+3. Revenue: the 41 approximate client-name matches and the 56 sheet clients with no project here should be read once (collapsible
+   lists on the tab); no rate history exists, so older months use today's rate; some app entries carry dates up to 2029 (typing
+   errors) and are ignored by the comparison.
+4. Rotate the ops-web client secret (pasted in chat on 2026-11-10); local viewing needs Docker Desktop and
+   `docker start shopify-theme-auditor-mongo` (a dev server cannot be started from Claude's shell).
+5. Before pushing a change to a server page, render it against live data (a temporary script with a `server-only` stub and
+   `renderToString`): a const used before its definition crashed the overview on 2026-11-17 and passed typecheck and lint.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
