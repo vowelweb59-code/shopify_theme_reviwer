@@ -78,29 +78,42 @@ function Segments({ items }: { items: Array<{ to: string; text: string; on: bool
   );
 }
 
-/** Underlined tabs with counts (Status): the main filter. */
-function Tabs({ items }: { items: Array<{ to: string; text: string; on: boolean; count: number }> }) {
+const DOT: Record<string, string> = { active: "bg-status-pass-icon", closed: "bg-status-info-icon", on_hold: "bg-status-warning-icon", all: "bg-status-not-tested-icon" };
+
+/** Underlined tabs with a colour dot and a count pill (Status): the main filter. */
+function Tabs({ items }: { items: Array<{ id: string; to: string; text: string; on: boolean; count: number }> }) {
   return (
     <nav aria-label="Project status" className="flex gap-5">
       {items.map((i) => (
         <Link
-          key={i.text}
+          key={i.id}
           href={i.to}
           aria-current={i.on ? "page" : undefined}
-          className={`-mb-px border-b-2 pb-2 text-sm ${i.on ? "border-primary font-medium text-primary-tint-text" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+          className={`-mb-px flex items-center gap-2 border-b-2 pb-2 text-sm ${i.on ? "border-primary font-medium text-primary-tint-text" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
         >
-          {i.text} <span className="tabular-nums text-zinc-400">{i.count}</span>
+          <span className={`h-2 w-2 rounded-full ${DOT[i.id]}`} aria-hidden="true" />
+          {i.text}
+          <span className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${i.on ? "bg-primary-tint text-primary-tint-text" : "bg-surface-muted text-zinc-500"}`}>{i.count}</span>
         </Link>
       ))}
     </nav>
   );
 }
 
-function Kpi({ label, value, note, tone }: { label: string; value: ReactNode; note?: ReactNode; tone?: "warn" }) {
+const ACCENT = {
+  primary: { bar: "border-l-primary", value: "text-primary-tint-text" },
+  pass: { bar: "border-l-status-pass-icon", value: "text-status-pass-text" },
+  warn: { bar: "border-l-status-warning-icon", value: "text-status-warning-text" },
+  info: { bar: "border-l-status-info-icon", value: "text-status-info-text" },
+  fail: { bar: "border-l-status-fail-icon", value: "text-status-fail-text" },
+} as const;
+
+function Kpi({ label, value, note, accent }: { label: string; value: ReactNode; note?: ReactNode; accent: keyof typeof ACCENT }) {
+  const a = ACCENT[accent];
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface p-4">
+    <div className={`rounded-lg border border-l-4 border-border-subtle ${a.bar} bg-surface p-4`}>
       <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</div>
-      <div className={`mt-1 text-3xl font-semibold tabular-nums ${tone === "warn" ? "text-status-warning-text" : "text-zinc-950 dark:text-zinc-50"}`}>{value}</div>
+      <div className={`mt-1 text-3xl font-semibold tabular-nums ${a.value}`}>{value}</div>
       {note && <div className="mt-1 text-xs text-zinc-500">{note}</div>}
     </div>
   );
@@ -111,6 +124,7 @@ function WeekCell({ minutes, limit }: { minutes: number; limit: number | null })
   if (limit === null) return <span className="tabular-nums">{minutes ? fmtMinutes(minutes) : "—"}</span>;
   const pct = limit ? Math.min(100, (minutes / limit) * 100) : 0;
   const over = minutes > limit;
+  const bar = over ? "bg-status-fail-icon" : pct >= 80 ? "bg-status-warning-icon" : "bg-status-pass-icon";
   return (
     <div className="ml-auto w-36">
       <div className="flex justify-between text-xs tabular-nums">
@@ -118,7 +132,7 @@ function WeekCell({ minutes, limit }: { minutes: number; limit: number | null })
         <span className="text-zinc-500">of {h1(limit)}h</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
-        <div className={`h-full ${over ? "bg-status-fail-icon" : "bg-primary"}`} style={{ width: `${pct}%` }} />
+        <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -186,7 +200,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-border-subtle">
-        <Tabs items={STATUS_TABS.map((s) => ({ to: href(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
+        <Tabs items={STATUS_TABS.map((s) => ({ id: s.id, to: href(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
         <div className="flex items-center gap-3 pb-2">
           <Segments items={TABS.map((t) => ({ to: href(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
           <Link
@@ -202,20 +216,21 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
 
       {showMoney ? (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Kpi label="Closed projects" value={projects.length.toLocaleString("en-IN")} />
-          <Kpi label="Average closing review" value={avgReview !== null ? <><span className="text-status-warning-icon">★</span> {avgReview.toFixed(1)}</> : "—"} note={`${rated.length} of ${projects.length} have a review`} />
-          <Kpi label="Taken from clients" value={fmtUsd(totalTaken)} note="Hourly: hours × rate. Fixed: the price. No rate or price counts as nothing." />
+          <Kpi accent="info" label="Closed projects" value={projects.length.toLocaleString("en-IN")} />
+          <Kpi accent="warn" label="Average closing review" value={avgReview !== null ? <><span className="text-status-warning-icon">★</span> {avgReview.toFixed(1)}</> : "—"} note={`${rated.length} of ${projects.length} have a review`} />
+          <Kpi accent="pass" label="Taken from clients" value={fmtUsd(totalTaken)} note="Hourly: hours × rate. Fixed: the price. No rate or price counts as nothing." />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} />
-          <Kpi label="On hold" value={counts(STATUS_TABS[2]).toLocaleString("en-IN")} />
+          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} />
+          <Kpi accent="warn" label="On hold" value={counts(STATUS_TABS[2]).toLocaleString("en-IN")} />
           <Kpi
+            accent="primary"
             label={`Hours this week · ${weekLabel(week)}`}
             value={fmtMinutes(weekMinutes)}
             note={quotaMinutes ? `of ${h1(quotaMinutes)}h weekly quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%` : "No weekly quota set"}
           />
-          <Kpi label="Over weekly quota" value={overQuota.toLocaleString("en-IN")} tone={overQuota ? "warn" : undefined} note={overQuota ? "projects past their quota this week" : "none this week"} />
+          <Kpi accent={overQuota ? "fail" : "pass"} label="Over weekly quota" value={overQuota.toLocaleString("en-IN")} note={overQuota ? "projects past their quota this week" : "none this week"} />
         </div>
       )}
 
@@ -257,16 +272,16 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                       <span className="text-zinc-400">No contract</span>
                     ) : kind === "fixed" ? (
                       <>
-                        <div>Fixed</div>
-                        <div className="text-xs text-zinc-500">{c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}</div>
+                        <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">Fixed</span>
+                        <div className="mt-0.5 text-xs text-zinc-500">{c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}</div>
                       </>
                     ) : kind === "hourly" ? (
                       <>
-                        <div>Hourly</div>
-                        <div className="text-xs tabular-nums text-zinc-500">{c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "no rate"}</div>
+                        <span className="rounded-full bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-text">Hourly</span>
+                        <div className="mt-0.5 text-xs tabular-nums text-zinc-500">{c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "no rate"}</div>
                       </>
                     ) : (
-                      <span className="text-status-warning-text" title="No rate or weekly quota entered: open the project to set Fixed or Hourly">Not set</span>
+                      <span className="rounded-full bg-status-warning-bg px-2 py-0.5 text-xs font-medium text-status-warning-text" title="No rate or weekly quota entered: open the project to set Fixed or Hourly">Not set</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right"><WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} /></td>
