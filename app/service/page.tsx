@@ -211,9 +211,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Headline numbers.
   const activeOfType = ofType.filter(STATUS_TABS[0].match);
   const weekMinutes = projects.reduce((n, p) => n + (thisWeek.get(p._id) ?? 0), 0);
-  const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? limitOf(p) ?? 0 : 0), 0);
   // Fixed-price projects: workable hours = price / $15; hourly projects: this week's quota.
   const fixedBudget = (p: Row) => (kindOf(p) === "fixed" ? workableMinutes(p.contract?.fixedPriceCents) : null);
+  const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? limitOf(p) ?? 0 : 0), 0);
   // Amounts (owner, 2026-11-17: "revenue generated, total scope of work in amount and how much achieved, like the hours"):
   // hourly = this week's hours x the hourly rate against the weekly quota x the rate; fixed = hours used x $15 against the fixed price.
   const rateOf = (p: Row) => (kindOf(p) === "fixed" ? STANDARD_RATE_CENTS : p.contract?.hourlyRateCents ?? null);
