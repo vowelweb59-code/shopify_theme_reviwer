@@ -43,6 +43,8 @@ export interface ActivityResult {
   reopened: string[];
 }
 
+/** Completed on purpose while it still gets small support (owner, 2026-11-18): never reopened by new hours. */
+export const REOPEN_EXEMPT = new Set(["Ranjith K"]);
 export const AUTO_REOPEN_REASON = "Automatic: hours reported after the project was completed";
 
 /**
@@ -135,6 +137,7 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
   const today = new Date(`${istDay(now)}T00:00:00Z`);
   const completed = await ServiceProject.find({ status: "COMPLETED" }).select("name history").lean<Array<{ _id: string; name: string; history: Array<{ toStatus: string; at: Date }> }>>();
   for (const p of completed) {
+    if (REOPEN_EXEMPT.has(p.name)) continue;
     const done = p.history.filter((h) => h.toStatus === "COMPLETED").sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
     if (!shouldReopen({ completedOn: done ? new Date(done.at) : null, lastAny: last.get(p._id), today })) continue;
     out.reasons[p.name] = AUTO_REOPEN_REASON;

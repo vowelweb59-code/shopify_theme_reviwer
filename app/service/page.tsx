@@ -38,11 +38,14 @@ type Kind = "hourly" | "fixed" | "unset";
 const kindOf = (p: Row): Kind =>
   p.contract?.type === "FIXED" ? "fixed" : p.contract && (p.contract.hourlyRateCents != null || p.contract.weeklyLimitMinutes != null) ? "hourly" : "unset";
 
+// Type switch (owner, 2026-11-18: open on All so the status counts cover every project; before, Timer was the default and the
+// counts looked like the whole company's).
 const TABS = [
+  { id: "all", label: "All", match: () => true },
   { id: "timer", label: "Timer", match: (p: Row) => kindOf(p) === "hourly" },
   { id: "fixed", label: "Fixed", match: (p: Row) => kindOf(p) === "fixed" },
-  { id: "all", label: "All", match: () => true },
 ] as const;
+const DEFAULT_TAB = "all";
 
 const STATUS_TABS = [
   { id: "active", label: "Active", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT"].includes(p.status) },
@@ -55,7 +58,7 @@ const STATUS_TABS = [
 type Per = { by?: "month"; on?: string };
 const href = (tab: string, status: string, teamOnly: boolean, per: Per = {}) => {
   const q = new URLSearchParams();
-  if (tab !== "timer") q.set("tab", tab);
+  if (tab !== DEFAULT_TAB) q.set("tab", tab);
   if (status !== "active") q.set("status", status);
   if (teamOnly) q.set("hours", "team");
   if (per.by) q.set("by", per.by);
@@ -173,7 +176,7 @@ function MoneyCell({ cents, scope }: { cents: number; scope: number | null }) {
 export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string }> }) {
   const sp = await searchParams;
   const teamOnly = sp.hours === "team";
-  const tab = TABS.find((t) => t.id === sp.tab) ?? TABS[0];
+  const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
   const [all, profiles, att, names] = await Promise.all([
@@ -280,7 +283,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             {!isCurrent && <Link href={h(tab.id, status.id, teamOnly, { by: per.by })} className="text-sm text-primary hover:underline">Back to this {unit}</Link>}
           </div>
           <form action="/service" method="get" className="flex items-center gap-2 text-sm">
-            {tab.id !== "timer" && <input type="hidden" name="tab" value={tab.id} />}
+            {tab.id !== DEFAULT_TAB && <input type="hidden" name="tab" value={tab.id} />}
             {status.id !== "active" && <input type="hidden" name="status" value={status.id} />}
             {teamOnly && <input type="hidden" name="hours" value="team" />}
             {byMonth && <input type="hidden" name="by" value="month" />}
