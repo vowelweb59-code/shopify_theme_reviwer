@@ -46,8 +46,8 @@ const TABS = [
 
 const STATUS_TABS = [
   { id: "active", label: "Active", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT"].includes(p.status) },
-  { id: "closed", label: "Closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
   { id: "on_hold", label: "On hold", match: (p: Row) => p.status === "ON_HOLD" },
+  { id: "closed", label: "Closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
   { id: "all", label: "All", match: () => true },
 ] as const;
 
@@ -93,20 +93,20 @@ function Segments({ items }: { items: Array<{ to: string; text: string; on: bool
 
 const DOT: Record<string, string> = { active: "bg-status-pass-icon", closed: "bg-status-info-icon", on_hold: "bg-status-warning-icon", all: "bg-status-not-tested-icon" };
 
-/** Underlined tabs with a colour dot and a count pill (Status): the main filter. */
+/** Status filter: one rounded group, the chosen status a raised pill with its colour dot and count (owner, 2026-11-18: make it look better; On hold second). */
 function Tabs({ items }: { items: Array<{ id: string; to: string; text: string; on: boolean; count: number }> }) {
   return (
-    <nav aria-label="Project status" className="flex gap-5">
+    <nav aria-label="Project status" className="inline-flex flex-wrap gap-1 rounded-xl border border-border-subtle bg-surface-muted p-1">
       {items.map((i) => (
         <Link
           key={i.id}
           href={i.to}
           aria-current={i.on ? "page" : undefined}
-          className={`-mb-px flex items-center gap-2 border-b-2 pb-2 text-sm ${i.on ? "border-primary font-medium text-primary-tint-text" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm transition-colors ${i.on ? "bg-surface font-semibold text-zinc-900 shadow-sm ring-1 ring-border-subtle dark:text-zinc-100" : "text-zinc-500 hover:bg-surface/60 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
         >
           <span className={`h-2 w-2 rounded-full ${DOT[i.id]}`} aria-hidden="true" />
           {i.text}
-          <span className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${i.on ? "bg-primary-tint text-primary-tint-text" : "bg-surface-muted text-zinc-500"}`}>{i.count}</span>
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${i.on ? "bg-primary-tint text-primary-tint-text" : "bg-surface text-zinc-500"}`}>{i.count}</span>
         </Link>
       ))}
     </nav>
@@ -290,9 +290,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           </form>
         </div>
       )}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-border-subtle">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <Tabs items={STATUS_TABS.map((s) => ({ id: s.id, to: h(tab.id, s.id, teamOnly), text: s.label, on: s.id === status.id, count: counts(s) }))} />
-        <div className="flex items-center gap-3 pb-2">
+        <div className="flex items-center gap-3">
           <Segments items={TABS.map((t) => ({ to: h(t.id, status.id, teamOnly), text: t.label, on: t.id === tab.id }))} />
           <Link
             href={h(tab.id, status.id, !teamOnly)}
@@ -313,7 +313,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} note={`${counts(STATUS_TABS[2])} on hold`} />
+          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} note={`${counts(STATUS_TABS.find((x) => x.id === "on_hold")!)} on hold`} />
           <Kpi
             accent="primary"
             label={`Hours ${isCurrent ? `this ${unit} ` : ""}· ${periodName}`}
