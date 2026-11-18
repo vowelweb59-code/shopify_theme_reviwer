@@ -395,7 +395,7 @@ export async function setUpworkProfile(id: string, body: Record<string, unknown>
 /** Runs the 45-day On hold / Active rule now (it also runs after every import). */
 export async function runActivityRules() {
   const r = await applyActivityRules();
-  await recordServiceAudit("project.activity_rules", { held: r.held.length, resumed: r.resumed.length });
+  await recordServiceAudit("project.activity_rules", { held: r.held.length, resumed: r.resumed.length, reopened: r.reopened.length });
   return r;
 }
 

@@ -39,6 +39,22 @@ export function workingDaysCutoff(now: Date, n = IDLE_WORKING_DAYS): Date {
 export interface ActivityResult {
   held: string[];
   resumed: string[];
+  /** Completed projects put back to Active because hours were reported after they were completed. */
+  reopened: string[];
+}
+
+export const AUTO_REOPEN_REASON = "Automatic: hours reported after the project was completed";
+
+/**
+ * Owner rule (2026-11-18): a Completed project whose client reports hours again is reopened. `completedOn` is the day it was
+ * completed (its latest move to Completed); with no such record (migrated projects) nothing can be told, so it is left alone.
+ * Hours dated in the future (typing errors) never count; only hours attributed to the project do, so a client with an open
+ * project reopens nothing.
+ */
+export function shouldReopen(i: { completedOn: Date | null; lastAny: Date | undefined; today: Date }): boolean {
+  if (!i.completedOn || !i.lastAny) return false;
+  const day = (d: Date) => istDay(new Date(d));
+  return day(i.lastAny) > day(i.completedOn) && i.lastAny <= i.today;
 }
 
 export interface HoldInput {
@@ -89,7 +105,7 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
     contractStarts.set(c.projectId, [...(contractStarts.get(c.projectId) ?? []), c.startDate]);
   }
 
-  const out: ActivityResult & { reasons: Record<string, string> } = { held: [], resumed: [], reasons: {} };
+  const out: ActivityResult & { reasons: Record<string, string> } = { held: [], resumed: [], reopened: [], reasons: {} };
   for (const p of projects) {
     const latest = [...p.history].sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
     // A project that only just began has had no time to report yet. Its beginning is the earliest known date; the day it was
@@ -113,6 +129,17 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
       if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
       out.resumed.push(p.name);
     }
+  }
+
+  // Completed projects that have hours dated after the day they were completed. `last` counts only hours attributed to the project.
+  const today = new Date(`${istDay(now)}T00:00:00Z`);
+  const completed = await ServiceProject.find({ status: "COMPLETED" }).select("name history").lean<Array<{ _id: string; name: string; history: Array<{ toStatus: string; at: Date }> }>>();
+  for (const p of completed) {
+    const done = p.history.filter((h) => h.toStatus === "COMPLETED").sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
+    if (!shouldReopen({ completedOn: done ? new Date(done.at) : null, lastAny: last.get(p._id), today })) continue;
+    out.reasons[p.name] = AUTO_REOPEN_REASON;
+    if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "COMPLETED" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "COMPLETED", toStatus: "ACTIVE", reason: AUTO_REOPEN_REASON, at: now } } });
+    out.reopened.push(p.name);
   }
   return out;
 }
