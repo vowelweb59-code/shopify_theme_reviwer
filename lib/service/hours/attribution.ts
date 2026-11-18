@@ -5,13 +5,28 @@ import { ServiceProject } from "@/models/service-project";
 
 export type AttributionProject = { _id: string; name: string; clientId: string | null; status: string; inHouse: boolean; contract: { weeklyLimitMinutes: number | null; type: string; status: string } | null };
 
+const CLOSED_STATUSES = new Set(["COMPLETED", "CANCELLED", "ARCHIVED"]);
+
+/**
+ * Projects that can own a client's unplaced hours. A project finished earlier can still carry a live contract (migrated data:
+ * "Andrew Johnson – Hasan" Completed next to "... (AI Video Creation)" Active), which made the client look like it had two live
+ * projects and left every new entry unplaced (owner, 2026-11-18). So when a client has at least one project that is not closed,
+ * its closed ones are left out; a client whose only projects are closed keeps them, so closed-project figures do not change.
+ */
+export function liveProjectsOf<T extends { clientId: string | null; status: string }>(projects: readonly T[]): T[] {
+  const hasOpen = new Set(projects.filter((p) => p.clientId && !CLOSED_STATUSES.has(p.status)).map((p) => p.clientId));
+  return projects.filter((p) => !CLOSED_STATUSES.has(p.status) || !p.clientId || !hasOpen.has(p.clientId));
+}
+
 /** Cached for 20 s (every Service page asks for it); writers call `forgetMemo("service:")`. */
 export const loadAttribution = () => memo("service:attribution", 20_000, loadAttributionUncached);
 
 async function loadAttributionUncached() {
-  const projects = await ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" } })
-    .select("name clientId status inHouse contract")
-    .lean<AttributionProject[]>();
+  const projects = liveProjectsOf(
+    await ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" } })
+      .select("name clientId status inHouse contract")
+      .lean<AttributionProject[]>()
+  );
   const byClient = new Map<string, AttributionProject[]>();
   for (const p of projects) if (p.clientId) byClient.set(p.clientId, [...(byClient.get(p.clientId) ?? []), p]);
   return {

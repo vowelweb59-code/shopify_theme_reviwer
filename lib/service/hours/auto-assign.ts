@@ -6,7 +6,7 @@
 // An entry already placed on a project is never moved.
 import { normalizeName } from "../import/text";
 import { matchSender } from "../projects/sender-name";
-import { splitMinutes } from "./attribution";
+import { liveProjectsOf, splitMinutes } from "./attribution";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceChatSender } from "@/models/service-chat";
 import { ServiceProject } from "@/models/service-project";
@@ -47,14 +47,15 @@ type Group = {
 
 /** Places unassigned entries of clients with several live projects. Safe to run again at any time. Returns how many changed. */
 export async function autoAssignProjects(clientId?: string): Promise<number> {
-  const [projects, senderRows, profiles, splitClients] = await Promise.all([
+  const [allProjects, senderRows, profiles, splitClients] = await Promise.all([
     ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" }, clientId: clientId ?? { $ne: null } })
-      .select("clientId chatKeywords upworkProfileId people")
-      .lean<Array<{ _id: string; clientId: string; chatKeywords: string[]; upworkProfileId: string | null; people: Array<{ role: string; name: string; senderId: string | null }> }>>(),
+      .select("clientId status chatKeywords upworkProfileId people")
+      .lean<Array<{ _id: string; clientId: string; status: string; chatKeywords: string[]; upworkProfileId: string | null; people: Array<{ role: string; name: string; senderId: string | null }> }>>(),
     ServiceChatSender.find().select("externalId displayName").lean<Array<{ _id: string; externalId: string; displayName: string }>>(),
     ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     ServiceClient.find({ splitUnclear: true }).select("_id").lean<Array<{ _id: string }>>(),
   ]);
+  const projects = liveProjectsOf(allProjects); // same set as `loadAttribution`: a finished project beside an open one does not take part
   const senders = senderRows.map((s) => ({ id: s._id, displayName: s.displayName }));
   const senderByExternal = new Map(senderRows.map((s) => [s.externalId, s._id]));
   const profileById = new Map(profiles.map((p) => [p._id, p]));
