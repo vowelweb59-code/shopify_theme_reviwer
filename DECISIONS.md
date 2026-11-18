@@ -31,6 +31,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 5. Before pushing a change to a server page, render it against live data (a temporary script with a `server-only` stub and
    `renderToString`): a const used before its definition crashed the overview on 2026-11-17 and passed typecheck and lint.
 
+6. **Service Chat connection was revoked on 2026-11-17 (found 2026-11-18)**: no TIMER STATUS message after 2026-11-17 ~07:13Z was imported (Hamza's "Andrew Johnson | Hasan" report, 17 Nov 7:25 PM IST, and everyone else's). Not a parser problem (the report parses to 270 min, no flags). The connection was made 2026-11-10 07:16Z and died exactly 7 days later: Google refresh tokens expire after 7 days while the OAuth consent screen is in **Testing**. Fix: reconnect in **Settings > Service Chat** (owner 2026-11-18: the Chat connection and Import month moved there from `/service/chat`, which now redirects to `/settings?tab=service-chat`; the Google sign-in returns there too; panel in `app/settings/ServiceChatPanel.tsx`, built, not deployed) (the month import then refetches the whole month, so the missing reports come in), and in Google Cloud (Upwork-Ops-Platform, ops-web) set the consent screen to **In production**, or it will die again every week. The theme-team Chat connection is separate and was still active on 2026-11-18, but may hit the same 7-day limit if its client is also in Testing.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).

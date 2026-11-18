@@ -15,7 +15,8 @@ export const serviceChatStateCookieOptions = {
 /** Back to the Service > Chat sync page with an outcome. Prefers APP_URL over the request origin (behind a proxy it can be internal). */
 export function serviceChatReturnUrl(requestUrl: string, params: Record<string, string>): URL {
   const base = process.env.APP_URL?.replace(/\/+$/, "") || new URL(requestUrl).origin;
-  const url = new URL("/service/chat", base);
+  const url = new URL("/settings", base);
+  url.searchParams.set("tab", "service-chat");
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   return url;
 }
