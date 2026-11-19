@@ -100,6 +100,7 @@ members, 5 rejection rounds; 19 projects), day splits (`set-day-splits.ts`, 6), 
 - Render may not auto-deploy on push: after pushing `master`, check the Render dashboard's Deploys page.
 - Login: one shared session (`BASIC_AUTH_USER/PASSWORD`, `lib/auth/session.ts`, `proxy.ts`). A production build refuses
   every page without them unless `BASIC_AUTH_DISABLED=1`.
+- **Render sleeping (owner 2026-11-19)**: every background job (Service Chat 15-min sync, attendance, partners, App Store, audits) runs only while the instance is awake; a free instance sleeps after about 15 minutes with no inbound request, and a sleeping process cannot wake itself. `GET /api/health` is public (skips login, `proxy.ts`) and touches the database, so an **external monitor** pinging `https://shopify-theme-reviwer.onrender.com/api/health` every 5 to 10 minutes keeps it awake (UptimeRobot free = 5 min). Set up by the owner; measured 2026-11-19: a request to a sleeping instance took 8.5 s. A free instance's 750 monthly hours cover one always-on service (744 h). The alternative is a paid Render instance.
 - Dev-machine gotchas: a dev server started from Claude's shell crashes in the CSS step (Windows `0xc0000142`), so start
   it from your own terminal. Git Bash rewrites `/flags` into paths (use `//PID`) and `/service` URLs (use
   `MSYS_NO_PATHCONV=1`). A stopped dev server can leave `node.exe` holding port 3000 (`taskkill //PID <pid> //F`).
