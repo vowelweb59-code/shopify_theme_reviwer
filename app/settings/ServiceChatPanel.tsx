@@ -34,13 +34,19 @@ export async function ServiceChatPanel({ connected, error }: { connected?: strin
             </p>
             {s.lastError && <p className="text-status-fail-text">Last error: {s.lastError}</p>}
           </div>
+        ) : s.revokedAt ? (
+          <p role="alert" className="rounded-md bg-status-fail-bg p-3 text-sm text-status-fail-text">
+            Google stopped the connection on {when(s.revokedAt)}, so no new hours are being imported. Press Reconnect, then Import month for the
+            current month to bring in what was missed. If this happens about every 7 days, the Google consent screen is still in Testing: set it to
+            In production in Google Cloud (Upwork-Ops-Platform, ops-web).
+          </p>
         ) : (
           <p className="text-sm text-zinc-500">Not connected. Sign in with a Google account that is a member of the TIMER STATUS space.</p>
         )}
         {s.configured && (
           <div className="mt-4 flex flex-wrap gap-2">
             <a href="/api/service/chat/google/connect" className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium hover:bg-surface-muted">
-              {s.connected ? "Reconnect" : "Connect Google Chat"}
+              {s.connected || s.revokedAt ? "Reconnect" : "Connect Google Chat"}
             </a>
           </div>
         )}

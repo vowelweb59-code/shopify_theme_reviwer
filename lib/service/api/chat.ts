@@ -26,6 +26,8 @@ export type ServiceChatStatus = {
   connected: boolean;
   account: string | null;
   connectedAt: string | null;
+  /** Set when Google refused the saved token (revoked, or expired after 7 days while the consent screen is in Testing): hours stop arriving until someone reconnects. */
+  revokedAt: string | null;
   space: string;
   lastSyncAt: string | null;
   lastError: string | null;
@@ -36,7 +38,7 @@ export type ServiceChatStatus = {
 export async function chatStatus(): Promise<ServiceChatStatus> {
   const space = serviceChatSpace();
   const [conn, spaceRow] = await Promise.all([
-    ServiceChatConnection.findOne({ key: "service-chat", status: "active" }).lean<{ email: string; createdAt: Date; lastSyncAt: Date | null; lastError: string | null; lastResult: ServiceChatStatus["lastResult"] } | null>(),
+    ServiceChatConnection.findOne({ key: "service-chat" }).lean<{ status: string; updatedAt: Date; email: string; createdAt: Date; lastSyncAt: Date | null; lastError: string | null; lastResult: ServiceChatStatus["lastResult"] } | null>(),
     ServiceChatSpace.findOne({ externalId: space }).select("_id").lean<{ _id: string } | null>(),
   ]);
   const checkpoints = spaceRow
@@ -44,13 +46,14 @@ export async function chatStatus(): Promise<ServiceChatStatus> {
     : [];
   return {
     configured: isServiceChatConfigured(),
-    connected: !!conn,
-    account: conn?.email ?? null,
-    connectedAt: conn?.createdAt ? new Date(conn.createdAt).toISOString() : null,
+    connected: conn?.status === "active",
+    revokedAt: conn?.status === "revoked" ? new Date(conn.updatedAt).toISOString() : null,
+    account: conn?.status === "active" ? conn.email : null,
+    connectedAt: conn?.status === "active" && conn.createdAt ? new Date(conn.createdAt).toISOString() : null,
     space,
-    lastSyncAt: conn?.lastSyncAt ? new Date(conn.lastSyncAt).toISOString() : null,
+    lastSyncAt: conn?.status === "active" && conn.lastSyncAt ? new Date(conn.lastSyncAt).toISOString() : null,
     lastError: conn?.lastError ?? null,
-    lastResult: conn?.lastResult ?? null,
+    lastResult: conn?.status === "active" ? conn.lastResult ?? null : null,
     months: checkpoints.map((c) => ({ month: c.month, syncedAt: (c.completedAt ?? c.updatedAt)?.toISOString() ?? null })),
   };
 }

@@ -66,6 +66,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 24. **Hours by month per person on a project (owner 2026-11-19; built, typecheck passes, not pushed)**: under "Who worked how much" on `/service/projects/[id]` a second table, person x IST month (newest first, row and column totals). `teamHours` (`lib/service/api/hours.ts`) returns `months` and `byMonth` per row; follows the Everyone / My team only switch. Entries dated after the current month (typing errors, e.g. Bhavesh Batra's 19 Oct 2029) get their own "Future date" column (shown only when there are any), so a row's Total always equals "All reported".
 
+25. **Expired Chat connection is shown as such (owner 2026-11-19; built, typecheck passes, not rendered with a revoked connection)**: `chatStatus` (`lib/service/api/chat.ts`) now also reads a `revoked` connection and returns `revokedAt`; Settings > Service Chat shows a red message with the time, "Reconnect" and a hint about the consent screen. Live 2026-11-19: connection active, last sync 07:18Z, reconnected 2026-11-18, so a Testing-mode token would die about 2026-11-25. The real fix stays with the owner: Google Cloud (Upwork-Ops-Platform, ops-web) consent screen to **In production**.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).
