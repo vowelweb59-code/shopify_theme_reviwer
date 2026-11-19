@@ -117,6 +117,8 @@ export function startPartnerCrawl(): void {
       crawl.current = null;
       crawl.finishedAt = new Date();
       crawl.running = null;
+      // Contact details follow the listing read straight away (profiles never read, or read over 30 days ago), not at the scheduler's next tick.
+      if (!crawl.errors.some((e) => !e.includes(":"))) startPartnerDetails({ refreshAfterDays: 30 });
     });
 }
 
