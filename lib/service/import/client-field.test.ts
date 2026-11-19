@@ -13,6 +13,13 @@ describe('aliases', () => {
   });
 });
 
+describe('suggestClientName and the DM tag', () => {
+  it('ignores a "DM |" label before the client, like "R |" and "App |"', () => {
+    expect(suggestClientName('DM | Ledty LavishCo | Batul')).toBe('Ledty LavishCo');
+    expect(extractClient('DM | Keziah Gutierrez | Sam', known).match).toMatchObject({ status: 'EXACT', client: { id: 'k' } });
+  });
+});
+
 describe('suggestClientName', () => {
   it('drops a Client label written before the name', () => {
     expect(suggestClientName('Client:- Cass Cooper')).toBe('Cass Cooper');

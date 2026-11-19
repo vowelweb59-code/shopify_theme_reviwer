@@ -5,7 +5,8 @@ import { bdMatch } from "../bd-members";
 import { dmMatch } from "../dm-members";
 import { runFollowUps } from "../import/persist";
 import { rematchClients } from "../import/rematch";
-import { parseNewProjectPost } from "../import/new-project-post";
+import { suggestClientName } from "../import/client-field";
+import { parseNewProjectPost, type NewProjectPost } from "../import/new-project-post";
 import { recordServiceAudit } from "../audit/record";
 import { listServiceMessages } from "./google";
 import { serviceRefreshToken } from "./sync";
@@ -24,6 +25,21 @@ const LOOKBACK_DAYS = 60;
 const OPEN = ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD"];
 const key = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
+/** An "Accepted the project of ..." post with the Chat message it came from (`ref` is what a created project remembers in `contractRef`). */
+export interface AcceptedPost { post: Extract<NewProjectPost, { kind: "accepted" }>; ref: string; posted: Date }
+
+/** The accepted-project posts of the last `lookbackDays` days, read live from the New Project Update space. */
+export async function loadAcceptedPosts(now: Date, lookbackDays: number): Promise<AcceptedPost[]> {
+  const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, { from: new Date(now.getTime() - lookbackDays * 86_400_000), to: new Date(now.getTime() + 60_000) });
+  const out: AcceptedPost[] = [];
+  for (const m of msgs) {
+    const posted = new Date(m.postedAt);
+    const post = parseNewProjectPost(m.text, posted);
+    if (post?.kind === "accepted") out.push({ post, ref: `chat:${m.externalId}`, posted });
+  }
+  return out;
+}
+
 export interface NewProjectResult { created: string[]; completed: string[]; skipped: Array<{ text: string; why: string }>; }
 
 export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {}): Promise<NewProjectResult> {
@@ -39,7 +55,7 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
   const dmSenders = (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>())
     .filter((x) => dmMatch(x.displayName) !== null).map((x) => x.externalId);
   const reported = new Set(
-    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null }, senderExternalId: { $in: dmSenders } }) as string[]).map((r) => key(r.split("|")[0])),
+    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null }, senderExternalId: { $in: dmSenders } }) as string[]).map((r) => key(suggestClientName(r) ?? r.split("|")[0])), // "DM | Client | Profile": the tag is not the client
   );
   for (const c of clients) for (const n of [c.name, ...c.aliases]) byName.set(key(n), c._id);
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();

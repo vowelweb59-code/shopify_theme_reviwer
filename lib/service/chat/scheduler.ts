@@ -3,6 +3,7 @@ import { intervalMs } from "@/lib/jobs/intervalMinutes";
 import { createRepeatingJob } from "@/lib/jobs/repeatingJob";
 import { ServiceChatConnection } from "@/models/service-chat";
 import { istDay, istMonth } from "./months";
+import { autoCreateProjects } from "./auto-projects";
 import { syncNewProjects } from "./new-projects";
 import { syncServiceMonth } from "./sync";
 
@@ -34,5 +35,12 @@ export const startServiceChatScheduler = createRepeatingJob("service-chat-sync",
     if (r.created.length || r.completed.length) console.log(`[service-chat] new projects: created ${r.created.join(", ") || "none"}; ended ${r.completed.join(", ") || "none"}`);
   } catch (err) {
     console.error("[service-chat] new project posts failed:", err instanceof Error ? err.message : err);
+  }
+  // A team member reported hours for a client the app does not have (owner, 2026-11-19): create its project and fill what both spaces say.
+  try {
+    const r = await autoCreateProjects();
+    if (r.created.length || r.enriched.length) console.log(`[service-chat] auto projects: created ${r.created.map((c) => c.name).join(", ") || "none"}; completed fields on ${r.enriched.join(", ") || "none"}`);
+  } catch (err) {
+    console.error("[service-chat] auto project creation failed:", err instanceof Error ? err.message : err);
   }
 }, 60_000); // first run after boot is staggered so a wake from sleep is not one big burst

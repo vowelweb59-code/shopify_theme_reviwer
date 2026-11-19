@@ -33,7 +33,7 @@ async function main() {
   const name = flag("name") ?? `${client}${profile ? ` – ${profile.name}` : ""}`;
   const clientId = found?._id ?? randomUUID();
   const open = found ? await ServiceProject.find({ clientId }).select("name status").lean<Array<{ name: string; status: string }>>() : [];
-  const waiting = await ServiceTimeEntry.find({ clientId: null, clientRaw: new RegExp(`^${client.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") }).select("minutes").lean<Array<{ minutes: number }>>();
+  const waiting = await ServiceTimeEntry.find({ clientId: null, clientRaw: new RegExp(`^(?:(?:R|App|DM)\\s*\\|\\s*)?${client.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") }).select("minutes").lean<Array<{ minutes: number }>>();
 
   console.log(`${apply ? "APPLYING" : "Dry run"}: client "${client}" ${found ? "exists" : "will be created"}; project "${name}" will be created (Active, Hourly, Timer).`);
   if (open.length) console.log(`  The client already has: ${open.map((p) => `${p.name} (${p.status})`).join(", ")}`);

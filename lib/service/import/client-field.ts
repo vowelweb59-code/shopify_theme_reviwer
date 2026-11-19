@@ -10,8 +10,8 @@ export interface ClientField {
   profile: string | null;
 }
 
-// Short labels people prefix to the client ("R |" = reseller work, "App |" = app project). Not part of the name.
-const TAGS = new Set(['r', 'app']);
+// Short labels people prefix to the client ("R |" = reseller work, "App |" = app project, "DM |" = Digital Marketing work, owner 2026-11-19). Not part of the name.
+const TAGS = new Set(['r', 'app', 'dm']);
 
 // A label some people write before the name: "Client: Name", "Client:- Name", "Client Name:- Name".
 const LABEL = /^\s*(?:client(?:\s+name)?|app\s+scope|project)\s*[:\-–—]+\s*/i;
