@@ -190,13 +190,13 @@ export async function teamHours(id: string, weekRaw?: string | null, teamOnly = 
   for (const e of all) {
     const name = names.get(e.senderExternalId) ?? "Unknown sender";
     const d = day(e.entryDate)!;
-    const row = people.get(name) ?? { name, week: 0, last30: 0, total: 0, lastReport: d, byMonth: {} };
+    const row = people.get(name) ?? { name, week: 0, last30: 0, total: 0, lastReport: d, byMonth: {}, later: 0 };
     row.total += e.minutes;
     const m = d.slice(0, 7);
-    if (m <= today.slice(0, 7)) { // dates typed years ahead are ignored here, as elsewhere
+    if (m <= today.slice(0, 7)) {
       monthSet.add(m);
       row.byMonth[m] = (row.byMonth[m] ?? 0) + e.minutes;
-    }
+    } else row.later += e.minutes; // a date in a future month is a typing error: kept apart so the row still adds up
     if (d >= since && d <= today) row.last30 += e.minutes;
     if (d >= week.start && d <= week.end) row.week += e.minutes;
     if (d > row.lastReport) row.lastReport = d;
@@ -205,7 +205,7 @@ export async function teamHours(id: string, weekRaw?: string | null, teamOnly = 
   return { week, rows: [...people.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)), months: [...monthSet].sort() };
 }
 
-export type TeamHoursRow = { name: string; week: number; last30: number; total: number; lastReport: string; /** minutes per IST month "YYYY-MM" */ byMonth: Record<string, number> };
+export type TeamHoursRow = { name: string; week: number; last30: number; total: number; lastReport: string; /** minutes per IST month "YYYY-MM" */ byMonth: Record<string, number>; /** minutes dated after the current month (typing errors) */ later: number };
 
 export type LiveReport = {
   id: string;

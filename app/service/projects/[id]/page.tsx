@@ -28,6 +28,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   const team = assignments.filter((a) => a.assignmentRole === "EMPLOYEE");
   const base = `/service/projects/${project.id}`;
   const q = (w?: string, h = teamOnly) => { const p = new URLSearchParams(); if (w) p.set("week", w); if (h) p.set("hours", "team"); return p.size ? `?${p}` : ""; };
+  const hasLater = team_.rows.some((r) => r.later > 0);
   const navBtn = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
 
   return (
@@ -209,6 +210,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                         {[...team_.months].reverse().map((m) => (
                           <th key={m} className="whitespace-nowrap py-2 pr-3 text-right font-medium">{new Date(`${m}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })}</th>
                         ))}
+                        {hasLater && <th className="whitespace-nowrap py-2 pr-3 text-right font-medium" title="Dated in a future month: a typing error in the report">Future date</th>}
                         <th className="py-2 text-right font-medium">Total</th>
                       </tr>
                     </thead>
@@ -219,7 +221,8 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                           {[...team_.months].reverse().map((m) => (
                             <td key={m} className="py-2 pr-3 text-right tabular-nums">{r.byMonth[m] ? fmtMinutes(r.byMonth[m]) : <span className="text-zinc-400">—</span>}</td>
                           ))}
-                          <td className="py-2 text-right font-medium tabular-nums">{fmtMinutes(Object.values(r.byMonth).reduce((n, x) => n + x, 0))}</td>
+                          {hasLater && <td className="py-2 pr-3 text-right tabular-nums">{r.later ? fmtMinutes(r.later) : <span className="text-zinc-400">—</span>}</td>}
+                          <td className="py-2 text-right font-medium tabular-nums">{fmtMinutes(Object.values(r.byMonth).reduce((n, x) => n + x, 0) + r.later)}</td>
                         </tr>
                       ))}
                       <tr className="font-medium">
@@ -227,7 +230,8 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                         {[...team_.months].reverse().map((m) => (
                           <td key={m} className="py-2 pr-3 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + (r.byMonth[m] ?? 0), 0))}</td>
                         ))}
-                        <td className="py-2 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + Object.values(r.byMonth).reduce((a, x) => a + x, 0), 0))}</td>
+                        {hasLater && <td className="py-2 pr-3 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + r.later, 0))}</td>}
+                        <td className="py-2 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + Object.values(r.byMonth).reduce((a, x) => a + x, 0) + r.later, 0))}</td>
                       </tr>
                     </tbody>
                   </table>
