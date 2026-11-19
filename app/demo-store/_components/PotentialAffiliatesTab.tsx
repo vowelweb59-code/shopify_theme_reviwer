@@ -201,7 +201,7 @@ export function PotentialAffiliatesTab() {
         <a href="https://www.shopify.com/partners/directory" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           Partner Directory
         </a>
-        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with a short pause between them, so it takes roughly 15 minutes. Contact details (email, phone, website) are on each partner’s own profile page, so they are a separate step: about one request per partner, roughly two hours for everyone, and it picks up where it stopped.
+        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with a short pause between them, so it takes roughly 15 minutes. Contact details (email, phone, website) are on each partner’s own profile page, so they are a separate step: about one request per partner, roughly two hours for everyone, and it picks up where it stopped. Both steps now run by themselves: the contact details are read once for everyone, then the whole directory is read again every 30 days while the server is awake; the buttons start a read early.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">

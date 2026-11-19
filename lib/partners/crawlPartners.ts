@@ -135,7 +135,22 @@ export function partnerDetailsProgress() {
   return { running: details.running !== null, total: details.total, done: details.done, errors: details.errors, lastError: details.lastError };
 }
 
-export function startPartnerDetails(): void {
+/** Profiles waiting to be read: never read, or (with `refreshAfterDays`) read longer ago than that. */
+export function pendingDetailsFilter(refreshAfterDays?: number) {
+  if (!refreshAfterDays) return { detailAt: null };
+  return { $or: [{ detailAt: null }, { detailAt: { $lt: new Date(Date.now() - refreshAfterDays * 86_400_000) } }] };
+}
+
+export async function partnerDetailsBacklog(refreshAfterDays?: number): Promise<number> {
+  await connectToDatabase();
+  return ShopifyPartner.countDocuments(pendingDetailsFilter(refreshAfterDays));
+}
+
+export function partnerCrawlRunning(): boolean {
+  return crawl.running !== null || details.running !== null;
+}
+
+export function startPartnerDetails(opts: { refreshAfterDays?: number } = {}): void {
   if (details.running || crawl.running) return;
   details.done = 0;
   details.total = 0;
@@ -143,7 +158,7 @@ export function startPartnerDetails(): void {
   details.lastError = null;
   details.running = (async () => {
     await connectToDatabase();
-    const pending = await ShopifyPartner.find({ detailAt: null }).sort({ reviewCount: -1 }).select("slug").lean<{ slug: string }[]>();
+    const pending = await ShopifyPartner.find(pendingDetailsFilter(opts.refreshAfterDays)).sort({ reviewCount: -1 }).select("slug").lean<{ slug: string }[]>();
     details.total = pending.length;
     let failures = 0;
     for (const { slug } of pending) {
@@ -153,7 +168,14 @@ export function startPartnerDetails(): void {
         const profile = html ? parseProfile(html) : null;
         await ShopifyPartner.updateOne(
           { slug },
-          { $set: { ...(profile ?? {}), detailAt: new Date(), detailError: profile ? null : "Profile not found" } }
+          {
+            $set: {
+              ...(profile ?? {}),
+              detailAt: new Date(),
+              // A page that loads but yields nothing usually means the directory changed its layout: keep that visible.
+              detailError: !profile ? "Profile not found" : !profile.website && !profile.email && !profile.phone ? "No contact details on the profile" : null,
+            },
+          }
         );
         failures = 0;
       } catch (err) {

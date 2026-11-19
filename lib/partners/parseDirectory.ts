@@ -114,13 +114,21 @@ export type PartnerProfile = { website: string | null; email: string | null; pho
  * is read — the rest of the page links to merchants' stores.
  */
 export function parseProfile(html: string): PartnerProfile {
+  // Layout of the directory since late 2026: a "Contact" button (data-component-name="partner-directory-contact-email" with a mailto: href),
+  // a globe link labelled "Visit website", and a "Partner since" fact. The old layout had a "Contact information" block; it is the fallback.
   const start = html.indexOf("Contact information");
   const end = start >= 0 ? html.indexOf("Primary location", start) : -1;
   const block = start >= 0 ? html.slice(start, end > start ? end : start + 6000) : "";
-  const website = block.match(/href="(https?:\/\/[^"]+)"/)?.[1] ?? null;
-  const email = block.match(/href="mailto:([^"?]+)/)?.[1] ?? null;
-  const phone = block.match(/href="tel:([^"]+)"/)?.[1] ?? null;
-  const since = textParts(html).find((t) => /^Partner since /i.test(t))?.replace(/^Partner since /i, "") ?? null;
+  const anchors = html.match(/<a\s[^>]*>/g) ?? [];
+  const attr = (tag: string, name: string) => tag.match(new RegExp("\\s" + name + '="([^"]*)"'))?.[1] ?? null;
+  const websiteTag = anchors.find((a) => /aria-label="Visit website/i.test(a));
+  const emailTag = anchors.find((a) => /partner-directory-contact-email/.test(a) && /href="mailto:/i.test(a));
+  const phoneTag = anchors.find((a) => /href="tel:/i.test(a));
+  const website = (websiteTag && attr(websiteTag, "href")) || block.match(/href="(https?:\/\/[^"]+)"/)?.[1] || null;
+  const email = (emailTag && attr(emailTag, "href")?.replace(/^mailto:/i, "").split("?")[0]) || block.match(/href="mailto:([^"?]+)/)?.[1] || null;
+  const phone = (phoneTag && attr(phoneTag, "href")?.replace(/^tel:/i, "")) || block.match(/href="tel:([^"]+)"/)?.[1] || null;
+  const sinceFact = html.match(/Partner since<\/span><\/dt><dd[^>]*>(?:<span[^>]*>)?([^<]+)/)?.[1]?.trim() ?? null;
+  const since = sinceFact ?? textParts(html).find((t) => /^Partner since /i.test(t))?.replace(/^Partner since /i, "") ?? null;
   return {
     website: website ? cleanUrl(decode(website)) : null,
     email: email ? decode(email).trim().toLowerCase() : null,
