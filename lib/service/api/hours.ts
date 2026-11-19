@@ -180,24 +180,32 @@ export async function projectWeek(id: string, weekRaw?: string | null, teamOnly 
 export async function teamHours(id: string, weekRaw?: string | null, teamOnly = false) {
   const p = await project(id);
   const week = weekParam(weekRaw);
-  if (!p.contract) return { week, rows: [] as Array<{ name: string; week: number; last30: number; total: number; lastReport: string }> };
+  if (!p.contract) return { week, rows: [] as TeamHoursRow[], months: [] as string[] };
   const [{ owner }, names] = await Promise.all([loadAttribution(), senderNames()]);
   const today = istDate(new Date());
   const since = shiftDays(today, -29);
   const all = (await entriesFor({ clientId: p.clientId, projectId: id }, { start: "2000-01-01", end: "2100-01-01" })).filter((e) => projectOf(e, owner) === id && e.minutes > 0 && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
-  const people = new Map<string, { name: string; week: number; last30: number; total: number; lastReport: string }>();
+  const people = new Map<string, TeamHoursRow>();
+  const monthSet = new Set<string>();
   for (const e of all) {
     const name = names.get(e.senderExternalId) ?? "Unknown sender";
     const d = day(e.entryDate)!;
-    const row = people.get(name) ?? { name, week: 0, last30: 0, total: 0, lastReport: d };
+    const row = people.get(name) ?? { name, week: 0, last30: 0, total: 0, lastReport: d, byMonth: {} };
     row.total += e.minutes;
+    const m = d.slice(0, 7);
+    if (m <= today.slice(0, 7)) { // dates typed years ahead are ignored here, as elsewhere
+      monthSet.add(m);
+      row.byMonth[m] = (row.byMonth[m] ?? 0) + e.minutes;
+    }
     if (d >= since && d <= today) row.last30 += e.minutes;
     if (d >= week.start && d <= week.end) row.week += e.minutes;
     if (d > row.lastReport) row.lastReport = d;
     people.set(name, row);
   }
-  return { week, rows: [...people.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)) };
+  return { week, rows: [...people.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)), months: [...monthSet].sort() };
 }
+
+export type TeamHoursRow = { name: string; week: number; last30: number; total: number; lastReport: string; /** minutes per IST month "YYYY-MM" */ byMonth: Record<string, number> };
 
 export type LiveReport = {
   id: string;

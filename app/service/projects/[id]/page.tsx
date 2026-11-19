@@ -198,6 +198,42 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                 </table>
               </div>
             )}
+            {team_.months.length > 0 && (
+              <>
+                <h4 className="mb-2 mt-6 text-sm font-medium">Hours by month <span className="font-normal text-zinc-500">· newest month first</span></h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-xs uppercase tracking-wide text-zinc-500">
+                      <tr className="border-b border-border-subtle text-left">
+                        <th className="py-2 pr-3 font-medium">Person</th>
+                        {[...team_.months].reverse().map((m) => (
+                          <th key={m} className="whitespace-nowrap py-2 pr-3 text-right font-medium">{new Date(`${m}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })}</th>
+                        ))}
+                        <th className="py-2 text-right font-medium">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-subtle">
+                      {team_.rows.map((r) => (
+                        <tr key={r.name}>
+                          <td className="whitespace-nowrap py-2 pr-3 font-medium">{outsider(r.name)}{r.name}</td>
+                          {[...team_.months].reverse().map((m) => (
+                            <td key={m} className="py-2 pr-3 text-right tabular-nums">{r.byMonth[m] ? fmtMinutes(r.byMonth[m]) : <span className="text-zinc-400">—</span>}</td>
+                          ))}
+                          <td className="py-2 text-right font-medium tabular-nums">{fmtMinutes(Object.values(r.byMonth).reduce((n, x) => n + x, 0))}</td>
+                        </tr>
+                      ))}
+                      <tr className="font-medium">
+                        <td className="py-2 pr-3">All people</td>
+                        {[...team_.months].reverse().map((m) => (
+                          <td key={m} className="py-2 pr-3 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + (r.byMonth[m] ?? 0), 0))}</td>
+                        ))}
+                        <td className="py-2 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + Object.values(r.byMonth).reduce((a, x) => a + x, 0), 0))}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
             <p className="mt-2 text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified. A report shared across projects counts here only for this project&apos;s share.</p>
           </section>
 
