@@ -48,7 +48,9 @@ export const REOPEN_EXEMPT = new Set(["Ranjith K"]);
 export const AUTO_REOPEN_REASON = "Automatic: hours reported after the project was completed";
 
 /**
- * Owner rule (2026-11-18): a Completed project whose client reports hours again is reopened. `completedOn` is the day it was
+ * Owner rule (2026-11-18): a Completed project whose client reports hours again is reopened, counting only Digital Marketing team
+ * members' hours (owner, same day, Morten - WordPress: "it will not come in my team unless someone from my team is logging hours"; other
+ * teams working on it, e.g. app development, do not reopen it). `completedOn` is the day it was
  * completed (its latest move to Completed); with no such record (migrated projects) nothing can be told, so it is left alone.
  * Hours dated in the future (typing errors) never count; only hours attributed to the project do, so a client with an open
  * project reopens nothing.
@@ -133,13 +135,13 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
     }
   }
 
-  // Completed projects that have hours dated after the day they were completed. `last` counts only hours attributed to the project.
+  // Completed projects that have Digital Marketing team hours dated after the day they were completed (`lastDm`: hours attributed to the project by team members).
   const today = new Date(`${istDay(now)}T00:00:00Z`);
   const completed = await ServiceProject.find({ status: "COMPLETED" }).select("name history").lean<Array<{ _id: string; name: string; history: Array<{ toStatus: string; at: Date }> }>>();
   for (const p of completed) {
     if (REOPEN_EXEMPT.has(p.name)) continue;
     const done = p.history.filter((h) => h.toStatus === "COMPLETED").sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
-    if (!shouldReopen({ completedOn: done ? new Date(done.at) : null, lastAny: last.get(p._id), today })) continue;
+    if (!shouldReopen({ completedOn: done ? new Date(done.at) : null, lastAny: lastDm.get(p._id), today })) continue;
     out.reasons[p.name] = AUTO_REOPEN_REASON;
     if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "COMPLETED" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "COMPLETED", toStatus: "ACTIVE", reason: AUTO_REOPEN_REASON, at: now } } });
     out.reopened.push(p.name);

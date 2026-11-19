@@ -8,6 +8,8 @@
 // (the normal placement rules choose). Anything else from outside the team is dropped. Pure: takes the full plan and the team's projects.
 import { dmMatch } from "../dm-members";
 import { pickProjectByKeywords } from "../hours/auto-assign";
+import { extractClient, findClientByFirstWord, findClientInText } from "./client-field";
+import type { KnownClient } from "./client-match";
 import { normalizeName } from "./text";
 import type { ImportPlan, PlannedEntry } from "./plan";
 
@@ -30,20 +32,49 @@ function samePerson(sender: string, member: string): boolean {
   return !m.includes(" ") && s.split(" ")[0] === m;
 }
 
-/** `null` = drop; `{ projectId: null }` = keep, placement left to the normal rules; otherwise keep and write the project. */
-export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): { projectId: string | null } | null {
-  if (!e.clientId) return null;
-  const projects = byClient.get(e.clientId);
+/**
+ * An outsider's entry with no client (the written name matched none of the known clients, e.g. "Tim | Adnan" for "Tim Fitz") used to be
+ * dropped, and its Chat message with it (owner, 2026-11-19: Tim Fitz showed 100 h, the team had worked 150+ with front end people
+ * reporting too). Now the name is tried against ONLY the clients whose team projects list this person, with the importer's usual
+ * rules (whole name written, a typo, the first name alone); one clear answer keeps the entry attached to that client, anything else
+ * still drops it, so the filter stays as narrow as before.
+ */
+function guessClientAmongTeam(e: Pick<PlannedEntry, "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): KnownClient | null {
+  const raw = e.clientRaw?.trim();
+  if (!raw) return null;
+  const known: KnownClient[] = [];
+  for (const [clientId, projects] of byClient) {
+    if (!projects.some((p) => p.teamNames.some((n) => samePerson(e.senderName, n)))) continue;
+    for (const name of projects[0]!.clientNames) known.push({ id: clientId, name });
+  }
+  if (!known.length) return null;
+  const m = extractClient(raw, known).match;
+  if (m.status === "EXACT" || m.status === "CORRECTED") return m.client;
+  return findClientInText(raw, known) ?? findClientByFirstWord(raw, known);
+}
+
+/** `null` = drop; `{ projectId: null }` = keep, placement left to the normal rules; otherwise keep and write the project. `clientId` is set only when the client was identified here. */
+export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): { projectId: string | null; clientId?: string } | null {
+  let clientId = e.clientId;
+  let guessed = false;
+  if (!clientId) {
+    const g = guessClientAmongTeam(e, byClient);
+    if (!g) return null;
+    clientId = g.id;
+    guessed = true;
+  }
+  const projects = byClient.get(clientId);
   if (!projects?.length) return null;
   const candidates = projects.map((p) => {
     const own = new Set(p.clientNames.map(normalizeName));
     return { projectId: p.id, keywords: p.keywords.filter((k) => !own.has(normalizeName(k))) };
   });
+  const extra = guessed ? { clientId } : {};
   const byKeyword = pickProjectByKeywords(e.clientRaw, candidates);
-  if (byKeyword) return { projectId: byKeyword };
+  if (byKeyword) return { projectId: byKeyword, ...extra };
   const onTeam = projects.filter((p) => p.teamNames.some((n) => samePerson(e.senderName, n)));
   if (!onTeam.length) return null;
-  return { projectId: onTeam.length === 1 ? onTeam[0]!.id : null };
+  return { projectId: onTeam.length === 1 ? onTeam[0]!.id : null, ...extra };
 }
 
 export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: readonly DmProject[]): ImportPlan {
@@ -57,7 +88,13 @@ export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: reado
       continue;
     }
     const placed = projectForOutsider(e, byClient);
-    if (placed) entries.push(placed.projectId ? { ...e, projectId: placed.projectId } : e);
+    if (!placed) continue;
+    let kept: PlannedEntry = placed.projectId ? { ...e, projectId: placed.projectId } : e;
+    if (placed.clientId) {
+      const flags = (e.flags ?? []).filter((f) => f !== "UNKNOWN_CLIENT" && f !== "AMBIGUOUS_CLIENT");
+      kept = { ...kept, clientId: placed.clientId, flags, state: e.state === "REJECTED" ? e.state : flags.length ? "NEEDS_REVIEW" : "PARSED" };
+    }
+    entries.push(kept);
   }
   const needed = new Set<string>();
   for (const e of entries) {
