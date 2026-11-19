@@ -385,6 +385,8 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
+                    {/* Fixed projects (owner 2026-11-19): the period's work first, the total (or billed total) under it. */}
+                    {kind === "fixed" && !showMoney && <div className="mb-1 tabular-nums">{fmtMinutes(thisWeek.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span></div>}
                     {showMoney ? (
                       // Closed (owner, 2026-11-18): the total hours worked on the project over its life, not this week's.
                       <div className="tabular-nums">{(minutes.get(p._id) ?? 0) > 0 ? fmtMinutes(minutes.get(p._id)!) : "—"} <span className="text-xs text-zinc-500">total</span></div>
@@ -395,7 +397,6 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     ) : (
                       <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />
                     )}
-                    {kind === "fixed" && !showMoney && <div className="mt-1 text-xs tabular-nums text-zinc-500">{fmtMinutes(thisWeek.get(p._id) ?? 0)} {isCurrent ? `this ${unit}` : `in this ${unit}`}</div>}
                   </td>
                   {!showMoney && <td className="px-4 py-2.5 text-right"><MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} /></td>}
                   {showMoney && (
