@@ -222,9 +222,19 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Digital Marketing members involved in a project (owner, 2026-11-20): everyone on the team who ever reported hours on it (most hours
   // first), then team members listed on the project's people without any report. Always from all-time hours, whatever the period.
   const dmHours = new Map<string, Map<string, number>>();
+  const lastDmReport = new Map<string, string>();
+  const twoMonthsAgo = (() => { const d = new Date(`${today}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 2); return d.toISOString().slice(0, 10); })();
+  const dmActive = (name: string) => (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
   // All-time hours are needed for Closed (money), for fixed-price projects (hours used against the workable total) and for the team column.
   {
     const entries = await loadAllTimeEntries();
+    // A team member with no report anywhere in the last 2 months is left out of the DM team column (owner, 2026-11-20). Dates after
+    // today are typing errors and do not count as a report.
+    for (const e of entries) {
+      const key = dmMatch(names.get(e.senderExternalId));
+      const d = e.entryDate.toISOString().slice(0, 10);
+      if (key && d <= today && d > (lastDmReport.get(key) ?? "")) lastDmReport.set(key, d);
+    }
     for (const e of expandAllocations(entries)) {
       const pid = projectOf(e, att.owner);
       if (!pid) continue;
@@ -238,17 +248,16 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
     }
   }
   const dmTeamOf = (p: Row): string[] => {
-    const byHours = [...(dmHours.get(p._id) ?? [])].filter(([, m]) => m > 0).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    const byHours = [...(dmHours.get(p._id) ?? [])].filter(([n, m]) => m > 0 && dmActive(n)).sort((a, b) => b[1] - a[1]).map(([n]) => n);
     const seen = new Set(byHours.map((n) => dmMatch(n)));
-    const listed = p.people.filter((x) => dmMatch(x.name) !== null && !seen.has(dmMatch(x.name))).map((x) => x.name);
+    const listed = p.people.filter((x) => dmMatch(x.name) !== null && dmActive(x.name) && !seen.has(dmMatch(x.name))).map((x) => x.name);
     for (const n of listed) seen.add(dmMatch(n));
-    // People assigned in Settings: team members assigned as employees or managers join as themselves; the project's other managers (PM) are
-    // always shown, marked "(PM)" (owner, 2026-11-20: "add assigned managers too").
+    // People assigned in Settings: team members assigned as employees or managers join as themselves. A manager who is not a team member
+    // (Huzefa, the owner: every DM project is his) is not listed (owner, 2026-11-20).
     const assigned = (p.assignments ?? []).map((a) => ({ name: userName.get(a.userId) ?? "", role: a.role })).filter((a) => a.name);
-    const assignedDm = assigned.filter((a) => dmMatch(a.name) !== null && !seen.has(dmMatch(a.name))).map((a) => a.name);
+    const assignedDm = assigned.filter((a) => dmMatch(a.name) !== null && dmActive(a.name) && !seen.has(dmMatch(a.name))).map((a) => a.name);
     for (const n of assignedDm) seen.add(dmMatch(n));
-    const managers = assigned.filter((a) => a.role === "MANAGER" && dmMatch(a.name) === null).map((a) => `${a.name} (PM)`);
-    return [...byHours, ...listed, ...assignedDm, ...managers];
+    return [...byHours, ...listed, ...assignedDm];
   };
   /** Cents taken from the client, or null when it cannot be worked out (no rate / no price entered). */
   const takenCents = (p: Row): number | null => {
@@ -398,7 +407,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     {(() => {
                       const team = dmTeamOf(p);
                       if (team.length === 0) return <span className="text-zinc-400">—</span>;
-                      const first = (n: string) => n.split(" ")[0] + (n.endsWith(" (PM)") ? " (PM)" : "");
+                      const first = (n: string) => n.split(" ")[0];
                       return (
                         <div title={team.join(", ")} className="max-w-48 text-xs leading-5">
                           {team.slice(0, 4).map(first).join(", ")}
