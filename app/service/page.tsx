@@ -335,9 +335,11 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const rated = projects.filter((p) => p.reviewRating != null);
   const avgReview = rated.length ? rated.reduce((n, p) => n + p.reviewRating!, 0) / rated.length : null;
   const th = "px-4 py-2.5 font-medium";
-  // Highest money first in every view (owner, 2026-11-20): Closed by what was taken from the client, the others by the revenue column
-  // (this period); projects with no figure last, ties by name.
-  const moneyOf = (p: Row) => (showMoney ? takenCents(p) : achievedCents(p)) ?? -1;
+  // Highest money first in every view (owner, 2026-11-20), by the money taken in the SELECTED period: the period's hours x the project's
+  // rate (hourly rate; fixed projects at their billed rate or the standard $15/h). Closed has no period (all-time view), so it is
+  // ordered by Taken from client. Projects with no figure last, ties by name.
+  const periodCents = (p: Row) => { const r = rateOf(p); return r === null ? 0 : Math.round(((thisWeek.get(p._id) ?? 0) / 60) * r); };
+  const moneyOf = (p: Row) => (showMoney ? takenCents(p) : periodCents(p)) ?? -1;
   const ranked = [...projects].sort((x, y) => moneyOf(y) - moneyOf(x) || x.name.localeCompare(y.name));
 
   return (
