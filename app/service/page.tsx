@@ -215,15 +215,30 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Closed projects: what we took from the client, from all reported hours.
   const showMoney = status.id === "closed";
   const minutes = new Map<string, number>();
-  // All-time hours are needed for Closed (money) and for fixed-price projects (hours used against the workable total).
-  if (showMoney || projects.some((p) => kindOf(p) === "fixed")) {
+  // Digital Marketing members involved in a project (owner, 2026-11-20): everyone on the team who ever reported hours on it (most hours
+  // first), then team members listed on the project's people without any report. Always from all-time hours, whatever the period.
+  const dmHours = new Map<string, Map<string, number>>();
+  // All-time hours are needed for Closed (money), for fixed-price projects (hours used against the workable total) and for the team column.
+  {
     const entries = await loadAllTimeEntries();
     for (const e of expandAllocations(entries)) {
-      if (!countsFor(e.senderExternalId)) continue;
       const pid = projectOf(e, att.owner);
-      if (pid) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
+      if (!pid) continue;
+      const who_ = names.get(e.senderExternalId);
+      if (dmMatch(who_) !== null && who_) {
+        const m = dmHours.get(pid) ?? new Map<string, number>();
+        m.set(who_, (m.get(who_) ?? 0) + e.minutes);
+        dmHours.set(pid, m);
+      }
+      if (countsFor(e.senderExternalId)) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
     }
   }
+  const dmTeamOf = (p: Row): string[] => {
+    const byHours = [...(dmHours.get(p._id) ?? [])].filter(([, m]) => m > 0).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    const seen = new Set(byHours.map((n) => dmMatch(n)));
+    const listed = p.people.filter((x) => dmMatch(x.name) !== null && !seen.has(dmMatch(x.name))).map((x) => x.name);
+    return [...byHours, ...listed];
+  };
   /** Cents taken from the client, or null when it cannot be worked out (no rate / no price entered). */
   const takenCents = (p: Row): number | null => {
     const c = p.contract;
@@ -339,6 +354,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             <tr>
               <th className={th}>Project</th>
               <th className={th}>BA / BD</th>
+              <th className={th}>DM team</th>
               <th className={th}>Type</th>
               <th className={`${th} text-right`}>Hours</th>
               {!showMoney && <th className={`${th} text-right`}>Revenue</th>}
@@ -349,7 +365,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <tbody className="divide-y divide-border-subtle">
             {projects.length === 0 && (
               <tr>
-                <td colSpan={showMoney ? 6 : 5} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
+                <td colSpan={showMoney ? 7 : 6} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
               </tr>
             )}
             {projects.map((p) => {
@@ -366,6 +382,19 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                   <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400">
                     <div>{ba || "—"}</div>
                     <div className="text-xs text-zinc-500">{bd || "—"}</div>
+                  </td>
+                  <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400">
+                    {(() => {
+                      const team = dmTeamOf(p);
+                      if (team.length === 0) return <span className="text-zinc-400">—</span>;
+                      const first = (n: string) => n.split(" ")[0];
+                      return (
+                        <div title={team.join(", ")} className="max-w-48 text-xs leading-5">
+                          {team.slice(0, 4).map(first).join(", ")}
+                          {team.length > 4 && <span className="text-zinc-400"> +{team.length - 4}</span>}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-2.5">
                     {!c ? (
