@@ -112,7 +112,7 @@ export function RevenueView({ input, rangeId, statusId }: { input: { taken: Take
   // The selected group: its clients and its month-by-month totals.
   const ids = new Set(everything.clients.filter((c) => inGroup(c, group.id)).map((c) => c.clientId));
   const scoped = group.id === "all" || group.id === "not_in_app" ? everything : compare(input.taken, input.clients, input.hours, from, last, ids);
-  const clients = (group.id === "not_in_app" ? [] : everything.clients.filter((c) => inGroup(c, group.id))).sort((a, b) => (a.takenCents - a.shouldCents) - (b.takenCents - b.shouldCents));
+  const clients = (group.id === "not_in_app" ? [] : everything.clients.filter((c) => inGroup(c, group.id))).sort((a, b) => b.takenCents - a.takenCents || a.name.localeCompare(b.name)); // highest money taken first (owner, 2026-11-20)
   const sheetOnly = group.id === "not_in_app" || group.id === "all" ? everything.sheetOnly : [];
   const months = group.id === "not_in_app" ? [] : scoped.months;
 

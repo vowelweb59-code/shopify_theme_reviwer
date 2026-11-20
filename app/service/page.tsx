@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
 import { dmHasLeft, dmMatch } from "@/lib/service/dm-members";
-import { workingDaysCutoff } from "@/lib/service/projects/activity-rules";
 import { loadAllTimeEntries } from "@/lib/service/hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
@@ -33,6 +32,8 @@ type Row = {
   upworkProfileId: string | null;
   people: Array<{ role: string; name: string }>;
   assignments?: Array<{ userId: string; role: "MANAGER" | "EMPLOYEE" }>;
+  /** Set by the overview, not stored: see "Moved to another department". */
+  movedDept?: boolean;
   contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null; weeklyLimitHistory?: LimitStep[] } | null;
 };
 
@@ -185,7 +186,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
-  const [all, profiles, att, names, users] = await Promise.all([
+  const [allRows, profiles, att, names, users] = await Promise.all([
     ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people assignments").sort({ name: 1 }).lean<Row[]>(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     loadAttribution(),
@@ -195,35 +196,8 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
   const profileName = new Map(profiles.map((x) => [x._id, x.name]));
   const who = (p: Row, role: string) => p.people.filter((x) => x.role === role).map((x) => x.name).join(", ");
-  const ofType = all.filter(tab.match);
-  const inStatus = ofType.filter(status.match);
-  const counts = (s: (typeof STATUS_TABS)[number]) => ofType.filter(s.match).length;
-
-  // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
-  // ?by=month or ?on=YYYY-MM-DD (any day inside the week / month wanted) is given.
   const today = istDate(new Date());
-  const anchor = isoDay(sp.on) ?? today;
-  const byMonth = sp.by === "month";
-  const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
-  const isCurrent = today >= week.start && today <= week.end;
-  // On hold is split in two (owner, 2026-11-20): projects nobody reported on in the last 30 working days, and projects others reported on
-  // but no one from the team did. `hold` picks one of them (idle | others | team).
-  const HOLD_KINDS = ["idle", "others", "team", "waiting"] as const;
-  const holdFilter = status.id === "on_hold" ? HOLD_KINDS.find((k) => k === sp.hold) : undefined;
-  const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined, hold: holdFilter };
-  const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
-  const unit = byMonth ? "month" : "week";
-  const prevOn = byMonth ? shiftMonth(anchor, -1) : shiftWeek(week.start, -1);
-  const nextOn = byMonth ? shiftMonth(anchor, 1) : shiftWeek(week.start, 1);
-  const h = (t: string, st: string, tm: boolean, p: Per = per) => href(t, st, tm, p);
   const countsFor = (sender: string) => !teamOnly || dmMatch(names.get(sender)) !== null;
-  const thisWeek = new Map<string, number>();
-  for (const e of await entriesFor("ANY", week)) {
-    const pid = projectOf(e, att.owner);
-    if (pid && countsFor(e.senderExternalId)) thisWeek.set(pid, (thisWeek.get(pid) ?? 0) + e.minutes);
-  }
-  const limitOf = (p: Row) => (p.contract ? limitForPeriod(p.contract.weeklyLimitHistory ?? [], p.contract.weeklyLimitMinutes, week.start, week.end) : null);
-
   // Closed projects: what we took from the client, from all reported hours.
   const showMoney = status.id === "closed";
   const minutes = new Map<string, number>();
@@ -232,7 +206,6 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const dmHours = new Map<string, Map<string, number>>();
   const lastAnyDay = new Map<string, string>();
   const lastDmDay = new Map<string, string>();
-  const holdCutoff = workingDaysCutoff(new Date()).toISOString().slice(0, 10);
   const lastDmReport = new Map<string, string>();
   const twoMonthsAgo = (() => { const d = new Date(`${today}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 2); return d.toISOString().slice(0, 10); })();
   const dmActive = (name: string) => !dmHasLeft(name) && (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
@@ -263,8 +236,44 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       if (countsFor(e.senderExternalId)) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
     }
   }
+  // Moved to another department (owner, 2026-11-20): a project other teams still report on but nobody from the team has reported on for
+  // 30 days (the gestation period) leaves Active / On hold for the On hold tab's "Moved to another department" group. Only the overview
+  // moves it: the project's own status is unchanged. Dates after today are typing errors and were ignored above.
+  const MOVED_DAYS = 30;
+  const movedCutoff = new Date(new Date(`${today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const all: Row[] = allRows.map((p) => {
+    if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return p;
+    return (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p;
+  });
+  const ofType = all.filter(tab.match);
+  const inStatus = ofType.filter(status.match);
+  const counts = (s: (typeof STATUS_TABS)[number]) => ofType.filter(s.match).length;
+
+  // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
+  // ?by=month or ?on=YYYY-MM-DD (any day inside the week / month wanted) is given.
+  const anchor = isoDay(sp.on) ?? today;
+  const byMonth = sp.by === "month";
+  const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
+  const isCurrent = today >= week.start && today <= week.end;
+  // On hold is split into groups (owner, 2026-11-20); `hold` picks one: idle (nobody reported in 30 days), moved (to another department),
+  // waiting (for the client), team (the team reported in the last 30 days but the project is on hold).
+  const HOLD_KINDS = ["idle", "moved", "team", "waiting"] as const;
+  const holdFilter = status.id === "on_hold" ? HOLD_KINDS.find((k) => k === sp.hold) : undefined;
+  const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined, hold: holdFilter };
+  const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
+  const unit = byMonth ? "month" : "week";
+  const prevOn = byMonth ? shiftMonth(anchor, -1) : shiftWeek(week.start, -1);
+  const nextOn = byMonth ? shiftMonth(anchor, 1) : shiftWeek(week.start, 1);
+  const h = (t: string, st: string, tm: boolean, p: Per = per) => href(t, st, tm, p);
+  const thisWeek = new Map<string, number>();
+  for (const e of await entriesFor("ANY", week)) {
+    const pid = projectOf(e, att.owner);
+    if (pid && countsFor(e.senderExternalId)) thisWeek.set(pid, (thisWeek.get(pid) ?? 0) + e.minutes);
+  }
+  const limitOf = (p: Row) => (p.contract ? limitForPeriod(p.contract.weeklyLimitHistory ?? [], p.contract.weeklyLimitMinutes, week.start, week.end) : null);
+
   /** Why a project is on hold: nobody reported in the window, only others did, or the team did (held by hand / waiting for the next sync). */
-  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => p.status === "WAITING_FOR_CLIENT" ? "waiting" : ((lastAnyDay.get(p._id) ?? "") < holdCutoff ? "idle" : (lastDmDay.get(p._id) ?? "") < holdCutoff ? "others" : "team");
+  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => p.status === "WAITING_FOR_CLIENT" ? "waiting" : p.movedDept ? "moved" : (lastAnyDay.get(p._id) ?? "") < movedCutoff ? "idle" : "team";
   const onHoldAll = status.id === "on_hold" ? inStatus : [];
   const holdCount = (k: (typeof HOLD_KINDS)[number]) => onHoldAll.filter((p) => holdKindOf(p) === k).length;
   const projects = holdFilter ? inStatus.filter((p) => holdKindOf(p) === holdFilter) : inStatus;
@@ -326,6 +335,10 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const rated = projects.filter((p) => p.reviewRating != null);
   const avgReview = rated.length ? rated.reduce((n, p) => n + p.reviewRating!, 0) / rated.length : null;
   const th = "px-4 py-2.5 font-medium";
+  // Highest money first in every view (owner, 2026-11-20): Closed by what was taken from the client, the others by the revenue column
+  // (this period); projects with no figure last, ties by name.
+  const moneyOf = (p: Row) => (showMoney ? takenCents(p) : achievedCents(p)) ?? -1;
+  const ranked = [...projects].sort((x, y) => moneyOf(y) - moneyOf(x) || x.name.localeCompare(y.name));
 
   return (
     <div className="space-y-5">
@@ -371,12 +384,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             items={[
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: undefined }), text: `All on hold ${onHoldAll.length}`, on: !holdFilter },
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "idle" }), text: `No activity ${holdCount("idle")}`, on: holdFilter === "idle" },
-              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "others" }), text: `Only others reported ${holdCount("others")}`, on: holdFilter === "others" },
+              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "moved" }), text: `Moved to another department ${holdCount("moved")}`, on: holdFilter === "moved" },
               ...(holdCount("waiting") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "waiting" }), text: `Waiting for client ${holdCount("waiting")}`, on: holdFilter === "waiting" }] : []),
               ...(holdCount("team") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "team" }), text: `Team reported ${holdCount("team")}`, on: holdFilter === "team" }] : []),
             ]}
           />
-          <span className="text-xs text-zinc-500">Window: the last 30 working days. No activity = nobody reported; only others = reports exist, none from your team.</span>
+          <span className="text-xs text-zinc-500">30-day window. Moved to another department = other teams still report, none from your team for 30 days; No activity = nobody reported.</span>
         </div>
       )}
       {status.id === "on_hold" && <CloseFromPosts />}
@@ -426,7 +439,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                 <td colSpan={showMoney ? 7 : 6} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
               </tr>
             )}
-            {projects.map((p) => {
+            {ranked.map((p) => {
               const c = p.contract;
               const kind = kindOf(p);
               const ba = who(p, "BUSINESS_ANALYST");
@@ -437,6 +450,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
                     <div className="text-xs text-zinc-500">
                       {(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}
+                      {p.movedDept && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text" title="Other teams report on it, none from your team for 30 days. Its own status is unchanged.">⇄ Another department</span>}
                       {p.status === "WAITING_FOR_CLIENT" && <span className="ml-2 rounded-full bg-status-info-bg px-2 py-0.5 text-[11px] font-medium text-status-info-text" title="Waiting for the client to reply">◔ Waiting for client</span>}
                       {p.status === "PARTIAL_HOLD" && <span className="ml-2 rounded-full bg-status-warning-bg px-2 py-0.5 text-[11px] font-medium text-status-warning-text" title="Client on a break: still a live project, never put on hold automatically">◑ Partial hold</span>}
                     </div>
