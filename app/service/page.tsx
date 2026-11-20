@@ -511,7 +511,13 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                       <WeekCell minutes={thisWeek.get(p._id) ?? 0} limit={limitOf(p)} />
                     )}
                   </td>
-                  {!showMoney && <td className="px-4 py-2.5 text-right"><MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} /></td>}
+                  {!showMoney && (
+                    <td className="px-4 py-2.5 text-right">
+                      {/* Fixed projects (owner 2026-11-20): what the period's hours were worth on top, the all-time amount under it. */}
+                      {kind === "fixed" && <div className="mb-1 tabular-nums">{fmtUsd(periodCents(p))} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span></div>}
+                      {billedByHours(p) ? <div className="tabular-nums">{fmtUsd(achievedCents(p))} <span className="text-xs text-zinc-500">total</span></div> : <MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} />}
+                    </td>
+                  )}
                   {showMoney && (
                     <td className="px-4 py-2.5 text-right tabular-nums">
                       {p.reviewRating != null ? <span title={`${p.reviewRating.toFixed(1)} out of 5`}><span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}</span> : "—"}
