@@ -4,7 +4,7 @@ import "server-only";
 import { badRequest, day, int, isoDay, notFound, oneOf, str } from "./http";
 import { memo } from "@/lib/cache/memo";
 import { dmMatch } from "../dm-members";
-import { limitForWeek, isMonday, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
+import { limitForPeriod, limitForWeek, isMonday, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { istDate } from "../import/text";
 import { weekOf, type Week } from "../import/week";
@@ -52,6 +52,36 @@ export type EntryLite = {
 export function weekParam(raw?: string | null): Week {
   if (raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) throw badRequest("week must be YYYY-MM-DD");
   return weekOf(raw || istDate(new Date()));
+}
+
+export type PeriodKind = "week" | "month";
+
+/** The period a project page shows (owner, 2026-11-20: a calendar to pick any week or month): a Monday-to-Sunday week or a calendar month containing `raw` (YYYY-MM-DD, or YYYY-MM for a month; default today). */
+export function periodParam(by: PeriodKind, raw?: string | null): Week {
+  if (raw && !/^\d{4}-\d{2}(-\d{2})?$/.test(raw)) throw badRequest("on must be YYYY-MM-DD or YYYY-MM");
+  const anchor = raw ? (raw.length === 7 ? `${raw}-01` : raw) : istDate(new Date());
+  if (by === "week") return weekOf(anchor);
+  const [y, m] = anchor.split("-").map(Number);
+  return { start: `${anchor.slice(0, 7)}-01`, end: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10) };
+}
+
+/** Same figures as `weeklyHours`, for any period (a month). */
+function periodHours(entries: readonly HourEntry[], limitMinutes: number | null, week: Week): WeeklyHours {
+  const inP = entries.filter((e) => e.date >= week.start && e.date <= week.end);
+  const sum = (xs: readonly HourEntry[]) => xs.reduce((n, e) => n + e.minutes, 0);
+  const confirmed = inP.filter((e) => e.confirmed);
+  const completed = sum(confirmed);
+  return {
+    week,
+    limitMinutes,
+    completedMinutes: completed,
+    trackedMinutes: sum(confirmed.filter((e) => e.source === "TIMER_CALCULATED")),
+    manualMinutes: sum(confirmed.filter((e) => e.source === "MANUAL_REPORT")),
+    unconfirmedMinutes: sum(inP.filter((e) => !e.confirmed)),
+    remainingMinutes: limitMinutes === null ? null : Math.max(limitMinutes - completed, 0),
+    overLimitMinutes: limitMinutes === null ? 0 : Math.max(completed - limitMinutes, 0),
+    percentUsed: limitMinutes ? Math.round((completed / limitMinutes) * 1000) / 10 : null,
+  };
 }
 
 const range = (w: { start: string; end: string }) => ({ $gte: new Date(`${w.start}T00:00:00Z`), $lte: new Date(`${w.end}T00:00:00Z`) });
@@ -138,6 +168,7 @@ export async function putContract(id: string, body: Record<string, unknown>) {
 
 export type ProjectWeek = {
   week: Week;
+  by?: PeriodKind;
   contract: Contract | null;
   hours: WeeklyHours | null;
   reason: "NO_CONTRACT" | null;
@@ -149,9 +180,9 @@ export type ProjectWeek = {
 };
 
 /** `teamOnly` (owner, 2026-11-17): count only the Digital Marketing team's own reports (`dmMatch`), not everyone on the project. */
-export async function projectWeek(id: string, weekRaw?: string | null, teamOnly = false): Promise<ProjectWeek> {
+export async function projectWeek(id: string, weekRaw?: string | null, teamOnly = false, by: PeriodKind = "week"): Promise<ProjectWeek> {
   const p = await project(id);
-  const week = weekParam(weekRaw);
+  const week = periodParam(by, weekRaw);
   const contract = shape(p);
   if (!contract) return { week, contract: null, hours: null, reason: "NO_CONTRACT" };
   const [{ owner, shared }, names] = await Promise.all([loadAttribution(), senderNames()]);
@@ -159,8 +190,11 @@ export async function projectWeek(id: string, weekRaw?: string | null, teamOnly 
   // Entries of a client with several projects count here only when they were placed on this one.
   const entries = all.filter((e) => projectOf(e, owner) === id && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
   const hourEntries: HourEntry[] = entries.map((e) => ({ date: day(e.entryDate)!, minutes: e.minutes, source: e.source, confirmed: isConfirmed(e) }));
-  const hours = weeklyHours(hourEntries, limitForWeek(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.end), week.start);
-  const byDay = Array.from({ length: 7 }, (_, i) => {
+  const hours = by === "month"
+    ? periodHours(hourEntries, limitForPeriod(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.start, week.end), week)
+    : weeklyHours(hourEntries, limitForWeek(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.end), week.start);
+  const dayCount = Math.round((Date.parse(`${week.end}T00:00:00Z`) - Date.parse(`${week.start}T00:00:00Z`)) / 86_400_000) + 1;
+  const byDay = Array.from({ length: dayCount }, (_, i) => {
     const d = shiftDays(week.start, i);
     return { date: d, minutes: hourEntries.filter((e) => e.date === d && e.confirmed).reduce((n, e) => n + e.minutes, 0) };
   });
@@ -170,16 +204,16 @@ export async function projectWeek(id: string, weekRaw?: string | null, teamOnly 
     bySender.set(n, (bySender.get(n) ?? 0) + e.minutes);
   }
   return {
-    week, contract, reason: null, sharedClient: !!p.clientId && shared.has(p.clientId), unassignedEntries: all.filter((e) => projectOf(e, owner) !== id).length, hours, byDay,
+    week, by, contract, reason: null, sharedClient: !!p.clientId && shared.has(p.clientId), unassignedEntries: all.filter((e) => projectOf(e, owner) !== id).length, hours, byDay,
     bySender: [...bySender].map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes),
     needsReview: entries.filter(isPending).length,
   };
 }
 
 /** Who worked how much on a project: hours per person for the chosen week, the last 30 days and everything reported. */
-export async function teamHours(id: string, weekRaw?: string | null, teamOnly = false) {
+export async function teamHours(id: string, weekRaw?: string | null, teamOnly = false, by: PeriodKind = "week") {
   const p = await project(id);
-  const week = weekParam(weekRaw);
+  const week = periodParam(by, weekRaw);
   if (!p.contract) return { week, rows: [] as TeamHoursRow[], months: [] as string[] };
   const [{ owner }, names] = await Promise.all([loadAttribution(), senderNames()]);
   const today = istDate(new Date());

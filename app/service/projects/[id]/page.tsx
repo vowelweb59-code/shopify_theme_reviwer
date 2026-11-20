@@ -3,9 +3,11 @@ import type { ReactNode } from "react";
 import { dmMatch } from "@/lib/service/dm-members";
 import { workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { load } from "@/lib/service/api/http";
+import { istDate } from "@/lib/service/import/text";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
 import { assignableUsers, getAssignments, getDetails, getProject, type AssignmentView } from "@/lib/service/api/projects";
-import { fmtLongDay, fmtMinutes, fmtUsd, HoursBar, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
+import { fmtMinutes, fmtUsd, HoursBar, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
+import { TeamHoursTable } from "./_components/TeamHoursTable";
 import { AssignmentsEditor } from "./_components/AssignmentsEditor";
 import { ContractEditor } from "./_components/ContractEditor";
 import { InHouseEditor, KeywordsEditor, PeopleEditor, ProfileEditor, ReviewEditor } from "./_components/DetailsEditors";
@@ -15,20 +17,29 @@ export const dynamic = "force-dynamic";
 
 const SECTION = "rounded-lg border border-border-subtle bg-surface p-4";
 
-export default async function ServiceProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; view?: string; hours?: string }> }) {
+export default async function ServiceProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; on?: string; by?: string; view?: string; hours?: string }> }) {
   const { id } = await params;
-  const { week, view, hours: scope } = await searchParams;
+  const { week, on: onRaw, by: byRaw, view, hours: scope } = await searchParams;
+  const byMonth = byRaw === "month";
   const teamOnly = scope === "team";
   const settings = view === "settings";
-  const wk = week && /^\d{4}-\d{2}-\d{2}$/.test(week) ? week : null;
+  // The period to look at (owner, 2026-11-20): a week or a calendar month; `on` is any day inside it (`week` is the older name of the same parameter).
+  const pick = onRaw ?? week;
+  const wk = pick && /^\d{4}-\d{2}-\d{2}$/.test(pick) ? pick : pick && /^\d{4}-\d{2}$/.test(pick) ? `${pick}-01` : null;
   const [project, assignments, pw, details, team_, users] = await load(() =>
-    Promise.all([getProject(id), getAssignments(id), projectWeek(id, wk, teamOnly), getDetails(id), teamHours(id, wk, teamOnly), assignableUsers()])
+    Promise.all([getProject(id), getAssignments(id), projectWeek(id, wk, teamOnly, byMonth ? "month" : "week"), getDetails(id), teamHours(id, wk, teamOnly, byMonth ? "month" : "week"), assignableUsers()])
   );
   const managers = assignments.filter((a) => a.assignmentRole === "MANAGER");
   const team = assignments.filter((a) => a.assignmentRole === "EMPLOYEE");
   const base = `/service/projects/${project.id}`;
-  const q = (w?: string, h = teamOnly) => { const p = new URLSearchParams(); if (w) p.set("week", w); if (h) p.set("hours", "team"); return p.size ? `?${p}` : ""; };
-  const hasLater = team_.rows.some((r) => r.later > 0);
+  const q = (on?: string, h = teamOnly, m = byMonth) => { const p = new URLSearchParams(); if (on) p.set("on", on); if (m) p.set("by", "month"); if (h) p.set("hours", "team"); return p.size ? `?${p}` : ""; };
+  const unit = byMonth ? "month" : "week";
+  const monthStart = (anchor: string, by: number) => { const [y, m] = anchor.split("-").map(Number); return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10); };
+  const prevOn = byMonth ? monthStart(pw.week.start, -1) : shiftWeek(pw.week.start, -1);
+  const nextOn = byMonth ? monthStart(pw.week.start, 1) : shiftWeek(pw.week.start, 1);
+  const periodText = byMonth ? new Date(`${pw.week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(pw.week);
+  const todayIso = istDate(new Date());
+  const isCurrent = todayIso >= pw.week.start && todayIso <= pw.week.end;
   const navBtn = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
 
   return (
@@ -113,12 +124,25 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
 
           <section aria-labelledby="hours" className={SECTION}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="hours" className="font-medium">Hours <span className="font-normal text-zinc-500">· {weekLabel(pw.week)}</span></h3>
-              <nav aria-label="Week" className="flex gap-2 text-sm">
-                <Link href={`${base}${q(shiftWeek(pw.week.start, -1))}`} className={navBtn}>← Previous</Link>
-                <Link href={`${base}${q()}`} className={navBtn}>This week</Link>
-                <Link href={`${base}${q(shiftWeek(pw.week.start, 1))}`} className={navBtn}>Next →</Link>
-              </nav>
+              <h3 id="hours" className="font-medium">Hours <span className="font-normal text-zinc-500">· {periodText}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-xs text-primary-tint-text">now</span>}</span></h3>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <div className="inline-flex overflow-hidden rounded-md border border-border-subtle">
+                  <Link href={`${base}${q(wk ?? undefined, teamOnly, false)}`} aria-current={!byMonth ? "page" : undefined} className={`border-r border-border-subtle px-3 py-1 ${!byMonth ? "bg-primary-tint font-medium text-primary-tint-text" : "hover:bg-surface-muted"}`}>Week</Link>
+                  <Link href={`${base}${q(wk ?? undefined, teamOnly, true)}`} aria-current={byMonth ? "page" : undefined} className={`px-3 py-1 ${byMonth ? "bg-primary-tint font-medium text-primary-tint-text" : "hover:bg-surface-muted"}`}>Month</Link>
+                </div>
+                <Link href={`${base}${q(prevOn)}`} aria-label={`Previous ${unit}`} className={navBtn}>←</Link>
+                <Link href={`${base}${q(nextOn)}`} aria-label={`Next ${unit}`} className={navBtn}>→</Link>
+                {!isCurrent && <Link href={`${base}${q()}`} className="text-primary hover:underline">This {unit}</Link>}
+                <form action={base} method="get" className="flex items-center gap-2">
+                  {byMonth && <input type="hidden" name="by" value="month" />}
+                  {teamOnly && <input type="hidden" name="hours" value="team" />}
+                  <label htmlFor="period-pick" className="sr-only">Choose a {unit}</label>
+                  {byMonth
+                    ? <input id="period-pick" type="month" name="on" defaultValue={pw.week.start.slice(0, 7)} max={todayIso.slice(0, 7)} className="rounded-md border border-border-subtle bg-surface px-2 py-1" />
+                    : <input id="period-pick" type="date" name="on" defaultValue={pw.week.start} max={todayIso} className="rounded-md border border-border-subtle bg-surface px-2 py-1" />}
+                  <button className={navBtn}>Go</button>
+                </form>
+              </div>
             </div>
             <p className="mt-2 flex items-center gap-2 text-sm">
               <span className="text-zinc-500">Count hours of:</span>
@@ -129,9 +153,9 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
               <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                   <Fact label="Completed" value={fmtMinutes(pw.hours.completedMinutes)} />
-                  <Fact label="Weekly limit" value={pw.hours.limitMinutes ? fmtMinutes(pw.hours.limitMinutes) : "Not set"} />
-                  <Fact label="Left this week" value={pw.hours.overLimitMinutes > 0 ? `Over by ${fmtMinutes(pw.hours.overLimitMinutes)}` : pw.hours.remainingMinutes === null ? "—" : fmtMinutes(pw.hours.remainingMinutes)} />
-                  <Fact label="Amount this week" value={pw.contract?.hourlyRateCents != null && !details.inHouse ? fmtUsd(Math.round((pw.hours.completedMinutes * pw.contract.hourlyRateCents) / 60)) : "—"} />
+                  <Fact label={byMonth ? "Limit this month" : "Weekly limit"} value={pw.hours.limitMinutes ? fmtMinutes(pw.hours.limitMinutes) : "Not set"} />
+                  <Fact label={`Left this ${unit}`} value={pw.hours.overLimitMinutes > 0 ? `Over by ${fmtMinutes(pw.hours.overLimitMinutes)}` : pw.hours.remainingMinutes === null ? "—" : fmtMinutes(pw.hours.remainingMinutes)} />
+                  <Fact label={`Amount this ${unit}`} value={pw.contract?.hourlyRateCents != null && !details.inHouse ? fmtUsd(Math.round((pw.hours.completedMinutes * pw.contract.hourlyRateCents) / 60)) : "—"} />
                   <Fact label="Tracked / manual" value={`${fmtMinutes(pw.hours.trackedMinutes)} / ${fmtMinutes(pw.hours.manualMinutes)}`} />
                 </div>
                 {pw.hours.limitMinutes ? <HoursBar hours={pw.hours} /> : null}
@@ -158,7 +182,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                 <p className="text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified.</p>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-zinc-500">No contract yet. Add one under Settings to see weekly hours.</p>
+              <p className="mt-3 text-sm text-zinc-500">No contract yet. Add one under Settings to see hours.</p>
             )}
           </section>
 
@@ -170,73 +194,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
             <NamesRow label="Executives" names={details.executives.map((x) => x.name)} />
             {team.length > 0 && <PeopleRow label="Team" people={team} />}
             <h4 className="mb-2 mt-4 text-sm font-medium">Who worked how much <span className="font-normal text-zinc-500">· * = not in the Digital Marketing team</span></h4>
-            {team_.rows.length === 0 ? (
-              <p className="text-sm text-zinc-500">No reports on this project yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px] text-sm">
-                  <thead className="text-xs uppercase tracking-wide text-zinc-500">
-                    <tr className="border-b border-border-subtle text-left">
-                      <th className="py-2 pr-3 font-medium">Person</th>
-                      <th className="py-2 pr-3 text-right font-medium">{weekLabel(pw.week)}</th>
-                      <th className="py-2 pr-3 text-right font-medium">Last 30 days</th>
-                      <th className="py-2 pr-3 text-right font-medium">All reported</th>
-                      <th className="py-2 text-right font-medium">Last report</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-subtle">
-                    {team_.rows.map((r) => (
-                      <tr key={r.name}>
-                        <td className="py-2 pr-3 font-medium">{outsider(r.name)}{r.name}</td>
-                        <td className="py-2 pr-3 text-right tabular-nums">{r.week ? fmtMinutes(r.week) : <span className="text-zinc-400">—</span>}</td>
-                        <td className="py-2 pr-3 text-right tabular-nums">{r.last30 ? fmtMinutes(r.last30) : <span className="text-zinc-400">—</span>}</td>
-                        <td className="py-2 pr-3 text-right font-medium tabular-nums">{fmtMinutes(r.total)}</td>
-                        <td className="py-2 text-right text-zinc-500">{fmtLongDay(r.lastReport)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {team_.months.length > 0 && (
-              <>
-                <h4 className="mb-2 mt-6 text-sm font-medium">Hours by month <span className="font-normal text-zinc-500">· newest month first</span></h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-xs uppercase tracking-wide text-zinc-500">
-                      <tr className="border-b border-border-subtle text-left">
-                        <th className="py-2 pr-3 font-medium">Person</th>
-                        {[...team_.months].reverse().map((m) => (
-                          <th key={m} className="whitespace-nowrap py-2 pr-3 text-right font-medium">{new Date(`${m}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })}</th>
-                        ))}
-                        {hasLater && <th className="whitespace-nowrap py-2 pr-3 text-right font-medium" title="Dated in a future month: a typing error in the report">Future date</th>}
-                        <th className="py-2 text-right font-medium">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-subtle">
-                      {team_.rows.map((r) => (
-                        <tr key={r.name}>
-                          <td className="whitespace-nowrap py-2 pr-3 font-medium">{outsider(r.name)}{r.name}</td>
-                          {[...team_.months].reverse().map((m) => (
-                            <td key={m} className="py-2 pr-3 text-right tabular-nums">{r.byMonth[m] ? fmtMinutes(r.byMonth[m]) : <span className="text-zinc-400">—</span>}</td>
-                          ))}
-                          {hasLater && <td className="py-2 pr-3 text-right tabular-nums">{r.later ? fmtMinutes(r.later) : <span className="text-zinc-400">—</span>}</td>}
-                          <td className="py-2 text-right font-medium tabular-nums">{fmtMinutes(Object.values(r.byMonth).reduce((n, x) => n + x, 0) + r.later)}</td>
-                        </tr>
-                      ))}
-                      <tr className="font-medium">
-                        <td className="py-2 pr-3">All people</td>
-                        {[...team_.months].reverse().map((m) => (
-                          <td key={m} className="py-2 pr-3 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + (r.byMonth[m] ?? 0), 0))}</td>
-                        ))}
-                        {hasLater && <td className="py-2 pr-3 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + r.later, 0))}</td>}
-                        <td className="py-2 text-right tabular-nums">{fmtMinutes(team_.rows.reduce((n, r) => n + Object.values(r.byMonth).reduce((a, x) => a + x, 0) + r.later, 0))}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+            <TeamHoursTable rows={team_.rows} months={team_.months} periodText={periodText} unit={unit} starred={outsider} />
             <p className="mt-2 text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified. A report shared across projects counts here only for this project&apos;s share.</p>
           </section>
 
