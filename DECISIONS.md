@@ -78,6 +78,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 30. **On hold split in two (owner 2026-11-20; rendered against live data, not pushed)**: on `/service?status=on_hold` a switch (`?hold=idle|others|team`) splits the on-hold projects by the last 30 working days (`workingDaysCutoff`): **No activity** (nobody reported), **Only others reported** (reports exist, none from a DM team member), and a small third **Team reported** (a team report is in the window but the project is still on hold: held by hand or waiting for the next sync), shown only when it has projects. Each on-hold row also shows "Last report <date> · team <date>" under the profile. Live 2026-11-20: 35 on hold = 18 + 13 + 4. Descriptive only: it does not change when the automatic holds fire (30 working days any report; 60 days team report).
 
+31. **On hold can move to Completed (owner 2026-11-20: "no option to move projects from hold to completed"; tests pass, not pushed)**: `ON_HOLD` now allows `ACTIVE`, `COMPLETED`, `CANCELLED` (`lib/service/projects/transitions.ts`, mirrored in the UI list `lib/service/ui/format.tsx`). The move is dated the project's last report (item 29), so a held project closed by hand keeps its real last-activity date and reopens only on hours dated after it. Blocked and Waiting for client still go only to Active.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).
