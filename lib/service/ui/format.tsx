@@ -46,6 +46,7 @@ const META: Record<ServiceProjectStatus, { label: string; icon: string; tone: st
   BLOCKED: { label: "Blocked", icon: "!", tone: "bg-status-fail-bg text-status-fail-text" },
   WAITING_FOR_CLIENT: { label: "Waiting for client", icon: "◔", tone: "bg-status-warning-bg text-status-warning-text" },
   ON_HOLD: { label: "On hold", icon: "❚❚", tone: "bg-status-warning-bg text-status-warning-text" },
+  PARTIAL_HOLD: { label: "Partial hold", icon: "◑", tone: "bg-status-warning-bg text-status-warning-text" },
   COMPLETED: { label: "Completed", icon: "✓", tone: "bg-status-info-bg text-status-info-text" },
   CANCELLED: { label: "Cancelled", icon: "✕", tone: "bg-status-not-tested-bg text-status-not-tested-text" },
   ARCHIVED: { label: "Archived", icon: "▣", tone: "bg-status-not-tested-bg text-status-not-tested-text" },
@@ -54,10 +55,11 @@ const META: Record<ServiceProjectStatus, { label: string; icon: string; tone: st
 // Mirrors lib/service/projects/transitions.ts so the UI only offers legal moves; the API remains the authority.
 export const NEXT_STATUSES: Record<ServiceProjectStatus, readonly ServiceProjectStatus[]> = {
   NOT_STARTED: ["ACTIVE", "CANCELLED"],
-  ACTIVE: ["BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "COMPLETED", "CANCELLED"],
+  ACTIVE: ["BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD", "COMPLETED", "CANCELLED"],
   BLOCKED: ["ACTIVE"],
   WAITING_FOR_CLIENT: ["ACTIVE"],
   ON_HOLD: ["ACTIVE", "COMPLETED", "CANCELLED"],
+  PARTIAL_HOLD: ["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"],
   COMPLETED: ["ARCHIVED", "ACTIVE"],
   CANCELLED: ["ARCHIVED"],
   ARCHIVED: [],

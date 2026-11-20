@@ -40,7 +40,7 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
   }
 
   const heldRows = await ServiceProject.find({ status: "ON_HOLD" }).select("name clientId upworkProfileId history reviewRating").lean<Array<{ _id: string; name: string; clientId: string | null; upworkProfileId: string | null; history: Array<{ at: Date }>; reviewRating: number | null }>>();
-  const open = await ServiceProject.find({ status: { $in: ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD"] }, clientId: { $ne: null } }).select("clientId").lean<Array<{ clientId: string }>>();
+  const open = await ServiceProject.find({ status: { $in: ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD"] }, clientId: { $ne: null } }).select("clientId").lean<Array<{ clientId: string }>>();
   const perClient = new Map<string, number>();
   for (const o of open) perClient.set(o.clientId, (perClient.get(o.clientId) ?? 0) + 1);
   const clients = await ServiceClient.find({ _id: { $in: heldRows.map((p) => p.clientId).filter((x): x is string => !!x) } }).select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();

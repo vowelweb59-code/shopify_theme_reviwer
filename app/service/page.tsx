@@ -52,8 +52,9 @@ const TABS = [
 const DEFAULT_TAB = "all";
 
 const STATUS_TABS = [
-  { id: "active", label: "Active", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT"].includes(p.status) },
-  { id: "on_hold", label: "On hold", match: (p: Row) => p.status === "ON_HOLD" },
+  { id: "active", label: "Active", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "PARTIAL_HOLD"].includes(p.status) },
+  // Waiting for client counts as on hold, with its own tag and its own filter (owner, 2026-11-20).
+  { id: "on_hold", label: "On hold", match: (p: Row) => p.status === "ON_HOLD" || p.status === "WAITING_FOR_CLIENT" },
   { id: "closed", label: "Closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
   { id: "all", label: "All", match: () => true },
 ] as const;
@@ -207,7 +208,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const isCurrent = today >= week.start && today <= week.end;
   // On hold is split in two (owner, 2026-11-20): projects nobody reported on in the last 30 working days, and projects others reported on
   // but no one from the team did. `hold` picks one of them (idle | others | team).
-  const HOLD_KINDS = ["idle", "others", "team"] as const;
+  const HOLD_KINDS = ["idle", "others", "team", "waiting"] as const;
   const holdFilter = status.id === "on_hold" ? HOLD_KINDS.find((k) => k === sp.hold) : undefined;
   const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined, hold: holdFilter };
   const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
@@ -263,7 +264,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
     }
   }
   /** Why a project is on hold: nobody reported in the window, only others did, or the team did (held by hand / waiting for the next sync). */
-  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => ((lastAnyDay.get(p._id) ?? "") < holdCutoff ? "idle" : (lastDmDay.get(p._id) ?? "") < holdCutoff ? "others" : "team");
+  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => p.status === "WAITING_FOR_CLIENT" ? "waiting" : ((lastAnyDay.get(p._id) ?? "") < holdCutoff ? "idle" : (lastDmDay.get(p._id) ?? "") < holdCutoff ? "others" : "team");
   const onHoldAll = status.id === "on_hold" ? inStatus : [];
   const holdCount = (k: (typeof HOLD_KINDS)[number]) => onHoldAll.filter((p) => holdKindOf(p) === k).length;
   const projects = holdFilter ? inStatus.filter((p) => holdKindOf(p) === holdFilter) : inStatus;
@@ -371,6 +372,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: undefined }), text: `All on hold ${onHoldAll.length}`, on: !holdFilter },
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "idle" }), text: `No activity ${holdCount("idle")}`, on: holdFilter === "idle" },
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "others" }), text: `Only others reported ${holdCount("others")}`, on: holdFilter === "others" },
+              ...(holdCount("waiting") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "waiting" }), text: `Waiting for client ${holdCount("waiting")}`, on: holdFilter === "waiting" }] : []),
               ...(holdCount("team") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "team" }), text: `Team reported ${holdCount("team")}`, on: holdFilter === "team" }] : []),
             ]}
           />
@@ -433,8 +435,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                 <tr key={p._id} className="hover:bg-surface-muted/50">
                   <td className="px-4 py-2.5">
                     <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
-                    <div className="text-xs text-zinc-500">{(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}</div>
-                    {p.status === "ON_HOLD" && (
+                    <div className="text-xs text-zinc-500">
+                      {(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}
+                      {p.status === "WAITING_FOR_CLIENT" && <span className="ml-2 rounded-full bg-status-info-bg px-2 py-0.5 text-[11px] font-medium text-status-info-text" title="Waiting for the client to reply">◔ Waiting for client</span>}
+                      {p.status === "PARTIAL_HOLD" && <span className="ml-2 rounded-full bg-status-warning-bg px-2 py-0.5 text-[11px] font-medium text-status-warning-text" title="Client on a break: still a live project, never put on hold automatically">◑ Partial hold</span>}
+                    </div>
+                    {(p.status === "ON_HOLD" || p.status === "WAITING_FOR_CLIENT") && (
                       <div className="text-xs text-zinc-400">
                         {lastAnyDay.get(p._id) ? `Last report ${fmtLongDay(lastAnyDay.get(p._id)!)}` : "No report yet"}
                         {lastDmDay.get(p._id) && lastDmDay.get(p._id) !== lastAnyDay.get(p._id) ? ` · team ${fmtLongDay(lastDmDay.get(p._id)!)}` : lastAnyDay.get(p._id) && !lastDmDay.get(p._id) ? " · none from the team" : ""}

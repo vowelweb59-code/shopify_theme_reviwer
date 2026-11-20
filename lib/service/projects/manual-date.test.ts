@@ -15,3 +15,11 @@ describe("closingDate", () => {
 describe("On hold to Completed", () => {
   it("is allowed (owner 2026-11-20)", () => expect(validateTransition("ON_HOLD", "COMPLETED")).toEqual({ ok: true }));
 });
+
+describe("Partial hold", () => {
+  it("is reachable from Active and leads back or on", () => {
+    expect(validateTransition("ACTIVE", "PARTIAL_HOLD")).toEqual({ ok: true });
+    for (const to of ["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"] as const) expect(validateTransition("PARTIAL_HOLD", to)).toEqual({ ok: true });
+    expect(validateTransition("ON_HOLD", "PARTIAL_HOLD").ok).toBe(false);
+  });
+});

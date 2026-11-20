@@ -22,7 +22,7 @@ import { ServiceUpworkProfile } from "@/models/service-upwork";
 // contract that doesn't point at exactly one open project, are returned in `skipped` and left for a person.
 export const NEW_PROJECT_SPACE = process.env.SERVICE_NEW_PROJECT_SPACE?.trim() || "spaces/AAAAVIeFrm4";
 const LOOKBACK_DAYS = 60;
-const OPEN = ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD"];
+const OPEN = ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD"];
 const key = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 /** An "Accepted the project of ..." post with the Chat message it came from (`ref` is what a created project remembers in `contractRef`). */
