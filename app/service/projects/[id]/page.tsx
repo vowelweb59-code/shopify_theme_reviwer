@@ -106,7 +106,6 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                 value={details.review.rating ? `${"★".repeat(Math.round(details.review.rating))}${"☆".repeat(5 - Math.round(details.review.rating))} ${details.review.rating.toFixed(1)}${details.review.comment ? ` · ${details.review.comment}` : ""}` : "Pending (project still running)"}
               />
               <Fact label="Weekly hours allotted" value={pw.contract?.weeklyLimitMinutes ? fmtMinutes(pw.contract.weeklyLimitMinutes) : "—"} />
-              <Fact label="Time tracking" value={pw.contract?.trackingMode ? (pw.contract.trackingMode === "TIMER" ? "Timer" : "Manual") : "—"} />
               <Fact label="Upwork profile" value={details.upworkProfile?.name ?? "—"} />
               <Fact label="Written in Chat as" value={details.chatKeywords.join(", ") || "—"} />
             </dl>
