@@ -13,6 +13,7 @@ import { fmtMinutes, fmtUsd, shiftWeek, weekLabel } from "@/lib/service/ui/forma
 import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
+import { ServiceUser } from "@/models/service-user";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ type Row = {
   reviewRating: number | null;
   upworkProfileId: string | null;
   people: Array<{ role: string; name: string }>;
+  assignments?: Array<{ userId: string; role: "MANAGER" | "EMPLOYEE" }>;
   contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null; weeklyLimitHistory?: LimitStep[] } | null;
 };
 
@@ -179,12 +181,14 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
-  const [all, profiles, att, names] = await Promise.all([
-    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people").sort({ name: 1 }).lean<Row[]>(),
+  const [all, profiles, att, names, users] = await Promise.all([
+    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people assignments").sort({ name: 1 }).lean<Row[]>(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     loadAttribution(),
     senderNames(),
+    ServiceUser.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
   ]);
+  const userName = new Map(users.map((u) => [u._id, u.displayName]));
   const profileName = new Map(profiles.map((x) => [x._id, x.name]));
   const who = (p: Row, role: string) => p.people.filter((x) => x.role === role).map((x) => x.name).join(", ");
   const ofType = all.filter(tab.match);
@@ -237,7 +241,14 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
     const byHours = [...(dmHours.get(p._id) ?? [])].filter(([, m]) => m > 0).sort((a, b) => b[1] - a[1]).map(([n]) => n);
     const seen = new Set(byHours.map((n) => dmMatch(n)));
     const listed = p.people.filter((x) => dmMatch(x.name) !== null && !seen.has(dmMatch(x.name))).map((x) => x.name);
-    return [...byHours, ...listed];
+    for (const n of listed) seen.add(dmMatch(n));
+    // People assigned in Settings: team members assigned as employees or managers join as themselves; the project's other managers (PM) are
+    // always shown, marked "(PM)" (owner, 2026-11-20: "add assigned managers too").
+    const assigned = (p.assignments ?? []).map((a) => ({ name: userName.get(a.userId) ?? "", role: a.role })).filter((a) => a.name);
+    const assignedDm = assigned.filter((a) => dmMatch(a.name) !== null && !seen.has(dmMatch(a.name))).map((a) => a.name);
+    for (const n of assignedDm) seen.add(dmMatch(n));
+    const managers = assigned.filter((a) => a.role === "MANAGER" && dmMatch(a.name) === null).map((a) => `${a.name} (PM)`);
+    return [...byHours, ...listed, ...assignedDm, ...managers];
   };
   /** Cents taken from the client, or null when it cannot be worked out (no rate / no price entered). */
   const takenCents = (p: Row): number | null => {
@@ -387,7 +398,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     {(() => {
                       const team = dmTeamOf(p);
                       if (team.length === 0) return <span className="text-zinc-400">—</span>;
-                      const first = (n: string) => n.split(" ")[0];
+                      const first = (n: string) => n.split(" ")[0] + (n.endsWith(" (PM)") ? " (PM)" : "");
                       return (
                         <div title={team.join(", ")} className="max-w-48 text-xs leading-5">
                           {team.slice(0, 4).map(first).join(", ")}

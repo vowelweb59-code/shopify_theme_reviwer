@@ -72,7 +72,7 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 27. **Fixed rows show this week above the total (owner 2026-11-19; rendered against live data, pushed)**: in the `/service` overview Hours cell a Fixed project shows the period's hours first ("this week" / "in this week|month"), then the total (billed by hours, or of the workable hours with the bar). Not shown on the Closed view (all-time total only).
 
-28. **"DM team" column on the overview (owner 2026-11-20; rendered against live data, pushed)**: `app/service/page.tsx`, after BA / BD: Digital Marketing members (`dmMatch`) who ever reported hours on the project (all-time, most hours first), then team members on its people list with no report; first names, 4 shown then "+N", full list on hover. Ignores the period and "My team only". Assigned managers (`assignments`) are not included.
+28. **"DM team" column on the overview (owner 2026-11-20; rendered against live data, pushed)**: `app/service/page.tsx`, after BA / BD: Digital Marketing members (`dmMatch`) who ever reported hours on the project (all-time, most hours first), then team members on its people list with no report; first names, 4 shown then "+N", full list on hover. Ignores the period and "My team only". **Assigned people added the same day (owner)**: team members assigned in the project's Settings (`assignments`, as manager or employee) join under their own name, and the project's other managers (PM, not a DM member, e.g. Huzefa; 35 of 368 projects) are always shown marked "(PM)", last.
 
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
