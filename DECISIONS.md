@@ -86,6 +86,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 34. **Waiting for client is shown under On hold (owner 2026-11-20; rendered on live data, not pushed)**: in the `/service` overview the status Waiting for client leaves the Active tab and joins On hold (live: Active 24 -> 23, On hold 33 -> 34), with its own tag "Waiting for client" under the project name and its own switch `?hold=waiting`; the other three groups (no activity / only others / team) describe the ON_HOLD ones. The status itself is unchanged (still Waiting for client; it goes only to Active). The Revenue tab still counts it as active.
 
+35. **Last sync time in the Service header (owner 2026-11-20; rendered on live data, pushed)**: `app/service/layout.tsx` shows "● Last synced 20 Nov, 4:52 pm IST · 4 min ago" after the subtitle on every Service page, from the Chat connection's `lastSyncAt` (the hours sync, every 15 minutes while the server is awake). Amber when over an hour old (server asleep or sync failing); red "Chat connection stopped: reconnect in Settings" when Google revoked it, "Chat not connected" when there is no connection.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).
