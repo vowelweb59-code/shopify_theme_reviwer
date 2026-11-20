@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CloseFromPosts } from "./_components/CloseFromPosts";
 import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
@@ -376,6 +377,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <span className="text-xs text-zinc-500">Window: the last 30 working days. No activity = nobody reported; only others = reports exist, none from your team.</span>
         </div>
       )}
+      {status.id === "on_hold" && <CloseFromPosts />}
 
       {showMoney ? (
         <div className="grid gap-4 sm:grid-cols-3">
