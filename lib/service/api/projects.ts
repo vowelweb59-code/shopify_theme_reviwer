@@ -9,6 +9,7 @@ import { autoAssignProjects } from "../hours/auto-assign";
 import { normalizeName } from "../import/text";
 import { recordServiceAudit } from "../audit/record";
 import { applyActivityRules } from "../projects/activity-rules";
+import { dateForManualMove } from "../projects/manual-date";
 import { matchSender } from "../projects/sender-name";
 import { validateTransition } from "../projects/transitions";
 import { loadProjectDepartments } from "../reports/project-departments";
@@ -224,7 +225,7 @@ export async function changeStatus(id: string, body: Record<string, unknown>) {
   const check = validateTransition(p.status, to, reason);
   if (!check.ok) throw badRequest(check.error);
   // Conditional on the status read, so two people moving the same project at once cannot both win.
-  const r = await ServiceProject.updateOne({ _id: id, status: p.status }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: new Date() } } });
+  const r = await ServiceProject.updateOne({ _id: id, status: p.status }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } } });
   if (r.modifiedCount === 0) throw badRequest("The project changed meanwhile. Reload and try again.");
   await recordServiceAudit("project.status", { projectId: id, from: p.status, to, reason: reason ?? null });
   return getProject(id);
@@ -440,7 +441,7 @@ export async function bulkEdit(body: Record<string, unknown>) {
         if (p.status === to) { skipped.push({ name: p.name, reason: "already in that status" }); continue; }
         const check = validateTransition(p.status, to!, reason);
         if (!check.ok) { skipped.push({ name: p.name, reason: check.error }); continue; }
-        await ServiceProject.updateOne({ _id: p._id }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: now } } });
+        await ServiceProject.updateOne({ _id: p._id }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: await dateForManualMove(to!, p, now) } } });
         break;
       }
       case "profile":

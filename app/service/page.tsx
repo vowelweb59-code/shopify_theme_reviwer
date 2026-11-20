@@ -2,14 +2,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
-import { dmMatch } from "@/lib/service/dm-members";
+import { dmHasLeft, dmMatch } from "@/lib/service/dm-members";
+import { workingDaysCutoff } from "@/lib/service/projects/activity-rules";
 import { loadAllTimeEntries } from "@/lib/service/hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { limitForPeriod, type LimitStep } from "@/lib/service/hours/limit-history";
 import { istDate } from "@/lib/service/import/text";
 import { weekOf } from "@/lib/service/import/week";
-import { fmtMinutes, fmtUsd, shiftWeek, weekLabel } from "@/lib/service/ui/format";
+import { fmtLongDay, fmtMinutes, fmtUsd, shiftWeek, weekLabel } from "@/lib/service/ui/format";
 import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
@@ -57,7 +58,7 @@ const STATUS_TABS = [
 ] as const;
 
 /** The period being looked at: a Monday-to-Sunday week or a calendar month (owner, 2026-11-17: look back at any past week or month). */
-type Per = { by?: "month"; on?: string };
+type Per = { by?: "month"; on?: string; hold?: string };
 const href = (tab: string, status: string, teamOnly: boolean, per: Per = {}) => {
   const q = new URLSearchParams();
   if (tab !== DEFAULT_TAB) q.set("tab", tab);
@@ -65,6 +66,7 @@ const href = (tab: string, status: string, teamOnly: boolean, per: Per = {}) => 
   if (teamOnly) q.set("hours", "team");
   if (per.by) q.set("by", per.by);
   if (per.on) q.set("on", per.on);
+  if (per.hold && status === "on_hold") q.set("hold", per.hold);
   return q.size ? `/service?${q}` : "/service";
 };
 const isoDay = (v: string | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) ? v : null);
@@ -175,7 +177,7 @@ function MoneyCell({ cents, scope }: { cents: number; scope: number | null }) {
   );
 }
 
-export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string }> }) {
+export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string; hold?: string }> }) {
   const sp = await searchParams;
   const teamOnly = sp.hours === "team";
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
@@ -192,7 +194,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const profileName = new Map(profiles.map((x) => [x._id, x.name]));
   const who = (p: Row, role: string) => p.people.filter((x) => x.role === role).map((x) => x.name).join(", ");
   const ofType = all.filter(tab.match);
-  const projects = ofType.filter(status.match);
+  const inStatus = ofType.filter(status.match);
   const counts = (s: (typeof STATUS_TABS)[number]) => ofType.filter(s.match).length;
 
   // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
@@ -202,7 +204,11 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const byMonth = sp.by === "month";
   const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
   const isCurrent = today >= week.start && today <= week.end;
-  const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined };
+  // On hold is split in two (owner, 2026-11-20): projects nobody reported on in the last 30 working days, and projects others reported on
+  // but no one from the team did. `hold` picks one of them (idle | others | team).
+  const HOLD_KINDS = ["idle", "others", "team"] as const;
+  const holdFilter = status.id === "on_hold" ? HOLD_KINDS.find((k) => k === sp.hold) : undefined;
+  const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined, hold: holdFilter };
   const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
   const unit = byMonth ? "month" : "week";
   const prevOn = byMonth ? shiftMonth(anchor, -1) : shiftWeek(week.start, -1);
@@ -222,9 +228,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Digital Marketing members involved in a project (owner, 2026-11-20): everyone on the team who ever reported hours on it (most hours
   // first), then team members listed on the project's people without any report. Always from all-time hours, whatever the period.
   const dmHours = new Map<string, Map<string, number>>();
+  const lastAnyDay = new Map<string, string>();
+  const lastDmDay = new Map<string, string>();
+  const holdCutoff = workingDaysCutoff(new Date()).toISOString().slice(0, 10);
   const lastDmReport = new Map<string, string>();
   const twoMonthsAgo = (() => { const d = new Date(`${today}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 2); return d.toISOString().slice(0, 10); })();
-  const dmActive = (name: string) => (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
+  const dmActive = (name: string) => !dmHasLeft(name) && (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
   // All-time hours are needed for Closed (money), for fixed-price projects (hours used against the workable total) and for the team column.
   {
     const entries = await loadAllTimeEntries();
@@ -239,6 +248,11 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       const pid = projectOf(e, att.owner);
       if (!pid) continue;
       const who_ = names.get(e.senderExternalId);
+      const day_ = e.entryDate.toISOString().slice(0, 10);
+      if (day_ <= today) {
+        if (day_ > (lastAnyDay.get(pid) ?? "")) lastAnyDay.set(pid, day_);
+        if (dmMatch(who_) !== null && day_ > (lastDmDay.get(pid) ?? "")) lastDmDay.set(pid, day_);
+      }
       if (dmMatch(who_) !== null && who_) {
         const m = dmHours.get(pid) ?? new Map<string, number>();
         m.set(who_, (m.get(who_) ?? 0) + e.minutes);
@@ -247,6 +261,11 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       if (countsFor(e.senderExternalId)) minutes.set(pid, (minutes.get(pid) ?? 0) + e.minutes);
     }
   }
+  /** Why a project is on hold: nobody reported in the window, only others did, or the team did (held by hand / waiting for the next sync). */
+  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => ((lastAnyDay.get(p._id) ?? "") < holdCutoff ? "idle" : (lastDmDay.get(p._id) ?? "") < holdCutoff ? "others" : "team");
+  const onHoldAll = status.id === "on_hold" ? inStatus : [];
+  const holdCount = (k: (typeof HOLD_KINDS)[number]) => onHoldAll.filter((p) => holdKindOf(p) === k).length;
+  const projects = holdFilter ? inStatus.filter((p) => holdKindOf(p) === holdFilter) : inStatus;
   const dmTeamOf = (p: Row): string[] => {
     const byHours = [...(dmHours.get(p._id) ?? [])].filter(([n, m]) => m > 0 && dmActive(n)).sort((a, b) => b[1] - a[1]).map(([n]) => n);
     const seen = new Set(byHours.map((n) => dmMatch(n)));
@@ -322,6 +341,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             {status.id !== "active" && <input type="hidden" name="status" value={status.id} />}
             {teamOnly && <input type="hidden" name="hours" value="team" />}
             {byMonth && <input type="hidden" name="by" value="month" />}
+            {holdFilter && <input type="hidden" name="hold" value={holdFilter} />}
             <label className="text-zinc-500" htmlFor="jump-date">Jump to a date</label>
             <input id="jump-date" type="date" name="on" defaultValue={anchor} max={today} className="rounded-md border border-border-subtle bg-surface px-2 py-1.5" />
             <button className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 hover:bg-surface-muted">Go</button>
@@ -342,6 +362,20 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           </Link>
         </div>
       </div>
+
+      {status.id === "on_hold" && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Segments
+            items={[
+              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: undefined }), text: `All on hold ${onHoldAll.length}`, on: !holdFilter },
+              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "idle" }), text: `No activity ${holdCount("idle")}`, on: holdFilter === "idle" },
+              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "others" }), text: `Only others reported ${holdCount("others")}`, on: holdFilter === "others" },
+              ...(holdCount("team") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "team" }), text: `Team reported ${holdCount("team")}`, on: holdFilter === "team" }] : []),
+            ]}
+          />
+          <span className="text-xs text-zinc-500">Window: the last 30 working days. No activity = nobody reported; only others = reports exist, none from your team.</span>
+        </div>
+      )}
 
       {showMoney ? (
         <div className="grid gap-4 sm:grid-cols-3">
@@ -398,6 +432,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                   <td className="px-4 py-2.5">
                     <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
                     <div className="text-xs text-zinc-500">{(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}</div>
+                    {p.status === "ON_HOLD" && (
+                      <div className="text-xs text-zinc-400">
+                        {lastAnyDay.get(p._id) ? `Last report ${fmtLongDay(lastAnyDay.get(p._id)!)}` : "No report yet"}
+                        {lastDmDay.get(p._id) && lastDmDay.get(p._id) !== lastAnyDay.get(p._id) ? ` · team ${fmtLongDay(lastDmDay.get(p._id)!)}` : lastAnyDay.get(p._id) && !lastDmDay.get(p._id) ? " · none from the team" : ""}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400">
                     <div>{ba || "—"}</div>
