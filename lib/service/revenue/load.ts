@@ -3,22 +3,27 @@ import { senderNames } from "../api/hours";
 import { dmMatch } from "../dm-members";
 import { loadAllTimeEntries } from "../hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
-import type { AppClient, ClientStatus, HoursRow, TakenRow } from "./compare";
+import type { AppClient } from "./compare";
+import { profileKey, type ProjectHours, type RevProject, type SheetRow } from "./by-project";
 import { normName } from "./match";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceRevenueTaken } from "@/models/service-revenue";
+import { ServiceUpworkProfile } from "@/models/service-upwork";
 
 /** What the Revenue tab compares: the imported sheet rows, the app's clients and the reported minutes per project and month. */
 export const loadRevenueInput = () => memo("service:revenue-input", 30_000, loadRevenueInputUncached);
 
-async function loadRevenueInputUncached(): Promise<{ taken: TakenRow[]; clients: AppClient[]; hours: HoursRow[] }> {
-  const [takenDocs, clientDocs, projects, att] = await Promise.all([
-    ServiceRevenueTaken.find().select("month clientName amountCents").lean<Array<{ month: string; clientName: string; amountCents: number }>>(),
+async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients: AppClient[]; projects: RevProject[]; hours: ProjectHours[] }> {
+  // Every project of the app (owner, 2026-11-21: the count must match the Projects tab), with the profile that tells which project a sheet row is for.
+  const [takenDocs, clientDocs, projects, profileDocs, att] = await Promise.all([
+    ServiceRevenueTaken.find().select("month clientName profile amountCents").lean<Array<{ month: string; clientName: string; profile: string | null; amountCents: number }>>(),
     ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
-    ServiceProject.find({ clientId: { $ne: null } }).select("clientId status contract").lean<Array<{ _id: string; clientId: string; status: string; contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null }>>(),
+    ServiceProject.find().select("name clientId status contract upworkProfileId").lean<Array<{ _id: string; name: string; clientId: string | null; status: string; upworkProfileId: string | null; contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null }>>(),
+    ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     loadAttribution(),
   ]);
+  const profileKeys = new Map(profileDocs.map((p) => [p._id, [p.name, ...(p.aliases ?? [])].map(profileKey).filter(Boolean)]));
   // The sales sheet is the Digital Marketing team's revenue only (owner, 2026-11-17), so only the team's own hours are worth counting
   // against it: some projects also have people from other teams reporting on them.
   const [allEntries, names] = await Promise.all([loadAllTimeEntries(), senderNames()]);
@@ -35,27 +40,20 @@ async function loadRevenueInputUncached(): Promise<{ taken: TakenRow[]; clients:
   const canonical = new Map<string, string>();
   const idOf = (c: { _id: string; name: string }) => { const k = normName(c.name); if (!canonical.has(k)) canonical.set(k, c._id); return canonical.get(k)!; };
   const canonicalOf = new Map(clientDocs.map((c) => [c._id, idOf(c)]));
-  const hours: HoursRow[] = [...sums].map(([k, minutes]) => {
-    const [pid, month] = k.split("|");
-    const p = byProject.get(pid)!;
-    return { clientId: canonicalOf.get(p.clientId) ?? p.clientId, month, minutes, type: p.contract?.type ?? null, rateCents: p.contract?.hourlyRateCents ?? null };
+  const hours: ProjectHours[] = [...sums].map(([k, minutes]) => {
+    const [projectId, month] = k.split("|");
+    return { projectId: projectId!, month: month!, minutes };
   });
-  // A client's status: active if any of its projects is running, else on hold, else closed.
-  const rank: Record<ClientStatus, number> = { active: 0, on_hold: 1, closed: 2 };
-  const statusOfProject = (st: string): ClientStatus => (st === "ON_HOLD" ? "on_hold" : ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(st) ? "closed" : "active");
-  const clientStatus = new Map<string, ClientStatus>();
-  for (const p of projects) {
-    const id = canonicalOf.get(p.clientId) ?? p.clientId;
-    const st = statusOfProject(p.status);
-    const have = clientStatus.get(id);
-    if (!have || rank[st] < rank[have]) clientStatus.set(id, st);
-  }
+  const revProjects: RevProject[] = projects.map((p) => ({
+    id: p._id, name: p.name, status: p.status, clientId: p.clientId ? canonicalOf.get(p.clientId) ?? p.clientId : null,
+    profileKeys: p.upworkProfileId ? profileKeys.get(p.upworkProfileId) ?? [] : [], type: p.contract?.type ?? null, rateCents: p.contract?.hourlyRateCents ?? null,
+  }));
   const clients: AppClient[] = [];
   for (const c of clientDocs) {
     const id = canonicalOf.get(c._id)!;
     const have = clients.find((x) => x.id === id);
     if (have) have.aliases = [...have.aliases, ...c.aliases];
-    else clients.push({ id, name: c.name, aliases: [...c.aliases], status: clientStatus.get(id) ?? null });
+    else clients.push({ id, name: c.name, aliases: [...c.aliases] });
   }
-  return { taken: takenDocs.map((t) => ({ month: t.month, clientName: t.clientName, amountCents: t.amountCents })), clients, hours };
+  return { taken: takenDocs.map((t) => ({ month: t.month, clientName: t.clientName, profile: t.profile ?? null, amountCents: t.amountCents })), clients, projects: revProjects, hours };
 }
