@@ -49,8 +49,19 @@ describe('month plan', () => {
     const timer = p.entries.find((e) => e.source === 'TIMER_CALCULATED')!;
     const manual = p.entries.find((e) => e.source === 'MANUAL_REPORT')!;
     expect(timer).toMatchObject({ minutes: 180, clientId: id('Acme Co'), state: 'PARSED', entryDate: '2026-10-23', senderExternalId: 's1' });
-    // owner rule: one day, both a timer and a report for the client: only the larger counts (timer 3h over the report's 1h)
-    expect(manual).toMatchObject({ minutes: 60, reportedOnTimerMinutes: 180, reconciliation: 'MATCH', state: 'REJECTED' });
+    // owner rule (2026-11-21): a report with its own ON figure and OFF hours: the OFF hour is extra work, it counts on top of the 3h timer
+    expect(manual).toMatchObject({ minutes: 60, reportedOnTimerMinutes: 180, reconciliation: 'MATCH', state: 'PARSED' });
+    expect(manual.notes).not.toContain('REPORT_SUPERSEDED_BY_TIMER');
+  });
+
+  it('still counts only the larger when a plain manual report (no ON figure) and a timer cover the same day', () => {
+    const p = plan(master(
+      m('s7', '2026-10-23T10:00', 'Acme Co | Sam - TIMER ON'),
+      m('s7', '2026-10-23T13:00', 'Acme Co | Sam - TIMER OFF'),
+      m('s7', '2026-10-23T19:00', ['Daily Report – 23/10/2026', 'Client: Acme Co | Sam', 'OFF Timer: 01:00 hrs', 'Memo: Work.'].join('\n')),
+    ));
+    const manual = p.entries.find((e) => e.source === 'MANUAL_REPORT' && e.senderExternalId === 's7')!;
+    expect(manual).toMatchObject({ minutes: 60, state: 'REJECTED' });
     expect(manual.notes).toContain('REPORT_SUPERSEDED_BY_TIMER');
   });
 

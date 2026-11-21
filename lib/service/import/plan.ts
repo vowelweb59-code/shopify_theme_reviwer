@@ -296,16 +296,22 @@ export function planImport(input: PlanInput): ImportPlan {
     }
   }
 
-  // ---- 5. owner rule: one person, one client, one day with BOTH timer hours and a manual report counts only one of them, the larger ----
+  // ---- 5. owner rule: one person, one client, one day with BOTH timer hours and a manual report counts only one of them, the larger
+  //         (a report's OFF-timer hours next to its own ON figure are extra work and are not part of this comparison) ----
   const counted = (e: PlannedEntry) => e.state !== 'REJECTED' && !e.flags.includes('OPEN_INTERVAL') && !e.flags.includes('ORPHAN_OFF') && !e.flags.includes('DUPLICATE_ON');
   const byDay = new Map<string, { timers: PlannedEntry[]; reports: PlannedEntry[] }>();
   for (const [e, key] of timerKey) if (counted(e)) (byDay.get(key) ?? byDay.set(key, { timers: [], reports: [] }).get(key)!).timers.push(e);
   for (const { e, key } of manual) if (counted(e)) (byDay.get(key) ?? byDay.set(key, { timers: [], reports: [] }).get(key)!).reports.push(e);
   for (const g of byDay.values()) {
+    // Owner rule (2026-11-21, Racheal Francis: "one hour report is short"): a report that states an ON-timer figure AND OFF-timer hours of its
+    // own describes two kinds of time: the ON part is the timer, the OFF hours are extra work off the timer. Those OFF hours are not compared with
+    // the timer, they count on top of it. (An ON figure that stands in for missing timer data, `ON_TIMER_FROM_REPORT`, is not extra.)
+    const extra = (e: PlannedEntry) => e.reportedOnTimerMinutes !== null && e.reportedOnTimerMinutes > 0 && e.minutes > 0 && !e.notes.includes('ON_TIMER_FROM_REPORT');
+    const comparable = g.reports.filter((e) => !extra(e));
     const timer = g.timers.reduce((n, e) => n + e.minutes, 0);
-    const report = g.reports.reduce((n, e) => n + e.minutes, 0);
+    const report = comparable.reduce((n, e) => n + e.minutes, 0);
     if (!timer || !report) continue;
-    const [drop, why] = report >= timer ? [g.timers, 'TIMER_SUPERSEDED_BY_REPORT'] : [g.reports, 'REPORT_SUPERSEDED_BY_TIMER'];
+    const [drop, why] = report >= timer ? [g.timers, 'TIMER_SUPERSEDED_BY_REPORT'] : [comparable, 'REPORT_SUPERSEDED_BY_TIMER'];
     for (const e of drop) {
       e.notes.push(why, AUTO_IGNORED);
       e.state = 'REJECTED';
