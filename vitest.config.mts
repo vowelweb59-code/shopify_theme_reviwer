@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -11,5 +11,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Never run the copies of the tests that `next build` leaves in .next/standalone.
+    exclude: [...configDefaults.exclude, ".next/**"],
   },
 });
