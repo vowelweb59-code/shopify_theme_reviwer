@@ -1,12 +1,12 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { dmMatch } from "@/lib/service/dm-members";
 import { workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { load } from "@/lib/service/api/http";
 import { istDate } from "@/lib/service/import/text";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
-import { assignableUsers, getAssignments, getDetails, getProject, type AssignmentView } from "@/lib/service/api/projects";
-import { fmtMinutes, fmtUsd, HoursBar, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
+import { assignableUsers, getAssignments, getDetails, getProject } from "@/lib/service/api/projects";
+import { fmtMinutes, fmtUsd, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
+import { Avatar, Card, DayBars, Metric, PeopleLine, Row } from "./_components/OverviewParts";
 import { TeamHoursTable } from "./_components/TeamHoursTable";
 import { AssignmentsEditor } from "./_components/AssignmentsEditor";
 import { ContractEditor } from "./_components/ContractEditor";
@@ -41,6 +41,17 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   const todayIso = istDate(new Date());
   const isCurrent = todayIso >= pw.week.start && todayIso <= pw.week.end;
   const navBtn = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
+  const c = pw.contract;
+  const used = team_.rows.reduce((n, r) => n + r.total, 0);
+  const billedByHours = c?.type === "FIXED" && c.hourlyRateCents != null;
+  const budgetTotal = c?.type === "FIXED" && c.hourlyRateCents == null ? workableMinutes(c.fixedPriceCents) : null;
+  // Fixed work with no hourly rate is valued at the standard $15/h, as on the Revenue tab.
+  const rateCents = c?.hourlyRateCents ?? (c?.type === "FIXED" && budgetTotal !== null ? 1500 : null);
+  const revenueSoFar = rateCents !== null ? Math.round((used / 60) * rateCents) : null;
+  const amountPeriod = pw.hours && rateCents !== null && !details.inHouse ? Math.round((pw.hours.completedMinutes * rateCents) / 60) : null;
+  const limit = pw.hours?.limitMinutes ?? null;
+  const rating = details.review.rating;
+  const seg = (on: boolean) => `px-3 py-1.5 text-sm ${on ? "bg-primary-tint font-medium text-primary-tint-text" : "text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`;
 
   return (
     <div className="space-y-6">
@@ -67,171 +78,153 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
 
       {!settings && (
         <>
-          {pw.contract?.type === "FIXED" && pw.contract.hourlyRateCents != null && (() => {
-            // Fixed price with an hourly rate: billed by the hours worked, no cap (scope grew past the first price).
-            const used = team_.rows.reduce((n, r) => n + r.total, 0);
-            return (
-              <section aria-labelledby="budget" className={`${SECTION} border-l-4 border-l-status-info-icon`}>
-                <h3 id="budget" className="mb-3 font-medium">Billed by the hours</h3>
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
-                  <Fact label="Hours worked" value={fmtMinutes(used)} />
-                  <Fact label="Rate" value={`${fmtUsd(pw.contract.hourlyRateCents!)}/h`} />
-                  <Fact label="Revenue so far" value={fmtUsd(Math.round((used / 60) * pw.contract.hourlyRateCents!))} />
-                  <Fact label="First fixed price" value={pw.contract.fixedPriceCents != null ? fmtUsd(pw.contract.fixedPriceCents) : "—"} />
-                </dl>
-                <p className="mt-2 text-xs text-zinc-500">The scope grew past the first fixed price, so the hours are billed at the hourly rate and there is no workable-hours limit.</p>
-              </section>
-            );
-          })()}
-          {pw.contract?.type === "FIXED" && pw.contract.hourlyRateCents == null && workableMinutes(pw.contract.fixedPriceCents) !== null && (() => {
-            const total = workableMinutes(pw.contract.fixedPriceCents)!;
-            const used = team_.rows.reduce((n, r) => n + r.total, 0);
-            const over = used > total;
-            return (
-              <section aria-labelledby="budget" className={`${SECTION} border-l-4 ${over ? "border-l-status-fail-icon" : "border-l-status-info-icon"}`}>
-                <h3 id="budget" className="mb-3 font-medium">Fixed budget in hours</h3>
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
-                  <Fact label="Total workable hours" value={`${fmtMinutes(total)} (${fmtUsd(pw.contract.fixedPriceCents!)} ÷ $15)`} />
-                  <Fact label="Hours used" value={fmtMinutes(used)} />
-                  <Fact label={over ? "Over the budget by" : "Hours left"} value={fmtMinutes(Math.abs(total - used))} />
-                  <Fact label="Revenue so far" value={`${fmtUsd(Math.round((used / 60) * 1500))} of ${fmtUsd(pw.contract.fixedPriceCents!)} (${Math.round((used / total) * 100)}%)`} />
-                </dl>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
-                  <div className={`h-full ${over ? "bg-status-fail-icon" : used / total >= 0.8 ? "bg-status-warning-icon" : "bg-status-pass-icon"}`} style={{ width: `${Math.min(100, (used / total) * 100)}%` }} />
-                </div>
-                {over && <p className="mt-2 text-sm text-status-fail-text">The hours reported are past what the fixed price allows.</p>}
-              </section>
-            );
-          })()}
-          <section aria-labelledby="facts" className={SECTION}>
-            <h3 id="facts" className="mb-3 font-medium">Project details</h3>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
-              <Fact label="Project type" value={pw.contract ? (pw.contract.type === "HOURLY" ? "Hourly" : "Fixed price") : "—"} />
-              {pw.contract?.type === "FIXED" ? (
-                <Fact label="Fixed price" value={pw.contract.fixedPriceCents != null ? fmtUsd(pw.contract.fixedPriceCents) : "—"} />
-              ) : (
-                <Fact label="Hourly rate" value={pw.contract?.hourlyRateCents != null ? fmtUsd(pw.contract.hourlyRateCents) : "—"} />
-              )}
-              <Fact
-                label="Review"
-                value={details.review.rating ? `${"★".repeat(Math.round(details.review.rating))}${"☆".repeat(5 - Math.round(details.review.rating))} ${details.review.rating.toFixed(1)}${details.review.comment ? ` · ${details.review.comment}` : ""}` : "Pending (project still running)"}
-              />
-              <Fact label="Weekly hours allotted" value={pw.contract?.weeklyLimitMinutes ? fmtMinutes(pw.contract.weeklyLimitMinutes) : "—"} />
-              <Fact label="Upwork profile" value={details.upworkProfile?.name ?? "—"} />
-              <Fact label="Written in Chat as" value={details.chatKeywords.join(", ") || "—"} />
-            </dl>
-          </section>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Metric
+              label={`Hours this ${unit}`}
+              value={pw.hours ? fmtMinutes(pw.hours.completedMinutes) : "—"}
+              meter={pw.hours && limit ? { value: pw.hours.completedMinutes, max: limit, over: pw.hours.overLimitMinutes > 0 } : undefined}
+              sub={!pw.hours ? "No contract yet" : limit ? (pw.hours.overLimitMinutes > 0 ? `Over the ${fmtMinutes(limit)} limit by ${fmtMinutes(pw.hours.overLimitMinutes)}` : `${fmtMinutes(pw.hours.remainingMinutes ?? 0)} left of ${fmtMinutes(limit)}`) : "No limit set"}
+              tone={pw.hours && pw.hours.overLimitMinutes > 0 ? "bad" : "default"}
+            />
+            <Metric
+              label={`Amount this ${unit}`}
+              value={amountPeriod !== null ? fmtUsd(amountPeriod) : "—"}
+              sub={c ? (c.type === "FIXED" && c.hourlyRateCents == null ? (budgetTotal !== null ? "Valued at $15/h against the fixed price" : "Fixed price") : c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "No hourly rate set") : undefined}
+            />
+            <Metric
+              label="Total hours worked"
+              value={fmtMinutes(used)}
+              meter={budgetTotal !== null ? { value: used, max: budgetTotal, over: used > budgetTotal } : undefined}
+              sub={budgetTotal !== null
+                ? `${used > budgetTotal ? `Over the budget by ${fmtMinutes(used - budgetTotal)}` : `${fmtMinutes(budgetTotal - used)} left`} of ${fmtMinutes(budgetTotal)} (${fmtUsd(c!.fixedPriceCents!)} ÷ $15)`
+                : revenueSoFar !== null ? `${fmtUsd(revenueSoFar)} earned so far${billedByHours ? " · billed by the hours" : ""}` : "No rate set"}
+              tone={budgetTotal !== null && used > budgetTotal ? "bad" : "default"}
+            />
+            <Metric
+              label="Client review"
+              value={rating ? <span><span className="text-status-warning-icon">★</span> {rating.toFixed(1)}</span> : "Pending"}
+              sub={rating ? details.review.comment || "Closing review" : "Given when the project closes"}
+            />
+          </div>
 
-          <section aria-labelledby="hours" className={SECTION}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="hours" className="font-medium">Hours <span className="font-normal text-zinc-500">· {periodText}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-xs text-primary-tint-text">now</span>}</span></h3>
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <div className="inline-flex overflow-hidden rounded-md border border-border-subtle">
-                  <Link href={`${base}${q(wk ?? undefined, teamOnly, false)}`} aria-current={!byMonth ? "page" : undefined} className={`border-r border-border-subtle px-3 py-1 ${!byMonth ? "bg-primary-tint font-medium text-primary-tint-text" : "hover:bg-surface-muted"}`}>Week</Link>
-                  <Link href={`${base}${q(wk ?? undefined, teamOnly, true)}`} aria-current={byMonth ? "page" : undefined} className={`px-3 py-1 ${byMonth ? "bg-primary-tint font-medium text-primary-tint-text" : "hover:bg-surface-muted"}`}>Month</Link>
-                </div>
-                <Link href={`${base}${q(prevOn)}`} aria-label={`Previous ${unit}`} className={navBtn}>←</Link>
-                <Link href={`${base}${q(nextOn)}`} aria-label={`Next ${unit}`} className={navBtn}>→</Link>
-                {!isCurrent && <Link href={`${base}${q()}`} className="text-primary hover:underline">This {unit}</Link>}
-                <form action={base} method="get" className="flex items-center gap-2">
-                  {byMonth && <input type="hidden" name="by" value="month" />}
-                  {teamOnly && <input type="hidden" name="hours" value="team" />}
-                  <label htmlFor="period-pick" className="sr-only">Choose a {unit}</label>
-                  {byMonth
-                    ? <input id="period-pick" type="month" name="on" defaultValue={pw.week.start.slice(0, 7)} max={todayIso.slice(0, 7)} className="rounded-md border border-border-subtle bg-surface px-2 py-1" />
-                    : <input id="period-pick" type="date" name="on" defaultValue={pw.week.start} max={todayIso} className="rounded-md border border-border-subtle bg-surface px-2 py-1" />}
-                  <button className={navBtn}>Go</button>
-                </form>
-              </div>
+          {pw.hours && (pw.needsReview || pw.sharedClient) ? (
+            <div className="space-y-2 text-sm">
+              {pw.needsReview ? (
+                <p className="rounded-lg border border-status-warning-icon/30 bg-status-warning-bg px-4 py-2 text-status-warning-text">
+                  {pw.needsReview} entr{pw.needsReview === 1 ? "y" : "ies"} still to check on the <Link href="/service/review" className="underline">Review page</Link>. They already count.
+                </p>
+              ) : null}
+              {pw.sharedClient ? (
+                <p className="rounded-lg border border-border-subtle bg-surface-muted/50 px-4 py-2 text-zinc-600 dark:text-zinc-400">
+                  This client has several contracts, so only hours assigned to this one on the Review page count here{pw.unassignedEntries ? ` (${pw.unassignedEntries} not assigned yet)` : ""}.
+                </p>
+              ) : null}
             </div>
-            <p className="mt-2 flex items-center gap-2 text-sm">
-              <span className="text-zinc-500">Count hours of:</span>
-              <Link href={`${base}${q(wk ?? undefined, false)}`} aria-current={!teamOnly ? "true" : undefined} className={`${navBtn} ${!teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>Everyone</Link>
-              <Link href={`${base}${q(wk ?? undefined, true)}`} aria-current={teamOnly ? "true" : undefined} className={`${navBtn} ${teamOnly ? "bg-primary-tint text-primary-tint-text" : ""}`}>My team only</Link>
-            </p>
-            {pw.hours ? (
-              <div className="mt-3 space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-                  <Fact label="Completed" value={fmtMinutes(pw.hours.completedMinutes)} />
-                  <Fact label={byMonth ? "Limit this month" : "Weekly limit"} value={pw.hours.limitMinutes ? fmtMinutes(pw.hours.limitMinutes) : "Not set"} />
-                  <Fact label={`Left this ${unit}`} value={pw.hours.overLimitMinutes > 0 ? `Over by ${fmtMinutes(pw.hours.overLimitMinutes)}` : pw.hours.remainingMinutes === null ? "—" : fmtMinutes(pw.hours.remainingMinutes)} />
-                  <Fact label={`Amount this ${unit}`} value={pw.contract?.hourlyRateCents != null && !details.inHouse ? fmtUsd(Math.round((pw.hours.completedMinutes * pw.contract.hourlyRateCents) / 60)) : "—"} />
-                  <Fact label="Tracked / manual" value={`${fmtMinutes(pw.hours.trackedMinutes)} / ${fmtMinutes(pw.hours.manualMinutes)}`} />
+          ) : null}
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="space-y-4 lg:col-span-2">
+              <Card
+                title="Hours"
+                subtitle={<>{periodText}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text">now</span>}</>}
+                action={
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <div className="inline-flex overflow-hidden rounded-lg border border-border-subtle">
+                      <Link href={`${base}${q(wk ?? undefined, teamOnly, false)}`} aria-current={!byMonth ? "page" : undefined} className={`border-r border-border-subtle ${seg(!byMonth)}`}>Week</Link>
+                      <Link href={`${base}${q(wk ?? undefined, teamOnly, true)}`} aria-current={byMonth ? "page" : undefined} className={seg(byMonth)}>Month</Link>
+                    </div>
+                    <Link href={`${base}${q(prevOn)}`} aria-label={`Previous ${unit}`} className={navBtn}>←</Link>
+                    <Link href={`${base}${q(nextOn)}`} aria-label={`Next ${unit}`} className={navBtn}>→</Link>
+                    {!isCurrent && <Link href={`${base}${q()}`} className="text-primary hover:underline">This {unit}</Link>}
+                    <form action={base} method="get" className="flex items-center gap-2">
+                      {byMonth && <input type="hidden" name="by" value="month" />}
+                      {teamOnly && <input type="hidden" name="hours" value="team" />}
+                      <label htmlFor="period-pick" className="sr-only">Choose a {unit}</label>
+                      {byMonth
+                        ? <input id="period-pick" type="month" name="on" defaultValue={pw.week.start.slice(0, 7)} max={todayIso.slice(0, 7)} className="rounded-lg border border-border-subtle bg-surface px-2 py-1" />
+                        : <input id="period-pick" type="date" name="on" defaultValue={pw.week.start} max={todayIso} className="rounded-lg border border-border-subtle bg-surface px-2 py-1" />}
+                      <button className={navBtn}>Go</button>
+                    </form>
+                  </div>
+                }
+              >
+                <div className="mb-4 inline-flex overflow-hidden rounded-lg border border-border-subtle text-sm" role="group" aria-label="Whose hours to count">
+                  <Link href={`${base}${q(wk ?? undefined, false)}`} aria-current={!teamOnly ? "true" : undefined} className={`border-r border-border-subtle ${seg(!teamOnly)}`}>Everyone</Link>
+                  <Link href={`${base}${q(wk ?? undefined, true)}`} aria-current={teamOnly ? "true" : undefined} className={seg(teamOnly)}>My team only</Link>
                 </div>
-                {pw.hours.limitMinutes ? <HoursBar hours={pw.hours} /> : null}
-                {pw.needsReview ? (
-                  <p className="text-sm text-status-warning-text">
-                    {pw.needsReview} entr{pw.needsReview === 1 ? "y" : "ies"} still to check on the <Link href="/service/review" className="underline">Review page</Link>. They already count.
-                  </p>
-                ) : null}
-                {pw.sharedClient && (
-                  <p className="text-sm text-zinc-500">
-                    This client has several contracts, so only hours assigned to this one on the Review page count here{pw.unassignedEntries ? ` (${pw.unassignedEntries} not assigned yet)` : ""}.
-                  </p>
+                {pw.hours && pw.byDay ? (
+                  <div className="space-y-4">
+                    <DayBars days={pw.byDay} month={byMonth} />
+                    {pw.bySender && pw.bySender.length > 0 && (
+                      <ul className="flex flex-wrap gap-2">
+                        {pw.bySender.map((p) => (
+                          <li key={p.name} className="flex items-center gap-2 rounded-full border border-border-subtle bg-surface-muted/40 py-1 pl-1 pr-3 text-sm">
+                            <Avatar name={p.name} />{outsider(p.name)}{p.name}<span className="tabular-nums text-zinc-500">{fmtMinutes(p.minutes)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="text-xs text-zinc-500">
+                      Tracked {fmtMinutes(pw.hours.trackedMinutes)} · manual {fmtMinutes(pw.hours.manualMinutes)}. Reported hours, not Upwork-verified; a report shared across projects counts here only for this project&apos;s share.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-500">No contract yet. Add one under Settings to see hours.</p>
                 )}
-                {pw.byDay && pw.byDay.some((d) => d.minutes > 0) && (
-                  <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500">
-                    {pw.byDay.map((d) => (
-                      <li key={d.date}>
-                        {new Date(`${d.date}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" })} {fmtMinutes(d.minutes)}
+              </Card>
+
+              <Card title="Who worked how much" subtitle="* = not in the Digital Marketing team">
+                <TeamHoursTable rows={team_.rows} months={team_.months} periodText={periodText} unit={unit} starred={outsider} compact />
+              </Card>
+            </div>
+
+            <aside className="space-y-4">
+              <Card title="Details">
+                <dl>
+                  <Row label="Type">{c ? (c.type === "HOURLY" ? "Hourly" : billedByHours ? "Fixed, billed by hours" : "Fixed price") : "—"}</Row>
+                  <Row label={c?.type === "FIXED" && !billedByHours ? "Fixed price" : "Hourly rate"}>
+                    {c?.type === "FIXED" && !billedByHours ? (c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "—") : c?.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "—"}
+                  </Row>
+                  {billedByHours && <Row label="First fixed price">{c!.fixedPriceCents != null ? fmtUsd(c!.fixedPriceCents) : "—"}</Row>}
+                  <Row label="Weekly hours">{c?.weeklyLimitMinutes ? fmtMinutes(c.weeklyLimitMinutes) : "—"}</Row>
+                  <Row label="Upwork profile">{details.upworkProfile?.name ?? "—"}</Row>
+                  <Row label="Written in Chat as">{details.chatKeywords.join(", ") || "—"}</Row>
+                </dl>
+              </Card>
+
+              <Card title="People">
+                <div className="-my-2 divide-y divide-border-subtle">
+                  <PeopleLine role="Project manager" names={managers.map((m) => m.user.displayName)} empty="Unassigned" />
+                  <PeopleLine role="Business analyst" names={details.businessAnalysts.map((x) => x.name)} empty="None listed" />
+                  <PeopleLine role="Business developer" names={details.businessDevelopers.map((x) => x.name)} empty="None listed" />
+                  <PeopleLine role="Executives" names={details.executives.map((x) => x.name)} empty="None listed" />
+                  {team.length > 0 && <PeopleLine role="Team" names={team.map((m) => m.user.displayName)} empty="" />}
+                </div>
+              </Card>
+
+              {details.upworkContracts.length > 0 && (
+                <Card title={`Upwork contracts (${details.upworkContracts.length})`} subtitle="From the company contract list">
+                  <ul className="-my-2 divide-y divide-border-subtle text-sm">
+                    {details.upworkContracts.map((k) => (
+                      <li key={k.ref} className="py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{k.profile ?? "No profile"}</span>
+                          {k.endDate ? <span className="text-xs text-zinc-500">Ended {k.endDate}</span> : <span className="rounded-full bg-status-pass-bg px-2 py-0.5 text-[11px] font-medium text-status-pass-text">Running</span>}
+                        </div>
+                        <div className="mt-0.5 text-xs text-zinc-500">
+                          Started {k.startDate ?? "—"}{k.bde ? ` · BD ${k.bde}` : ""}{k.ba ? ` · BA ${k.ba}` : ""}{k.endedBy ? ` · ended by ${k.endedBy}` : ""}{k.rating !== null ? ` · ${k.rating.toFixed(1)}★` : ""}
+                          {k.url && <> · <a href={k.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">Upwork</a></>}
+                        </div>
                       </li>
                     ))}
                   </ul>
-                )}
-                {pw.bySender && pw.bySender.length > 0 && <p className="text-sm text-zinc-500">By person: {pw.bySender.map((s) => `${outsider(s.name)}${s.name} ${fmtMinutes(s.minutes)}`).join(" · ")}</p>}
-                <p className="text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified.</p>
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-zinc-500">No contract yet. Add one under Settings to see hours.</p>
-            )}
-          </section>
-
-          <section aria-labelledby="people" className={SECTION}>
-            <h3 id="people" className="mb-3 font-medium">People</h3>
-            <PeopleRow label="PM" people={managers} />
-            <NamesRow label="BA" names={details.businessAnalysts.map((x) => x.name)} />
-            <NamesRow label="BD" names={details.businessDevelopers.map((x) => x.name)} />
-            <NamesRow label="Executives" names={details.executives.map((x) => x.name)} />
-            {team.length > 0 && <PeopleRow label="Team" people={team} />}
-            <h4 className="mb-2 mt-4 text-sm font-medium">Who worked how much <span className="font-normal text-zinc-500">· * = not in the Digital Marketing team</span></h4>
-            <TeamHoursTable rows={team_.rows} months={team_.months} periodText={periodText} unit={unit} starred={outsider} />
-            <p className="mt-2 text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified. A report shared across projects counts here only for this project&apos;s share.</p>
-          </section>
-
-          {details.upworkContracts.length > 0 && (
-            <section aria-labelledby="contracts" className={SECTION}>
-              <h3 id="contracts" className="font-medium">Upwork contracts <span className="font-normal text-zinc-500">({details.upworkContracts.length})</span></h3>
-              <div className="mt-2 overflow-x-auto">
-                <table className="w-full min-w-[720px] text-sm">
-                  <thead>
-                    <tr className="border-b border-border-subtle text-left text-zinc-500">
-                      {["Started", "Ended", "Profile", "BD", "BA", "Ended by", "Rating", "Link"].map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-subtle">
-                    {details.upworkContracts.map((c) => (
-                      <tr key={c.ref}>
-                        <td className="py-2 pr-3">{c.startDate ?? "—"}</td>
-                        <td className="py-2 pr-3">{c.endDate ?? <span className="text-status-pass-text">Running</span>}</td>
-                        <td className="py-2 pr-3">{c.profile ?? "—"}</td>
-                        <td className="py-2 pr-3">{c.bde ?? "—"}</td>
-                        <td className="py-2 pr-3">{c.ba ?? "—"}</td>
-                        <td className="py-2 pr-3">{c.endedBy ?? "—"}</td>
-                        <td className="py-2 pr-3">{c.rating !== null ? c.rating.toFixed(1) : "—"}</td>
-                        <td className="py-2">{c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">Upwork</a> : "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {!["COMPLETED", "CANCELLED", "ARCHIVED"].includes(project.status) && details.upworkContracts.every((c) => c.endDate) && (
-                <p className="mt-2 text-sm text-status-pass-text">
-                  Rehired: the last contract ended on {details.upworkContracts.map((c) => c.endDate!).sort().at(-1)}, but the team has worked on it since, so it stays open.
-                </p>
+                  {!["COMPLETED", "CANCELLED", "ARCHIVED"].includes(project.status) && details.upworkContracts.every((k) => k.endDate) && (
+                    <p className="mt-3 text-xs text-status-pass-text">Rehired: the last contract ended on {details.upworkContracts.map((k) => k.endDate!).sort().at(-1)}, but the team has worked on it since, so it stays open.</p>
+                  )}
+                </Card>
               )}
-              <p className="mt-2 text-xs text-zinc-500">From the company contract list. A project counts as closed when all its contracts have ended and nobody has worked on it since.</p>
-            </section>
-          )}
+            </aside>
+          </div>
         </>
       )}
 
@@ -278,32 +271,5 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   );
 }
 
-function Fact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <dt className="text-zinc-500">{label}</dt>
-      <dd className="font-medium">{value}</dd>
-    </div>
-  );
-}
-
 /** "*" before the name of someone outside the Digital Marketing team (their hours count because they are on this project). */
 const outsider = (name: string) => (dmMatch(name) ? "" : "*");
-
-function PeopleRow({ label, people }: { label: string; people: AssignmentView[] }) {
-  return (
-    <div className="flex gap-3 py-1 text-sm">
-      <span className="w-20 text-zinc-500">{label}</span>
-      <span>{people.length ? people.map((p) => p.user.displayName).join(", ") : <span className="text-zinc-500">Unassigned</span>}</span>
-    </div>
-  );
-}
-
-function NamesRow({ label, names }: { label: string; names: string[] }) {
-  return (
-    <div className="flex gap-3 py-1 text-sm">
-      <span className="w-20 shrink-0 text-zinc-500">{label}</span>
-      <span>{names.length ? names.join(", ") : <span className="text-zinc-500">None listed</span>}</span>
-    </div>
-  );
-}

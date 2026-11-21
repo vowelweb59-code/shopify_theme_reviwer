@@ -25,7 +25,7 @@ function Cell({ minutes, max, strong = false }: { minutes: number; max: number; 
   );
 }
 
-export function TeamHoursTable({ rows, months, periodText, unit, starred }: { rows: TeamHoursRow[]; months: string[]; periodText: string; unit: "week" | "month"; starred: (name: string) => string }) {
+export function TeamHoursTable({ rows, months, periodText, unit, starred, compact = false }: { rows: TeamHoursRow[]; months: string[]; periodText: string; unit: "week" | "month"; starred: (name: string) => string; compact?: boolean }) {
   if (rows.length === 0) return <p className="text-sm text-zinc-500">No reports on this project yet.</p>;
   const shown = [...months].reverse().slice(0, MONTHS_SHOWN);
   const older = [...months].reverse().slice(MONTHS_SHOWN);
@@ -44,7 +44,7 @@ export function TeamHoursTable({ rows, months, periodText, unit, starred }: { ro
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {!compact && <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
           { label: "Total reported", value: fmtMinutes(grand) },
           { label: `This ${unit} · ${periodText}`, value: fmtMinutes(sum((r) => r.week)) },
@@ -56,9 +56,9 @@ export function TeamHoursTable({ rows, months, periodText, unit, starred }: { ro
             <div className="text-lg font-semibold tabular-nums">{x.value}</div>
           </div>
         ))}
-      </div>
+      </div>}
 
-      <div className="overflow-x-auto rounded-md border border-border-subtle">
+      <div className="overflow-x-auto rounded-lg border border-border-subtle">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-surface-muted text-xs uppercase tracking-wide text-zinc-500">
             <tr>

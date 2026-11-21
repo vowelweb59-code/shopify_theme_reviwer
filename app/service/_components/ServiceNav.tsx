@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 // The Service Team section's own tab strip: every page under /service sits behind it, apart from the theme team's pages.
 // Owner, 2026-11-16: only the projects overview is shown for now; the other tabs are hidden (their pages still exist and open by
 // URL) and will be brought back one at a time by moving them into VISIBLE.
-const VISIBLE = new Set(["/service", "/service/revenue", "/service/performance"]);
+const VISIBLE = new Set(["/service", "/service/revenue", "/service/performance", "/service/analytics"]);
 const ALL_TABS = [
   { href: "/service", label: "Projects", exact: true },
   { href: "/service/revenue", label: "Revenue" },
   { href: "/service/performance", label: "Team performance" },
+  { href: "/service/analytics", label: "Analytics" },
   { href: "/service/projects", label: "Projects" },
   { href: "/service/team", label: "Team" },
   { href: "/service/departments", label: "Departments" },
