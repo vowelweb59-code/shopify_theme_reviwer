@@ -33,24 +33,25 @@ describe("computePerformance", () => {
     expect(m.simpleRating).toBe(4);
   });
 
-  it("splits a project's weekly quota by each member's share of the last 30 days", () => {
+  it("allocates a member's usual week (last 28 days / 4), whatever the project's quota", () => {
     const r = computePerformance({
       ...base,
-      projects: [project({ id: "a", weeklyLimitMinutes: 20 * 60 })],
-      entries: [e("Hamza", "a", "2026-11-10", 300), e("Trishul", "a", "2026-11-11", 100)],
+      projects: [project({ id: "a", weeklyLimitMinutes: 40 * 60 })],
+      entries: [e("Hamza", "a", "2026-11-10", 600), e("Trishul", "a", "2026-11-11", 200), e("Hamza", "a", "2026-09-01", 9000)],
     });
-    expect(by(r, "Hamza").allocatedMinutes).toBe(15 * 60);
-    expect(by(r, "Trishul").allocatedMinutes).toBe(5 * 60);
-    expect(by(r, "Hamza").occupancy).toBeCloseTo((15 * 60) / (8.5 * 5 * 60));
+    expect(by(r, "Hamza").allocatedMinutes).toBe(150); // 600 / 4, the old entry is outside the 28 days
+    expect(by(r, "Trishul").allocatedMinutes).toBe(50);
+    expect(by(r, "Hamza").projects[0].share).toBeCloseTo(0.75);
+    expect(by(r, "Hamza").occupancy).toBeCloseTo(150 / (8.5 * 5 * 60));
   });
 
-  it("uses the recent weekly pace for a project with no weekly quota, and skips projects not running or idle for 30 days", () => {
+  it("allocates only running projects the member worked on in the last 28 days", () => {
     const r = computePerformance({
       ...base,
-      projects: [project({ id: "fixed", weeklyLimitMinutes: null }), project({ id: "hold", status: "ON_HOLD" }), project({ id: "old" })],
-      entries: [e("Neha", "fixed", "2026-11-10", 240), e("Neha", "hold", "2026-11-10", 600), e("Neha", "old", "2026-09-01", 600)],
+      projects: [project({ id: "run" }), project({ id: "hold", status: "ON_HOLD" }), project({ id: "old" }), project({ id: "part", status: "PARTIAL_HOLD" })],
+      entries: [e("Neha", "run", "2026-11-10", 240), e("Neha", "hold", "2026-11-10", 600), e("Neha", "old", "2026-09-01", 600), e("Neha", "part", "2026-11-12", 120)],
     });
-    expect(by(r, "Neha").allocatedMinutes).toBe(60); // 240 min over the last 28 days / 4
+    expect(by(r, "Neha").allocatedMinutes).toBe(60 + 30);
   });
 
   it("ignores entries dated after today", () => {

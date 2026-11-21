@@ -69,11 +69,11 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
 
       {m.projects.some((p) => p.allocatedMinutes > 0) && (
         <section className="rounded-lg border border-border-subtle bg-surface">
-          <h3 className="px-4 pt-4 font-medium">Allocation <span className="font-normal text-zinc-500">· how the {fmtMinutes(m.allocatedMinutes)} a week is made up; a usual week is {m.paceMinutes ? fmtMinutes(m.paceMinutes) : "—"}</span></h3>
+          <h3 className="px-4 pt-4 font-medium">Allocation <span className="font-normal text-zinc-500">· the usual {fmtMinutes(m.allocatedMinutes)} a week: hours reported in the last 4 weeks / 4, by project</span></h3>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[620px] text-sm">
               <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
-                <tr><th className={th}>Project</th><th className={`${th} text-right`}>Weekly quota</th><th className={`${th} text-right`}>Share of the team&apos;s last 30 days</th><th className={`${th} text-right`}>Allocated a week</th></tr>
+                <tr><th className={th}>Project</th><th className={`${th} text-right`}>Team&apos;s usual week</th><th className={`${th} text-right`}>Share of the project&apos;s last 4 weeks</th><th className={`${th} text-right`}>Allocated a week</th></tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
                 {m.projects.filter((p) => p.allocatedMinutes > 0).sort((a, b) => b.allocatedMinutes - a.allocatedMinutes).map((p) => (

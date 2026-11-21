@@ -7,8 +7,8 @@ import { Meter, Stat, occupancyState } from "./_components/PerfBits";
 export const dynamic = "force-dynamic";
 
 // Team performance > Overview (owner, 2026-11-20): for the chosen week, how much of each member's weekly availability is taken by their
-// allocation (the quota of the running projects they work on, shared by what they reported in the last 30 days), and how much of that
-// they have completed so far. Only members who reported in the last 2 months and have not left.
+// allocation (their usual week on the running projects they work on: what they reported in the last 4 weeks / 4), and how much of that they
+// have completed so far. Only members who reported in the last 2 months and have not left.
 export default async function PerformanceOverview({ searchParams }: { searchParams: Promise<{ on?: string }> }) {
   const { on } = await searchParams;
   await connectToDatabase();
@@ -44,19 +44,18 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
-        <table className="w-full min-w-[900px] text-sm">
+        <table className="w-full min-w-[820px] text-sm">
           <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-4 py-2.5 font-medium">Member</th>
               <th className="px-4 py-2.5 font-medium">Occupied (allocation of {fmtMinutes(capacityMinutes)})</th>
-              <th className="px-4 py-2.5 text-right font-medium" title="Average weekly hours over the last 4 weeks">Usual week</th>
               <th className="px-4 py-2.5 font-medium">Completed so far</th>
               <th className="px-4 py-2.5 text-right font-medium">Left of allocation</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
-            {people.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-zinc-500">No active members.</td></tr>}
+            {people.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-zinc-500">No active members.</td></tr>}
             {people.map((m) => {
               const st = occupancyState(m.occupancy);
               const left = Math.max(0, m.allocatedMinutes - m.weekMinutes);
@@ -70,7 +69,6 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
                     <div className="flex justify-between text-xs tabular-nums"><span className="font-medium">{fmtMinutes(m.allocatedMinutes)}</span><span className="text-zinc-500">{Math.round(m.occupancy * 100)}%</span></div>
                     <div className="mt-1"><Meter value={m.allocatedMinutes} max={capacityMinutes} over={m.occupancy > 1} /></div>
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{m.paceMinutes ? fmtMinutes(m.paceMinutes) : "—"}</td>
                   <td className="w-72 px-4 py-2.5">
                     <div className="flex justify-between text-xs tabular-nums"><span className="font-medium">{fmtMinutes(m.weekMinutes)}</span><span className="text-zinc-500">{m.allocatedMinutes ? `${Math.round((m.weekMinutes / m.allocatedMinutes) * 100)}% of allocation` : "no allocation"}</span></div>
                     <div className="mt-1"><Meter value={m.weekMinutes} max={m.allocatedMinutes || capacityMinutes} tone="bg-status-pass-icon" /></div>
@@ -84,8 +82,8 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
         </table>
       </div>
       <p className="text-xs text-zinc-500">
-        Availability is 8h 30m a day, Monday to Friday. A member&apos;s allocation is the weekly quota of each running project they worked on in the last 30 days (a project with no weekly
-        quota counts at its recent weekly pace), shared between members by their hours in those 30 days. Completed = hours reported in the chosen week. Reported hours, not Upwork-verified.
+        Availability is 8h 30m a day, Monday to Friday. A member&apos;s allocation is their usual week: the hours they reported on running projects (Active or Partial hold) in the last 4 weeks,
+        divided by 4. It is today&apos;s figure, even when a past week is chosen. Completed = hours reported in the chosen week. Reported hours, not Upwork-verified.
       </p>
     </div>
   );

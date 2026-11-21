@@ -1,6 +1,7 @@
 // Team performance (owner, 2026-11-20): per Digital Marketing member, how occupied they are this week against their allocation, what they have
-// completed, and their whole record: projects handled, hours, value earned, review ratings. Pure: the loader (`load.ts`) turns the database
-// into these inputs.
+// completed, and their whole record: projects handled, hours, value earned, review ratings. A member's allocation is their USUAL hours on the
+// running projects (average of the last 4 weeks), not the projects' quotas (owner, same day). Pure: the loader (`load.ts`) turns the
+// database into these inputs.
 
 /** 8 h 30 a day, Monday to Friday (Saturday is optional, see attendance): a member's weekly availability. */
 export const WEEKLY_CAPACITY_MINUTES = 8.5 * 5 * 60;
@@ -36,11 +37,12 @@ export interface MemberProject {
   rating: number | null;
   last30Minutes: number;
   lastReport: string;
-  /** This member's part of the project's weekly allocation (0 when the project is not running or the team was idle for 30 days). */
+  last28Minutes: number;
+  /** The member's usual week on this project: their last 28 days / 4 (0 when the project is not running). */
   allocatedMinutes: number;
-  /** The project's weekly quota, or its recent weekly pace when it has no quota. */
+  /** The team's usual week on the project (its last 28 days / 4). */
   weeklyMinutes: number;
-  /** The member's share of the team's last 30 days on the project, 0 to 1. */
+  /** The member's share of the team's last 28 days on the project, 0 to 1. */
   share: number;
 }
 
@@ -58,8 +60,6 @@ export interface MemberPerformance {
   weightedRating: number | null;
   simpleRating: number | null;
   weekMinutes: number;
-  /** Average weekly hours over the last 4 weeks: what a usual week looks like, next to the allocation. */
-  paceMinutes: number;
   allocatedMinutes: number;
   /** Allocated / capacity (can pass 1). */
   occupancy: number;
@@ -88,20 +88,15 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
   const since28 = addDays(input.today, -27);
   const entries = input.entries.filter((e) => e.minutes > 0 && e.date <= input.today && byId.has(e.projectId));
 
-  // The team's last 30 days on each project: the basis of each member's share, and (last 28 days / 4) the weekly pace of a project with no weekly quota.
-  const team30 = new Map<string, number>();
+  // The team's last 28 days on each project (a member's share of it is shown beside their allocation).
   const team28 = new Map<string, number>();
-  for (const e of entries) {
-    if (e.date >= since30) team30.set(e.projectId, (team30.get(e.projectId) ?? 0) + e.minutes);
-    if (e.date >= since28) team28.set(e.projectId, (team28.get(e.projectId) ?? 0) + e.minutes);
-  }
-  const weeklyAllocation = (p: PerfProject) => p.weeklyLimitMinutes ?? Math.round((team28.get(p.id) ?? 0) / 4);
+  for (const e of entries) if (e.date >= since28) team28.set(e.projectId, (team28.get(e.projectId) ?? 0) + e.minutes);
 
   const members = new Map<string, MemberPerformance & { _p: Map<string, MemberProject> }>();
   const memberOf = (key: string) => {
     let m = members.get(key);
     if (!m) {
-      m = { key, totalMinutes: 0, valueCents: 0, unpricedMinutes: 0, projectsHandled: 0, projectsNow: 0, ratedProjects: 0, weightedRating: null, simpleRating: null, weekMinutes: 0, paceMinutes: 0, allocatedMinutes: 0, occupancy: 0, lastReport: null, projects: [], byMonth: {}, _p: new Map() };
+      m = { key, totalMinutes: 0, valueCents: 0, unpricedMinutes: 0, projectsHandled: 0, projectsNow: 0, ratedProjects: 0, weightedRating: null, simpleRating: null, weekMinutes: 0, allocatedMinutes: 0, occupancy: 0, lastReport: null, projects: [], byMonth: {}, _p: new Map() };
       members.set(key, m);
     }
     return m;
@@ -121,8 +116,8 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
     const mm = (m.byMonth[month] ??= { minutes: 0, valueCents: 0 });
     mm.minutes += e.minutes;
     mm.valueCents += value;
-    if (e.date >= since28) m.paceMinutes += e.minutes;
-    const mp = m._p.get(e.projectId) ?? { projectId: e.projectId, minutes: 0, valueCents: 0, rating: p.reviewRating, last30Minutes: 0, lastReport: e.date, allocatedMinutes: 0, weeklyMinutes: 0, share: 0 };
+    const mp = m._p.get(e.projectId) ?? { projectId: e.projectId, minutes: 0, valueCents: 0, rating: p.reviewRating, last30Minutes: 0, last28Minutes: 0, lastReport: e.date, allocatedMinutes: 0, weeklyMinutes: 0, share: 0 };
+    if (e.date >= since28) mp.last28Minutes += e.minutes;
     mp.minutes += e.minutes;
     mp.valueCents += value;
     if (e.date >= since30) mp.last30Minutes += e.minutes;
@@ -139,18 +134,16 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
     const hours = rated.reduce((n, x) => n + x.minutes, 0);
     m.weightedRating = rated.length && hours ? rated.reduce((n, x) => n + x.rating! * x.minutes, 0) / hours : null;
     m.simpleRating = rated.length ? rated.reduce((n, x) => n + x.rating!, 0) / rated.length : null;
-    // Allocation: for every running project the team reported on in the last 30 days, the project's weekly quota (or its recent weekly pace)
-    // times the member's share of the team's last 30 days on it.
+    // Allocation: the member's usual week on every running project, i.e. what they reported on it in the last 28 days / 4.
     for (const x of m.projects) {
       const p = byId.get(x.projectId)!;
-      const total = team30.get(p.id) ?? 0;
-      if (!ALLOCATED_STATUSES.includes(p.status) || x.last30Minutes === 0 || total === 0) continue;
-      x.weeklyMinutes = weeklyAllocation(p);
-      x.share = x.last30Minutes / total;
-      x.allocatedMinutes = Math.round(x.weeklyMinutes * x.share);
+      const total = team28.get(p.id) ?? 0;
+      if (!ALLOCATED_STATUSES.includes(p.status) || x.last28Minutes === 0 || total === 0) continue;
+      x.weeklyMinutes = Math.round(total / 4);
+      x.share = x.last28Minutes / total;
+      x.allocatedMinutes = Math.round(x.last28Minutes / 4);
       m.allocatedMinutes += x.allocatedMinutes;
     }
-    m.paceMinutes = Math.round(m.paceMinutes / 4);
     m.occupancy = capacity ? m.allocatedMinutes / capacity : 0;
   }
   return [...members.values()].map(({ _p, ...m }) => (void _p, m));
