@@ -1,3 +1,9 @@
+// Owner, 2026-11-21 (Shefali's "Racheal Francis | Rahul" report was dropped because she is not on that project's list): "the total allotted
+// hours of a client are the same for all teams, we need to consider the hours of every member in a project". So an outsider's entry is kept
+// whenever it names a client the team has a project with: no longer only when the poster is on the project's people list or writes a project
+// keyword. The project is written on the entry when it is the only one (or the only one the poster is on); with several the normal placement
+// rules choose. What follows is the history of the rule it replaces.
+//
 // Owner, 2026-11-16: the live Service section keeps the Digital Marketing team's hours, plus anyone else's hours on a PROJECT the
 // team works on ("Andrew Johnson has 2 projects: an HR website front end and marketing; both should be separated").
 // Only the team's projects exist on the live site, so a client whose other project is not ours looks like it has one project and
@@ -43,14 +49,24 @@ function guessClientAmongTeam(e: Pick<PlannedEntry, "clientRaw" | "senderName">,
   const raw = e.clientRaw?.trim();
   if (!raw) return null;
   const known: KnownClient[] = [];
+  const everyone: KnownClient[] = [];
   for (const [clientId, projects] of byClient) {
-    if (!projects.some((p) => p.teamNames.some((n) => samePerson(e.senderName, n)))) continue;
-    for (const name of projects[0]!.clientNames) known.push({ id: clientId, name });
+    for (const name of projects[0]!.clientNames) {
+      everyone.push({ id: clientId, name });
+      if (projects.some((p) => p.teamNames.some((n) => samePerson(e.senderName, n)))) known.push({ id: clientId, name });
+    }
   }
-  if (!known.length) return null;
-  const m = extractClient(raw, known).match;
+  if (known.length) {
+    const m = extractClient(raw, known).match;
+    if (m.status === "EXACT" || m.status === "CORRECTED") return m.client;
+    const hit = findClientInText(raw, known) ?? findClientByFirstWord(raw, known);
+    if (hit) return hit;
+  }
+  // Every member's hours count (owner, 2026-11-21): then any client the team has a project with, but only on a clear match (the whole
+  // name written or a typo of it), never on a first name alone.
+  const m = extractClient(raw, everyone).match;
   if (m.status === "EXACT" || m.status === "CORRECTED") return m.client;
-  return findClientInText(raw, known) ?? findClientByFirstWord(raw, known);
+  return findClientInText(raw, everyone);
 }
 
 /** `null` = drop; `{ projectId: null }` = keep, placement left to the normal rules; otherwise keep and write the project. `clientId` is set only when the client was identified here. */
@@ -72,9 +88,10 @@ export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw
   const extra = guessed ? { clientId } : {};
   const byKeyword = pickProjectByKeywords(e.clientRaw, candidates);
   if (byKeyword) return { projectId: byKeyword, ...extra };
+  // The projects the poster is on, else all of the client's team projects (owner, 2026-11-21: every member's hours count).
   const onTeam = projects.filter((p) => p.teamNames.some((n) => samePerson(e.senderName, n)));
-  if (!onTeam.length) return null;
-  return { projectId: onTeam.length === 1 ? onTeam[0]!.id : null, ...extra };
+  const pool = onTeam.length ? onTeam : projects;
+  return { projectId: pool.length === 1 ? pool[0]!.id : null, ...extra };
 }
 
 export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: readonly DmProject[]): ImportPlan {

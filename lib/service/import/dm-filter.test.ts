@@ -27,10 +27,10 @@ describe('filterPlanToDigitalMarketing', () => {
     expect(out.entries.map((e) => e.projectId)).toEqual(['p-marketing']);
   });
 
-  it("drops an outsider's hours on the client's other project (only the client's name written, not on the team)", () => {
-    const out = filterPlanToDigitalMarketing(plan([msg('1', 'Neil Shah')], [entry('1', 'Neil Shah', 'andrew', 'Andrew Johnson HR website')]), [marketing]);
-    expect(out.entries).toHaveLength(0);
-    expect(out.messages).toHaveLength(0);
+  it("keeps an outsider's hours on a client the team has a project with, even when the poster is not on the project (owner 2026-11-21)", () => {
+    const out = filterPlanToDigitalMarketing(plan([msg('1', 'Neil Shah')], [entry('1', 'Neil Shah', 'andrew', 'Andrew Johnson')]), [marketing]);
+    expect(out.entries.map((e) => e.projectId)).toEqual(['p-marketing']);
+    expect(out.messages).toHaveLength(1);
   });
 
   it('drops an outsider on a client the team has no project with, or with no client', () => {
@@ -46,10 +46,14 @@ describe('filterPlanToDigitalMarketing', () => {
     expect(out.entries[0]).toMatchObject({ clientId: 'tim', projectId: 'p-tim', state: 'PARSED', flags: [] });
   });
 
-  it('still drops an outsider whose unmatched client is not one of the clients they are on', () => {
+  it('identifies an unmatched client by its whole name for anyone, but still drops a name that matches no team client or only a first name', () => {
     const tim: DmProject = { id: 'p-tim', clientId: 'tim', clientNames: ['Tim Fitz'], keywords: ['Tim Fitz'], teamNames: ['Shefali Shrivastava'] };
-    const out = filterPlanToDigitalMarketing(plan([msg('1', 'Shefali Shrivastava'), msg('2', 'Neil Shah')], [entry('1', 'Shefali Shrivastava', null, 'Jessica Gatt | Shraddha'), entry('2', 'Neil Shah', null, 'Tim Fitz | Adnan')]), [tim]);
-    expect(out.entries).toHaveLength(0);
+    const out = filterPlanToDigitalMarketing(
+      plan([msg('1', 'Shefali Shrivastava'), msg('2', 'Neil Shah'), msg('3', 'Neil Shah')], [entry('1', 'Shefali Shrivastava', null, 'Jessica Gatt | Shraddha'), entry('2', 'Neil Shah', null, 'Tim Fitz | Adnan'), entry('3', 'Neil Shah', null, 'Tim | Adnan')]),
+      [tim],
+    );
+    expect(out.entries.map((e) => e.messageExternalId)).toEqual(['2']);
+    expect(out.entries[0]).toMatchObject({ clientId: 'tim', projectId: 'p-tim' });
   });
 
   it('keeps an outsider on several team projects of the client, with no project written', () => {
