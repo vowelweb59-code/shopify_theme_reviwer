@@ -8,6 +8,7 @@ import { fmtUsd } from "@/lib/service/ui/format";
 // then the clients. Hours were worth = reported hours x the project's hourly rate (a fixed project with no rate: $15/h).
 
 const RANGES = [
+  { id: "1m", label: "Last month" },
   { id: "12m", label: "Last 12 months" },
   { id: "ytd", label: "This year" },
   { id: "all", label: "All time" },
@@ -87,7 +88,7 @@ function ClientTable({ rows }: { rows: ClientLine[] }) {
 }
 
 export function RevenueView({ input, rangeId, statusId }: { input: { taken: TakenRow[]; clients: AppClient[]; hours: HoursRow[] }; rangeId?: string; statusId?: string }) {
-  const range = RANGES.find((r) => r.id === rangeId) ?? RANGES[0];
+  const range = RANGES.find((r) => r.id === rangeId) ?? RANGES.find((r) => r.id === "12m")!;
   const group = GROUPS.find((g) => g.id === statusId) ?? GROUPS[0];
   if (!input.taken.length) {
     return (
@@ -98,7 +99,8 @@ export function RevenueView({ input, rangeId, statusId }: { input: { taken: Take
   }
   const last = input.taken.reduce((m, t) => (t.month > m ? t.month : m), "0000-00");
   const first = input.taken.reduce((m, t) => (t.month < m ? t.month : m), "9999-99");
-  const from = range.id === "12m" ? shift(last, -11) : range.id === "ytd" ? `${last.slice(0, 4)}-01` : first;
+  // "Last month" = the newest month the sales sheet has (owner, 2026-11-21): money taken is only known up to that month.
+  const from = range.id === "1m" ? last : range.id === "12m" ? shift(last, -11) : range.id === "ytd" ? `${last.slice(0, 4)}-01` : first;
   const everything = compare(input.taken, input.clients, input.hours, from, last);
 
   // The tabs: how many clients (and how much money) sit in each group.
@@ -133,7 +135,7 @@ export function RevenueView({ input, rangeId, statusId }: { input: { taken: Take
           <p className="mt-1 max-w-3xl text-sm text-zinc-500">
             <strong className="font-medium text-zinc-700 dark:text-zinc-300">We took</strong> = money in your sales sheet.{" "}
             <strong className="font-medium text-zinc-700 dark:text-zinc-300">Hours were worth</strong> = hours reported by your Digital Marketing team × the hourly rate (other teams&apos; hours on the same projects are left out, as the sheet is your team&apos;s revenue only).{" "}
-            {monthLabel(from)} to {monthLabel(last)}.
+            {from === last ? `${monthLabel(last)} (the newest month in the sales sheet).` : `${monthLabel(from)} to ${monthLabel(last)}.`}
           </p>
         </div>
         <div className="inline-flex overflow-hidden rounded-md border border-border-subtle">
