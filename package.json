@@ -9,6 +9,7 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,mts}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mjs,mts}\"",
+    "commits": "node scripts/commit-list.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:requirements": "tsx --env-file-if-exists=.env.local scripts/seed-requirements.ts",
