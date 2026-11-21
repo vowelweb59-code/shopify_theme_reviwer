@@ -1,5 +1,7 @@
 import { connectToDatabase } from "@/lib/db/connect";
 import { persistPlan, runFollowUps } from "@/lib/service/import/persist";
+import { filterPlanToDigitalMarketing } from "@/lib/service/import/dm-filter";
+import { loadDmProjects } from "@/lib/service/import/dm-projects";
 import { planImport, type SpaceInput } from "@/lib/service/import/plan";
 import { loadClientRegistry } from "@/lib/service/import/rematch";
 import { istMonthWindow } from "@/lib/service/chat/months";
@@ -7,7 +9,8 @@ import { ServiceChatMessage, ServiceChatSpace } from "@/models/service-chat";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 // Re-reads the TIMER STATUS messages already stored (no Google call) through the current parser and rules, month by month,
-// the same way a Chat sync does. Use after a parser or rule change. Entries a person decided are kept. Prints totals before
+// the same way a Chat sync does, including its Digital Marketing filter (2026-11-21: without it the re-read would bring back the entries of
+// people outside the team that the November clean-up removed). Use after a parser or rule change. Entries a person decided are kept. Prints totals before
 // and after. A dry run unless --apply. Optional: --from=YYYY-MM to start at a month.
 //   npx tsx --env-file=.env.local scripts/service-reread-stored.ts [--apply] [--from=2026-01]
 const apply = process.argv.includes("--apply");
@@ -31,11 +34,12 @@ async function main() {
   ])).map((m) => m._id).filter((m) => m >= from);
   console.log("Before:", await totals());
   const clients = await loadClientRegistry();
+  const dmProjects = await loadDmProjects();
   for (const month of months) {
     const { from: start, to } = istMonthWindow(month);
     const stored = await ServiceChatMessage.find({ spaceId: space._id, postedAt: { $gte: start, $lt: to } }).sort({ postedAt: 1 }).lean<Array<{ externalId: string; senderExternalId: string; senderName: string; postedAt: Date; text: string }>>();
     const spaces: SpaceInput[] = [{ externalId: space.externalId, name: space.name, type: "TIMER_STATUS", messages: stored.map((m) => ({ externalId: m.externalId, senderExternalId: m.senderExternalId, senderName: m.senderName, postedAt: m.postedAt.toISOString(), text: m.text })) }];
-    const plan = planImport({ month, spaces, clients });
+    const plan = filterPlanToDigitalMarketing(planImport({ month, spaces, clients }), dmProjects);
     if (!apply) {
       console.log(`  ${month}: ${stored.length} messages -> ${plan.entries.length} planned entries`);
       continue;
