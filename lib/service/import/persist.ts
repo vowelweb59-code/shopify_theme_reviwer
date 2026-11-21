@@ -7,6 +7,7 @@ import { applyActivityRules } from "../projects/activity-rules";
 import { syncReporters } from "../projects/reporters";
 import { matchProfile } from "./profile-match";
 import { matchSenderToUser } from "./sender-match";
+import { monthDateRange, removableTimerIds } from "./stale-timers";
 import { AUTO_IGNORED, PARSER_VERSION, type ImportPlan, type PlannedEntry, type SpaceInput } from "./plan";
 import { ServiceChatMessage, ServiceChatSender, ServiceChatSpace, ServiceSyncCheckpoint } from "@/models/service-chat";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
@@ -210,6 +211,17 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
   if (staleIds.length) {
     await ServiceTimeEntry.deleteMany({ _id: { $in: staleIds } });
     out.entriesRemoved += staleIds.length;
+  }
+
+  // Timer entries no longer exist: remove those left from the older rules for this month, including those of messages the team filter dropped.
+  const { from, to } = monthDateRange(plan.month);
+  const oldTimers = await ServiceTimeEntry.find({ source: "TIMER_CALCULATED", entryDate: { $gte: from, $lt: to } })
+    .select("source state notes")
+    .lean<Array<{ _id: string; source: string; state: string; notes: string[] }>>();
+  const timerIds = removableTimerIds(oldTimers);
+  if (timerIds.length) {
+    await ServiceTimeEntry.deleteMany({ _id: { $in: timerIds } });
+    out.entriesRemoved += timerIds.length;
   }
 
   for (const s of spaces) {
