@@ -167,7 +167,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                       </ul>
                     )}
                     <p className="text-xs text-zinc-500">
-                      Tracked {fmtMinutes(pw.hours.trackedMinutes)} · manual {fmtMinutes(pw.hours.manualMinutes)}. Reported hours, not Upwork-verified; a report shared across projects counts here only for this project&apos;s share.
+                      {pw.hours.trackedMinutes > 0 ? `Tracked ${fmtMinutes(pw.hours.trackedMinutes)} · manual ${fmtMinutes(pw.hours.manualMinutes)}. ` : ""}Hours come from the daily reports. Reported hours, not Upwork-verified; a report shared across projects counts here only for this project&apos;s share.
                     </p>
                   </div>
                 ) : (

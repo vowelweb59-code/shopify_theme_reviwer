@@ -1,13 +1,11 @@
 // Turns one month of Chat messages into time entries. Pure: no I/O, so the whole rule set is testable with fixtures and
 // a re-run over the same messages gives the same plan (persist.ts then upserts it idempotently).
-// Rules: docs/design/data-import.md. Sender owns the hours; everything is IST; timer hours come from timestamps;
-// manual hours come from the OFF Timer line; an ON figure in a report is compared with the timer hours.
+// Rules: docs/design/data-import.md. Sender owns the hours; everything is IST. HOURS COME FROM THE REPORTS ONLY (owner, 2026-11-21: "consider the
+// report only, not the TIMER ON / TIMER OFF messages"): a report's hours are its OFF Timer line plus its ON Timer figure. The "<client> - TIMER
+// ON" / "TIMER OFF" messages are still read and stored (they are Chat messages) but make no entry and count nothing.
 import { classifyMessage, type MessageKind } from './classify';
-import { extractClient, findClientByFirstWord, findClientInText, profileTail } from './client-field';
+import { extractClient, findClientByFirstWord, findClientInText } from './client-field';
 import type { KnownClient } from './client-match';
-import { reconcileOnTimer } from './reconcile';
-import { pairTimerEvents } from './timer-intervals';
-import type { TimerEvent } from './timer-message';
 import { istDate, normalizeName } from './text';
 import { isLateReport } from './week';
 
@@ -91,7 +89,7 @@ export interface ImportPlan {
 const DAY_MS = 86_400_000;
 const IMPOSSIBLE_GAP_DAYS = 31; // a written date further than this from the posting day is a typo
 const OLD_DAYS = 183;
-const TIMER_MAX_MINUTES = 8 * 60 + 30; // owner: a timer longer than 8h30 counts only through a manual report // about six months: too old for a person to check
+// about six months: too old for a person to check
 
 /**
  * Owner rules for the review queue (27 Oct 2026). Only what a person can still usefully decide waits for review:
@@ -163,8 +161,6 @@ function clientFlags(raw: string, known: readonly KnownClient[], flags: string[]
 export function planImport(input: PlanInput): ImportPlan {
   const now = input.now ?? new Date();
   const messages: PlannedMessage[] = [];
-  const events: TimerEvent[] = [];
-  const timerEntries: PlannedEntry[] = [];
   const manual: Array<{ e: PlannedEntry; key: string }> = [];
   const meta = new Map<string, PlannedMessage>();
 
@@ -181,7 +177,6 @@ export function planImport(input: PlanInput): ImportPlan {
       };
       messages.push(pm);
       meta.set(id, pm);
-      if (c.timer?.kind === 'EVENT') events.push(c.timer.event);
       c.reports.forEach((r, ordinal) => {
         const posted = istDate(postedAt);
         const flags = [...r.flags];
@@ -206,43 +201,7 @@ export function planImport(input: PlanInput): ImportPlan {
     }
   }
 
-  // ---- 2. timer events: the same line posted in two spaces counts once, then ON/OFF pairing ----
-  const lastSeen = new Map<string, number>();
-  const unique = events
-    .sort((a, b) => a.at.getTime() - b.at.getTime())
-    .filter((ev) => {
-      const k = `${ev.senderId}|${ev.direction}|${ev.clientKey}|${ev.profileKey}`;
-      const last = lastSeen.get(k);
-      lastSeen.set(k, ev.at.getTime());
-      return last === undefined || ev.at.getTime() - last > 60_000;
-    });
-  const timerKey = new Map<PlannedEntry, string>();
-  for (const iv of pairTimerEvents(unique)) {
-    const src = meta.get(iv.endMessageId ?? iv.startMessageId!)!;
-    const flags = [...iv.flags];
-    const notes = [...iv.notes];
-    const { clientId } = clientFlags(iv.client, input.clients, flags, notes, iv.profile);
-    const closedPair = iv.startMessageId !== null && iv.endMessageId !== null;
-    const e: PlannedEntry = {
-      spaceExternalId: src.spaceExternalId, messageExternalId: src.externalId,
-      startMessageExternalId: closedPair ? meta.get(iv.startMessageId!)!.externalId : null,
-      ordinal: 0, source: 'TIMER_CALCULATED', senderExternalId: iv.senderId, senderName: src.senderName, clientId,
-      clientRaw: iv.client, profile: profileTail(iv.profile), entryDate: iv.istDate, minutes: iv.minutes ?? 0, state: 'PARSED', flags, notes,
-      memo: null, reportedOnTimerMinutes: null, reconciliation: null, isLate: isLateReport(iv.istDate, src.postedAt),
-    };
-    // Owner rule: a timer over 8h30 is not counted; the day's manual report, if there is one, counts instead.
-    if (e.minutes > TIMER_MAX_MINUTES) {
-      e.notes.push('TIMER_OVER_8H30', AUTO_IGNORED);
-      e.state = 'REJECTED';
-    }
-    // Owner rule: a "TIMER OFF" with no ON, posted in the same message as a daily report, is set aside: the report carries the hours.
-    if (e.flags.includes('ORPHAN_OFF') && src.kind === 'TIMER_AND_REPORT') {
-      e.notes.push('OFF_POSTED_WITH_REPORT', AUTO_IGNORED);
-      e.state = 'REJECTED';
-    }
-    timerEntries.push(e);
-    timerKey.set(e, `${iv.senderId}|${clientId ?? normalizeName(iv.client)}|${iv.istDate}`);
-  }
+  // ---- 2. timer ON / OFF messages: not counted (owner, 2026-11-21: the reports are the only source of hours) ----
 
   // ---- 3. one report posted in two spaces counts once; a resent report with the same memo counts once (the latest); several
   //         different reports for one client and day are separate work and all count (owner rule: a manual report is real hours) ----
@@ -270,75 +229,16 @@ export function planImport(input: PlanInput): ImportPlan {
     if (kept.length > 1) for (const e of kept) e.notes.push('MULTIPLE_REPORTS_SAME_DAY');
   }
 
-  // ---- 4. compare the ON figure in each report with the timer hours for the same sender + client + day ----
-  const timerTotals = new Map<string, number>();
-  for (const [e, key] of timerKey) {
-    if (!e.flags.includes('OPEN_INTERVAL') && !e.flags.includes('ORPHAN_OFF')) timerTotals.set(key, (timerTotals.get(key) ?? 0) + e.minutes);
-  }
-  for (const { e, key } of manual) {
-    if (e.state === 'REJECTED' || e.reportedOnTimerMinutes === null) continue;
-    const r = reconcileOnTimer(timerTotals.get(key) ?? null, e.reportedOnTimerMinutes);
-    if (!r) continue;
-    e.reconciliation = r.status;
-    // Owner rule: a manual report is real working time. A missing or different ON figure is kept as a note, not a review flag.
-    if (r.status === 'NO_TIMER_DATA') {
-      e.notes.push('ON_TIMER_NOT_FOUND');
-      // Owner rule (29 Oct): no timer hours behind the report's ON figure (the timer was never switched off, or never posted):
-      // the reported figure counts as the person's time, unless the report already carries OFF-timer hours of its own.
-      if (e.minutes === 0) {
-        e.minutes = e.reportedOnTimerMinutes;
-        e.notes.push('ON_TIMER_FROM_REPORT');
-      }
-    }
-    if (r.status === 'MISMATCH') {
-      e.notes.push('ON_TIMER_MISMATCH');
-      for (const [t, k] of timerKey) if (k === key) t.notes.push('ON_TIMER_MISMATCH');
-    }
+  // ---- 4. a report's hours = its OFF Timer line (`minutes`) + its ON Timer figure. The ON figure is what the person reports of the timed
+  //         work; the timer messages are not compared with it (owner, 2026-11-21: Rupali 16 Nov, Yuri Parreno: counting both the report and
+  //         the TIMER ON / OFF messages gave hours the reports do not show). Duplicate and superseded reports stay rejected. ----
+  for (const { e } of manual) {
+    if (e.state === 'REJECTED' || !e.reportedOnTimerMinutes) continue;
+    e.minutes += e.reportedOnTimerMinutes;
+    e.notes.push('ON_TIMER_COUNTED');
   }
 
-  // ---- 4b. owner rule (2026-11-21, Rupali on Racheal Francis, 16 Nov: the report said ON Timer 2:30, the timer messages gave 3:21 and the app
-  //          showed 3:21): when the ON figure(s) in the day's reports are LOWER than the timer hours (beyond the tolerance), the report
-  //          counts: the timer entries are cut down to the reported ON total. A report HIGHER than the timer still leaves the timer value. ----
-  const reportedOn = new Map<string, number>();
-  for (const { e, key } of manual) if (e.state !== 'REJECTED' && e.reportedOnTimerMinutes) reportedOn.set(key, (reportedOn.get(key) ?? 0) + e.reportedOnTimerMinutes);
-  for (const [key, on] of reportedOn) {
-    const total = timerTotals.get(key) ?? 0;
-    if (!total || on >= total || reconcileOnTimer(total, on)?.status !== 'MISMATCH') continue;
-    let left = on;
-    for (const [t, k] of timerKey) {
-      if (k !== key || t.state === 'REJECTED' || t.flags.includes('OPEN_INTERVAL') || t.flags.includes('ORPHAN_OFF')) continue;
-      const keep = Math.min(t.minutes, left);
-      left -= keep;
-      if (keep === t.minutes) continue;
-      t.minutes = keep;
-      t.notes.push('TIMER_CAPPED_TO_REPORT_ON');
-      if (keep === 0) { t.notes.push(AUTO_IGNORED); t.state = 'REJECTED'; }
-    }
-  }
-
-  // ---- 5. owner rule: one person, one client, one day with BOTH timer hours and a manual report counts only one of them, the larger
-  //         (a report's OFF-timer hours next to its own ON figure are extra work and are not part of this comparison) ----
-  const counted = (e: PlannedEntry) => e.state !== 'REJECTED' && !e.flags.includes('OPEN_INTERVAL') && !e.flags.includes('ORPHAN_OFF') && !e.flags.includes('DUPLICATE_ON');
-  const byDay = new Map<string, { timers: PlannedEntry[]; reports: PlannedEntry[] }>();
-  for (const [e, key] of timerKey) if (counted(e)) (byDay.get(key) ?? byDay.set(key, { timers: [], reports: [] }).get(key)!).timers.push(e);
-  for (const { e, key } of manual) if (counted(e)) (byDay.get(key) ?? byDay.set(key, { timers: [], reports: [] }).get(key)!).reports.push(e);
-  for (const g of byDay.values()) {
-    // Owner rule (2026-11-21, Racheal Francis: "one hour report is short"): a report that states an ON-timer figure AND OFF-timer hours of its
-    // own describes two kinds of time: the ON part is the timer, the OFF hours are extra work off the timer. Those OFF hours are not compared with
-    // the timer, they count on top of it. (An ON figure that stands in for missing timer data, `ON_TIMER_FROM_REPORT`, is not extra.)
-    const extra = (e: PlannedEntry) => e.reportedOnTimerMinutes !== null && e.reportedOnTimerMinutes > 0 && e.minutes > 0 && !e.notes.includes('ON_TIMER_FROM_REPORT');
-    const comparable = g.reports.filter((e) => !extra(e));
-    const timer = g.timers.reduce((n, e) => n + e.minutes, 0);
-    const report = comparable.reduce((n, e) => n + e.minutes, 0);
-    if (!timer || !report) continue;
-    const [drop, why] = report >= timer ? [g.timers, 'TIMER_SUPERSEDED_BY_REPORT'] : [comparable, 'REPORT_SUPERSEDED_BY_TIMER'];
-    for (const e of drop) {
-      e.notes.push(why, AUTO_IGNORED);
-      e.state = 'REJECTED';
-    }
-  }
-
-  const entries = [...timerEntries, ...manual.map((x) => x.e)];
+  const entries = manual.map((x) => x.e);
   for (const e of entries) {
     // Owner rule: a timer switched on and never off (or switched on twice) is ignored: it has no hours to count.
     if (e.flags.includes('OPEN_INTERVAL') || e.flags.includes('DUPLICATE_ON')) {

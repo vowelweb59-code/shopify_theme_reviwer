@@ -40,86 +40,49 @@ describe('client field', () => {
 });
 
 describe('month plan', () => {
-  it('pairs ON/OFF into timer hours and compares the ON figure in the report', () => {
+  it("counts a report as its OFF hours plus its ON figure, and the TIMER ON / OFF messages count nothing (owner 2026-11-21)", () => {
     const p = plan(master(
       m('s1', '2026-10-23T10:00', 'Acme Co | Sam - TIMER ON'),
       m('s1', '2026-10-23T13:00', 'Acme Co | Sam - TIMER OFF'),
       m('s1', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Acme Co | Sam\nON Timer: 03:00 hrs\nOFF Timer: 01:00 hrs\nMemo: Work.'),
     ));
-    const timer = p.entries.find((e) => e.source === 'TIMER_CALCULATED')!;
-    const manual = p.entries.find((e) => e.source === 'MANUAL_REPORT')!;
-    expect(timer).toMatchObject({ minutes: 180, clientId: id('Acme Co'), state: 'PARSED', entryDate: '2026-10-23', senderExternalId: 's1' });
-    // owner rule (2026-11-21): a report with its own ON figure and OFF hours: the OFF hour is extra work, it counts on top of the 3h timer
-    expect(manual).toMatchObject({ minutes: 60, reportedOnTimerMinutes: 180, reconciliation: 'MATCH', state: 'PARSED' });
-    expect(manual.notes).not.toContain('REPORT_SUPERSEDED_BY_TIMER');
+    expect(p.entries).toHaveLength(1);
+    expect(p.entries[0]).toMatchObject({ source: 'MANUAL_REPORT', minutes: 240, reportedOnTimerMinutes: 180, clientId: id('Acme Co'), state: 'PARSED', entryDate: '2026-10-23', senderExternalId: 's1' });
+    expect(p.entries[0]!.notes).toContain('ON_TIMER_COUNTED');
   });
 
-  it('still counts only the larger when a plain manual report (no ON figure) and a timer cover the same day', () => {
-    const p = plan(master(
-      m('s7', '2026-10-23T10:00', 'Acme Co | Sam - TIMER ON'),
-      m('s7', '2026-10-23T13:00', 'Acme Co | Sam - TIMER OFF'),
-      m('s7', '2026-10-23T19:00', ['Daily Report – 23/10/2026', 'Client: Acme Co | Sam', 'OFF Timer: 01:00 hrs', 'Memo: Work.'].join('\n')),
-    ));
-    const manual = p.entries.find((e) => e.source === 'MANUAL_REPORT' && e.senderExternalId === 's7')!;
-    expect(manual).toMatchObject({ minutes: 60, state: 'REJECTED' });
-    expect(manual.notes).toContain('REPORT_SUPERSEDED_BY_TIMER');
+  it("counts the report's ON figure when it differs from the timer messages, lower or higher (Rupali, 16 Nov: report 2:30, timer 3:21)", () => {
+    const day = (sender: string, onHours: string, off: string) => plan(master(
+      m(sender, '2026-10-23T10:00', 'Beta Ltd | Rahul - TIMER ON'),
+      m(sender, `2026-10-23T${off}`, 'Beta Ltd | Rahul - TIMER OFF'),
+      m(sender, '2026-10-23T19:00', `Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: ${onHours} hrs\nMemo: x`),
+    )).entries;
+    expect(day('s2', '02:30', '13:21').map((e) => e.minutes)).toEqual([150]); // timer longer than the report
+    expect(day('s11', '04:00', '11:00').map((e) => e.minutes)).toEqual([240]); // timer shorter than the report
   });
 
-  it('counts the report instead of the timer when the report has more hours that day', () => {
+  it('timer messages alone make no entry and count nothing', () => {
+    const p = plan(master(m('s7', '2026-10-23T10:00', 'Acme Co | Sam - TIMER ON'), m('s7', '2026-10-23T13:00', 'Acme Co | Sam - TIMER OFF')));
+    expect(p.entries).toHaveLength(0);
+    expect(p.summary.byKind).toMatchObject({ TIMER: 2 });
+  });
+
+  it('a report with only OFF hours counts them, whatever the timer messages of the day say', () => {
     const p = plan(master(
       m('s9', '2026-10-23T10:00', 'Acme Co | Sam - TIMER ON'),
       m('s9', '2026-10-23T11:00', 'Acme Co | Sam - TIMER OFF'),
       m('s9', '2026-10-23T19:00', ['Daily Report – 23/10/2026', 'Client: Acme Co | Sam', 'OFF Timer: 04:00 hrs', 'Memo: Work.'].join('\n')),
     ));
-    const timer = p.entries.find((e) => e.source === 'TIMER_CALCULATED' && e.senderExternalId === 's9')!;
-    const manual = p.entries.find((e) => e.source === 'MANUAL_REPORT' && e.senderExternalId === 's9')!;
-    expect(timer).toMatchObject({ minutes: 60, state: 'REJECTED' });
-    expect(timer.notes).toContain('TIMER_SUPERSEDED_BY_REPORT');
-    expect(manual).toMatchObject({ minutes: 240, state: 'PARSED' });
+    expect(p.entries.map((e) => [e.source, e.minutes, e.state])).toEqual([['MANUAL_REPORT', 240, 'PARSED']]);
   });
 
-  it('a mismatch keeps the timer value and notes it on both entries without sending them to review', () => {
-    const p = plan(master(
-      m('s2', '2026-10-23T11:00', 'Beta Ltd | Rahul - TIMER ON'),
-      m('s2', '2026-10-23T12:00', 'Beta Ltd | Rahul - TIMER OFF'),
-      m('s2', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 04:00 hrs\nMemo: x'),
-    ));
-    for (const e of p.entries) expect(e).toMatchObject({ flags: [], notes: expect.arrayContaining(['ON_TIMER_MISMATCH']) });
-    expect(p.entries.find((e) => e.source === 'TIMER_CALCULATED')).toMatchObject({ minutes: 60, state: 'PARSED' });
-    // the report gives only an ON figure, so it has no hours of its own to count (owner: stranded ON figure, set aside)
-    expect(p.entries.find((e) => e.source === 'MANUAL_REPORT')).toMatchObject({ minutes: 0, state: 'REJECTED', notes: expect.arrayContaining(['NOTHING_TO_COUNT']) });
-  });
-
-  it('counts the report instead of the timer when its ON figure is lower than the timer (owner 2026-11-21)', () => {
-    const p = plan(master(
-      m('s8', '2026-10-23T10:00', 'Beta Ltd | Rahul - TIMER ON'),
-      m('s8', '2026-10-23T13:21', 'Beta Ltd | Rahul - TIMER OFF'),
-      m('s8', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 02:30 hrs\nMemo: x'),
-    ));
-    const timer = p.entries.find((e) => e.source === 'TIMER_CALCULATED' && e.senderExternalId === 's8')!;
-    expect(timer).toMatchObject({ minutes: 150, state: 'PARSED' });
-    expect(timer.notes).toContain('TIMER_CAPPED_TO_REPORT_ON');
-  });
-
-  it('cuts several timer intervals of the day down to the reported ON total, in order', () => {
-    const p = plan(master(
-      m('s10', '2026-10-23T09:00', 'Beta Ltd | Rahul - TIMER ON'),
-      m('s10', '2026-10-23T10:00', 'Beta Ltd | Rahul - TIMER OFF'),
-      m('s10', '2026-10-23T14:00', 'Beta Ltd | Rahul - TIMER ON'),
-      m('s10', '2026-10-23T16:00', 'Beta Ltd | Rahul - TIMER OFF'),
-      m('s10', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 01:30 hrs\nMemo: x'),
-    ));
-    const timers = p.entries.filter((e) => e.source === 'TIMER_CALCULATED' && e.senderExternalId === 's10');
-    expect(timers.map((t) => t.minutes)).toEqual([60, 30]);
-  });
-
-  it('sets aside an ON with no OFF, and counts an ON figure that has no timer messages behind it as reported', () => {
+  it('an ON figure counts as reported, with or without timer messages behind it; an open timer counts nothing', () => {
     const p = plan(master(
       m('s3', '2026-10-23T09:00', 'Gamma Inc | Ali - TIMER ON'),
       m('s4', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 02:00 hrs\nMemo: x'),
     ));
-    expect(p.entries.find((e) => e.senderExternalId === 's3')).toMatchObject({ minutes: 0, state: 'REJECTED', flags: expect.arrayContaining(['OPEN_INTERVAL']), notes: expect.arrayContaining(['AUTO_IGNORED']) });
-    expect(p.entries.find((e) => e.senderExternalId === 's4')).toMatchObject({ reconciliation: 'NO_TIMER_DATA', minutes: 120, state: 'PARSED', notes: expect.arrayContaining(['ON_TIMER_NOT_FOUND', 'ON_TIMER_FROM_REPORT']) });
+    expect(p.entries.find((e) => e.senderExternalId === 's3')).toBeUndefined();
+    expect(p.entries.find((e) => e.senderExternalId === 's4')).toMatchObject({ minutes: 120, state: 'PARSED', notes: expect.arrayContaining(['ON_TIMER_COUNTED']) });
   });
 
   it('counts a report posted in both the master and the client space once', () => {
@@ -173,13 +136,13 @@ describe('month plan', () => {
     expect(second).toMatchObject({ minutes: 120, state: 'PARSED' });
   });
 
-  it('a timer line and its report in one message give a timer entry and a manual entry from the same message', () => {
+  it('a timer line and its report in one message give one manual entry from the report', () => {
     const p = plan(master(
       m('s1', '2026-10-23T09:00', 'Acme Co | Sam - TIMER ON'),
       m('s1', '2026-10-23T17:00', 'Acme Co | Sam - TIMER OFF\n\nDate:- 23-10-2026\nClient Name:- App | Acme Co | Sam\nOn timer:- 08:00 hrs\nMemo: x'),
     ));
     expect(p.summary.byKind).toMatchObject({ TIMER: 1, TIMER_AND_REPORT: 1 });
-    expect(p.entries.map((e) => [e.source, e.minutes, e.reconciliation])).toEqual([['TIMER_CALCULATED', 480, null], ['MANUAL_REPORT', 0, 'MATCH']]);
+    expect(p.entries.map((e) => [e.source, e.minutes])).toEqual([['MANUAL_REPORT', 480]]);
   });
 
   it('is deterministic: planning the same messages twice gives the same plan', () => {
