@@ -3,6 +3,7 @@ import { CloseFromPosts } from "./_components/CloseFromPosts";
 import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
+import { canonicalBa } from "@/lib/service/ba-members";
 import { canonicalBd } from "@/lib/service/bd-members";
 import { dmHasLeft, dmMatch } from "@/lib/service/dm-members";
 import { loadAllTimeEntries } from "@/lib/service/hours/all-time";
@@ -196,7 +197,7 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   ]);
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
   const profileName = new Map(profiles.map((x) => [x._id, x.name]));
-  const who = (p: Row, role: string) => [...new Set(p.people.filter((x) => x.role === role).map((x) => (role === "BUSINESS_DEVELOPER" ? canonicalBd(x.name) : x.name)))].join(", ");
+  const who = (p: Row, role: string) => [...new Set(p.people.filter((x) => x.role === role).map((x) => (role === "BUSINESS_DEVELOPER" ? canonicalBd(x.name) : role === "BUSINESS_ANALYST" ? canonicalBa(x.name) : x.name)))].join(", ");
   const today = istDate(new Date());
   const countsFor = (sender: string) => !teamOnly || dmMatch(names.get(sender)) !== null;
   // Closed projects: what we took from the client, from all reported hours.

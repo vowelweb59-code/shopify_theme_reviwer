@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { uniqueBa } from "@/lib/service/ba-members";
 import { uniqueBd } from "@/lib/service/bd-members";
 import { dmMatch } from "@/lib/service/dm-members";
 import { workableMinutes } from "@/lib/service/hours/fixed-budget";
@@ -196,7 +197,7 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
               <Card title="People">
                 <div className="-my-2 divide-y divide-border-subtle">
                   <PeopleLine role="Project manager" names={managers.map((m) => m.user.displayName)} empty="Unassigned" />
-                  <PeopleLine role="Business analyst" names={details.businessAnalysts.map((x) => x.name)} empty="None listed" />
+                  <PeopleLine role="Business analyst" names={uniqueBa(details.businessAnalysts.map((x) => x.name))} empty="None listed" />
                   <PeopleLine role="Business developer" names={uniqueBd(details.businessDevelopers.map((x) => x.name))} empty="None listed" />
                   <PeopleLine role="Executives" names={details.executives.map((x) => x.name)} empty="None listed" />
                   {team.length > 0 && <PeopleLine role="Team" names={team.map((m) => m.user.displayName)} empty="" />}
