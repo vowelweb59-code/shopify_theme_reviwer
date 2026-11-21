@@ -4,7 +4,7 @@
 export const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", "Rupali", "Hamza", "Neha", "Priyanka Raut", "Kunal", "Adnan", "Mustufa", "Saloni", "Alefiya", "Batul"];
 
 /** Team members who have left the company (owner): still in DM_MEMBERS so their past hours keep counting, but never shown as a current member. */
-export const DM_LEFT = ["Priyanka Raut"];
+export const DM_LEFT = ["Priyanka Raut", "Batul"];
 
 const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 
