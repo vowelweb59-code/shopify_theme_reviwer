@@ -60,6 +60,8 @@ export interface MemberPerformance {
   weightedRating: number | null;
   simpleRating: number | null;
   weekMinutes: number;
+  /** This member's weekly availability (the full week unless they work part-time). */
+  capacityMinutes: number;
   allocatedMinutes: number;
   /** Allocated / capacity (can pass 1). */
   occupancy: number;
@@ -76,6 +78,8 @@ export interface PerfInput {
   weekStart: string;
   weekEnd: string;
   capacityMinutes?: number;
+  /** Part-time members: their weekly availability by member key. */
+  capacityByMember?: Record<string, number>;
 }
 
 export const rateOf = (p: PerfProject): number | null => p.hourlyRateCents ?? (p.fixed ? STANDARD_RATE_CENTS : null);
@@ -96,7 +100,7 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
   const memberOf = (key: string) => {
     let m = members.get(key);
     if (!m) {
-      m = { key, totalMinutes: 0, valueCents: 0, unpricedMinutes: 0, projectsHandled: 0, projectsNow: 0, ratedProjects: 0, weightedRating: null, simpleRating: null, weekMinutes: 0, allocatedMinutes: 0, occupancy: 0, lastReport: null, projects: [], byMonth: {}, _p: new Map() };
+      m = { key, totalMinutes: 0, valueCents: 0, unpricedMinutes: 0, projectsHandled: 0, projectsNow: 0, ratedProjects: 0, weightedRating: null, simpleRating: null, weekMinutes: 0, capacityMinutes: capacity, allocatedMinutes: 0, occupancy: 0, lastReport: null, projects: [], byMonth: {}, _p: new Map() };
       members.set(key, m);
     }
     return m;
@@ -144,7 +148,8 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
       x.allocatedMinutes = Math.round(x.last28Minutes / 4);
       m.allocatedMinutes += x.allocatedMinutes;
     }
-    m.occupancy = capacity ? m.allocatedMinutes / capacity : 0;
+    m.capacityMinutes = input.capacityByMember?.[m.key] ?? capacity;
+    m.occupancy = m.capacityMinutes ? m.allocatedMinutes / m.capacityMinutes : 0;
   }
   return [...members.values()].map(({ _p, ...m }) => (void _p, m));
 }

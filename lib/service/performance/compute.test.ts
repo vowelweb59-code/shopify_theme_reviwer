@@ -54,6 +54,13 @@ describe("computePerformance", () => {
     expect(by(r, "Neha").allocatedMinutes).toBe(60 + 30);
   });
 
+  it("measures a part-time member against their own availability", () => {
+    const half = (8.5 * 5 * 60) / 2;
+    const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Bhavesh", "a", "2026-11-10", 600)], capacityByMember: { Bhavesh: half } });
+    expect(by(r, "Bhavesh").capacityMinutes).toBe(half);
+    expect(by(r, "Bhavesh").occupancy).toBeCloseTo(150 / half);
+  });
+
   it("ignores entries dated after today", () => {
     const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Bhavesh", "a", "2029-10-19", 240), e("Bhavesh", "a", "2026-11-10", 60)] });
     expect(by(r, "Bhavesh").totalMinutes).toBe(60);

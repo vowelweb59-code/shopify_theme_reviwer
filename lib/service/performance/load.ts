@@ -2,7 +2,7 @@ import "server-only";
 import { entriesForDm } from "./entries";
 import { computePerformance, type MemberPerformance, type PerfProject, WEEKLY_CAPACITY_MINUTES } from "./compute";
 import { periodParam } from "../api/hours";
-import { dmHasLeft } from "../dm-members";
+import { DM_AVAILABILITY, dmHasLeft } from "../dm-members";
 import { istDate } from "../import/text";
 import { ServiceChatSender } from "@/models/service-chat";
 import { ServiceProject } from "@/models/service-project";
@@ -30,7 +30,8 @@ export async function loadPerformance(onRaw?: string | null) {
     id: p._id, name: p.name, status: p.status, reviewRating: p.reviewRating ?? null,
     fixed: p.contract?.type === "FIXED", hourlyRateCents: p.contract?.hourlyRateCents ?? null, weeklyLimitMinutes: p.contract?.weeklyLimitMinutes ?? null,
   }));
-  const computed = computePerformance({ projects, entries: dm.entries, today, weekStart: week.start, weekEnd: week.end });
+  const capacityByMember = Object.fromEntries(Object.entries(DM_AVAILABILITY).map(([k, f]) => [k, Math.round(WEEKLY_CAPACITY_MINUTES * f)]));
+  const computed = computePerformance({ projects, entries: dm.entries, today, weekStart: week.start, weekEnd: week.end, capacityByMember });
 
   const profiles = await ServiceChatSender.find().select("externalId displayName designation").lean<Array<{ externalId: string; displayName: string; designation: string | null }>>();
   const designation = new Map<string, string | null>();

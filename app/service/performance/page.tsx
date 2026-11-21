@@ -16,7 +16,7 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
   const { week, today, capacityMinutes } = data;
   const isCurrent = today >= week.start && today <= week.end;
   const people = data.members.filter((m) => m.active).sort((a, b) => b.occupancy - a.occupancy || a.name.localeCompare(b.name));
-  const team = { capacity: people.length * capacityMinutes, allocated: people.reduce((n, m) => n + m.allocatedMinutes, 0), done: people.reduce((n, m) => n + m.weekMinutes, 0) };
+  const team = { capacity: people.reduce((n, m) => n + m.capacityMinutes, 0), allocated: people.reduce((n, m) => n + m.allocatedMinutes, 0), done: people.reduce((n, m) => n + m.weekMinutes, 0) };
   const q = (d?: string) => (d ? `?on=${d}` : "");
   const btn = "rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted";
 
@@ -37,7 +37,7 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Team availability" value={fmtMinutes(team.capacity)} note={`${people.length} members × ${fmtMinutes(capacityMinutes)} a week`} />
+        <Stat label="Team availability" value={fmtMinutes(team.capacity)} note={`${people.length} members, ${fmtMinutes(capacityMinutes)} a week each (part-timers less)`} />
         <Stat label="Allocated" value={fmtMinutes(team.allocated)} note={team.capacity ? `${Math.round((team.allocated / team.capacity) * 100)}% of availability` : undefined} />
         <Stat label="Completed this week" value={fmtMinutes(team.done)} note={team.allocated ? `${Math.round((team.done / team.allocated) * 100)}% of the allocation` : undefined} />
         <Stat label="Free capacity" value={fmtMinutes(Math.max(0, team.capacity - team.allocated))} note={team.allocated > team.capacity ? `Over-allocated by ${fmtMinutes(team.allocated - team.capacity)}` : "not yet allocated"} />
@@ -48,7 +48,7 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
           <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-4 py-2.5 font-medium">Member</th>
-              <th className="px-4 py-2.5 font-medium">Occupied (allocation of {fmtMinutes(capacityMinutes)})</th>
+              <th className="px-4 py-2.5 font-medium">Occupied (allocation of the weekly availability)</th>
               <th className="px-4 py-2.5 font-medium">Completed so far</th>
               <th className="px-4 py-2.5 text-right font-medium">Left of allocation</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
@@ -66,8 +66,8 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
                     <div className="text-xs text-zinc-500">{m.designation ? `${m.designation} · ` : ""}{m.projectsNow} running project{m.projectsNow === 1 ? "" : "s"}</div>
                   </td>
                   <td className="w-72 px-4 py-2.5">
-                    <div className="flex justify-between text-xs tabular-nums"><span className="font-medium">{fmtMinutes(m.allocatedMinutes)}</span><span className="text-zinc-500">{Math.round(m.occupancy * 100)}%</span></div>
-                    <div className="mt-1"><Meter value={m.allocatedMinutes} max={capacityMinutes} over={m.occupancy > 1} /></div>
+                    <div className="flex justify-between text-xs tabular-nums"><span className="font-medium">{fmtMinutes(m.allocatedMinutes)}</span><span className="text-zinc-500">{Math.round(m.occupancy * 100)}% of {fmtMinutes(m.capacityMinutes)}</span></div>
+                    <div className="mt-1"><Meter value={m.allocatedMinutes} max={m.capacityMinutes} over={m.occupancy > 1} /></div>
                   </td>
                   <td className="w-72 px-4 py-2.5">
                     <div className="flex justify-between text-xs tabular-nums"><span className="font-medium">{fmtMinutes(m.weekMinutes)}</span><span className="text-zinc-500">{m.allocatedMinutes ? `${Math.round((m.weekMinutes / m.allocatedMinutes) * 100)}% of allocation` : "no allocation"}</span></div>
@@ -82,7 +82,7 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
         </table>
       </div>
       <p className="text-xs text-zinc-500">
-        Availability is 8h 30m a day, Monday to Friday. A member&apos;s allocation is their usual week: the hours they reported on running projects (Active or Partial hold) in the last 4 weeks,
+        Availability is 8h 30m a day, Monday to Friday (half of that for Bhavesh, who works half days). A member&apos;s allocation is their usual week: the hours they reported on running projects (Active or Partial hold) in the last 4 weeks,
         divided by 4. It is today&apos;s figure, even when a past week is chosen. Completed = hours reported in the chosen week. Reported hours, not Upwork-verified.
       </p>
     </div>

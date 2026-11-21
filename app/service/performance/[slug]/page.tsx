@@ -19,7 +19,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
   const data = await loadPerformance(on && /^\d{4}-\d{2}-\d{2}$/.test(on) ? on : null);
   const m = data.members.find((x) => x.slug === slug);
   if (!m) notFound();
-  const { week, capacityMinutes } = data;
+  const { week } = data;
   const st = occupancyState(m.occupancy);
   const months = Object.entries(m.byMonth).sort((a, b) => b[0].localeCompare(a[0]));
   const monthMax = Math.max(0, ...months.map(([, v]) => v.minutes));
@@ -57,12 +57,12 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="flex justify-between text-sm"><span>Occupied by allocation</span><span className="tabular-nums text-zinc-500">{fmtMinutes(m.allocatedMinutes)} of {fmtMinutes(capacityMinutes)} · {Math.round(m.occupancy * 100)}%</span></div>
-            <div className="mt-1"><Meter value={m.allocatedMinutes} max={capacityMinutes} over={m.occupancy > 1} /></div>
+            <div className="flex justify-between text-sm"><span>Occupied by allocation</span><span className="tabular-nums text-zinc-500">{fmtMinutes(m.allocatedMinutes)} of {fmtMinutes(m.capacityMinutes)} · {Math.round(m.occupancy * 100)}%</span></div>
+            <div className="mt-1"><Meter value={m.allocatedMinutes} max={m.capacityMinutes} over={m.occupancy > 1} /></div>
           </div>
           <div>
             <div className="flex justify-between text-sm"><span>Completed so far</span><span className="tabular-nums text-zinc-500">{fmtMinutes(m.weekMinutes)}{m.allocatedMinutes ? ` of ${fmtMinutes(m.allocatedMinutes)} · ${Math.round((m.weekMinutes / m.allocatedMinutes) * 100)}%` : ""}</span></div>
-            <div className="mt-1"><Meter value={m.weekMinutes} max={m.allocatedMinutes || capacityMinutes} tone="bg-status-pass-icon" /></div>
+            <div className="mt-1"><Meter value={m.weekMinutes} max={m.allocatedMinutes || m.capacityMinutes} tone="bg-status-pass-icon" /></div>
           </div>
         </div>
       </section>
