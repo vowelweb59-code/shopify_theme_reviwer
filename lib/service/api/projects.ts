@@ -37,6 +37,7 @@ type ProjectDoc = {
   description: string | null;
   projectType: string | null;
   status: ServiceProjectStatus;
+  deptOverride?: DeptOverride;
   startDate: Date | null;
   targetDate: Date | null;
   revisedDate: Date | null;
@@ -56,10 +57,14 @@ type ProjectDoc = {
 
 export type ProjectKind = "timer" | "fixed" | "direct" | "inhouse";
 
+export type DeptOverride = "STAY" | "MOVED" | null;
+
 export type ServiceProjectView = {
   id: string;
   name: string;
   status: ServiceProjectStatus;
+  /** Manual placement in the overview: null = automatic. */
+  deptOverride: DeptOverride;
   contractRef: string | null;
   description: string | null;
   projectType: string | null;
@@ -88,6 +93,7 @@ const view = (p: ProjectDoc): ServiceProjectView => ({
   id: p._id,
   name: p.name,
   status: p.status,
+  deptOverride: p.deptOverride ?? null,
   contractRef: p.contractRef ?? null,
   description: p.description ?? null,
   projectType: p.projectType ?? null,
@@ -215,19 +221,32 @@ export async function createProject(body: Record<string, unknown>) {
   await recordServiceAudit("project.create", { projectId: doc._id, name: data.name });
   return getProject(String(doc._id));
 }
+/**
+ * Changes a project's status and/or where the overview places it (owner, 2026-11-21: "an option to change the status to any status or
+ * sub status"). `to` is any status (omit it, or give the current one, to change only the placement); `dept` is AUTO (the automatic
+ * 30-day rule), STAY (always with the team) or MOVED (always "Moved to another department").
+ */
 export async function changeStatus(id: string, body: Record<string, unknown>) {
   const p = await find(id);
-  const to = oneOf(body.to, "to", SERVICE_PROJECT_STATUSES);
   const reason = str(body.reason, "reason", { max: 1000, optional: true }) ?? undefined;
-  const check = validateTransition(p.status, to, reason);
-  if (!check.ok) throw badRequest(check.error);
+  const dept = body.dept === undefined ? undefined : oneOf(body.dept, "dept", ["AUTO", "STAY", "MOVED"] as const);
+  const to = body.to === undefined || body.to === "" ? p.status : oneOf(body.to, "to", SERVICE_PROJECT_STATUSES);
+  if (to === p.status && dept === undefined) throw badRequest(`The project is already ${to}.`);
+  if (to !== p.status) {
+    const check = validateTransition(p.status, to, reason);
+    if (!check.ok) throw badRequest(check.error);
+  }
+  const set: Record<string, unknown> = {};
+  if (to !== p.status) set.status = to;
+  if (dept !== undefined) set.deptOverride = dept === "AUTO" ? null : dept;
+  const push =
+    to !== p.status
+      ? { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } }
+      : { history: { fromStatus: p.status, toStatus: p.status, reason: reason ?? `Placement set to ${dept}`, at: new Date() } };
   // Conditional on the status read, so two people moving the same project at once cannot both win.
-  const r = await ServiceProject.updateOne(
-    { _id: id, status: p.status },
-    { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } } }
-  );
+  const r = await ServiceProject.updateOne({ _id: id, status: p.status }, { $set: set, $push: push });
   if (r.modifiedCount === 0) throw badRequest("The project changed meanwhile. Reload and try again.");
-  await recordServiceAudit("project.status", { projectId: id, from: p.status, to, reason: reason ?? null });
+  await recordServiceAudit("project.status", { projectId: id, from: p.status, to, dept: dept ?? null, reason: reason ?? null });
   return getProject(id);
 }
 

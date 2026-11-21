@@ -67,6 +67,9 @@ const serviceProjectSchema = new Schema(
     description: { type: String, default: null },
     projectType: { type: String, default: null },
     status: { type: String, enum: SERVICE_PROJECT_STATUSES, default: "NOT_STARTED", index: true },
+    // Where the overview places an Active / On hold project (owner, 2026-11-21): null = automatic (30 days without a team report while others
+    // report = "Moved to another department"), STAY = always with the team, MOVED = always in "Moved to another department".
+    deptOverride: { type: String, enum: ["STAY", "MOVED", null], default: null },
     startDate: { type: Date, default: null },
     targetDate: { type: Date, default: null },
     revisedDate: { type: Date, default: null },

@@ -1,12 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { validateTransition } from "./transitions";
+import { PROJECT_STATUSES, validateTransition } from "./transitions";
 import { computeHash, verifyChain, GENESIS_HASH, type AuditEntry } from "../audit/hash-chain";
 
 describe("project transitions", () => {
-  it("allows valid and rejects invalid moves", () => {
-    expect(validateTransition("NOT_STARTED", "ACTIVE").ok).toBe(true);
-    expect(validateTransition("NOT_STARTED", "COMPLETED").ok).toBe(false);
-    expect(validateTransition("ARCHIVED", "ACTIVE").ok).toBe(false);
+  it("allows every status to move to every other one (owner 2026-11-21), but not to itself", () => {
+    for (const from of PROJECT_STATUSES) {
+      for (const to of PROJECT_STATUSES) {
+        if (from === to) expect(validateTransition(from, to).ok).toBe(false);
+        else if (!(from === "COMPLETED" && to === "ACTIVE")) expect(validateTransition(from, to).ok).toBe(true);
+      }
+    }
+    expect(validateTransition("ARCHIVED", "ACTIVE", "put back").ok).toBe(true);
+    expect(validateTransition("NOT_STARTED", "COMPLETED").ok).toBe(true);
   });
   it("reopening a completed project needs a reason", () => {
     expect(validateTransition("COMPLETED", "ACTIVE").ok).toBe(false);

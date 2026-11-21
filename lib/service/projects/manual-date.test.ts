@@ -21,6 +21,6 @@ describe("Partial hold", () => {
   it("is reachable from Active and leads back or on", () => {
     expect(validateTransition("ACTIVE", "PARTIAL_HOLD")).toEqual({ ok: true });
     for (const to of ["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"] as const) expect(validateTransition("PARTIAL_HOLD", to)).toEqual({ ok: true });
-    expect(validateTransition("ON_HOLD", "PARTIAL_HOLD").ok).toBe(false);
+    expect(validateTransition("ON_HOLD", "PARTIAL_HOLD").ok).toBe(true);
   });
 });

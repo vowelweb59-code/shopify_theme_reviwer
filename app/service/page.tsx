@@ -36,6 +36,8 @@ type Row = {
   assignments?: Array<{ userId: string; role: "MANAGER" | "EMPLOYEE" }>;
   /** Set by the overview, not stored: see "Moved to another department". */
   movedDept?: boolean;
+  /** Manual placement (project Settings): STAY = never moved, MOVED = always moved, null = the automatic 30-day rule. */
+  deptOverride?: "STAY" | "MOVED" | null;
   contract: {
     type: "HOURLY" | "FIXED";
     hourlyRateCents: number | null;
@@ -213,7 +215,7 @@ export default async function ServiceOverviewPage({
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
   const [allRows, profiles, att, names, users] = await Promise.all([
-    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people assignments").sort({ name: 1 }).lean<Row[]>(),
+    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people assignments deptOverride").sort({ name: 1 }).lean<Row[]>(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     loadAttribution(),
     senderNames(),
@@ -280,9 +282,10 @@ export default async function ServiceOverviewPage({
   const movedCutoff = new Date(new Date(`${today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
   const all: Row[] = allRows.map((p) => {
     if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return p;
-    return (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff
-      ? { ...p, status: "ON_HOLD" as const, movedDept: true }
-      : p;
+    // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21).
+    if (p.deptOverride === "STAY") return p;
+    const automatic = (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff;
+    return p.deptOverride === "MOVED" || automatic ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p;
   });
   const ofType = all.filter(tab.match);
   const inStatus = ofType.filter(status.match);

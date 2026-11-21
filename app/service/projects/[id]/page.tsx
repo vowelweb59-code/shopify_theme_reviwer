@@ -89,6 +89,12 @@ export default async function ServiceProjectPage({
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h2>
           <ServiceStatusBadge status={project.status} />
+          {project.deptOverride === "MOVED" && (
+            <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">⇄ Another department</span>
+          )}
+          {project.deptOverride === "STAY" && (
+            <span className="rounded-full border border-border-subtle px-2 py-0.5 text-xs text-zinc-500">Kept with my team</span>
+          )}
           {details.inHouse && <span className="rounded-full border border-border-subtle px-2 py-0.5 text-xs text-zinc-500">In-house</span>}
         </div>
         {project.description && <p className="mt-2 max-w-2xl text-sm text-zinc-500">{project.description}</p>}
@@ -387,7 +393,7 @@ export default async function ServiceProjectPage({
       {settings && (
         <div className="space-y-6">
           <section aria-label="Status" className={SECTION}>
-            <StatusControl projectId={project.id} status={project.status} />
+            <StatusControl projectId={project.id} status={project.status} deptOverride={project.deptOverride} />
           </section>
 
           <section aria-labelledby="edit" className={SECTION}>

@@ -54,18 +54,12 @@ const META: Record<ServiceProjectStatus, { label: string; icon: string; tone: st
   ARCHIVED: { label: "Archived", icon: "▣", tone: "bg-status-not-tested-bg text-status-not-tested-text" },
 };
 
-// Mirrors lib/service/projects/transitions.ts so the UI only offers legal moves; the API remains the authority.
-export const NEXT_STATUSES: Record<ServiceProjectStatus, readonly ServiceProjectStatus[]> = {
-  NOT_STARTED: ["ACTIVE", "CANCELLED"],
-  ACTIVE: ["BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD", "COMPLETED", "CANCELLED"],
-  BLOCKED: ["ACTIVE"],
-  WAITING_FOR_CLIENT: ["ACTIVE"],
-  ON_HOLD: ["ACTIVE", "COMPLETED", "CANCELLED"],
-  PARTIAL_HOLD: ["ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"],
-  COMPLETED: ["ARCHIVED", "ACTIVE"],
-  CANCELLED: ["ARCHIVED"],
-  ARCHIVED: [],
-};
+// Any status can move to any other (see lib/service/projects/transitions.ts), so every status offers all the others.
+const ALL_STATUSES = Object.keys(META) as ServiceProjectStatus[];
+export const NEXT_STATUSES = Object.fromEntries(ALL_STATUSES.map((s) => [s, ALL_STATUSES.filter((x) => x !== s)])) as unknown as Record<
+  ServiceProjectStatus,
+  readonly ServiceProjectStatus[]
+>;
 
 export const statusLabel = (s: ServiceProjectStatus) => META[s].label;
 export const STATUS_OPTIONS = Object.entries(META).map(([value, m]) => ({ value: value as ServiceProjectStatus, label: m.label }));
