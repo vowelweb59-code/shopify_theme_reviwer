@@ -69,16 +69,25 @@ describe("listAccessibleProperties", () => {
 describe("getPropertyDetails", () => {
   it("returns the property's name, time zone and creation date", async () => {
     const admin = fakeAdmin({ property: { name: "properties/111", displayName: "Adorn Demo", timeZone: "Asia/Kolkata", createTime: "2023-04-01T10:00:00Z" } });
-    expect(await getPropertyDetails(admin, "111")).toEqual({ propertyId: "111", displayName: "Adorn Demo", timeZone: "Asia/Kolkata", createTime: "2023-04-01T10:00:00Z" });
+    expect(await getPropertyDetails(admin, "111")).toEqual({
+      propertyId: "111",
+      displayName: "Adorn Demo",
+      timeZone: "Asia/Kolkata",
+      createTime: "2023-04-01T10:00:00Z",
+    });
     expect(admin.properties.get).toHaveBeenCalledWith({ name: "properties/111" });
   });
 
   it("treats a trashed property as not found", async () => {
-    await expect(getPropertyDetails(fakeAdmin({ property: { displayName: "Old", deleteTime: "2026-01-01T00:00:00Z" } }), "111")).rejects.toMatchObject({ code: "not_found" });
+    await expect(getPropertyDetails(fakeAdmin({ property: { displayName: "Old", deleteTime: "2026-01-01T00:00:00Z" } }), "111")).rejects.toMatchObject({
+      code: "not_found",
+    });
   });
 
   it("maps a permission failure", async () => {
-    await expect(getPropertyDetails(fakeAdmin({ error: httpError(403, "User does not have sufficient permissions for this property.") }), "111")).rejects.toMatchObject({
+    await expect(
+      getPropertyDetails(fakeAdmin({ error: httpError(403, "User does not have sufficient permissions for this property.") }), "111")
+    ).rejects.toMatchObject({
       code: "permission_denied",
     });
   });

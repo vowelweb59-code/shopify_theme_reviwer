@@ -29,7 +29,8 @@ type Report = {
 const SOURCE_LABEL: Record<Source, string> = { upwork: "Upwork", theme: "the theme team" };
 const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const weekday = (day: string) => WEEKDAY[new Date(`${day}T00:00:00Z`).getUTCDay()];
-const dayLabel = (day: string) => `${weekday(day)} ${day.slice(8)} ${new Date(`${day}T00:00:00Z`).toLocaleString("en-GB", { month: "short", timeZone: "UTC" })}`;
+const dayLabel = (day: string) =>
+  `${weekday(day)} ${day.slice(8)} ${new Date(`${day}T00:00:00Z`).toLocaleString("en-GB", { month: "short", timeZone: "UTC" })}`;
 const list = (xs: Source[]) => xs.map((s) => SOURCE_LABEL[s]).join(" or ");
 
 const CELL: Record<Status, { mark: string; cls: string; hint: string }> = {
@@ -45,7 +46,8 @@ const CELL: Record<Status, { mark: string; cls: string; hint: string }> = {
 };
 
 function problem(f: Flag): string {
-  if (f.kind === "leave-but-reported") return `Leave announced${f.leave?.reason ? ` (${f.leave.reason})` : ""} but hours were reported in ${list(f.reportedIn)}.`;
+  if (f.kind === "leave-but-reported")
+    return `Leave announced${f.leave?.reason ? ` (${f.leave.reason})` : ""} but hours were reported in ${list(f.reportedIn)}.`;
   return `No report in ${list(f.expectedIn)} and no leave announced.`;
 }
 
@@ -72,12 +74,21 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
 
   const flags = useMemo(() => (data?.flags ?? []).filter((f) => (!person || f.key === person) && (!kind || f.kind === kind)), [data, person, kind]);
   const columns: TableColumn<Flag>[] = [
-    { key: "day", header: "Day", render: (f) => <span className="whitespace-nowrap font-medium tabular-nums">{dayLabel(f.day)}</span>, sortValue: (f) => f.day },
+    {
+      key: "day",
+      header: "Day",
+      render: (f) => <span className="whitespace-nowrap font-medium tabular-nums">{dayLabel(f.day)}</span>,
+      sortValue: (f) => f.day,
+    },
     { key: "name", header: "Person", render: (f) => <span>{f.name}</span>, sortValue: (f) => f.name.toLowerCase() },
     {
       key: "kind",
       header: "Flag",
-      render: (f) => <span className={f.kind === "missing" ? "text-status-fail-text" : "text-status-warning-text"}>{f.kind === "missing" ? "Missing" : "Leave but reported"}</span>,
+      render: (f) => (
+        <span className={f.kind === "missing" ? "text-status-fail-text" : "text-status-warning-text"}>
+          {f.kind === "missing" ? "Missing" : "Leave but reported"}
+        </span>
+      ),
       sortValue: (f) => f.kind,
     },
     { key: "why", header: "What is missing", render: (f) => <span className="text-sm">{problem(f)}</span> },
@@ -97,15 +108,27 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
           <RefreshCw className={`mr-1.5 h-4 w-4 ${syncing ? "animate-spin" : ""}`} aria-hidden />
           {syncing ? "Reading…" : "Read attendance space now"}
         </Button>
-        {data?.sync?.lastSyncAt && <span className="text-xs text-zinc-500">Space last read {formatDateTime(data.sync.lastSyncAt)} ({data.sync.lastCount} messages)</span>}
+        {data?.sync?.lastSyncAt && (
+          <span className="text-xs text-zinc-500">
+            Space last read {formatDateTime(data.sync.lastSyncAt)} ({data.sync.lastCount} messages)
+          </span>
+        )}
       </div>
-      {message && <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">{message}</p>}
-      {(error || data?.sync?.lastError) && <p role="alert" className="text-sm text-status-fail-text">{error ?? `Last read failed: ${data?.sync?.lastError}`}</p>}
+      {message && (
+        <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">
+          {message}
+        </p>
+      )}
+      {(error || data?.sync?.lastError) && (
+        <p role="alert" className="text-sm text-status-fail-text">
+          {error ?? `Last read failed: ${data?.sync?.lastError}`}
+        </p>
+      )}
       {loading && !data && <p className="text-sm text-zinc-500">Loading…</p>}
       {none && (
         <p className="rounded-md bg-status-warning-bg p-3 text-sm text-status-warning-text">
-          No leave announcements have been read yet, so every working day without a report would be flagged. Connect Google Chat on Service &gt; Chat sync (the account must be a
-          member of the attendance space), then press “Read attendance space now”.
+          No leave announcements have been read yet, so every working day without a report would be flagged. Connect Google Chat on Service &gt; Chat sync (the
+          account must be a member of the attendance space), then press “Read attendance space now”.
         </p>
       )}
 
@@ -130,11 +153,13 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <select value={person} onChange={(e) => setPerson(e.target.value)} aria-label="Person" className={select}>
                 <option value="">Everyone</option>
-                {data.rows.filter((r) => r.counts.missing + r.counts.conflicts > 0).map((r) => (
-                  <option key={r.key} value={r.key}>
-                    {r.name} ({r.counts.missing + r.counts.conflicts})
-                  </option>
-                ))}
+                {data.rows
+                  .filter((r) => r.counts.missing + r.counts.conflicts > 0)
+                  .map((r) => (
+                    <option key={r.key} value={r.key}>
+                      {r.name} ({r.counts.missing + r.counts.conflicts})
+                    </option>
+                  ))}
               </select>
               <select value={kind} onChange={(e) => setKind(e.target.value as "" | Flag["kind"])} aria-label="Flag type" className={select}>
                 <option value="">All flags</option>
@@ -143,11 +168,20 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
               </select>
               <span className="text-xs text-zinc-500">{flags.length} shown</span>
             </div>
-            <ResponsiveTable columns={columns} rows={flags} rowKey={(f) => `${f.key}|${f.day}|${f.kind}`} pageSize={25} emptyMessage="Nothing flagged for this month." />
+            <ResponsiveTable
+              columns={columns}
+              rows={flags}
+              rowKey={(f) => `${f.key}|${f.day}|${f.kind}`}
+              pageSize={25}
+              emptyMessage="Nothing flagged for this month."
+            />
           </Card>
 
           <Card>
-            <CardHeader title="Month at a glance" description="✓ reported · L leave · ½ half-day leave · ✗ missing · ! leave but reported · shaded = Saturday / Sunday · · not due yet" />
+            <CardHeader
+              title="Month at a glance"
+              description="✓ reported · L leave · ½ half-day leave · ✗ missing · ! leave but reported · shaded = Saturday / Sunday · · not due yet"
+            />
             <div className="overflow-x-auto">
               <table className="min-w-full border-separate border-spacing-0 text-xs">
                 <thead>
@@ -188,11 +222,15 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
 
           {data.unmatched.length > 0 && (
             <Card>
-              <CardHeader title="Leaves for names not found" description="The announcement names someone who has no reports in Upwork or the theme team. Check the spelling, or add the spelling as an alias on the Team page." />
+              <CardHeader
+                title="Leaves for names not found"
+                description="The announcement names someone who has no reports in Upwork or the theme team. Check the spelling, or add the spelling as an alias on the Team page."
+              />
               <ul className="space-y-1 text-sm">
                 {data.unmatched.map((u, i) => (
                   <li key={i}>
-                    <span className="font-medium">{u.person}</span> · {u.dates.join(", ")} <span className="text-xs text-zinc-500">(posted {formatDateTime(u.postedAt)})</span>
+                    <span className="font-medium">{u.person}</span> · {u.dates.join(", ")}{" "}
+                    <span className="text-xs text-zinc-500">(posted {formatDateTime(u.postedAt)})</span>
                   </li>
                 ))}
               </ul>
@@ -201,7 +239,10 @@ export function AttendanceView({ initialMonth }: { initialMonth: string }) {
 
           {data.review.length > 0 && (
             <Card>
-              <CardHeader title="Messages I couldn't read" description="Leave-style posts without a usable date. Days they cover show as missing until the wording is understood; send me these." />
+              <CardHeader
+                title="Messages I couldn't read"
+                description="Leave-style posts without a usable date. Days they cover show as missing until the wording is understood; send me these."
+              />
               <ul className="space-y-2 text-sm">
                 {data.review.map((m, i) => (
                   <li key={i}>

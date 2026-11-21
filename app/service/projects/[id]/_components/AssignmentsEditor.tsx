@@ -60,7 +60,12 @@ export function AssignmentsEditor({ projectId, users, current }: { projectId: st
               <td className="py-1.5">{u.displayName}</td>
               {(["MANAGER", "EMPLOYEE"] as const).map((role) => (
                 <td key={role} className="py-1.5">
-                  <input type="checkbox" checked={picked.has(`${u.id}:${role}`)} onChange={() => toggle(u.id, role)} aria-label={`${u.displayName} as ${role === "MANAGER" ? "manager" : "team member"}`} />
+                  <input
+                    type="checkbox"
+                    checked={picked.has(`${u.id}:${role}`)}
+                    onChange={() => toggle(u.id, role)}
+                    aria-label={`${u.displayName} as ${role === "MANAGER" ? "manager" : "team member"}`}
+                  />
                 </td>
               ))}
             </tr>
@@ -68,11 +73,24 @@ export function AssignmentsEditor({ projectId, users, current }: { projectId: st
         </tbody>
       </table>
       <div className="flex items-center gap-3">
-        <button type="button" onClick={save} disabled={busy} className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60">
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60"
+        >
           {busy ? "Saving…" : "Save assignments"}
         </button>
-        {saved && <span role="status" className="text-sm text-status-pass-text">Saved</span>}
-        {error && <span role="alert" className="text-sm text-status-fail-text">{error}</span>}
+        {saved && (
+          <span role="status" className="text-sm text-status-pass-text">
+            Saved
+          </span>
+        )}
+        {error && (
+          <span role="alert" className="text-sm text-status-fail-text">
+            {error}
+          </span>
+        )}
       </div>
     </div>
   );

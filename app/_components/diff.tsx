@@ -216,7 +216,10 @@ export function DiffFindingsView({ findings }: { findings: DiffFindingRow[] }) {
                         <span className="mt-1 block text-xs text-amber-600 dark:text-amber-400">↺ Reintroduced</span>
                       )}
                       {row.status === "new" && row.newFindingAttribution && row.newFindingAttribution !== "theme_change" && (
-                        <span className="mt-1 block text-xs text-zinc-500" title="This rule was added or changed since the baseline audit — not necessarily a change in the theme itself.">
+                        <span
+                          className="mt-1 block text-xs text-zinc-500"
+                          title="This rule was added or changed since the baseline audit — not necessarily a change in the theme itself."
+                        >
                           {ATTRIBUTION_LABEL[row.newFindingAttribution]}
                         </span>
                       )}

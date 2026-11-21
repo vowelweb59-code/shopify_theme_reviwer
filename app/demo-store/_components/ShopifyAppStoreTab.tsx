@@ -37,7 +37,18 @@ type StoreData = {
   watched: { slug: string; label: string; apps: number; read: number; lastReadAt: string | null }[];
   detail: { read: number; total: number; backlog: number };
 };
-type Progress = { running: boolean; mode: "full" | "details" | "category" | null; scope: string | null; phase: "tree" | "listings" | "details" | null; total: number; done: number; current: string | null; appsSeen: number; errors: string[]; finishedAt: string | null };
+type Progress = {
+  running: boolean;
+  mode: "full" | "details" | "category" | null;
+  scope: string | null;
+  phase: "tree" | "listings" | "details" | null;
+  total: number;
+  done: number;
+  current: string | null;
+  appsSeen: number;
+  errors: string[];
+  finishedAt: string | null;
+};
 type CategoryFeature = { handle: string; label: string; group: string; apps: number; share: number };
 type CategoryApp = {
   handle: string;
@@ -57,9 +68,22 @@ type CategoryApp = {
   languages: string[];
   worksWith: string[];
 };
-type CategoryData = { slug: string; label: string; priority: boolean; lastReadAt: string | null; appCount: number; readCount: number; features: CategoryFeature[]; apps: CategoryApp[] };
+type CategoryData = {
+  slug: string;
+  label: string;
+  priority: boolean;
+  lastReadAt: string | null;
+  appCount: number;
+  readCount: number;
+  features: CategoryFeature[];
+  apps: CategoryApp[];
+};
 
-const PHASE_LABEL = { tree: "Reading the category tree", listings: "Reading every category's apps", details: "Reading app pages (features, plans, launch date, star split)" } as const;
+const PHASE_LABEL = {
+  tree: "Reading the category tree",
+  listings: "Reading every category's apps",
+  details: "Reading app pages (features, plans, launch date, star split)",
+} as const;
 const PRICING_LABEL: Record<Pricing, string> = { free: "Free", freemium: "Free plan", trial: "Free trial", paid: "Paid", unknown: "Unknown" };
 const dash = <span className="text-zinc-400">—</span>;
 const num = (n: number) => n.toLocaleString();
@@ -78,9 +102,18 @@ function ScoreBar({ value }: { value: number }) {
 
 function MixBar({ mix }: { mix: PricingMix }) {
   const total = Object.values(mix).reduce((s, n) => s + n, 0) || 1;
-  const parts: [Pricing, string][] = [["free", "bg-emerald-500"], ["freemium", "bg-sky-500"], ["trial", "bg-amber-500"], ["paid", "bg-violet-500"]];
+  const parts: [Pricing, string][] = [
+    ["free", "bg-emerald-500"],
+    ["freemium", "bg-sky-500"],
+    ["trial", "bg-amber-500"],
+    ["paid", "bg-violet-500"],
+  ];
   return (
-    <div className="flex h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="img" aria-label={parts.map(([k]) => `${PRICING_LABEL[k]} ${Math.round((mix[k] / total) * 100)}%`).join(", ")}>
+    <div
+      className="flex h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+      role="img"
+      aria-label={parts.map(([k]) => `${PRICING_LABEL[k]} ${Math.round((mix[k] / total) * 100)}%`).join(", ")}
+    >
       {parts.map(([k, color]) => (
         <div key={k} className={color} style={{ width: `${(mix[k] / total) * 100}%` }} />
       ))}
@@ -88,7 +121,19 @@ function MixBar({ mix }: { mix: PricingMix }) {
   );
 }
 
-function StageCard({ stage, index, selected, onSelect, years }: { stage: StageInsight; index: number; selected: boolean; onSelect: () => void; years: number[] }) {
+function StageCard({
+  stage,
+  index,
+  selected,
+  onSelect,
+  years,
+}: {
+  stage: StageInsight;
+  index: number;
+  selected: boolean;
+  onSelect: () => void;
+  years: number[];
+}) {
   const recent = years.slice(-5);
   const max = Math.max(1, ...recent.map((y) => stage.launchesByYear[y] ?? 0));
   return (
@@ -106,10 +151,17 @@ function StageCard({ stage, index, selected, onSelect, years }: { stage: StageIn
       </span>
       <MixBar mix={stage.pricing} />
       {recent.length > 0 && (
-        <div className="flex h-8 items-end gap-1" role="img" aria-label={`Launches per year: ${recent.map((y) => `${y}: ${stage.launchesByYear[y] ?? 0}`).join(", ")}`}>
+        <div
+          className="flex h-8 items-end gap-1"
+          role="img"
+          aria-label={`Launches per year: ${recent.map((y) => `${y}: ${stage.launchesByYear[y] ?? 0}`).join(", ")}`}
+        >
           {recent.map((y) => (
             <div key={y} className="flex flex-1 flex-col items-center gap-0.5">
-              <div className="w-full rounded-sm bg-zinc-400 dark:bg-zinc-600" style={{ height: `${Math.max(2, ((stage.launchesByYear[y] ?? 0) / max) * 24)}px` }} />
+              <div
+                className="w-full rounded-sm bg-zinc-400 dark:bg-zinc-600"
+                style={{ height: `${Math.max(2, ((stage.launchesByYear[y] ?? 0) / max) * 24)}px` }}
+              />
               <span className="text-[9px] text-zinc-500">{String(y).slice(2)}</span>
             </div>
           ))}
@@ -151,7 +203,9 @@ function WhyPanel({ category, onClose }: { category: CategoryInsight; onClose: (
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-500">{category.gap === null ? "Fewer than 5 apps — too few to score." : "No single strong signal; the score is a middling mix."}</p>
+        <p className="text-sm text-zinc-500">
+          {category.gap === null ? "Fewer than 5 apps — too few to score." : "No single strong signal; the score is a middling mix."}
+        </p>
       )}
       {c && (
         <dl className="grid gap-2 sm:grid-cols-2">
@@ -192,8 +246,24 @@ function WhyPanel({ category, onClose }: { category: CategoryInsight; onClose: (
 
 // Everything read about one category: its features and how many apps tick each, and every app with its plans, languages and
 // description. Pick features to see which apps cover them (and whether any app covers them all): where a new app could fit.
-function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, onClose }: { slug: string; refreshKey: string | null; running: boolean; onRead: () => void; onWatchChanged: () => void; onClose: () => void }) {
-  const { data, loading, error, reload } = useApi<CategoryData>(`/api/shopify-apps/category?slug=${encodeURIComponent(slug)}&v=${encodeURIComponent(refreshKey ?? "")}`);
+function CategoryWorkspace({
+  slug,
+  refreshKey,
+  running,
+  onRead,
+  onWatchChanged,
+  onClose,
+}: {
+  slug: string;
+  refreshKey: string | null;
+  running: boolean;
+  onRead: () => void;
+  onWatchChanged: () => void;
+  onClose: () => void;
+}) {
+  const { data, loading, error, reload } = useApi<CategoryData>(
+    `/api/shopify-apps/category?slug=${encodeURIComponent(slug)}&v=${encodeURIComponent(refreshKey ?? "")}`
+  );
   const [picked, setPicked] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -212,7 +282,11 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
   async function toggleWatch() {
     if (!data) return;
     setMessage(null);
-    const res = await fetch("/api/shopify-apps/category", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, priority: !data.priority }) });
+    const res = await fetch("/api/shopify-apps/category", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, priority: !data.priority }),
+    });
     if (!res.ok) return setMessage("Couldn't change that.");
     reload();
     onWatchChanged();
@@ -220,7 +294,21 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
 
   function exportCsv() {
     if (!data) return;
-    const header = ["App", "Developer", "Rating", "Reviews", "Pricing", "Launched", "Built for Shopify", "Description", "Plans", "Languages", "Works with", "Features in this category", "Link"];
+    const header = [
+      "App",
+      "Developer",
+      "Rating",
+      "Reviews",
+      "Pricing",
+      "Launched",
+      "Built for Shopify",
+      "Description",
+      "Plans",
+      "Languages",
+      "Works with",
+      "Features in this category",
+      "Link",
+    ];
     const lines = data.apps.map((a) =>
       [
         a.name,
@@ -236,7 +324,9 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
         a.worksWith.join("; "),
         a.features.map((h) => labelOf.get(h) ?? h).join("; "),
         a.url,
-      ].map(cell).join(",")
+      ]
+        .map(cell)
+        .join(",")
     );
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -252,27 +342,90 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
       header: "App",
       render: (a) => (
         <div className="flex flex-col gap-0.5">
-          <a href={a.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
+          <a
+            href={a.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50"
+          >
             {a.name}
             <ExternalLink className="h-3 w-3 text-zinc-400" aria-hidden />
           </a>
-          <span className="max-w-md text-xs text-zinc-500" title={a.description ?? a.tagline ?? ""}>{(a.description ?? a.tagline ?? "").slice(0, 140)}</span>
+          <span className="max-w-md text-xs text-zinc-500" title={a.description ?? a.tagline ?? ""}>
+            {(a.description ?? a.tagline ?? "").slice(0, 140)}
+          </span>
         </div>
       ),
       sortValue: (a) => a.name.toLowerCase(),
     },
-    ...(picked.length ? [{ key: "covers", header: `Covers (of ${picked.length})`, render: (a: (typeof rows)[number]) => <span className="tabular-nums font-medium">{a.covered}</span>, sortValue: (a: (typeof rows)[number]) => a.covered, className: "text-right" } as TableColumn<(typeof rows)[number]>] : []),
-    { key: "features", header: "Features ticked", render: (a) => (a.read ? <span className="tabular-nums">{a.features.length} of {data?.features.length ?? 0}</span> : <span className="text-xs text-zinc-400">not read yet</span>), sortValue: (a) => (a.read ? a.features.length : -1), className: "text-right" },
-    { key: "rating", header: "★", render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>), sortValue: (a) => a.rating ?? -1, className: "text-right" },
-    { key: "reviews", header: "Reviews", render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>, sortValue: (a) => a.reviewCount, className: "text-right" },
+    ...(picked.length
+      ? [
+          {
+            key: "covers",
+            header: `Covers (of ${picked.length})`,
+            render: (a: (typeof rows)[number]) => <span className="tabular-nums font-medium">{a.covered}</span>,
+            sortValue: (a: (typeof rows)[number]) => a.covered,
+            className: "text-right",
+          } as TableColumn<(typeof rows)[number]>,
+        ]
+      : []),
+    {
+      key: "features",
+      header: "Features ticked",
+      render: (a) =>
+        a.read ? (
+          <span className="tabular-nums">
+            {a.features.length} of {data?.features.length ?? 0}
+          </span>
+        ) : (
+          <span className="text-xs text-zinc-400">not read yet</span>
+        ),
+      sortValue: (a) => (a.read ? a.features.length : -1),
+      className: "text-right",
+    },
+    {
+      key: "rating",
+      header: "★",
+      render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>),
+      sortValue: (a) => a.rating ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>,
+      sortValue: (a) => a.reviewCount,
+      className: "text-right",
+    },
     {
       key: "plans",
       header: "Plans",
-      render: (a) => (a.plans.length ? <span className="text-xs">{a.plans.map((p) => `${p.name} ${p.price ?? ""}`.trim()).join(" · ")}</span> : <span className="text-xs">{PRICING_LABEL[a.pricing]}</span>),
+      render: (a) =>
+        a.plans.length ? (
+          <span className="text-xs">{a.plans.map((p) => `${p.name} ${p.price ?? ""}`.trim()).join(" · ")}</span>
+        ) : (
+          <span className="text-xs">{PRICING_LABEL[a.pricing]}</span>
+        ),
     },
-    { key: "dev", header: "Developer", render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash), sortValue: (a) => (a.developer ?? "~").toLowerCase() },
-    { key: "langs", header: "Languages", render: (a) => (a.languages.length ? <span className="tabular-nums">{a.languages.length}</span> : dash), sortValue: (a) => a.languages.length, className: "text-right" },
-    { key: "launched", header: "Launched", render: (a) => (a.launchedAt ? <span className="text-xs tabular-nums">{a.launchedAt}</span> : dash), sortValue: (a) => a.launchedAt ?? "" },
+    {
+      key: "dev",
+      header: "Developer",
+      render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash),
+      sortValue: (a) => (a.developer ?? "~").toLowerCase(),
+    },
+    {
+      key: "langs",
+      header: "Languages",
+      render: (a) => (a.languages.length ? <span className="tabular-nums">{a.languages.length}</span> : dash),
+      sortValue: (a) => a.languages.length,
+      className: "text-right",
+    },
+    {
+      key: "launched",
+      header: "Launched",
+      render: (a) => (a.launchedAt ? <span className="text-xs tabular-nums">{a.launchedAt}</span> : dash),
+      sortValue: (a) => a.launchedAt ?? "",
+    },
   ];
 
   return (
@@ -308,14 +461,17 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
       {loading && !data && <p className="text-sm text-zinc-500">Loading…</p>}
       {data && data.readCount < data.appCount && (
         <p className="text-xs text-zinc-500">
-          {num(data.appCount - data.readCount)} of {num(data.appCount)} apps have not had their page read yet, so their features are missing from the counts below. “Read this category now” reads them all (about {Math.ceil((data.appCount - data.readCount) / 40)} minutes).
+          {num(data.appCount - data.readCount)} of {num(data.appCount)} apps have not had their page read yet, so their features are missing from the counts
+          below. “Read this category now” reads them all (about {Math.ceil((data.appCount - data.readCount) / 40)} minutes).
         </p>
       )}
 
       {data && data.features.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Features: how many apps tick each (click to pick what you want to build)</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Features: how many apps tick each (click to pick what you want to build)
+            </h4>
             {picked.length > 0 && (
               <>
                 <span className="text-xs text-zinc-700 dark:text-zinc-300">
@@ -362,7 +518,16 @@ function CategoryWorkspace({ slug, refreshKey, running, onRead, onWatchChanged, 
       )}
       {data && data.features.length === 0 && data.appCount > 0 && <p className="text-xs text-zinc-500">No features read for this category yet.</p>}
 
-      {data && <ResponsiveTable columns={columns} rows={rows} rowKey={(a) => a.handle} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} emptyMessage="No apps read for this category yet. Press “Read this category now”." />}
+      {data && (
+        <ResponsiveTable
+          columns={columns}
+          rows={rows}
+          rowKey={(a) => a.handle}
+          theadClassName="bg-primary-tint text-primary-tint-text"
+          pageSize={25}
+          emptyMessage="No apps read for this category yet. Press “Read this category now”."
+        />
+      )}
     </section>
   );
 }
@@ -413,7 +578,11 @@ export function ShopifyAppStoreTab() {
 
   async function startCategoryRead(slug: string) {
     setStartError(null);
-    const res = await fetch("/api/shopify-apps/crawl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category: slug }) });
+    const res = await fetch("/api/shopify-apps/crawl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: slug }),
+    });
     if (!res.ok) return setStartError("Couldn't start reading that category.");
     setProgress((await res.json()) as Progress);
   }
@@ -450,7 +619,20 @@ export function ShopifyAppStoreTab() {
   function exportCsv() {
     const header = ["App", "Developer", "Stages", "Categories", "Rating", "Reviews", "Pricing", "Built for Shopify", "Launched", "Link"];
     const lines = shownApps.map((a) =>
-      [a.name, a.developer, a.stages.map(stageLabel).join("; "), a.categories.map((s) => labels?.[s] ?? s).join("; "), a.rating, a.reviewCount, PRICING_LABEL[a.pricing], a.builtForShopify ? "Yes" : "", a.launchedAt, a.url].map(cell).join(",")
+      [
+        a.name,
+        a.developer,
+        a.stages.map(stageLabel).join("; "),
+        a.categories.map((s) => labels?.[s] ?? s).join("; "),
+        a.rating,
+        a.reviewCount,
+        PRICING_LABEL[a.pricing],
+        a.builtForShopify ? "Yes" : "",
+        a.launchedAt,
+        a.url,
+      ]
+        .map(cell)
+        .join(",")
     );
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -461,7 +643,12 @@ export function ShopifyAppStoreTab() {
   }
 
   const opportunityColumns: TableColumn<CategoryInsight>[] = [
-    { key: "gap", header: "Opportunity", render: (c) => (c.gap === null ? <span className="text-xs text-zinc-400">too few apps</span> : <ScoreBar value={c.gap} />), sortValue: (c) => c.gap ?? -1 },
+    {
+      key: "gap",
+      header: "Opportunity",
+      render: (c) => (c.gap === null ? <span className="text-xs text-zinc-400">too few apps</span> : <ScoreBar value={c.gap} />),
+      sortValue: (c) => c.gap ?? -1,
+    },
     {
       key: "category",
       header: GROUP_HEADER,
@@ -474,15 +661,71 @@ export function ShopifyAppStoreTab() {
     },
     { key: "stage", header: "Lifecycle stage", render: (c) => <span className="text-xs">{stageLabel(c.stage)}</span>, sortValue: (c) => c.stage },
     { key: "apps", header: "Apps", render: (c) => <span className="tabular-nums">{num(c.apps)}</span>, sortValue: (c) => c.apps, className: "text-right" },
-    { key: "reviews", header: "Reviews", render: (c) => <span className="tabular-nums">{num(c.reviews)}</span>, sortValue: (c) => c.reviews, className: "text-right" },
-    { key: "rpa", header: "Reviews / app", render: (c) => <span className="tabular-nums">{num(Math.round(c.reviewsPerApp))}</span>, sortValue: (c) => c.reviewsPerApp, className: "text-right" },
-    { key: "leaders", header: "Leaders ★", render: (c) => (c.leaderRating === null ? dash : <span className="tabular-nums">{c.leaderRating.toFixed(2)}</span>), sortValue: (c) => c.leaderRating ?? 99, className: "text-right" },
-    { key: "low", header: "1–2★ share", render: (c) => (c.lowStarShare === null ? dash : <span className="tabular-nums">{c.lowStarShare.toFixed(1)}%</span>), sortValue: (c) => c.lowStarShare ?? -1, className: "text-right" },
-    { key: "top3", header: "Top-3 hold", render: (c) => <span className="tabular-nums">{pctText(c.top3Share)}</span>, sortValue: (c) => c.top3Share, className: "text-right" },
-    { key: "bfs", header: "Built for Shopify (top 10)", render: (c) => <span className="tabular-nums">{pctText(c.bfsShare)}</span>, sortValue: (c) => c.bfsShare, className: "text-right" },
-    { key: "break", header: "New breakouts", render: (c) => <span className="tabular-nums">{c.breakouts || "—"}</span>, sortValue: (c) => c.breakouts, className: "text-right" },
-    { key: "l12", header: "Launched 12 mo", render: (c) => <span className="tabular-nums">{c.launches12m || "—"}</span>, sortValue: (c) => c.launches12m, className: "text-right" },
-    { key: "pricing", header: "Pricing mix", render: (c) => <div className="w-24"><MixBar mix={c.pricing} /></div> },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (c) => <span className="tabular-nums">{num(c.reviews)}</span>,
+      sortValue: (c) => c.reviews,
+      className: "text-right",
+    },
+    {
+      key: "rpa",
+      header: "Reviews / app",
+      render: (c) => <span className="tabular-nums">{num(Math.round(c.reviewsPerApp))}</span>,
+      sortValue: (c) => c.reviewsPerApp,
+      className: "text-right",
+    },
+    {
+      key: "leaders",
+      header: "Leaders ★",
+      render: (c) => (c.leaderRating === null ? dash : <span className="tabular-nums">{c.leaderRating.toFixed(2)}</span>),
+      sortValue: (c) => c.leaderRating ?? 99,
+      className: "text-right",
+    },
+    {
+      key: "low",
+      header: "1–2★ share",
+      render: (c) => (c.lowStarShare === null ? dash : <span className="tabular-nums">{c.lowStarShare.toFixed(1)}%</span>),
+      sortValue: (c) => c.lowStarShare ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "top3",
+      header: "Top-3 hold",
+      render: (c) => <span className="tabular-nums">{pctText(c.top3Share)}</span>,
+      sortValue: (c) => c.top3Share,
+      className: "text-right",
+    },
+    {
+      key: "bfs",
+      header: "Built for Shopify (top 10)",
+      render: (c) => <span className="tabular-nums">{pctText(c.bfsShare)}</span>,
+      sortValue: (c) => c.bfsShare,
+      className: "text-right",
+    },
+    {
+      key: "break",
+      header: "New breakouts",
+      render: (c) => <span className="tabular-nums">{c.breakouts || "—"}</span>,
+      sortValue: (c) => c.breakouts,
+      className: "text-right",
+    },
+    {
+      key: "l12",
+      header: "Launched 12 mo",
+      render: (c) => <span className="tabular-nums">{c.launches12m || "—"}</span>,
+      sortValue: (c) => c.launches12m,
+      className: "text-right",
+    },
+    {
+      key: "pricing",
+      header: "Pricing mix",
+      render: (c) => (
+        <div className="w-24">
+          <MixBar mix={c.pricing} />
+        </div>
+      ),
+    },
   ];
 
   const appColumns: TableColumn<StoreApp>[] = [
@@ -490,22 +733,66 @@ export function ShopifyAppStoreTab() {
       key: "app",
       header: "App",
       render: (a) => (
-        <a href={a.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
+        <a
+          href={a.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50"
+        >
           {a.name}
           <ExternalLink className="h-3 w-3 text-zinc-400" aria-hidden />
         </a>
       ),
       sortValue: (a) => a.name.toLowerCase(),
     },
-    { key: "dev", header: "Developer", render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash), sortValue: (a) => (a.developer ?? "~").toLowerCase() },
-    { key: "stages", header: "Lifecycle stage", render: (a) => (a.stages.length ? <span className="text-xs">{a.stages.map(stageLabel).join(" · ")}</span> : dash) },
-    { key: "topics", header: "Topics", render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.topics.map((k) => TOPIC_LABEL[k]).join(", ") || "—"}</span> },
-    { key: "cats", header: "Categories", render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.categories.map((s) => labels?.[s] ?? s).join(", ") || "—"}</span> },
-    { key: "rating", header: "★", render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>), sortValue: (a) => a.rating ?? -1, className: "text-right" },
-    { key: "reviews", header: "Reviews", render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>, sortValue: (a) => a.reviewCount, className: "text-right" },
+    {
+      key: "dev",
+      header: "Developer",
+      render: (a) => (a.developer ? <span className="text-xs">{a.developer}</span> : dash),
+      sortValue: (a) => (a.developer ?? "~").toLowerCase(),
+    },
+    {
+      key: "stages",
+      header: "Lifecycle stage",
+      render: (a) => (a.stages.length ? <span className="text-xs">{a.stages.map(stageLabel).join(" · ")}</span> : dash),
+    },
+    {
+      key: "topics",
+      header: "Topics",
+      render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.topics.map((k) => TOPIC_LABEL[k]).join(", ") || "—"}</span>,
+    },
+    {
+      key: "cats",
+      header: "Categories",
+      render: (a) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{a.categories.map((s) => labels?.[s] ?? s).join(", ") || "—"}</span>,
+    },
+    {
+      key: "rating",
+      header: "★",
+      render: (a) => (a.rating === null ? dash : <span className="tabular-nums">{a.rating.toFixed(1)}</span>),
+      sortValue: (a) => a.rating ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (a) => <span className="tabular-nums">{num(a.reviewCount)}</span>,
+      sortValue: (a) => a.reviewCount,
+      className: "text-right",
+    },
     { key: "pricing", header: "Pricing", render: (a) => <span className="text-xs">{PRICING_LABEL[a.pricing]}</span>, sortValue: (a) => a.pricing },
-    { key: "bfs", header: "BFS", render: (a) => (a.builtForShopify ? <span className="text-xs font-medium text-status-pass-text">Yes</span> : dash), sortValue: (a) => (a.builtForShopify ? 1 : 0) },
-    { key: "launched", header: "Launched", render: (a) => (a.launchedAt ? <span className="text-xs tabular-nums">{a.launchedAt}</span> : dash), sortValue: (a) => a.launchedAt ?? "" },
+    {
+      key: "bfs",
+      header: "BFS",
+      render: (a) => (a.builtForShopify ? <span className="text-xs font-medium text-status-pass-text">Yes</span> : dash),
+      sortValue: (a) => (a.builtForShopify ? 1 : 0),
+    },
+    {
+      key: "launched",
+      header: "Launched",
+      render: (a) => (a.launchedAt ? <span className="text-xs tabular-nums">{a.launchedAt}</span> : dash),
+      sortValue: (a) => a.launchedAt ?? "",
+    },
   ];
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
@@ -520,8 +807,10 @@ export function ShopifyAppStoreTab() {
         <a href="https://apps.shopify.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           apps.shopify.com
         </a>
-        , grouped by the stage of a merchant&apos;s journey it makes easier rather than by Shopify&apos;s own categories. Each Shopify category is a &ldquo;job&rdquo;; the <strong>opportunity score</strong> (0–100) ranks the jobs by demand
-        (reviews), weak leaders, an open market and demand per competitor — see why for any category. A read takes roughly 25 minutes and is repeated daily; app pages (launch date, star split) are read 400 at a time, most-reviewed first.
+        , grouped by the stage of a merchant&apos;s journey it makes easier rather than by Shopify&apos;s own categories. Each Shopify category is a
+        &ldquo;job&rdquo;; the <strong>opportunity score</strong> (0–100) ranks the jobs by demand (reviews), weak leaders, an open market and demand per
+        competitor — see why for any category. A read takes roughly 25 minutes and is repeated daily; app pages (launch date, star split) are read 400 at a
+        time, most-reviewed first.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -540,7 +829,13 @@ export function ShopifyAppStoreTab() {
 
       {progress?.running && progress.phase && (
         <div className="flex flex-col gap-1">
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-xs text-zinc-500">
@@ -558,7 +853,8 @@ export function ShopifyAppStoreTab() {
       {data && data.detail.total > 0 && (
         <p className="text-xs text-zinc-500">
           App pages read in depth (features, plans, languages): {num(data.detail.read)} of {num(data.detail.total)}
-          {data.detail.backlog > 0 ? ` · ${num(data.detail.backlog)} waiting` : " · up to date"}. Scans run on their own while the server is up: the whole store daily, then app pages in batches (watched categories weekly, the rest monthly).
+          {data.detail.backlog > 0 ? ` · ${num(data.detail.backlog)} waiting` : " · up to date"}. Scans run on their own while the server is up: the whole store
+          daily, then app pages in batches (watched categories weekly, the rest monthly).
         </p>
       )}
       {(error || startError) && <p className="text-sm text-status-fail-text">{error ?? startError}</p>}
@@ -579,24 +875,42 @@ export function ShopifyAppStoreTab() {
                     onClick={() => openWatched(w.slug)}
                     className={`rounded-full border px-3 py-1 text-sm transition-colors ${open === w.slug && level === "category" ? "border-primary bg-primary-tint text-primary" : "border-border-subtle hover:border-zinc-400"}`}
                   >
-                    {w.label} <span className="tabular-nums text-xs text-zinc-500">{num(w.apps)} apps · {num(w.read)} read</span>
+                    {w.label}{" "}
+                    <span className="tabular-nums text-xs text-zinc-500">
+                      {num(w.apps)} apps · {num(w.read)} read
+                    </span>
                   </button>
                 ))}
               </div>
             )}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
               {analytics.stages.map((s, i) => (
-                <StageCard key={s.key} stage={s} index={i} years={analytics.launchYears} selected={stage === s.key} onSelect={() => setStage(stage === s.key ? "" : s.key)} />
+                <StageCard
+                  key={s.key}
+                  stage={s}
+                  index={i}
+                  years={analytics.launchYears}
+                  selected={stage === s.key}
+                  onSelect={() => setStage(stage === s.key ? "" : s.key)}
+                />
               ))}
             </div>
             <p className="text-xs text-zinc-500">
-              {num(analytics.coverage.apps)} apps. Launch dates and star splits are read for {coverage ? num(coverage.withDetails) : 0} so far ({coverage && coverage.apps ? Math.round((coverage.withDetails / coverage.apps) * 100) : 0}%) — newcomer and
-              1–2★ figures use only those. Pricing shows the free-tier label on each card (price points aren&apos;t comparable across currencies): <span className="text-emerald-600">free</span> ·{" "}
-              <span className="text-sky-600">free plan</span> · <span className="text-amber-600">free trial</span> · <span className="text-violet-600">paid</span>. {stage ? `Showing ${stageLabel(stage)} only — click it again to clear.` : "Click a stage to filter."}
+              {num(analytics.coverage.apps)} apps. Launch dates and star splits are read for {coverage ? num(coverage.withDetails) : 0} so far (
+              {coverage && coverage.apps ? Math.round((coverage.withDetails / coverage.apps) * 100) : 0}%) — newcomer and 1–2★ figures use only those. Pricing
+              shows the free-tier label on each card (price points aren&apos;t comparable across currencies): <span className="text-emerald-600">free</span> ·{" "}
+              <span className="text-sky-600">free plan</span> · <span className="text-amber-600">free trial</span> ·{" "}
+              <span className="text-violet-600">paid</span>.{" "}
+              {stage ? `Showing ${stageLabel(stage)} only — click it again to clear.` : "Click a stage to filter."}
             </p>
 
             <div role="tablist" aria-label="App Store views" className="flex gap-1 border-b border-border-subtle">
-              {([["opportunities", "Opportunities by category"], ["apps", "All apps"]] as const).map(([key, label]) => (
+              {(
+                [
+                  ["opportunities", "Opportunities by category"],
+                  ["apps", "All apps"],
+                ] as const
+              ).map(([key, label]) => (
                 <button
                   key={key}
                   type="button"
@@ -615,19 +929,43 @@ export function ShopifyAppStoreTab() {
                 <div className="flex flex-wrap items-center gap-3">
                   <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                     Group apps by
-                    <select value={level} onChange={(e) => { setLevel(e.target.value as Level); setOpen(null); }} aria-label="Grouping level" className={select}>
+                    <select
+                      value={level}
+                      onChange={(e) => {
+                        setLevel(e.target.value as Level);
+                        setOpen(null);
+                      }}
+                      aria-label="Grouping level"
+                      className={select}
+                    >
                       <option value="category">Shopify category</option>
                       <option value="niche">Niche (category › topic)</option>
                       <option value="topic">Topic across categories</option>
                     </select>
                   </label>
-                  <span className="text-xs text-zinc-500">{num(categories.length)} groups{level !== "category" ? " with at least 5 apps. Topics are read from each app’s name and tagline." : ""}</span>
+                  <span className="text-xs text-zinc-500">
+                    {num(categories.length)} groups{level !== "category" ? " with at least 5 apps. Topics are read from each app’s name and tagline." : ""}
+                  </span>
                 </div>
                 {openCategory && <WhyPanel category={openCategory} onClose={() => setOpen(null)} />}
                 {level === "category" && open && (
-                  <CategoryWorkspace slug={open} refreshKey={progress?.finishedAt ?? null} running={running} onRead={() => void startCategoryRead(open)} onWatchChanged={reload} onClose={() => setOpen(null)} />
+                  <CategoryWorkspace
+                    slug={open}
+                    refreshKey={progress?.finishedAt ?? null}
+                    running={running}
+                    onRead={() => void startCategoryRead(open)}
+                    onWatchChanged={reload}
+                    onClose={() => setOpen(null)}
+                  />
                 )}
-                <ResponsiveTable columns={opportunityColumns} rows={categories} rowKey={(c) => c.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} emptyMessage="No categories." />
+                <ResponsiveTable
+                  columns={opportunityColumns}
+                  rows={categories}
+                  rowKey={(c) => c.slug}
+                  theadClassName="bg-primary-tint text-primary-tint-text"
+                  pageSize={25}
+                  emptyMessage="No categories."
+                />
               </>
             ) : (
               <>
@@ -645,11 +983,13 @@ export function ShopifyAppStoreTab() {
                   </select>
                   <select value={topic} onChange={(e) => setTopic(e.target.value)} aria-label="Topic" className={select}>
                     <option value="">All topics</option>
-                    {Object.entries(TOPIC_LABEL).sort((a, b) => a[1].localeCompare(b[1])).map(([k, label]) => (
-                      <option key={k} value={k}>
-                        {label}
-                      </option>
-                    ))}
+                    {Object.entries(TOPIC_LABEL)
+                      .sort((a, b) => a[1].localeCompare(b[1]))
+                      .map(([k, label]) => (
+                        <option key={k} value={k}>
+                          {label}
+                        </option>
+                      ))}
                   </select>
                   <select value={pricing} onChange={(e) => setPricing(e.target.value as Pricing | "")} aria-label="Pricing" className={select}>
                     <option value="">Any pricing</option>
@@ -659,10 +999,24 @@ export function ShopifyAppStoreTab() {
                       </option>
                     ))}
                   </select>
-                  <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search app, developer or what it does" aria-label="Search" className="min-w-56 rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search app, developer or what it does"
+                    aria-label="Search"
+                    className="min-w-56 rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm"
+                  />
                   <span className="text-xs text-zinc-500">{num(shownApps.length)} apps</span>
                 </div>
-                <ResponsiveTable columns={appColumns} rows={shownApps} rowKey={(a) => a.handle} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={50} emptyMessage="No apps match." />
+                <ResponsiveTable
+                  columns={appColumns}
+                  rows={shownApps}
+                  rowKey={(a) => a.handle}
+                  theadClassName="bg-primary-tint text-primary-tint-text"
+                  pageSize={50}
+                  emptyMessage="No apps match."
+                />
               </>
             )}
           </>

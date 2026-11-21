@@ -21,7 +21,12 @@ describe.skipIf(!uri)("interrupted audit recovery (MongoDB)", () => {
   });
 
   const run = (status: string, startedMsAgo: number) =>
-    AuditRun.create({ themeId: new mongoose.Types.ObjectId(), status, startedAt: new Date(NOW.getTime() - startedMsAgo), currentStage: status === "running" ? "running_rules" : null });
+    AuditRun.create({
+      themeId: new mongoose.Types.ObjectId(),
+      status,
+      startedAt: new Date(NOW.getTime() - startedMsAgo),
+      currentStage: status === "running" ? "running_rules" : null,
+    });
 
   it("fails only runs stuck longer than an audit could take, then every running one at boot", async () => {
     const stuck = await run("running", STALE_AUDIT_MS + 60_000);

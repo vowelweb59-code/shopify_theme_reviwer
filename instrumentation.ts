@@ -16,7 +16,7 @@ export async function register() {
     } catch (err) {
       console.error("[git] could not report the token status:", err instanceof Error ? err.message : err);
     }
-    const starters:[string, () => Promise<void>][] = [
+    const starters: [string, () => Promise<void>][] = [
       ["audit-recovery", async () => (await import("./lib/audit/recovery")).startAuditRecovery()],
       ["demo-store", async () => (await import("./lib/demoStore/scheduler")).startDemoStoreScheduler()],
       ["theme-ranking", async () => (await import("./lib/themes/rankingScheduler")).startThemeRankingScheduler()],

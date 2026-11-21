@@ -32,7 +32,10 @@ describe("buildReportSpecs with a page filter", () => {
 
   it("filters every report to the theme's pages, case-insensitively", () => {
     for (const spec of specs) {
-      expect(spec.request.dimensionFilter!.andGroup!.expressions).toEqual([expect.objectContaining({ filter: expect.objectContaining({ fieldName: "eventName" }) }), pageFilter]);
+      expect(spec.request.dimensionFilter!.andGroup!.expressions).toEqual([
+        expect.objectContaining({ filter: expect.objectContaining({ fieldName: "eventName" }) }),
+        pageFilter,
+      ]);
     }
   });
 });
@@ -51,7 +54,12 @@ describe("estimateInstallRows", () => {
   it("splits each day's installs by that day's Try Theme share", () => {
     const rows = estimateInstallRows(
       [themeRow("2026-09-01", "add_to_cart", 30), themeRow("2026-09-02", "add_to_cart", 5)],
-      [propertyRow("2026-09-01", "add_to_cart", 40), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 4), propertyRow("2026-09-02", "add_to_cart", 5), propertyRow("2026-09-02", PRIMARY_EVENTS.themeInstall, 2)]
+      [
+        propertyRow("2026-09-01", "add_to_cart", 40),
+        propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 4),
+        propertyRow("2026-09-02", "add_to_cart", 5),
+        propertyRow("2026-09-02", PRIMARY_EVENTS.themeInstall, 2),
+      ]
     );
     expect(rows.map((r) => [r.date, r.metrics.eventCount])).toEqual([
       ["2026-09-01", 3],
@@ -61,7 +69,10 @@ describe("estimateInstallRows", () => {
   });
 
   it("gives the theme nothing on a day only the other theme had Try Theme clicks", () => {
-    const rows = estimateInstallRows([themeRow("2026-09-02", "add_to_cart", 10)], [propertyRow("2026-09-01", "add_to_cart", 8), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 1), propertyRow("2026-09-02", "add_to_cart", 10)]);
+    const rows = estimateInstallRows(
+      [themeRow("2026-09-02", "add_to_cart", 10)],
+      [propertyRow("2026-09-01", "add_to_cart", 8), propertyRow("2026-09-01", PRIMARY_EVENTS.themeInstall, 1), propertyRow("2026-09-02", "add_to_cart", 10)]
+    );
     expect(rows).toEqual([]);
   });
 
@@ -114,7 +125,9 @@ describe("runFullReport", () => {
     ]);
     expect(result.subjectToThresholding).toBe(true);
     expect(runReport).toHaveBeenCalledTimes(2);
-    expect(runReport.mock.calls[1]).toEqual([expect.objectContaining({ property: "properties/123456789", requestBody: expect.objectContaining({ offset: "100000" }) })]);
+    expect(runReport.mock.calls[1]).toEqual([
+      expect.objectContaining({ property: "properties/123456789", requestBody: expect.objectContaining({ offset: "100000" }) }),
+    ]);
   });
 
   it("retries a momentary failure, then succeeds", async () => {

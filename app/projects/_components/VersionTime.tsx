@@ -83,7 +83,9 @@ function VersionDetails({ row }: { row: Row }) {
       )}
 
       <section>
-        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{row.inProgress ? "Reported so far" : "Reported by our developers"}</h4>
+        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+          {row.inProgress ? "Reported so far" : "Reported by our developers"}
+        </h4>
         {row.reports.length === 0 ? (
           <p className="text-sm text-zinc-400">No reports with a description in this period.</p>
         ) : (
@@ -170,10 +172,16 @@ export function VersionTime({ projectId }: { projectId: string }) {
                   <th className="w-6 py-1.5" />
                   <th className="py-1.5 pr-3 font-medium">Version</th>
                   <th className="py-1.5 pr-3 font-medium">Released</th>
-                  <th className="py-1.5 pr-3 text-right font-medium" title="Days between the previous release and this one">Days between</th>
-                  <th className="py-1.5 pr-3 text-right font-medium" title="Days on which a developer logged time">Days worked</th>
+                  <th className="py-1.5 pr-3 text-right font-medium" title="Days between the previous release and this one">
+                    Days between
+                  </th>
+                  <th className="py-1.5 pr-3 text-right font-medium" title="Days on which a developer logged time">
+                    Days worked
+                  </th>
                   <th className="py-1.5 pr-3 text-right font-medium">Hours</th>
-                  <th className="py-1.5 pr-3 text-right font-medium" title="Hours as working days at 8.5 h per day">Effort (days)</th>
+                  <th className="py-1.5 pr-3 text-right font-medium" title="Hours as working days at 8.5 h per day">
+                    Effort (days)
+                  </th>
                   <th className="py-1.5 font-medium">Who</th>
                 </tr>
               </thead>
@@ -203,15 +211,21 @@ export function VersionTime({ projectId }: { projectId: string }) {
                           {r.inProgress ? (
                             <span className="inline-flex items-center gap-1.5">
                               {r.version}
-                              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">in progress</span>
+                              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                                in progress
+                              </span>
                             </span>
                           ) : (
                             r.version
                           )}
                         </td>
-                        <td className="py-2 pr-3 text-zinc-600 dark:text-zinc-300">{r.releasedOn ? formatDateOnly(r.releasedOn) : r.since ? `after ${formatDateOnly(r.since)}` : "—"}</td>
+                        <td className="py-2 pr-3 text-zinc-600 dark:text-zinc-300">
+                          {r.releasedOn ? formatDateOnly(r.releasedOn) : r.since ? `after ${formatDateOnly(r.since)}` : "—"}
+                        </td>
                         <td className="py-2 pr-3 text-right tabular-nums">{r.calendarDays ?? "—"}</td>
-                        <td className="py-2 pr-3 text-right font-semibold tabular-nums">{noLog ? <span className="font-normal text-zinc-400">—</span> : r.daysWorked}</td>
+                        <td className="py-2 pr-3 text-right font-semibold tabular-nums">
+                          {noLog ? <span className="font-normal text-zinc-400">—</span> : r.daysWorked}
+                        </td>
                         <td className="py-2 pr-3 text-right tabular-nums">{noLog ? <span className="text-zinc-400">—</span> : r.hours}</td>
                         <td className="py-2 pr-3 text-right tabular-nums">{noLog ? <span className="text-zinc-400">—</span> : r.effortDays}</td>
                         <td className="py-2 text-xs text-zinc-600 dark:text-zinc-300">
@@ -242,13 +256,15 @@ export function VersionTime({ projectId }: { projectId: string }) {
           </div>
           {data.undated.length > 0 && (
             <p className="text-xs text-zinc-500">
-              The Theme Store shows no release date for {data.undated.join(", ")}, so {data.undated.length === 1 ? "its" : "their"} work is counted in the next dated release.
+              The Theme Store shows no release date for {data.undated.join(", ")}, so {data.undated.length === 1 ? "its" : "their"} work is counted in the next
+              dated release.
             </p>
           )}
           <p className="text-xs text-zinc-500">
             Based on {data.entryCount} logged entr{data.entryCount === 1 ? "y" : "ies"} in this project&apos;s hours log
             {data.refreshedAt ? `; release dates and notes read from the Theme Store on ${formatDateOnly(data.refreshedAt)}` : ""}.
-            {data.firstEntryOn ? ` Reports start on ${formatDateOnly(data.firstEntryOn)}; earlier releases show "—".` : ""} Work logged before the first listed release is counted in it.
+            {data.firstEntryOn ? ` Reports start on ${formatDateOnly(data.firstEntryOn)}; earlier releases show "—".` : ""} Work logged before the first listed
+            release is counted in it.
           </p>
         </div>
       )}

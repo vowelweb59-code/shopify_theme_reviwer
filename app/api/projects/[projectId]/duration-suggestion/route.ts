@@ -21,8 +21,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
 
   // A preset project is measured by the preset reports linked to it; a theme project by its theme's new-theme reports.
   const scope = project.type === "preset_development" ? { projectId, kind: "preset" } : { themeId: project.themeId, kind: "theme" };
-  const reports = await ChatReport.find({ ...scope, status: "ok" }).select("memberId minutes date").lean();
-  const members = await TeamMember.find({ _id: { $in: reports.map((r) => r.memberId) } }).select("designation").lean();
+  const reports = await ChatReport.find({ ...scope, status: "ok" })
+    .select("memberId minutes date")
+    .lean();
+  const members = await TeamMember.find({ _id: { $in: reports.map((r) => r.memberId) } })
+    .select("designation")
+    .lean();
   const designation = new Map(members.map((m) => [String(m._id), m.designation as string]));
 
   const suggestion = suggestDurations(reports.map((r) => ({ minutes: r.minutes, designation: designation.get(String(r.memberId)) ?? null })));

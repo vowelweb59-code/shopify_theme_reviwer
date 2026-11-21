@@ -26,7 +26,11 @@ export async function memo<T>(key: string, ttlMs: number, load: () => Promise<T>
   );
   store.set(key, { at: Date.now(), promise });
   if (store.size > MAX_ENTRIES) {
-    for (const [k, e] of store) if (!e.promise) { store.delete(k); if (store.size <= MAX_ENTRIES) break; }
+    for (const [k, e] of store)
+      if (!e.promise) {
+        store.delete(k);
+        if (store.size <= MAX_ENTRIES) break;
+      }
   }
   return promise;
 }

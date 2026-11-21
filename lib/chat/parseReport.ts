@@ -41,12 +41,16 @@ export function parseReport(text: string, postedOn?: string): Result<ParsedRepor
     const [day, year] = [Number(date[1]), Number(date[3])];
     iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const check = new Date(`${iso}T00:00:00.000Z`);
-    if (month === 0 || Number.isNaN(check.getTime()) || check.toISOString().slice(0, 10) !== iso) return { ok: false, error: `"${date[1]}-${date[2]}-${date[3]}" is not a real date.` };
+    if (month === 0 || Number.isNaN(check.getTime()) || check.toISOString().slice(0, 10) !== iso)
+      return { ok: false, error: `"${date[1]}-${date[2]}-${date[3]}" is not a real date.` };
   } else if (!iso) return { ok: false, error: "No date found." };
 
   const theme = THEME_RE.exec(text);
   // "|" separates the parts; some people type a capital "I" between spaces instead ("Voltix I Clothing").
-  const themeParts = (theme?.[1] ?? "").split(/\s*\|\s*|\s+I\s+/).map((p) => p.trim()).filter(Boolean);
+  const themeParts = (theme?.[1] ?? "")
+    .split(/\s*\|\s*|\s+I\s+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (themeParts.length === 0) return { ok: false, error: "No theme name found." };
 
   const timer = TIMER_RE.exec(text);
@@ -86,6 +90,10 @@ export function splitThemes(report: string): string[] {
   const parts = themeStarts.map((start, i) => report.slice(start, themeStarts[i + 1] ?? report.length).trim());
   // Only when every theme has its own timer; otherwise it is one report that happens to mention "Theme Name" twice.
   if (!parts.every((part) => TIMER_RE.test(part))) return [report];
-  return parts.map((part) => (header ? `${header}
-${part}` : part));
+  return parts.map((part) =>
+    header
+      ? `${header}
+${part}`
+      : part
+  );
 }

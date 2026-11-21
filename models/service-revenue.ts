@@ -19,4 +19,5 @@ const serviceRevenueTakenSchema = new Schema(
 
 export type ServiceRevenueTakenDoc = InferSchemaType<typeof serviceRevenueTakenSchema> & { _id: string };
 export const ServiceRevenueTaken: mongoose.Model<ServiceRevenueTakenDoc> =
-  (mongoose.models.ServiceRevenueTaken as mongoose.Model<ServiceRevenueTakenDoc>) || mongoose.model<ServiceRevenueTakenDoc>("ServiceRevenueTaken", serviceRevenueTakenSchema);
+  (mongoose.models.ServiceRevenueTaken as mongoose.Model<ServiceRevenueTakenDoc>) ||
+  mongoose.model<ServiceRevenueTakenDoc>("ServiceRevenueTaken", serviceRevenueTakenSchema);

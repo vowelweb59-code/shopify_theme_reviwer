@@ -7,7 +7,12 @@ import { createOAuthState } from "@/lib/analytics/oauthState";
 // to directly (not fetched) so the browser follows Google's redirects.
 export async function GET(request: Request) {
   if (!isChatConfigured()) {
-    return NextResponse.redirect(chatReturnUrl(request.url, { chat: "error", chatError: "Google Chat isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL)." }));
+    return NextResponse.redirect(
+      chatReturnUrl(request.url, {
+        chat: "error",
+        chatError: "Google Chat isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL).",
+      })
+    );
   }
   const state = createOAuthState();
   const response = NextResponse.redirect(buildChatAuthUrl(state));

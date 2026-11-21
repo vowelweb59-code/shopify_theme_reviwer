@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseDateOnly, parseDays, parseProjectFields, parseProjectMembers, parsePortal, parseProjectType, parseTeamMemberInput, parseTimeEntryInput } from "./sanitize";
+import {
+  parseDateOnly,
+  parseDays,
+  parseProjectFields,
+  parseProjectMembers,
+  parsePortal,
+  parseProjectType,
+  parseTeamMemberInput,
+  parseTimeEntryInput,
+} from "./sanitize";
 
 const ID_A = "507f1f77bcf86cd799439011";
 const ID_B = "507f1f77bcf86cd799439012";

@@ -131,5 +131,4 @@ enhancementPointSchema.index({ adoptionTier: 1, themeCount: -1 });
 
 export type EnhancementPointDoc = InferSchemaType<typeof enhancementPointSchema>;
 
-export const EnhancementPoint =
-  models.EnhancementPoint ?? model("EnhancementPoint", enhancementPointSchema);
+export const EnhancementPoint = models.EnhancementPoint ?? model("EnhancementPoint", enhancementPointSchema);

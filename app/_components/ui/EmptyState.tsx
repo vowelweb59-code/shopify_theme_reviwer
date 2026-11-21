@@ -2,17 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Inbox, AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function EmptyState({
-  icon: Icon = Inbox,
-  title,
-  description,
-  action,
-}: {
-  icon?: LucideIcon;
-  title: string;
-  description?: string;
-  action?: ReactNode;
-}) {
+export function EmptyState({ icon: Icon = Inbox, title, description, action }: { icon?: LucideIcon; title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-subtle p-10 text-center">
       <Icon className="h-8 w-8 text-zinc-400" aria-hidden />

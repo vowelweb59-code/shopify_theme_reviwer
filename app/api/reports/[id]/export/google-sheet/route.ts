@@ -53,9 +53,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     .limit(1)
     .lean();
   const baselineFindings =
-    baselineRuns.length > 0
-      ? withRuleCitations((await Finding.find({ auditRunId: baselineRuns[0]._id }).lean()) as unknown as SheetChecklistFinding[])
-      : [];
+    baselineRuns.length > 0 ? withRuleCitations((await Finding.find({ auditRunId: baselineRuns[0]._id }).lean()) as unknown as SheetChecklistFinding[]) : [];
 
   const diff = computeFindingsDiff<SheetChecklistFinding>(baselineFindings, currentFindings);
   const freshTabs = buildChecklistSheetTabs(id, theme.name, diff.findings);
@@ -73,9 +71,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     enhancementPoints
   );
   const futureUpdatesTab =
-    futureUpdatesPoints.length > 0
-      ? withFutureUpdatesFormatting(buildFutureUpdatesTab(futureUpdatesPoints as unknown as SheetFutureUpdatesPoint[]))
-      : null;
+    futureUpdatesPoints.length > 0 ? withFutureUpdatesFormatting(buildFutureUpdatesTab(futureUpdatesPoints as unknown as SheetFutureUpdatesPoint[])) : null;
 
   let tabsToWrite: SheetTab[] = freshTabs;
   let reused = false;
@@ -90,10 +86,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       } else if (err instanceof GoogleSheetsNotConnectedError) {
         return NextResponse.json({ error: err.message }, { status: 409 });
       } else {
-        return NextResponse.json(
-          { error: sheetsErrorMessage("Failed to reach the existing Google Sheet", err) },
-          { status: 502 }
-        );
+        return NextResponse.json({ error: sheetsErrorMessage("Failed to reach the existing Google Sheet", err) }, { status: 502 });
       }
     }
 
@@ -146,10 +139,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     if (err instanceof GoogleSheetsNotConnectedError) {
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
-    return NextResponse.json(
-      { error: sheetsErrorMessage("Failed to update the Google Sheet", err) },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: sheetsErrorMessage("Failed to update the Google Sheet", err) }, { status: 502 });
   }
 }
 

@@ -27,7 +27,13 @@ const valid = (y: number, m: number, d: number) => {
  * service import does (lib/service/import/text.ts), so "José" in a leave post matches "Jose" in a time report.
  */
 export function normalizeName(name: string): string {
-  return name.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  return name
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 type Token = { day: number; month: number | null; year: number | null; start: number; end: number; suffix: boolean };
@@ -47,7 +53,7 @@ export function parseDates(text: string, postedAt: Date): string[] {
   }
   tokens.sort((a, b) => a.start - b.start);
   // Drop tokens swallowed by a numeric date, and day-only numbers that are not dates ("for 2 days").
-  const kept = tokens.filter((t, i) => !tokens.some((o, j) => j !== i && o.start <= t.start && o.end >= t.end && (o.end - o.start > t.end - t.start)));
+  const kept = tokens.filter((t, i) => !tokens.some((o, j) => j !== i && o.start <= t.start && o.end >= t.end && o.end - o.start > t.end - t.start));
   // A day without a month takes the next dated token's month and year ("16th & 17th Nov 2026").
   const filled: Token[] = [];
   for (let i = 0; i < kept.length; i++) {

@@ -22,11 +22,21 @@ export type Round = {
 
 type RoundMemberOf = { memberId: unknown; role?: string | null };
 type RoundOf = { status: string; rejectionStage?: string | null; rejectionType?: string | null; members: RoundMemberOf[] };
-type RoundsOf = { _id?: unknown; themeId?: unknown; name?: string; status: string | null; rejectionStage?: string | null; rejectionType?: string | null; members: RoundMemberOf[]; rounds?: RoundOf[] };
+type RoundsOf = {
+  _id?: unknown;
+  themeId?: unknown;
+  name?: string;
+  status: string | null;
+  rejectionStage?: string | null;
+  rejectionType?: string | null;
+  members: RoundMemberOf[];
+  rounds?: RoundOf[];
+};
 
 /** How much of a rejection counts against a member's success rate: an internal rejection counts half for a Team Lead (their role on the round, or their designation), everything else in full. */
 export const INTERNAL_REJECTION_TEAM_LEAD_WEIGHT = 0.5;
-const isTeamLead = (role: string | null | undefined, designation: string | undefined) => /team\s*lead/i.test(role ?? "") || /team\s*lead/i.test(designation ?? "");
+const isTeamLead = (role: string | null | undefined, designation: string | undefined) =>
+  /team\s*lead/i.test(role ?? "") || /team\s*lead/i.test(designation ?? "");
 export function rejectionWeight(round: { rejectionType?: string | null }, role: string | null | undefined, designation: string | undefined): number {
   return round.rejectionType === "internal" && isTeamLead(role, designation) ? INTERNAL_REJECTION_TEAM_LEAD_WEIGHT : 1;
 }
@@ -37,7 +47,13 @@ export function isExcludedFromRound(round: { status: string; rejectionStage?: st
 }
 
 /** One decided round a member was on: which project, and which of its rounds when it has several. */
-export type OutcomeEntry = { projectId: string; name: string; round: number | null; /** Rejected rounds only: who rejected it. */ rejectionType?: RejectionType | null; /** Rejected rounds only: how much of it counted (0.5 for a Team Lead's internal rejection). */ weight?: number };
+export type OutcomeEntry = {
+  projectId: string;
+  name: string;
+  round: number | null;
+  /** Rejected rounds only: who rejected it. */ rejectionType?: RejectionType | null;
+  /** Rejected rounds only: how much of it counted (0.5 for a Team Lead's internal rejection). */ weight?: number;
+};
 /** `rejected` is the number of rejected rounds; `rejectedWeight` is what they count for in the success rate (see rejectionWeight). */
 export type Outcomes = { approved: number; rejected: number; rejectedWeight: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
 
@@ -58,7 +74,10 @@ export function countOutcomes(projects: RoundsOf[], designationById: Map<string,
   const out = new Map<string, Outcomes>();
   for (const project of projects) {
     const earlier = project.rounds ?? [];
-    const all: RoundOf[] = [...earlier, { status: project.status ?? "", rejectionStage: project.rejectionStage, rejectionType: project.rejectionType, members: project.members }];
+    const all: RoundOf[] = [
+      ...earlier,
+      { status: project.status ?? "", rejectionStage: project.rejectionStage, rejectionType: project.rejectionType, members: project.members },
+    ];
     all.forEach((round, i) => {
       if (round.status !== "live" && round.status !== "rejected") return;
       const baseEntry: OutcomeEntry = { projectId: String(project._id ?? ""), name: project.name ?? "", round: earlier.length > 0 ? i + 1 : null };
@@ -95,7 +114,9 @@ export function successRate(tally: { approved: number; rejected: number; rejecte
 }
 
 /** Rejections per member: a round counts when its status is Rejected, for everyone on that round. */
-export function countRejections(projects: { status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] }[]): Map<string, number> {
+export function countRejections(
+  projects: { status: string | null; members: { memberId: unknown }[]; rounds?: { status: string; members: { memberId: unknown }[] }[] }[]
+): Map<string, number> {
   const counts = new Map<string, number>();
   for (const project of projects) {
     for (const round of [...(project.rounds ?? []), { status: project.status ?? "", members: project.members }]) {

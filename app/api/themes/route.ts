@@ -28,7 +28,9 @@ export async function GET(request: Request) {
   // ?unreleased=1 also lists the themes that are not on the Theme Store (yet): themes under development, whose Theme Store
   // readiness the owner wants to check before they are submitted.
   const unreleased = new URL(request.url).searchParams.get("unreleased") === "1";
-  const themes = await Theme.find(unreleased ? {} : { themeStoreLive: { $ne: false } }).sort({ name: 1 }).lean();
+  const themes = await Theme.find(unreleased ? {} : { themeStoreLive: { $ne: false } })
+    .sort({ name: 1 })
+    .lean();
   const themeIds = themes.map((t) => t._id);
   const versions = await ThemeVersion.find({ themeId: { $in: themeIds } }).lean();
 
@@ -144,8 +146,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json(
-    { theme, themeVersion: result.themeVersion, themeZip: result.themeZip, reusedZip: result.reusedZip },
-    { status: 201 }
-  );
+  return NextResponse.json({ theme, themeVersion: result.themeVersion, themeZip: result.themeZip, reusedZip: result.reusedZip }, { status: 201 });
 }

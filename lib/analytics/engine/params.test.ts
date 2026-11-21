@@ -33,11 +33,19 @@ describe("parseBreakdownQuery", () => {
   it("needs a known dimension, and has sort/paging defaults", () => {
     expect(() => parseBreakdownQuery(qs(""))).toThrow(/dimension is required/);
     expect(() => parseBreakdownQuery(qs("dimension=planet"))).toThrow(/dimension is required/);
-    expect(parseBreakdownQuery(qs("dimension=device"))).toMatchObject({ dimension: "device", groupDims: ["deviceCategory"], sort: "installs", order: "desc", limit: 25, offset: 0 });
+    expect(parseBreakdownQuery(qs("dimension=device"))).toMatchObject({
+      dimension: "device",
+      groupDims: ["deviceCategory"],
+      sort: "installs",
+      order: "desc",
+      limit: 25,
+      offset: 0,
+    });
   });
 
   it("no longer offers city, browser or OS", () => {
-    for (const dimension of ["city", "browser", "os", "source", "channel"]) expect(() => parseBreakdownQuery(qs(`dimension=${dimension}`))).toThrow(/dimension is required/);
+    for (const dimension of ["city", "browser", "os", "source", "channel"])
+      expect(() => parseBreakdownQuery(qs(`dimension=${dimension}`))).toThrow(/dimension is required/);
   });
 
   it.each(["limit=0", "limit=101", "limit=2.5", "offset=-1", "sort=revenue", "sort=users", "order=up"])("rejects %s", (extra) => {
@@ -61,5 +69,4 @@ describe("filters", () => {
     expect(() => breakdownFor(["country", "deviceCategory"])).toThrow(FilterError);
     expect(() => breakdownFor(["country", "deviceCategory"])).toThrow(/country \+ device can't be combined/);
   });
-
 });

@@ -7,7 +7,10 @@ import { connectToDatabase } from "@/lib/db/connect";
 
 /** A failure the caller should see: 400 (bad input), 404 (missing), 409 (conflict). */
 export class ServiceError extends Error {
-  constructor(public readonly status: 400 | 404 | 409, message: string) {
+  constructor(
+    public readonly status: 400 | 404 | 409,
+    message: string
+  ) {
     super(message);
     this.name = "ServiceError";
   }
@@ -22,7 +25,7 @@ export async function handle<T>(fn: () => Promise<T>, status = 200): Promise<Nex
     return NextResponse.json(await fn(), { status });
   } catch (err) {
     if (err instanceof ServiceError) return NextResponse.json({ error: err.message }, { status: err.status });
-    console.error("[service api]", err instanceof Error ? err.stack ?? err.message : err);
+    console.error("[service api]", err instanceof Error ? (err.stack ?? err.message) : err);
     return NextResponse.json({ error: "Something went wrong on the server." }, { status: 500 });
   }
 }
@@ -81,7 +84,8 @@ export function isoDay(v: unknown, field: string, { optional = true } = {}): Dat
     if (optional) return null;
     throw badRequest(`${field} is required.`);
   }
-  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`))) throw badRequest(`${field} must be a date (YYYY-MM-DD).`);
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`)))
+    throw badRequest(`${field} must be a date (YYYY-MM-DD).`);
   return new Date(`${v}T00:00:00Z`);
 }
 

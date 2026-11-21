@@ -1,6 +1,6 @@
 // Matches a Chat sender to a platform user by display name. Deliberately strict: only an exact normalised full-name
 // match to exactly one active user counts. Anything else stays unmatched until someone links it by hand.
-import { normalizeName } from './text';
+import { normalizeName } from "./text";
 
 export interface MatchableUser {
   id: string;

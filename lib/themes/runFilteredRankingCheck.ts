@@ -42,7 +42,10 @@ export async function runFilteredRankingCheck(filter: HydratedDocument<ThemeRank
     for (const theme of listed) {
       const slug = theme.themeStoreSlug as string;
       const found = rankings.get(slug) ?? [];
-      const presetNameBySlug = new Map<string, string>([[slug, theme.name], ...(theme.themeStorePresets ?? []).map((p: { slug: string; name: string }) => [p.slug, p.name] as const)]);
+      const presetNameBySlug = new Map<string, string>([
+        [slug, theme.name],
+        ...(theme.themeStorePresets ?? []).map((p: { slug: string; name: string }) => [p.slug, p.name] as const),
+      ]);
       for (const entry of found) {
         const key = `${theme._id}/${entry.presetSlug}`;
         matchedKeys.add(key);

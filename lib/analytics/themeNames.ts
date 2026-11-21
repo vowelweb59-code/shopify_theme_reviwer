@@ -5,7 +5,9 @@ import { Theme } from "@/models/theme";
 export async function themeNames(theme: { name: string; themeId?: { toString(): string } | null }): Promise<string[]> {
   const names = [theme.name];
   if (theme.themeId) {
-    const audited = await Theme.findById(theme.themeId).select("name themeStorePresets").lean<{ name: string; themeStorePresets?: { name: string }[] } | null>();
+    const audited = await Theme.findById(theme.themeId)
+      .select("name themeStorePresets")
+      .lean<{ name: string; themeStorePresets?: { name: string }[] } | null>();
     if (audited) names.push(audited.name, ...(audited.themeStorePresets ?? []).map((p) => p.name));
   }
   return names;

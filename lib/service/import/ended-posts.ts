@@ -9,8 +9,19 @@ export interface HeldProject {
   /** Other open projects of the same client (a post that names no profile cannot choose between them). */
   siblings: number;
 }
-export interface EndedPostLite { client: string; rating: number | null; profileId: string | null; profileText: string | null; posted: Date; ref: string }
-export interface AcceptedPostLite { client: string; profileId: string | null; posted: Date }
+export interface EndedPostLite {
+  client: string;
+  rating: number | null;
+  profileId: string | null;
+  profileText: string | null;
+  posted: Date;
+  ref: string;
+}
+export interface AcceptedPostLite {
+  client: string;
+  profileId: string | null;
+  posted: Date;
+}
 
 export interface ClosurePlan {
   close: Array<{ projectId: string; name: string; endedOn: Date; rating: number | null; ref: string }>;
@@ -30,13 +41,25 @@ export function planClosures(held: HeldProject[], ended: EndedPostLite[], accept
   for (const p of held) {
     const keys = new Set(p.clientNames.map(nameKey));
     const ofClient = ended.filter((e) => keys.has(nameKey(e.client)));
-    if (ofClient.length === 0) { out.noPost.push(p.name); continue; }
+    if (ofClient.length === 0) {
+      out.noPost.push(p.name);
+      continue;
+    }
     const fits = ofClient.filter((e) => compatible(e.profileId, p.profileId));
-    if (fits.length === 0) { out.skipped.push({ name: p.name, why: `the ended post names another profile (${ofClient[0].profileText ?? "unknown"})` }); continue; }
+    if (fits.length === 0) {
+      out.skipped.push({ name: p.name, why: `the ended post names another profile (${ofClient[0].profileText ?? "unknown"})` });
+      continue;
+    }
     const post = [...fits].sort((a, b) => +b.posted - +a.posted)[0];
-    if (!post.profileId && p.siblings > 0) { out.skipped.push({ name: p.name, why: `the client has ${p.siblings + 1} open projects and the post (${day(post.posted)}) names no profile` }); continue; }
+    if (!post.profileId && p.siblings > 0) {
+      out.skipped.push({ name: p.name, why: `the client has ${p.siblings + 1} open projects and the post (${day(post.posted)}) names no profile` });
+      continue;
+    }
     const again = accepted.find((a) => keys.has(nameKey(a.client)) && compatible(a.profileId, p.profileId) && a.posted > post.posted);
-    if (again) { out.skipped.push({ name: p.name, why: `an Accepted post of ${day(again.posted)} came after the ended post of ${day(post.posted)}: it restarted` }); continue; }
+    if (again) {
+      out.skipped.push({ name: p.name, why: `an Accepted post of ${day(again.posted)} came after the ended post of ${day(post.posted)}: it restarted` });
+      continue;
+    }
     out.close.push({ projectId: p.id, name: p.name, endedOn: post.posted, rating: post.rating, ref: post.ref });
   }
   return out;

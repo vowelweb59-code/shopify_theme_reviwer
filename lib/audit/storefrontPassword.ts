@@ -76,7 +76,11 @@ export async function loginToStorefront(anyUrl: string, password: string, resolv
     if (!isPasswordPage(html)) return { ok: true, session: null };
 
     const body = new URLSearchParams({ form_type: "storefront_password", utf8: "✓", ...parseHiddenInputs(html), password });
-    const post = await send(`${origin}/password`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", Cookie: cookie() }, body: body.toString() }, resolve);
+    const post = await send(
+      `${origin}/password`,
+      { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", Cookie: cookie() }, body: body.toString() },
+      resolve
+    );
     remember(post);
 
     // Proof: the home page, read with the cookie we now hold, must not be the password page.

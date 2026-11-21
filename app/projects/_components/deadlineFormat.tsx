@@ -3,7 +3,8 @@ import type { DeadlineInfo } from "@/lib/projects/deadlines";
 // Shared by the Deadlines page and each project's Deadline card, so both say the same thing.
 
 /** "2026-10-29" -> "Oct 29, 2026"; the stored day is a calendar date, so no time zone shift. */
-export const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+export const day = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 export const plural = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
 
 type Timing = Pick<DeadlineInfo, "state" | "daysLeft" | "lateByDays"> & { deadline?: string | null; averageDeadline?: string | null };

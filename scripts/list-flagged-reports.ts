@@ -8,7 +8,16 @@ import { connectToDatabase } from "../lib/db/connect";
 import { reprocessFlaggedReports } from "../lib/chat/importReports";
 import { ChatReport } from "../models/chat-report";
 
-type Row = { sender?: string; date?: Date; minutes: number; themeName?: string; kind?: string | null; preset?: string | null; reason?: string | null; locked?: boolean };
+type Row = {
+  sender?: string;
+  date?: Date;
+  minutes: number;
+  themeName?: string;
+  kind?: string | null;
+  preset?: string | null;
+  reason?: string | null;
+  locked?: boolean;
+};
 
 async function main() {
   const mongoose = await connectToDatabase();
@@ -26,7 +35,9 @@ async function main() {
     console.log(`== ${reason}  (${list.length}, ${(list.reduce((s, r) => s + r.minutes, 0) / 60).toFixed(1)} h)`);
     for (const r of list) {
       const day = r.date ? new Date(r.date).toISOString().slice(0, 10) : "?";
-      console.log(`   ${day}  ${(r.sender ?? "?").padEnd(22)} ${(r.minutes / 60).toFixed(1).padStart(4)} h  "${r.themeName ?? ""}"${r.locked ? "  [locked]" : ""}`);
+      console.log(
+        `   ${day}  ${(r.sender ?? "?").padEnd(22)} ${(r.minutes / 60).toFixed(1).padStart(4)} h  "${r.themeName ?? ""}"${r.locked ? "  [locked]" : ""}`
+      );
     }
     console.log("");
   }

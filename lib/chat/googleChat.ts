@@ -69,17 +69,26 @@ export async function exchangeChatCode(code: string, client: OAuth2Client = crea
   } catch {
     throw new ChatOAuthError("token_exchange_failed", "Google rejected the sign-in. Try connecting again.");
   }
-  if (!tokens.access_token || !tokens.expiry_date) throw new ChatOAuthError("token_exchange_failed", "Google returned an incomplete token set. Try connecting again.");
+  if (!tokens.access_token || !tokens.expiry_date)
+    throw new ChatOAuthError("token_exchange_failed", "Google returned an incomplete token set. Try connecting again.");
 
   const scopes = (tokens.scope ?? "").split(/\s+/).filter(Boolean);
-  if (!scopes.includes(CHAT_MESSAGES_SCOPE)) throw new ChatOAuthError("missing_scope", "Reading Chat messages wasn't granted. Reconnect and leave every checkbox ticked.");
+  if (!scopes.includes(CHAT_MESSAGES_SCOPE))
+    throw new ChatOAuthError("missing_scope", "Reading Chat messages wasn't granted. Reconnect and leave every checkbox ticked.");
 
   if (!tokens.id_token) throw new ChatOAuthError("invalid_identity", "Google didn't identify the account. Try connecting again.");
   const ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: client._clientId }).catch(() => null);
   const payload = ticket?.getPayload();
   if (!payload?.sub || !payload.email) throw new ChatOAuthError("invalid_identity", "Couldn't verify which Google account signed in. Try connecting again.");
 
-  return { googleAccountId: payload.sub, email: payload.email, accessToken: tokens.access_token, refreshToken: tokens.refresh_token ?? null, expiryDate: new Date(tokens.expiry_date), scopes };
+  return {
+    googleAccountId: payload.sub,
+    email: payload.email,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token ?? null,
+    expiryDate: new Date(tokens.expiry_date),
+    scopes,
+  };
 }
 
 // --- reading the space -------------------------------------------------------
@@ -105,7 +114,11 @@ export async function listMemberNames(space: string, accessToken: string, fetche
   const names = new Map<string, string>();
   let pageToken = "";
   for (let page = 0; page < MAX_PAGES; page++) {
-    const data = (await getJson(fetcher, `${API}/spaces/${space}/members?pageSize=1000${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`, accessToken)) as {
+    const data = (await getJson(
+      fetcher,
+      `${API}/spaces/${space}/members?pageSize=1000${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+      accessToken
+    )) as {
       memberships?: { member?: { name?: string; displayName?: string } }[];
       nextPageToken?: string;
     };
@@ -117,7 +130,13 @@ export async function listMemberNames(space: string, accessToken: string, fetche
 }
 
 /** Messages in the space created after `since` (all of them when null), oldest first. */
-export async function listSpaceMessages(space: string, accessToken: string, since: Date | null, memberNames: Map<string, string>, fetcher: Fetcher = fetch): Promise<SpaceMessage[]> {
+export async function listSpaceMessages(
+  space: string,
+  accessToken: string,
+  since: Date | null,
+  memberNames: Map<string, string>,
+  fetcher: Fetcher = fetch
+): Promise<SpaceMessage[]> {
   const out: SpaceMessage[] = [];
   let pageToken = "";
   let finished = false;

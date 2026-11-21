@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { computeAnalytics, type AProject } from "./compute";
 
-const project = (o: Partial<AProject> & { id: string }): AProject => ({ name: o.id, status: "ACTIVE", reviewRating: null, fixed: false, hourlyRateCents: 1500, weeklyLimitMinutes: null, clientId: "c1", profile: "Batul", people: [], ...o });
+const project = (o: Partial<AProject> & { id: string }): AProject => ({
+  name: o.id,
+  status: "ACTIVE",
+  reviewRating: null,
+  fixed: false,
+  hourlyRateCents: 1500,
+  weeklyLimitMinutes: null,
+  clientId: "c1",
+  profile: "Batul",
+  people: [],
+  ...o,
+});
 const e = (member: string, projectId: string, date: string, minutes: number) => ({ member, projectId, date, minutes });
 // 2026-11-21 is a Saturday: its week starts Monday 2026-11-16 (the unfinished current week).
 const base = { today: "2026-11-21", fromDate: null, capacityMinutes: 2550, capacityByMember: {}, clientNames: { c1: "Alpha", c2: "Beta", c3: "Gamma" } };
@@ -66,7 +77,13 @@ describe("computeAnalytics", () => {
       ...base,
       projects: [
         project({ id: "a", people: [{ role: "BUSINESS_DEVELOPER", name: "Aliasger B" }] }),
-        project({ id: "b", people: [{ role: "BUSINESS_DEVELOPER", name: "Ali Asger Bagichawala" }, { role: "BUSINESS_DEVELOPER", name: "Aliasger B" }] }),
+        project({
+          id: "b",
+          people: [
+            { role: "BUSINESS_DEVELOPER", name: "Ali Asger Bagichawala" },
+            { role: "BUSINESS_DEVELOPER", name: "Aliasger B" },
+          ],
+        }),
       ],
       entries: [e("Hamza", "a", "2026-11-02", 600), e("Hamza", "b", "2026-11-03", 600)],
     });
@@ -92,7 +109,10 @@ describe("computeAnalytics", () => {
       entries: [e("Neha", "a", "2026-11-02", 180), e("Neha", "b", "2026-11-03", 60), e("Neha", "c", "2026-11-04", 600)],
     });
     expect(r.kpis.rating).toBeCloseTo((5 * 180 + 3 * 60) / 240);
-    expect(r.statusMix).toEqual([{ status: "COMPLETED", count: 2 }, { status: "ACTIVE", count: 1 }]);
+    expect(r.statusMix).toEqual([
+      { status: "COMPLETED", count: 2 },
+      { status: "ACTIVE", count: 1 },
+    ]);
     expect(r.ratingHistogram).toEqual([0, 0, 1, 0, 1]);
   });
 });

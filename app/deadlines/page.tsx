@@ -57,7 +57,9 @@ export default function DeadlinesPage() {
     const shown = all.filter((r) => filter === "all" || (filter === "open" ? r.state !== "finished" && r.state !== "rejected" : r.state === filter));
     // Open work by date (overdue first, no deadline last), then what's finished, latest first.
     const rank = (r: Row) => (r.state === "finished" || r.state === "rejected" ? 2 : r.date ? 0 : 1);
-    return [...shown].sort((a, b) => rank(a) - rank(b) || (rank(a) === 2 ? (b.date ?? "").localeCompare(a.date ?? "") : (a.date ?? "").localeCompare(b.date ?? "")));
+    return [...shown].sort(
+      (a, b) => rank(a) - rank(b) || (rank(a) === 2 ? (b.date ?? "").localeCompare(a.date ?? "") : (a.date ?? "").localeCompare(b.date ?? ""))
+    );
   }, [data, filter]);
 
   const overdue = data?.projects.filter((r) => r.state === "overdue").length ?? 0;
@@ -89,12 +91,21 @@ export default function DeadlinesPage() {
             {r.date ? <span className="tabular-nums">{day(r.date)}</span> : <span className="text-zinc-400">No report yet</span>}
             <div className="text-xs text-zinc-500">
               {r.date ? "last report" : ""}
-              {r.deadline || r.averageDeadline ? `${r.date ? " · " : ""}due ${day((r.deadline ?? r.averageDeadline) as string)}${r.deadline ? "" : " (average)"}` : ""}
+              {r.deadline || r.averageDeadline
+                ? `${r.date ? " · " : ""}due ${day((r.deadline ?? r.averageDeadline) as string)}${r.deadline ? "" : " (average)"}`
+                : ""}
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            <input type="date" aria-label={`Deadline for ${r.name}`} className={INPUT} defaultValue={r.deadline ?? ""} key={r.deadline ?? "none"} onBlur={(e) => e.target.value !== (r.deadline ?? "") && saveDeadline(r._id, e.target.value)} />
+            <input
+              type="date"
+              aria-label={`Deadline for ${r.name}`}
+              className={INPUT}
+              defaultValue={r.deadline ?? ""}
+              key={r.deadline ?? "none"}
+              onBlur={(e) => e.target.value !== (r.deadline ?? "") && saveDeadline(r._id, e.target.value)}
+            />
             {!r.deadline && r.averageDeadline && <span className="text-xs text-zinc-500">Average-based: {day(r.averageDeadline)}</span>}
           </div>
         ),
@@ -105,16 +116,24 @@ export default function DeadlinesPage() {
       header: "Working days",
       render: (r) =>
         r.budgetDays === null ? (
-          r.type === "theme_update" ? dash : <span className="tabular-nums text-zinc-600 dark:text-zinc-400">{r.usedDays} d used</span>
+          r.type === "theme_update" ? (
+            dash
+          ) : (
+            <span className="tabular-nums text-zinc-600 dark:text-zinc-400">{r.usedDays} d used</span>
+          )
         ) : (
           <div>
             <span className="tabular-nums">{r.usedDays}</span> <span className="text-zinc-500">of {r.budgetDays} d</span>
-            {r.extraDays ? <div className="text-xs font-medium text-status-fail-text">{r.extraDays} days extra</div> : r.usedDays > 0 ? <div className="text-xs text-status-pass-text">within the average</div> : null}
+            {r.extraDays ? (
+              <div className="text-xs font-medium text-status-fail-text">{r.extraDays} days extra</div>
+            ) : r.usedDays > 0 ? (
+              <div className="text-xs text-status-pass-text">within the average</div>
+            ) : null}
           </div>
         ),
       sortValue: (r) => r.extraDays ?? -1,
     },
-    { key: "state", header: "Timing", render: (r) => <TimingLabel r={r} />, sortValue: (r) => (r.daysLeft ?? 99999) },
+    { key: "state", header: "Timing", render: (r) => <TimingLabel r={r} />, sortValue: (r) => r.daysLeft ?? 99999 },
   ];
 
   return (
@@ -123,7 +142,9 @@ export default function DeadlinesPage() {
         <div>
           <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Deadlines</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-            When each project is due. A project without a date set by hand is due its first report plus the average working days of the finished projects of its type (Sundays off); “days extra” is the time used beyond that average. Pick a date to set your own. Once a project is Live or Completed, its last report date is shown instead.
+            When each project is due. A project without a date set by hand is due its first report plus the average working days of the finished projects of its
+            type (Sundays off); “days extra” is the time used beyond that average. Pick a date to set your own. Once a project is Live or Completed, its last
+            report date is shown instead.
             {data ? ` ${overdue} overdue, ${dueSoon} due within a week.` : ""}
           </p>
         </div>
@@ -147,7 +168,10 @@ export default function DeadlinesPage() {
                 <div className="text-xs text-zinc-500">{PROJECT_TYPE_LABELS[type]}: average working time</div>
                 {b ? (
                   <div className="mt-1 text-sm">
-                    <span className="text-xl font-semibold tabular-nums">{b.days} days</span> <span className="text-zinc-500">across {b.sample} finished project{b.sample === 1 ? "" : "s"}</span>
+                    <span className="text-xl font-semibold tabular-nums">{b.days} days</span>{" "}
+                    <span className="text-zinc-500">
+                      across {b.sample} finished project{b.sample === 1 ? "" : "s"}
+                    </span>
                   </div>
                 ) : (
                   <div className="mt-1 text-sm text-zinc-500">No finished project has hours yet, so there is no average to measure against.</div>
@@ -159,7 +183,17 @@ export default function DeadlinesPage() {
       )}
 
       {(error || saveError) && <p className="text-sm text-status-fail-text">{saveError ?? error}</p>}
-      {loading && !data ? <p className="text-sm text-zinc-500">Loading…</p> : <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => r._id} theadClassName="bg-primary-tint text-primary-tint-text" emptyMessage="No projects here." />}
+      {loading && !data ? (
+        <p className="text-sm text-zinc-500">Loading…</p>
+      ) : (
+        <ResponsiveTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r._id}
+          theadClassName="bg-primary-tint text-primary-tint-text"
+          emptyMessage="No projects here."
+        />
+      )}
     </PageContainer>
   );
 }

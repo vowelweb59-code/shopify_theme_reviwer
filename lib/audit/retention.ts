@@ -18,11 +18,16 @@ export const AUDIT_RUNS_KEPT_PER_THEME = 3;
  * versions, and re-auditing needs them. Returns what was removed.
  */
 export async function pruneOldAuditRuns(themeId: unknown, keep: number = AUDIT_RUNS_KEPT_PER_THEME): Promise<{ runs: number; findings: number }> {
-  const complete = await AuditRun.find({ themeId, status: "complete" }).sort({ startedAt: -1 }).select("_id startedAt").lean<{ _id: unknown; startedAt: Date }[]>();
+  const complete = await AuditRun.find({ themeId, status: "complete" })
+    .sort({ startedAt: -1 })
+    .select("_id startedAt")
+    .lean<{ _id: unknown; startedAt: Date }[]>();
   if (complete.length <= keep) return { runs: 0, findings: 0 };
 
   const oldestKept = complete[keep - 1].startedAt;
-  const staleFailed = await AuditRun.find({ themeId, status: "failed", startedAt: { $lt: oldestKept } }).select("_id").lean<{ _id: unknown }[]>();
+  const staleFailed = await AuditRun.find({ themeId, status: "failed", startedAt: { $lt: oldestKept } })
+    .select("_id")
+    .lean<{ _id: unknown }[]>();
   const ids = [...complete.slice(keep).map((r) => r._id), ...staleFailed.map((r) => r._id)];
 
   const { deletedCount: findings } = await Finding.deleteMany({ auditRunId: { $in: ids } });

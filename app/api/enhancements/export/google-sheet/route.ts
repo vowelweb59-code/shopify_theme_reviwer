@@ -48,10 +48,7 @@ export async function POST() {
       } else if (err instanceof GoogleSheetsNotConnectedError) {
         return NextResponse.json({ error: err.message }, { status: 409 });
       } else {
-        return NextResponse.json(
-          { error: sheetsErrorMessage("Failed to reach the existing Google Sheet", err) },
-          { status: 502 }
-        );
+        return NextResponse.json({ error: sheetsErrorMessage("Failed to reach the existing Google Sheet", err) }, { status: 502 });
       }
     }
   }
@@ -73,10 +70,7 @@ export async function POST() {
     if (err instanceof GoogleSheetsNotConnectedError) {
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
-    return NextResponse.json(
-      { error: sheetsErrorMessage("Failed to update the Google Sheet", err) },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: sheetsErrorMessage("Failed to update the Google Sheet", err) }, { status: 502 });
   }
 }
 

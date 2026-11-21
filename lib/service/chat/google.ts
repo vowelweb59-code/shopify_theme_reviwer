@@ -56,7 +56,8 @@ export function serviceChatAuthUrl(state: string, client = serviceChatOAuthClien
 export async function exchangeServiceChatCode(code: string, client = serviceChatOAuthClient()) {
   const { tokens } = await client.getToken(code);
   const scopes = (tokens.scope ?? "").split(/\s+/).filter(Boolean);
-  if (!scopes.includes("https://www.googleapis.com/auth/chat.messages.readonly")) throw new Error("Reading Chat messages wasn't granted. Reconnect and leave every checkbox ticked.");
+  if (!scopes.includes("https://www.googleapis.com/auth/chat.messages.readonly"))
+    throw new Error("Reading Chat messages wasn't granted. Reconnect and leave every checkbox ticked.");
   if (!tokens.id_token) throw new Error("Google didn't identify the account. Try connecting again.");
   const ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: client._clientId }).catch(() => null);
   const payload = ticket?.getPayload();
@@ -99,7 +100,8 @@ async function memberNames(token: string, space: string): Promise<Map<string, st
   let pageToken = "";
   for (let i = 0; i < MAX_PAGES; i++) {
     const r = await getJson<{ memberships?: Array<{ member?: { name?: string; displayName?: string } }>; nextPageToken?: string }>(
-      token, `${API}/${space}/members?pageSize=1000&showGroups=false${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`
+      token,
+      `${API}/${space}/members?pageSize=1000&showGroups=false${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`
     ).catch(() => ({ memberships: [], nextPageToken: undefined }));
     for (const m of r.memberships ?? []) if (m.member?.name && m.member.displayName) names.set(m.member.name, m.member.displayName);
     if (!r.nextPageToken) break;
@@ -117,11 +119,20 @@ export async function listServiceMessages(refreshToken: string, space: string, {
   let pageToken = "";
   for (let i = 0; i < MAX_PAGES; i++) {
     const params = new URLSearchParams({ pageSize: "1000", orderBy: "createTime ASC", filter, ...(pageToken ? { pageToken } : {}) });
-    const r = await getJson<{ messages?: Array<{ name?: string; createTime?: string; text?: string; sender?: { name?: string; displayName?: string; type?: string } }>; nextPageToken?: string }>(token, `${API}/${space}/messages?${params}`);
+    const r = await getJson<{
+      messages?: Array<{ name?: string; createTime?: string; text?: string; sender?: { name?: string; displayName?: string; type?: string } }>;
+      nextPageToken?: string;
+    }>(token, `${API}/${space}/messages?${params}`);
     for (const m of r.messages ?? []) {
       if (!m.name || !m.createTime || !m.text || m.sender?.type === "BOT") continue;
       const sender = m.sender?.name ?? "unknown";
-      out.push({ externalId: m.name, senderExternalId: sender, senderName: m.sender?.displayName || names.get(sender) || sender, postedAt: m.createTime, text: m.text });
+      out.push({
+        externalId: m.name,
+        senderExternalId: sender,
+        senderName: m.sender?.displayName || names.get(sender) || sender,
+        postedAt: m.createTime,
+        text: m.text,
+      });
     }
     if (!r.nextPageToken) return out;
     pageToken = r.nextPageToken;

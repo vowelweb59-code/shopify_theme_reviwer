@@ -12,7 +12,11 @@ import { syncReviewStatuses } from "@/lib/projects/syncReviewStatuses";
  * Nothing is marked not-live while the catalog is empty (it has never been read). Presets keep the ranks the ranking check wrote.
  * Safe to run any number of times; it never touches a theme's own audit data.
  */
-export async function syncThemesFromCatalog({ dryRun = false }: { dryRun?: boolean } = {}): Promise<{ live: number; notLive: number; notLiveThemes: { _id: unknown; name: string }[] }> {
+export async function syncThemesFromCatalog({ dryRun = false }: { dryRun?: boolean } = {}): Promise<{
+  live: number;
+  notLive: number;
+  notLiveThemes: { _id: unknown; name: string }[];
+}> {
   await connectToDatabase();
   if ((await ThemeStoreTheme.estimatedDocumentCount()) === 0) return { live: 0, notLive: 0, notLiveThemes: [] };
   const notLiveThemes: { _id: unknown; name: string }[] = [];

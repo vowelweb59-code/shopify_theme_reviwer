@@ -30,5 +30,5 @@ export const uniqueBd = (names: readonly string[]) => [...new Set(names.map(cano
 /** The BD a written name stands for, or null. */
 export function bdMatch(written: string | null | undefined): (typeof BD_MEMBERS)[number] | null {
   const w = norm(written ?? "");
-  return w ? BD_MEMBERS.find((b) => (b.spellings as readonly string[]).includes(w)) ?? null : null;
+  return w ? (BD_MEMBERS.find((b) => (b.spellings as readonly string[]).includes(w)) ?? null) : null;
 }

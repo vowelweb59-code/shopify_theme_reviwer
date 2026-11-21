@@ -104,8 +104,7 @@ export function extractHtmlStructure(rawText: string): HtmlStructure {
 
   function handleImageLikeOpen(tag: "img" | "source", attribs: Record<string, string>, offset: number) {
     const alt = attribs.alt;
-    const altSource: ParsedImage["altSource"] =
-      alt === undefined ? "missing" : alt === "" ? "empty" : isLiquidExpression(alt) ? "liquid" : "literal";
+    const altSource: ParsedImage["altSource"] = alt === undefined ? "missing" : alt === "" ? "empty" : isLiquidExpression(alt) ? "liquid" : "literal";
     const src = attribs.src ?? attribs.srcset;
     images.push({
       line: toLine(offset),

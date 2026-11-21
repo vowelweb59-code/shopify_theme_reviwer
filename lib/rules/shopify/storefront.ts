@@ -52,7 +52,7 @@ const articleExcerptRule: Rule = {
   defaultSeverity: "medium",
   title: "Article page should not show the article excerpt",
   description:
-    "The article page already shows the full article, so a \"Show excerpt\" option that repeats article.excerpt under the title is non-essential. Theme Store reviewers ask for it to be removed (\"The article excerpt logic is non-essential. It is advisable to deprecate and remove this functionality.\"). Excerpts belong on the blog listing, via article.excerpt_or_content.",
+    'The article page already shows the full article, so a "Show excerpt" option that repeats article.excerpt under the title is non-essential. Theme Store reviewers ask for it to be removed ("The article excerpt logic is non-essential. It is advisable to deprecate and remove this functionality."). Excerpts belong on the blog listing, via article.excerpt_or_content.',
   sourceReference: "Shopify Theme Store review feedback — Design/UX, Article page",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   check({ files, index }) {
@@ -95,7 +95,7 @@ const swatchImageRule: Rule = {
   defaultSeverity: "medium",
   title: "Option swatches must keep their image when the selected variant changes",
   description:
-    "Option swatches should stay constant visual indicators. A swatch whose image comes only from the option value's variant (value.variant.featured_image) loses it when that option value has no variant for the current combination of selections, so swatches flicker or disappear on every variant change. A Theme Store rejection reason (\"Option swatches lose assigned preview images and disappear during state updates\").",
+    'Option swatches should stay constant visual indicators. A swatch whose image comes only from the option value\'s variant (value.variant.featured_image) loses it when that option value has no variant for the current combination of selections, so swatches flicker or disappear on every variant change. A Theme Store rejection reason ("Option swatches lose assigned preview images and disappear during state updates").',
   sourceReference: "Shopify Theme Store review feedback — Design/UX, Flickering swatches",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   // Flags an option value's .variant image reference (directly, or through

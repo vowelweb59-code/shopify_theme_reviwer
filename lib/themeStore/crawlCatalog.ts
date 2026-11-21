@@ -21,14 +21,31 @@ const MAX_PAGES = 200; // safety net; the full catalog is ~55 pages
 const DETAIL_FRESH_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Phase = "catalog" | "categories" | "details";
-type CrawlState = { running: Promise<void> | null; phase: Phase | null; total: number; done: number; current: string | null; themesSeen: number; errors: string[]; finishedAt: Date | null };
+type CrawlState = {
+  running: Promise<void> | null;
+  phase: Phase | null;
+  total: number;
+  done: number;
+  current: string | null;
+  themesSeen: number;
+  errors: string[];
+  finishedAt: Date | null;
+};
 const g = globalThis as typeof globalThis & { _themeStoreCrawl?: CrawlState };
 const crawl = (g._themeStoreCrawl ??= { running: null, phase: null, total: 0, done: 0, current: null, themesSeen: 0, errors: [], finishedAt: null });
 
 export function themeStoreCrawlProgress() {
-  return { running: crawl.running !== null, phase: crawl.phase, total: crawl.total, done: crawl.done, current: crawl.current, themesSeen: crawl.themesSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
+  return {
+    running: crawl.running !== null,
+    phase: crawl.phase,
+    total: crawl.total,
+    done: crawl.done,
+    current: crawl.current,
+    themesSeen: crawl.themesSeen,
+    errors: crawl.errors,
+    finishedAt: crawl.finishedAt,
+  };
 }
-
 
 async function fetchListing(url: string): Promise<string> {
   return fetchPublicText(url, { attempts: 3, rateLimitWaitMs: RATE_LIMIT_WAIT_MS });
@@ -74,7 +91,11 @@ async function crawlCatalog(): Promise<void> {
   const now = new Date();
   // The price each theme had before this read, so a change can be added to its price history.
   const before = new Map(
-    (await ThemeStoreTheme.find({}).select("slug price priceHistory firstSeenAt").lean<{ slug: string; price: number | null; priceHistory?: { price: number; at: Date }[]; firstSeenAt: Date }[]>()).map((r) => [r.slug, r])
+    (
+      await ThemeStoreTheme.find({})
+        .select("slug price priceHistory firstSeenAt")
+        .lean<{ slug: string; price: number | null; priceHistory?: { price: number; at: Date }[]; firstSeenAt: Date }[]>()
+    ).map((r) => [r.slug, r])
   );
   await ThemeStoreTheme.bulkWrite(
     [...byTheme].map(([slug, t]) => {
@@ -94,8 +115,20 @@ async function crawlCatalog(): Promise<void> {
           filter: { slug },
           update: {
             // A theme's name comes from its default preset's card; a theme whose default card isn't listed keeps the name its page gave it.
-            $set: { ...(t.base ? { name: t.base.name } : {}), price: main.price, isNew: main.isNew, presets: t.presets, rank: t.rank, lastSeenAt: now, ...(main.positivePercent !== null ? { positivePercent: main.positivePercent } : {}) },
-            $setOnInsert: { firstSeenAt: now, ...(t.base ? {} : { name: titleCase(slug) }), ...(prev ? {} : { priceHistory: main.price !== null ? [{ price: main.price, at: now }] : [] }) },
+            $set: {
+              ...(t.base ? { name: t.base.name } : {}),
+              price: main.price,
+              isNew: main.isNew,
+              presets: t.presets,
+              rank: t.rank,
+              lastSeenAt: now,
+              ...(main.positivePercent !== null ? { positivePercent: main.positivePercent } : {}),
+            },
+            $setOnInsert: {
+              firstSeenAt: now,
+              ...(t.base ? {} : { name: titleCase(slug) }),
+              ...(prev ? {} : { priceHistory: main.price !== null ? [{ price: main.price, at: now }] : [] }),
+            },
             ...(prev && entries.length > 0 ? { $push: { priceHistory: { $each: entries } } } : {}),
           },
           upsert: true,
@@ -128,7 +161,9 @@ async function crawlCategories(): Promise<void> {
 
 async function crawlDetails(): Promise<void> {
   crawl.phase = "details";
-  const stale = await ThemeStoreTheme.find({ $or: [{ detailAt: null }, { companionAppAt: null }, { detailAt: { $lt: new Date(Date.now() - DETAIL_FRESH_MS) } }] })
+  const stale = await ThemeStoreTheme.find({
+    $or: [{ detailAt: null }, { companionAppAt: null }, { detailAt: { $lt: new Date(Date.now() - DETAIL_FRESH_MS) } }],
+  })
     .sort({ rank: 1 })
     .select("slug")
     .lean<{ slug: string }[]>();

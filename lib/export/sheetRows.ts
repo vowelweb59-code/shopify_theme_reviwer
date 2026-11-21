@@ -98,11 +98,7 @@ function buildChecklistRow(auditRunId: string, themeName: string, f: DiffFinding
  * findings in this diff are omitted rather than added as empty tabs;
  * ordered by FINDING_CATEGORIES' canonical order, not first-seen order.
  */
-export function buildChecklistSheetTabs(
-  auditRunId: string,
-  themeName: string,
-  diffFindings: DiffFinding<SheetChecklistFinding>[]
-): SheetTab[] {
+export function buildChecklistSheetTabs(auditRunId: string, themeName: string, diffFindings: DiffFinding<SheetChecklistFinding>[]): SheetTab[] {
   const byCategory = new Map<string, DiffFinding<SheetChecklistFinding>[]>();
   for (const f of diffFindings) {
     const category = (f.current ?? f.previous)!.category;

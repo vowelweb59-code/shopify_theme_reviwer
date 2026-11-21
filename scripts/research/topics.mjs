@@ -436,7 +436,7 @@ export const TOPICS = [
   },
   {
     id: "NATIVE-CUSTOM-001",
-    name: "Native storefront password / \"coming soon\" page",
+    name: 'Native storefront password / "coming soon" page',
     category: "Theme Customization",
     re: /password page|coming[- ]soon page|under construction page/i,
   },

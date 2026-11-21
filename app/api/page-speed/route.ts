@@ -14,10 +14,7 @@ export async function GET() {
 
   const rows = await Promise.all(
     themes.map(async (theme) => {
-      const latestRun = await AuditRun.findOne({ themeId: theme._id, status: "complete" })
-        .sort({ startedAt: -1 })
-        .select("_id startedAt pageSpeed")
-        .lean();
+      const latestRun = await AuditRun.findOne({ themeId: theme._id, status: "complete" }).sort({ startedAt: -1 }).select("_id startedAt pageSpeed").lean();
       if (!latestRun) return null;
 
       const openPerformanceFindingCount = await Finding.countDocuments({

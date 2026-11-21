@@ -91,7 +91,7 @@ const missingScopedSettingRule: Rule = {
   defaultSeverity: "medium",
   title: "section.settings.x / block.settings.x must be declared in that section's own schema",
   description:
-    "section.settings.x must resolve to an id in this section's own {% schema %} \"settings\" array, and block.settings.x must resolve to an id declared under any block type's \"settings\" array in the same schema — each section declares these independently, unlike global settings.x.",
+    'section.settings.x must resolve to an id in this section\'s own {% schema %} "settings" array, and block.settings.x must resolve to an id declared under any block type\'s "settings" array in the same schema — each section declares these independently, unlike global settings.x.',
   // Only enforced for section files (which own a schema) — a snippet using
   // section.settings.x/block.settings.x could be rendered from any number of
   // different sections/block types with no static way to know which, so
@@ -154,7 +154,7 @@ const duplicateSchemaIdRule: Rule = {
   defaultSeverity: "high",
   title: "Schema settings/blocks must not declare duplicate ids or types",
   description:
-    "Within a single {% schema %}: each top-level setting id must be unique, each block type's own settings ids must be unique within that block type, and block \"type\" values must be unique among the declared blocks. A duplicate id means only the last definition is ever used, silently dropping the others.",
+    'Within a single {% schema %}: each top-level setting id must be unique, each block type\'s own settings ids must be unique within that block type, and block "type" values must be unique among the declared blocks. A duplicate id means only the last definition is ever used, silently dropping the others.',
   sourceReference: "Shopify: Section schema",
   sourceUrl: SECTION_SCHEMA_URL,
   check({ files }) {

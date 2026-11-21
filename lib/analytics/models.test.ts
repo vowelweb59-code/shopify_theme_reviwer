@@ -25,9 +25,7 @@ function indexKeys(model: { schema: { indexes(): [Record<string, unknown>, Recor
 
 describe("buildDimsKey", () => {
   it("uses only the breakdown's own dimensions, in fixed order", () => {
-    expect(buildDimsKey("country", { country: "India", deviceCategory: "mobile" })).toBe(
-      "country=India"
-    );
+    expect(buildDimsKey("country", { country: "India", deviceCategory: "mobile" })).toBe("country=India");
   });
 
   it("is empty for the total breakdown", () => {
@@ -51,7 +49,11 @@ describe("AnalyticsTheme", () => {
   });
 
   it("rejects a malformed property id, slug, or status", async () => {
-    expect(await invalidPaths(new AnalyticsTheme({ name: "X", slug: "Not A Slug!", ga4PropertyId: "properties/123", connectionStatus: "nope" }))).toEqual(["connectionStatus", "ga4PropertyId", "slug"]);
+    expect(await invalidPaths(new AnalyticsTheme({ name: "X", slug: "Not A Slug!", ga4PropertyId: "properties/123", connectionStatus: "nope" }))).toEqual([
+      "connectionStatus",
+      "ga4PropertyId",
+      "slug",
+    ]);
   });
 
   it("allows many unmapped themes but one theme per property", () => {
@@ -105,7 +107,10 @@ describe("AnalyticsAggregate", () => {
   });
 
   it("rejects an unknown breakdown and negative metrics", async () => {
-    expect(await invalidPaths(new AnalyticsAggregate({ ...base, breakdown: "weather", metrics: { eventCount: -1 } }))).toEqual(["breakdown", "metrics.eventCount"]);
+    expect(await invalidPaths(new AnalyticsAggregate({ ...base, breakdown: "weather", metrics: { eventCount: -1 } }))).toEqual([
+      "breakdown",
+      "metrics.eventCount",
+    ]);
   });
 
   it("stores only the row's own dimensions, with no null placeholders", () => {

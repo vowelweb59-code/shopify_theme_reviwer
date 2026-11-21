@@ -122,7 +122,9 @@ function NewProjectModal({
               </option>
             ))}
           </select>
-          {!typeHasStatus(type) && <span className="text-xs text-zinc-500">Ongoing work with no status or due date. You log the hours spent on it instead.</span>}
+          {!typeHasStatus(type) && (
+            <span className="text-xs text-zinc-500">Ongoing work with no status or due date. You log the hours spent on it instead.</span>
+          )}
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Theme</span>
@@ -161,7 +163,9 @@ function NewProjectModal({
               className={INPUT}
               placeholder="e.g. Aurora"
             />
-            <span className="text-xs text-zinc-500">Creates the theme without a ZIP; upload one later from the Themes page. A theme with this name is reused if it already exists.</span>
+            <span className="text-xs text-zinc-500">
+              Creates the theme without a ZIP; upload one later from the Themes page. A theme with this name is reused if it already exists.
+            </span>
           </label>
         )}
         <label className="flex flex-col gap-1 text-sm">
@@ -180,7 +184,9 @@ function NewProjectModal({
             </select>
           </label>
         )}
-        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
+        {error && (
+          <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>
+        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
@@ -270,9 +276,17 @@ export default function ProjectsPage() {
   }
 
   const columns: TableColumn<ProjectRow>[] = [
-    { key: "name", header: "Project", sortValue: (p) => p.name.toLowerCase(), render: (p) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</span> },
+    {
+      key: "name",
+      header: "Project",
+      sortValue: (p) => p.name.toLowerCase(),
+      render: (p) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</span>,
+    },
     { key: "type", header: "Type", sortValue: (p) => PROJECT_TYPES.indexOf(p.type), render: (p) => PROJECT_TYPE_LABELS[p.type] },
-    { key: "status", header: "Status", sortValue: (p) => (p.status ? PROJECT_STATUSES.indexOf(p.status) : -1),
+    {
+      key: "status",
+      header: "Status",
+      sortValue: (p) => (p.status ? PROJECT_STATUSES.indexOf(p.status) : -1),
       render: (p) => (p.status ? <ProjectStatusPill status={p.status} /> : <span className="text-zinc-500">Ongoing</span>),
     },
     {
@@ -331,7 +345,14 @@ export default function ProjectsPage() {
         p.cost === null ? (
           <span className="text-zinc-400">—</span>
         ) : (
-          <span className="tabular-nums" title={p.costUnpricedHours > 0 ? `${p.costUnpricedHours} h of people with no salary entered are not priced, so the real cost is higher` : "Reported hours x each person's hourly cost (monthly salary / 221 h)"}>
+          <span
+            className="tabular-nums"
+            title={
+              p.costUnpricedHours > 0
+                ? `${p.costUnpricedHours} h of people with no salary entered are not priced, so the real cost is higher`
+                : "Reported hours x each person's hourly cost (monthly salary / 221 h)"
+            }
+          >
             {INR.format(p.cost)}
             {p.costUnpricedHours > 0 ? "*" : ""}
           </span>
@@ -392,7 +413,9 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
+      {error && (
+        <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>
+      )}
 
       {projects.length > 0 && (
         <div role="tablist" aria-label="Portal" className="flex flex-wrap gap-1 border-b border-border-subtle">
@@ -406,7 +429,9 @@ export default function ProjectsPage() {
                 aria-selected={active}
                 onClick={() => setPortalTab(p)}
                 className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
-                  active ? "border-primary font-medium text-zinc-950 dark:text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                  active
+                    ? "border-primary font-medium text-zinc-950 dark:text-zinc-50"
+                    : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                 }`}
               >
                 {p === "none" ? "No portal" : p}
@@ -428,7 +453,9 @@ export default function ProjectsPage() {
                 aria-selected={active}
                 onClick={() => setTypeFilter(t)}
                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                  active ? "border-transparent bg-primary-tint font-medium text-primary-tint-text" : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
+                  active
+                    ? "border-transparent bg-primary-tint font-medium text-primary-tint-text"
+                    : "border-border-subtle text-zinc-600 hover:border-border-strong dark:text-zinc-400"
                 }`}
               >
                 {PROJECT_TYPE_LABELS[t]}
@@ -444,16 +471,34 @@ export default function ProjectsPage() {
         <EmptyState
           icon={FolderKanban}
           title="No projects yet"
-          description={themes.length === 0 ? "Add a theme on the Themes page first, then start a project for it." : "Start a project for one of your themes, then assign team members to it."}
+          description={
+            themes.length === 0
+              ? "Add a theme on the Themes page first, then start a project for it."
+              : "Start a project for one of your themes, then assign team members to it."
+          }
         />
       ) : (
-        <ResponsiveTable columns={shownColumns} rows={visible} emptyMessage="No projects here yet." rowKey={(p) => p._id} onRowClick={(p) => router.push(`/projects/${p._id}`)} />
+        <ResponsiveTable
+          columns={shownColumns}
+          rows={visible}
+          emptyMessage="No projects here yet."
+          rowKey={(p) => p._id}
+          onRowClick={(p) => router.push(`/projects/${p._id}`)}
+        />
       )}
 
       {!loading && projects.length > 0 && <ThemeCostSection />}
 
       <ImportReportsModal open={importOpen} onOpenChange={setImportOpen} notice={chatNotice} autoSync={autoSync} />
-      {modalOpen && <NewProjectModal themes={themes} defaultPortal={portalTab === "none" ? "" : portalTab} open={modalOpen} onOpenChange={setModalOpen} onCreated={(id) => router.push(`/projects/${id}`)} />}
+      {modalOpen && (
+        <NewProjectModal
+          themes={themes}
+          defaultPortal={portalTab === "none" ? "" : portalTab}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onCreated={(id) => router.push(`/projects/${id}`)}
+        />
+      )}
     </PageContainer>
   );
 }

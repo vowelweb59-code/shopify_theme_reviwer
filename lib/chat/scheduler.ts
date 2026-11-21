@@ -9,11 +9,17 @@ import { syncSpace } from "./syncSpace";
 const INTERVAL_MS = 5 * 60 * 1000;
 
 /** Called once from instrumentation.ts on server boot. Syncs right away, then every 5 minutes. */
-export const startChatSyncScheduler = createRepeatingJob("chat-sync", "chat-sync", INTERVAL_MS, async () => {
-  await connectToDatabase();
-  const connection = await ChatConnection.findOne({ key: "chat" }).select("status").lean<{ status: string } | null>();
-  if (connection?.status === "active") {
-    const summary = await syncSpace();
-    if (summary.created > 0) console.log(`[chat-sync] read ${summary.fetched} messages: imported ${summary.created} reports`);
-  }
-}, 30_000); // first run after boot is staggered so a wake from sleep is not one big burst
+export const startChatSyncScheduler = createRepeatingJob(
+  "chat-sync",
+  "chat-sync",
+  INTERVAL_MS,
+  async () => {
+    await connectToDatabase();
+    const connection = await ChatConnection.findOne({ key: "chat" }).select("status").lean<{ status: string } | null>();
+    if (connection?.status === "active") {
+      const summary = await syncSpace();
+      if (summary.created > 0) console.log(`[chat-sync] read ${summary.fetched} messages: imported ${summary.created} reports`);
+    }
+  },
+  30_000
+); // first run after boot is staggered so a wake from sleep is not one big burst

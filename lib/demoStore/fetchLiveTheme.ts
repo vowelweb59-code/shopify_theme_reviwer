@@ -3,8 +3,7 @@ import { demoStoreUrl } from "./stores";
 const FETCH_TIMEOUT_MS = 20_000;
 
 export type LiveThemeResult =
-  | { ok: true; themeId: number; themeName: string; schemaName: string | null; schemaVersion: string | null }
-  | { ok: false; error: string };
+  { ok: true; themeId: number; themeName: string; schemaName: string | null; schemaVersion: string | null } | { ok: false; error: string };
 
 /**
  * Fetches an ops demo store's public storefront and reads which theme is

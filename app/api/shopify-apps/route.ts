@@ -40,7 +40,10 @@ export async function GET() {
 
 async function build() {
   const [rows, categories, watchedRows, backlog] = await Promise.all([
-    ShopifyApp.find({}).sort({ reviewCount: -1 }).select("-_id handle name tagline rating reviewCount pricingLabel builtForShopify categories developer launchedAt ratingShares lastSeenAt detailVersion").lean<Row[]>(),
+    ShopifyApp.find({})
+      .sort({ reviewCount: -1 })
+      .select("-_id handle name tagline rating reviewCount pricingLabel builtForShopify categories developer launchedAt ratingShares lastSeenAt detailVersion")
+      .lean<Row[]>(),
     ShopifyAppCategory.find({}).select("-_id slug label").lean<{ slug: string; label: string }[]>(),
     ShopifyAppCategory.find({ priority: true }).select("-_id slug label lastReadAt").lean<{ slug: string; label: string; lastReadAt: Date | null }[]>(),
     detailBacklog(),

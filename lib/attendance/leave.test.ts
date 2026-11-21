@@ -27,9 +27,17 @@ describe("parseLeaveMessage", () => {
   });
 
   it("reads a range, a list and a half day", () => {
-    expect(parseLeaveMessage("@Lead Sam Lee has applied for a leave from 16th Nov 2026 to 18th Nov 2026.(Trip)", [], posted, ["Sam Lee"])).toMatchObject({ dates: ["2026-11-16", "2026-11-17", "2026-11-18"], reason: "Trip" });
-    expect(parseLeaveMessage("@Lead Sam Lee has applied for a leave on 16th & 18th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({ dates: ["2026-11-16", "2026-11-18"] });
-    expect(parseLeaveMessage("@Lead Sam Lee has applied for a half day leave on 20th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({ dates: ["2026-11-20"], half: true });
+    expect(parseLeaveMessage("@Lead Sam Lee has applied for a leave from 16th Nov 2026 to 18th Nov 2026.(Trip)", [], posted, ["Sam Lee"])).toMatchObject({
+      dates: ["2026-11-16", "2026-11-17", "2026-11-18"],
+      reason: "Trip",
+    });
+    expect(parseLeaveMessage("@Lead Sam Lee has applied for a leave on 16th & 18th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({
+      dates: ["2026-11-16", "2026-11-18"],
+    });
+    expect(parseLeaveMessage("@Lead Sam Lee has applied for a half day leave on 20th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({
+      dates: ["2026-11-20"],
+      half: true,
+    });
   });
 
   it("flags what it cannot read instead of dropping it", () => {
@@ -38,7 +46,11 @@ describe("parseLeaveMessage", () => {
   });
 
   it("reads a cancellation", () => {
-    expect(parseLeaveMessage("@Lead Sam Lee has cancelled the leave on 16th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({ kind: "cancel", person: "Sam Lee", dates: ["2026-11-16"] });
+    expect(parseLeaveMessage("@Lead Sam Lee has cancelled the leave on 16th Nov 2026.", [], posted, ["Sam Lee"])).toMatchObject({
+      kind: "cancel",
+      person: "Sam Lee",
+      dates: ["2026-11-16"],
+    });
   });
 });
 

@@ -15,9 +15,7 @@ function orderedSectionTypes(templateFile: ParsedFile): string[] {
   if (!sections || typeof sections !== "object") return [];
 
   const orderRaw = (json as Record<string, unknown>).order;
-  const order = Array.isArray(orderRaw)
-    ? orderRaw.filter((k): k is string => typeof k === "string")
-    : Object.keys(sections as Record<string, unknown>);
+  const order = Array.isArray(orderRaw) ? orderRaw.filter((k): k is string => typeof k === "string") : Object.keys(sections as Record<string, unknown>);
 
   const types: string[] = [];
   for (const key of order) {

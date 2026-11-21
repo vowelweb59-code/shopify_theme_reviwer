@@ -10,19 +10,21 @@ const SOURCE = "Theme Store review: a demo store must look like a real, finished
 const PLACEHOLDER_TEXT: { re: RegExp; label: string }[] = [
   { re: /lorem ipsum|dolor sit amet|consectetur adipiscing/i, label: "lorem ipsum filler" },
   { re: /share information about your brand/i, label: "Shopify's default brand paragraph" },
-  { re: /talk about your brand/i, label: "\"Talk about your brand\"" },
+  { re: /talk about your brand/i, label: '"Talk about your brand"' },
   { re: /\byour text here\b|\bclick here to edit\b|\bdescribe your (product|brand|business)\b/i, label: "an unedited prompt" },
   { re: /\badd (a )?(heading|tagline|your (text|description|content))\b/i, label: "an unedited prompt" },
   { re: /\b(example|sample|test|dummy) (product|collection|title|text|content)\b/i, label: "example/sample/test wording" },
-  { re: /\bplaceholder (text|title|content|image)\b/i, label: "the word \"placeholder\"" },
+  { re: /\bplaceholder (text|title|content|image)\b/i, label: 'the word "placeholder"' },
 ];
 
 // Shopify's own sample products (the snowboard shop every new dev store ships with).
-const SAMPLE_PRODUCT_RE = /\bthe (complete|collection|compare at price|multi-managed|multi-location|hidden|draft|archived|inventory not tracked|videographer|3p fulfilled|out of stock|minimal|oversized)\b[^.]{0,40}\bsnowboard\b|\bselling plans ski wax\b/i;
+const SAMPLE_PRODUCT_RE =
+  /\bthe (complete|collection|compare at price|multi-managed|multi-location|hidden|draft|archived|inventory not tracked|videographer|3p fulfilled|out of stock|minimal|oversized)\b[^.]{0,40}\bsnowboard\b|\bselling plans ski wax\b/i;
 const GENERIC_PRODUCT_RE = /^(product|item|example|sample|test|dummy)\s*#?\d*$/i;
 
 const PLACEHOLDER_IMAGE_FILE_RE = /(placeholder|no[-_]?image|noimage|default[-_]?image|dummy|image[-_]?coming|coming[-_]?soon)/i;
-const PLACEHOLDER_IMAGE_HOST_RE = /(^|\.)(placehold\.co|placehold\.it|via\.placeholder\.com|placeholder\.com|picsum\.photos|loremflickr\.com|placekitten\.com|dummyimage\.com)$/i;
+const PLACEHOLDER_IMAGE_HOST_RE =
+  /(^|\.)(placehold\.co|placehold\.it|via\.placeholder\.com|placeholder\.com|picsum\.photos|loremflickr\.com|placekitten\.com|dummyimage\.com)$/i;
 const NOT_CONTENT_IMAGE_RE = /(logo|icon|payment|badge|flag|star|arrow|sprite|favicon|cursor|spinner|loading|trust|social)/i;
 const FILENAME_ALT_RE = /\.(jpe?g|png|webp|gif|avif)$|^(img|dsc|image|photo|picture|screenshot)[-_ ]?\d+/i;
 
@@ -46,7 +48,9 @@ export function imageKey(src: string): string {
 
 /** The pictures that count as content: not icons, flags, logos or vector art. */
 export function contentImagesOf(content: DemoContent) {
-  return content.images.filter((i) => !NOT_CONTENT_IMAGE_RE.test(fileName(i.src)) && !/\.svg$/i.test(fileName(i.src)) && !/cdn\.shopify\.com\/static\//i.test(i.src));
+  return content.images.filter(
+    (i) => !NOT_CONTENT_IMAGE_RE.test(fileName(i.src)) && !/\.svg$/i.test(fileName(i.src)) && !/cdn\.shopify\.com\/static\//i.test(i.src)
+  );
 }
 
 function snippet(items: string[], max = 3): string {
@@ -85,10 +89,7 @@ export function demoRealismFindings(content: DemoContent, pageType: DemoPageType
   });
   const emptySlots = content.placeholderSvgCount + placeholderImages.length;
   if (emptySlots > 0) {
-    const lines = [
-      ...(content.placeholderSlots ?? []).map((w) => `empty slot in ${w}`),
-      ...placeholderImages.slice(0, 5).map((i) => `stand-in file ${i.src}`),
-    ];
+    const lines = [...(content.placeholderSlots ?? []).map((w) => `empty slot in ${w}`), ...placeholderImages.slice(0, 5).map((i) => `stand-in file ${i.src}`)];
     const where = lines.length > 0 ? ` Where: ${lines.join("; ")}.` : "";
     add(
       "LIVE-DEMO-IMG-001",
@@ -107,7 +108,7 @@ export function demoRealismFindings(content: DemoContent, pageType: DemoPageType
       "LIVE-DEMO-IMG-002",
       "low",
       `${fileAlt.length} images on the ${pageType} page have a file name as their alt text: ${snippet(fileAlt.map((i) => i.alt!))}.`,
-      "Describe what the picture shows (for example \"Woman wearing a linen shirt\") instead of the file name."
+      'Describe what the picture shows (for example "Woman wearing a linen shirt") instead of the file name.'
     );
   }
 

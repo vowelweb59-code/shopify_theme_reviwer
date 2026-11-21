@@ -10,20 +10,68 @@ type ThemeTotal = SalesSummary["themes"][number];
 const MONTH_COLUMNS: TableColumn<ThemeMonth>[] = [
   { key: "month", header: "Month", render: (r) => <span className="whitespace-nowrap font-medium">{formatMonth(r.month)}</span>, sortValue: (r) => r.month },
   { key: "theme", header: "Theme", render: (r) => r.themeName, sortValue: (r) => r.themeName },
-  { key: "try", header: "Try Theme", render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>, sortValue: (r) => r.tryTheme ?? -1, className: "text-right" },
-  { key: "installs", header: "Installs", render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>, sortValue: (r) => r.installs ?? -1, className: "text-right" },
+  {
+    key: "try",
+    header: "Try Theme",
+    render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>,
+    sortValue: (r) => r.tryTheme ?? -1,
+    className: "text-right",
+  },
+  {
+    key: "installs",
+    header: "Installs",
+    render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>,
+    sortValue: (r) => r.installs ?? -1,
+    className: "text-right",
+  },
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-  { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
-  { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
+  {
+    key: "rate",
+    header: "Installs / sales",
+    render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>,
+    sortValue: (r) => r.installRate ?? -1,
+    className: "text-right",
+  },
+  {
+    key: "gross",
+    header: "Revenue",
+    render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>,
+    sortValue: (r) => r.gross,
+    className: "text-right",
+  },
 ];
 
 const TOTAL_COLUMNS: TableColumn<ThemeTotal>[] = [
   { key: "theme", header: "Theme", render: (r) => <span className="font-medium">{r.themeName}</span>, sortValue: (r) => r.themeName },
-  { key: "try", header: "Try Theme", render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>, sortValue: (r) => r.tryTheme ?? -1, className: "text-right" },
-  { key: "installs", header: "Installs", render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>, sortValue: (r) => r.installs ?? -1, className: "text-right" },
+  {
+    key: "try",
+    header: "Try Theme",
+    render: (r) => <span className="tabular-nums">{formatCount(r.tryTheme)}</span>,
+    sortValue: (r) => r.tryTheme ?? -1,
+    className: "text-right",
+  },
+  {
+    key: "installs",
+    header: "Installs",
+    render: (r) => <span className="tabular-nums">{formatCount(r.installs)}</span>,
+    sortValue: (r) => r.installs ?? -1,
+    className: "text-right",
+  },
   { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-  { key: "rate", header: "Installs / sales", render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>, sortValue: (r) => r.installRate ?? -1, className: "text-right" },
-  { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
+  {
+    key: "rate",
+    header: "Installs / sales",
+    render: (r) => <span className="tabular-nums">{formatRate(r.installRate)}</span>,
+    sortValue: (r) => r.installRate ?? -1,
+    className: "text-right",
+  },
+  {
+    key: "gross",
+    header: "Revenue",
+    render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>,
+    sortValue: (r) => r.gross,
+    className: "text-right",
+  },
 ];
 
 export function ThemesTab({ data }: { data: SalesSummary }) {
@@ -48,7 +96,13 @@ export function ThemesTab({ data }: { data: SalesSummary }) {
       </section>
       <section className="flex flex-col gap-3">
         <SectionTitle title="Month by month" description="Each month's Try Theme clicks and installs next to that month's sales." />
-        <ResponsiveTable columns={MONTH_COLUMNS} rows={data.themeMonths} rowKey={(r) => `${r.themeId}-${r.month}`} emptyMessage="No data in these months." pageSize={24} />
+        <ResponsiveTable
+          columns={MONTH_COLUMNS}
+          rows={data.themeMonths}
+          rowKey={(r) => `${r.themeId}-${r.month}`}
+          emptyMessage="No data in these months."
+          pageSize={24}
+        />
       </section>
     </div>
   );

@@ -103,9 +103,7 @@ describe("fetchPageFacts", () => {
   });
 
   it("fetches and parses in one call", async () => {
-    global.fetch = vi
-      .fn()
-      .mockResolvedValue({ ok: true, text: async () => '<meta name="description" content="hi">' }) as unknown as typeof fetch;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => '<meta name="description" content="hi">' }) as unknown as typeof fetch;
     const facts = await fetchPageFacts("https://example.com");
     expect(facts.url).toBe("https://example.com");
     expect(facts.metaDescription).toBe("hi");

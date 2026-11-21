@@ -33,11 +33,7 @@ export const AGGREGATE_BREAKDOWNS = {
 export type AggregateBreakdown = keyof typeof AGGREGATE_BREAKDOWNS;
 
 /** GA4 Data API dimension names, used verbatim as keys of AnalyticsAggregate.dims. */
-export type AggregateDimension =
-  | "country"
-  | "deviceCategory"
-  | "landingPage"
-  | "pagePath";
+export type AggregateDimension = "country" | "deviceCategory" | "landingPage" | "pagePath";
 
 /**
  * Deterministic key for a row's dimension values — part of

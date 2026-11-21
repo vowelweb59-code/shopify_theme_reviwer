@@ -16,7 +16,9 @@ import { ServiceChatConnection } from "@/models/service-chat";
 // scheduler (this month every 15 minutes; once per IST day also last month, for late posts).
 
 export async function serviceRefreshToken(): Promise<string> {
-  const conn = await ServiceChatConnection.findOne({ key: "service-chat", status: "active" }).select("+encryptedRefreshToken").lean<{ encryptedRefreshToken: string | null } | null>();
+  const conn = await ServiceChatConnection.findOne({ key: "service-chat", status: "active" })
+    .select("+encryptedRefreshToken")
+    .lean<{ encryptedRefreshToken: string | null } | null>();
   if (!conn?.encryptedRefreshToken) throw new Error("Google Chat is not connected for the service team yet.");
   return decryptSecret(conn.encryptedRefreshToken);
 }
@@ -51,7 +53,10 @@ async function runServiceMonth(month: string, trigger: "manual" | "auto") {
     const plan = filterPlanToDigitalMarketing(planImport({ month, spaces, clients: await loadClientRegistry() }), await loadDmProjects());
     const saved = await persistPlan(plan, spaces);
     const result = { month, fetched: messages.length, summary: plan.summary, saved };
-    await ServiceChatConnection.updateOne({ key: "service-chat" }, { $set: { lastSyncAt: new Date(), lastResult: { month, fetched: messages.length, ...saved }, lastError: null } });
+    await ServiceChatConnection.updateOne(
+      { key: "service-chat" },
+      { $set: { lastSyncAt: new Date(), lastResult: { month, fetched: messages.length, ...saved }, lastError: null } }
+    );
     await recordServiceAudit(trigger === "manual" ? "chat.sync" : "chat.auto_sync", { month, fetched: messages.length, ...saved });
     return result;
   } catch (err) {

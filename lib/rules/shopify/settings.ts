@@ -110,7 +110,7 @@ const missingLabelRule: Rule = {
   category: "Theme Store Compliance",
   defaultSeverity: "low",
   title: "Every setting must have a label",
-  description: "All theme settings must have a label (header/paragraph settings use \"content\" instead and are exempt).",
+  description: 'All theme settings must have a label (header/paragraph settings use "content" instead and are exempt).',
   sourceReference: "Shopify Theme Store requirements",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   check({ files }) {

@@ -58,14 +58,22 @@ export async function exchangeAdsCode(code: string, client: OAuth2Client = creat
   } catch {
     throw new AdsOAuthError("token_exchange_failed", "Google rejected the sign-in. Try connecting again.");
   }
-  if (!tokens.access_token || !tokens.expiry_date) throw new AdsOAuthError("token_exchange_failed", "Google returned an incomplete token set. Try connecting again.");
+  if (!tokens.access_token || !tokens.expiry_date)
+    throw new AdsOAuthError("token_exchange_failed", "Google returned an incomplete token set. Try connecting again.");
   const scopes = (tokens.scope ?? "").split(/\s+/).filter(Boolean);
   if (!scopes.includes(ADS_SCOPE)) throw new AdsOAuthError("missing_scope", "Access to Google Ads wasn't granted. Reconnect and leave every checkbox ticked.");
   if (!tokens.id_token) throw new AdsOAuthError("invalid_identity", "Google didn't identify the account. Try connecting again.");
   const ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: client._clientId }).catch(() => null);
   const payload = ticket?.getPayload();
   if (!payload?.sub || !payload.email) throw new AdsOAuthError("invalid_identity", "Couldn't verify which Google account signed in. Try connecting again.");
-  return { googleAccountId: payload.sub, email: payload.email, accessToken: tokens.access_token, refreshToken: tokens.refresh_token ?? null, expiryDate: new Date(tokens.expiry_date), scopes };
+  return {
+    googleAccountId: payload.sub,
+    email: payload.email,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token ?? null,
+    expiryDate: new Date(tokens.expiry_date),
+    scopes,
+  };
 }
 
 type ConnectionDoc = NonNullable<Awaited<ReturnType<typeof loadAdsConnection>>>;
@@ -124,7 +132,8 @@ export async function listAdsAccounts(accessToken: string, fetcher: typeof fetch
         body: JSON.stringify({ query: "SELECT customer.descriptive_name, customer.manager, customer.currency_code FROM customer LIMIT 1" }),
       });
       if (!res.ok) return { id, name: null, manager: false, currency: null, error: await apiError(res) };
-      const c = ((await res.json()) as { results?: { customer?: { descriptiveName?: string; manager?: boolean; currencyCode?: string } }[] }).results?.[0]?.customer;
+      const c = ((await res.json()) as { results?: { customer?: { descriptiveName?: string; manager?: boolean; currencyCode?: string } }[] }).results?.[0]
+        ?.customer;
       return { id, name: c?.descriptiveName ?? null, manager: Boolean(c?.manager), currency: c?.currencyCode ?? null };
     })
   );

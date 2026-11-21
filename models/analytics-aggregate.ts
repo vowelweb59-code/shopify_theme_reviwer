@@ -47,10 +47,7 @@ const analyticsAggregateSchema = new Schema(
 );
 
 // Upsert target — makes re-syncing an overlapping date range idempotent.
-analyticsAggregateSchema.index(
-  { analyticsThemeId: 1, date: 1, breakdown: 1, eventName: 1, dimsKey: 1 },
-  { unique: true, name: "aggregate_row_identity" }
-);
+analyticsAggregateSchema.index({ analyticsThemeId: 1, date: 1, breakdown: 1, eventName: 1, dimsKey: 1 }, { unique: true, name: "aggregate_row_identity" });
 // Single-theme dashboard reads: one breakdown over a date range.
 analyticsAggregateSchema.index({ analyticsThemeId: 1, breakdown: 1, eventName: 1, date: 1 });
 // "All Themes" reads: same, across every theme.

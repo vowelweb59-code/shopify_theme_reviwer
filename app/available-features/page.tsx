@@ -23,7 +23,6 @@ type ThemeFeatures = {
   features: FeatureRow[];
 };
 
-
 const STATUS_LABEL: Record<FeatureRow["status"], string> = {
   detected: "Detected",
   not_detected: "Not detected",
@@ -55,9 +54,7 @@ function ThemeChecklist({ theme }: { theme: ThemeFeatures }) {
                 <span className="text-zinc-700 dark:text-zinc-300" title={f.note ?? undefined}>
                   {f.label}
                 </span>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_CLASS[f.status]}`}>
-                  {STATUS_LABEL[f.status]}
-                </span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_CLASS[f.status]}`}>{STATUS_LABEL[f.status]}</span>
               </li>
             ))}
           </ul>
@@ -92,16 +89,14 @@ export default function AvailableFeaturesPage() {
       <div>
         <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Available Features</h1>
         <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
-          Shopify&apos;s optional Theme Store feature checklist, checked against each theme&apos;s latest audit.
-          &quot;Not yet checked&quot; means no detector exists for that feature yet — it&apos;s never guessed at.
+          Shopify&apos;s optional Theme Store feature checklist, checked against each theme&apos;s latest audit. &quot;Not yet checked&quot; means no detector
+          exists for that feature yet — it&apos;s never guessed at.
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
         {loading && <p className="text-sm text-zinc-500">Loading…</p>}
-        {!loading && rows.length === 0 && (
-          <p className="text-sm text-zinc-500">No completed audits yet — run one from the Audit page.</p>
-        )}
+        {!loading && rows.length === 0 && <p className="text-sm text-zinc-500">No completed audits yet — run one from the Audit page.</p>}
         {rows.map((theme) => {
           const isOpen = expanded === theme.themeId;
           return (

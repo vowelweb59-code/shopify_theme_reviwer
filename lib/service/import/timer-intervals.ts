@@ -1,7 +1,7 @@
 // Turns ON/OFF events into worked intervals. Hours are calculated: OFF timestamp minus ON timestamp.
 // Anything that cannot be paired cleanly is flagged and contributes no hours.
-import type { TimerEvent } from './timer-message';
-import { editDistance, istDate } from './text';
+import type { TimerEvent } from "./timer-message";
+import { editDistance, istDate } from "./text";
 
 export const MAX_PLAUSIBLE_MINUTES = 16 * 60;
 
@@ -21,42 +21,67 @@ export interface TimerInterval {
   flags: string[];
   /** Informational only, e.g. a client typo that was auto-corrected. Never triggers review. */
   notes: string[];
-  state: 'PARSED' | 'NEEDS_REVIEW';
+  state: "PARSED" | "NEEDS_REVIEW";
 }
 
-const finish = (i: Omit<TimerInterval, 'state' | 'notes'> & { notes?: string[] }): TimerInterval => ({
+const finish = (i: Omit<TimerInterval, "state" | "notes"> & { notes?: string[] }): TimerInterval => ({
   ...i,
   notes: i.notes ?? [],
-  state: i.flags.length ? 'NEEDS_REVIEW' : 'PARSED',
+  state: i.flags.length ? "NEEDS_REVIEW" : "PARSED",
 });
 
 function closed(on: TimerEvent, off: TimerEvent, notes: string[]): TimerInterval {
   const ms = off.at.getTime() - on.at.getTime();
   const flags = [...on.flags, ...off.flags];
   let minutes: number | null = null;
-  if (ms <= 0) flags.push('INVALID_DURATION');
+  if (ms <= 0) flags.push("INVALID_DURATION");
   else {
     minutes = Math.round(ms / 60_000);
-    if (minutes > MAX_PLAUSIBLE_MINUTES) flags.push('SUSPICIOUS_DURATION');
-    if (istDate(on.at) !== istDate(off.at)) flags.push('CROSSES_MIDNIGHT');
+    if (minutes > MAX_PLAUSIBLE_MINUTES) flags.push("SUSPICIOUS_DURATION");
+    if (istDate(on.at) !== istDate(off.at)) flags.push("CROSSES_MIDNIGHT");
   }
   return finish({
-    senderId: on.senderId, client: on.client, profile: on.profile, startAt: on.at, endAt: off.at,
-    minutes: ms <= 0 ? null : minutes, istDate: istDate(on.at), startMessageId: on.messageId, endMessageId: off.messageId, flags, notes,
+    senderId: on.senderId,
+    client: on.client,
+    profile: on.profile,
+    startAt: on.at,
+    endAt: off.at,
+    minutes: ms <= 0 ? null : minutes,
+    istDate: istDate(on.at),
+    startMessageId: on.messageId,
+    endMessageId: off.messageId,
+    flags,
+    notes,
   });
 }
 
 const open = (on: TimerEvent, extra: string[]): TimerInterval =>
   // An ON with no OFF is ALWAYS flagged, however it arose.
   finish({
-    senderId: on.senderId, client: on.client, profile: on.profile, startAt: on.at, endAt: null, minutes: null,
-    istDate: istDate(on.at), startMessageId: on.messageId, endMessageId: null, flags: [...on.flags, 'OPEN_INTERVAL', ...extra],
+    senderId: on.senderId,
+    client: on.client,
+    profile: on.profile,
+    startAt: on.at,
+    endAt: null,
+    minutes: null,
+    istDate: istDate(on.at),
+    startMessageId: on.messageId,
+    endMessageId: null,
+    flags: [...on.flags, "OPEN_INTERVAL", ...extra],
   });
 
 const orphan = (off: TimerEvent): TimerInterval =>
   finish({
-    senderId: off.senderId, client: off.client, profile: off.profile, startAt: null, endAt: off.at, minutes: null,
-    istDate: istDate(off.at), startMessageId: null, endMessageId: off.messageId, flags: [...off.flags, 'ORPHAN_OFF'],
+    senderId: off.senderId,
+    client: off.client,
+    profile: off.profile,
+    startAt: null,
+    endAt: off.at,
+    minutes: null,
+    istDate: istDate(off.at),
+    startMessageId: null,
+    endMessageId: off.messageId,
+    flags: [...off.flags, "ORPHAN_OFF"],
   });
 
 /**
@@ -72,9 +97,9 @@ export function pairTimerEvents(events: readonly TimerEvent[]): TimerInterval[] 
   for (const ev of sorted) {
     const lane = `${ev.senderId}\u0000${ev.profileKey}`;
     const opens = openByLane.get(lane) ?? [];
-    if (ev.direction === 'ON') {
+    if (ev.direction === "ON") {
       const dup = opens.findIndex((o) => o.clientKey === ev.clientKey);
-      if (dup >= 0) out.push(open(opens.splice(dup, 1)[0], ['DUPLICATE_ON']));
+      if (dup >= 0) out.push(open(opens.splice(dup, 1)[0], ["DUPLICATE_ON"]));
       opens.push(ev);
       openByLane.set(lane, opens);
       continue;
@@ -85,7 +110,7 @@ export function pairTimerEvents(events: readonly TimerEvent[]): TimerInterval[] 
       const near = opens.map((o, i) => ({ i, d: editDistance(o.clientKey, ev.clientKey) })).filter((x) => x.d <= 2 && ev.clientKey.length >= 5);
       if (near.length === 1 && opens.length === 1) {
         idx = near[0].i;
-        notes = ['CLIENT_NAME_CORRECTED'];
+        notes = ["CLIENT_NAME_CORRECTED"];
       }
     }
     if (idx < 0) out.push(orphan(ev));

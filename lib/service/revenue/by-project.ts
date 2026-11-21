@@ -5,7 +5,20 @@
 // client's projects by the team's hours that month (that period, then equally, when there are none). A project the sheet has no money for
 // keeps an empty "We took" but is still listed. Pure.
 import { matchClient } from "./match";
-import { priceMinutes, type AppClient } from "./compare";
+import { STANDARD_RATE_CENTS } from "../hours/fixed-budget";
+
+/** A client of the app: its name and the other spellings the sales sheet may use for it. */
+export interface AppClient {
+  id: string;
+  name: string;
+  aliases: readonly string[];
+}
+
+/** What minutes of work were worth: at the project's rate, a fixed project with no rate at the standard $15/h, otherwise not priced (null). */
+export function priceMinutes(minutes: number, type: "HOURLY" | "FIXED" | null, rateCents: number | null): number | null {
+  const rate = rateCents ?? (type === "FIXED" ? STANDARD_RATE_CENTS : null);
+  return rate === null ? null : (minutes / 60) * rate;
+}
 
 export interface RevProject {
   id: string;
@@ -17,10 +30,23 @@ export interface RevProject {
   type: "HOURLY" | "FIXED" | null;
   rateCents: number | null;
 }
-export interface ProjectHours { projectId: string; month: string; minutes: number }
-export interface SheetRow { month: string; clientName: string; profile: string | null; amountCents: number }
+export interface ProjectHours {
+  projectId: string;
+  month: string;
+  minutes: number;
+}
+export interface SheetRow {
+  month: string;
+  clientName: string;
+  profile: string | null;
+  amountCents: number;
+}
 
-export interface ProjectMonth { takenCents: number; shouldCents: number; minutes: number }
+export interface ProjectMonth {
+  takenCents: number;
+  shouldCents: number;
+  minutes: number;
+}
 export interface ProjectLine {
   id: string;
   name: string;
@@ -43,17 +69,47 @@ export interface ProjectRevenue {
   fuzzy: Array<{ sheet: string; client: string }>;
 }
 
-export const profileKey = (s: string | null | undefined) => (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+export const profileKey = (s: string | null | undefined) =>
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-export function revenueByProject(input: { projects: readonly RevProject[]; clients: readonly AppClient[]; hours: readonly ProjectHours[]; taken: readonly SheetRow[] }, from: string, to: string): ProjectRevenue {
+export function revenueByProject(
+  input: { projects: readonly RevProject[]; clients: readonly AppClient[]; hours: readonly ProjectHours[]; taken: readonly SheetRow[] },
+  from: string,
+  to: string
+): ProjectRevenue {
   const nameOf = new Map(input.clients.map((c) => [c.id, c.name]));
   const names = input.clients.map((c) => ({ id: c.id, names: [c.name, ...c.aliases] }));
   const cache = new Map<string, ReturnType<typeof matchClient>>();
-  const matchOf = (n: string) => { let m = cache.get(n); if (!m) { m = matchClient(n, names); cache.set(n, m); } return m; };
+  const matchOf = (n: string) => {
+    let m = cache.get(n);
+    if (!m) {
+      m = matchClient(n, names);
+      cache.set(n, m);
+    }
+    return m;
+  };
 
   const lines = new Map<string, ProjectLine>();
   for (const p of input.projects) {
-    lines.set(p.id, { id: p.id, name: p.name, status: p.status, clientName: p.clientId ? nameOf.get(p.clientId) ?? null : null, hasSheetMoney: false, takenCents: 0, minutes: 0, shouldCents: 0, unpricedMinutes: 0, active: false, months: {} });
+    lines.set(p.id, {
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      clientName: p.clientId ? (nameOf.get(p.clientId) ?? null) : null,
+      hasSheetMoney: false,
+      takenCents: 0,
+      minutes: 0,
+      shouldCents: 0,
+      unpricedMinutes: 0,
+      active: false,
+      months: {},
+    });
   }
   const month = (l: ProjectLine, m: string) => (l.months[m] ??= { takenCents: 0, shouldCents: 0, minutes: 0 });
   const byId = new Map(input.projects.map((p) => [p.id, p]));
@@ -69,7 +125,10 @@ export function revenueByProject(input: { projects: readonly RevProject[]; clien
     month(l, h.month).minutes += h.minutes;
     const cents = priceMinutes(h.minutes, p.type, p.rateCents);
     if (cents === null) l.unpricedMinutes += h.minutes;
-    else { l.shouldCents += cents; month(l, h.month).shouldCents += cents; }
+    else {
+      l.shouldCents += cents;
+      month(l, h.month).shouldCents += cents;
+    }
     hoursIn.set(h.projectId, (hoursIn.get(h.projectId) ?? 0) + h.minutes);
     hoursAt.set(`${h.projectId}|${h.month}`, (hoursAt.get(`${h.projectId}|${h.month}`) ?? 0) + h.minutes);
   }
@@ -82,8 +141,11 @@ export function revenueByProject(input: { projects: readonly RevProject[]; clien
   for (const t of input.taken) {
     if (t.month < from || t.month > to) continue;
     const m = matchOf(t.clientName);
-    const candidates = m.clientId ? byClient.get(m.clientId) ?? [] : [];
-    if (m.clientId === null || candidates.length === 0) { sheetOnly.set(t.clientName, (sheetOnly.get(t.clientName) ?? 0) + t.amountCents); continue; }
+    const candidates = m.clientId ? (byClient.get(m.clientId) ?? []) : [];
+    if (m.clientId === null || candidates.length === 0) {
+      sheetOnly.set(t.clientName, (sheetOnly.get(t.clientName) ?? 0) + t.amountCents);
+      continue;
+    }
     if (m.how === "fuzzy") fuzzy.set(t.clientName, nameOf.get(m.clientId) ?? m.clientId);
     const profile = profileKey(t.profile);
     const byProfile = profile ? candidates.filter((p) => p.profileKeys.includes(profile)) : [];

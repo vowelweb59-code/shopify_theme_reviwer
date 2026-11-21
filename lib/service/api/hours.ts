@@ -107,7 +107,14 @@ async function senderNamesUncached(): Promise<Map<string, string>> {
   return new Map(rows.map((s) => [s.externalId, s.displayName]));
 }
 
-type ProjectRow = { _id: string; name: string; clientId: string | null; upworkAccountId: string | null; status: string; contract: (Omit<Contract, "projectId" | "startDate" | "endDate"> & { startDate: Date | null; endDate: Date | null }) | null };
+type ProjectRow = {
+  _id: string;
+  name: string;
+  clientId: string | null;
+  upworkAccountId: string | null;
+  status: string;
+  contract: (Omit<Contract, "projectId" | "startDate" | "endDate"> & { startDate: Date | null; endDate: Date | null }) | null;
+};
 
 async function project(id: string): Promise<ProjectRow> {
   const p = await ServiceProject.findById(id).select("name clientId upworkAccountId status contract").lean<ProjectRow | null>();
@@ -119,8 +126,17 @@ function shape(p: ProjectRow): Contract | null {
   const c = p.contract;
   if (!c) return null;
   return {
-    projectId: p._id, type: c.type, weeklyLimitMinutes: c.weeklyLimitMinutes ?? null, weeklyLimitHistory: c.weeklyLimitHistory ?? [], hourlyRateCents: c.hourlyRateCents ?? null, fixedPriceCents: c.fixedPriceCents ?? null,
-    trackingMode: c.trackingMode ?? null, externalRef: c.externalRef ?? null, startDate: day(c.startDate), endDate: day(c.endDate), status: c.status,
+    projectId: p._id,
+    type: c.type,
+    weeklyLimitMinutes: c.weeklyLimitMinutes ?? null,
+    weeklyLimitHistory: c.weeklyLimitHistory ?? [],
+    hourlyRateCents: c.hourlyRateCents ?? null,
+    fixedPriceCents: c.fixedPriceCents ?? null,
+    trackingMode: c.trackingMode ?? null,
+    externalRef: c.externalRef ?? null,
+    startDate: day(c.startDate),
+    endDate: day(c.endDate),
+    status: c.status,
   };
 }
 
@@ -130,12 +146,27 @@ export async function getContract(id: string) {
 
 export async function putContract(id: string, body: Record<string, unknown>) {
   const p = await project(id);
-  const allowed = new Set(["type", "weeklyLimitMinutes", "limitChange", "limitFrom", "hourlyRateCents", "fixedPriceCents", "trackingMode", "externalRef", "startDate", "endDate", "status"]);
+  const allowed = new Set([
+    "type",
+    "weeklyLimitMinutes",
+    "limitChange",
+    "limitFrom",
+    "hourlyRateCents",
+    "fixedPriceCents",
+    "trackingMode",
+    "externalRef",
+    "startDate",
+    "endDate",
+    "status",
+  ]);
   for (const k of Object.keys(body)) if (!allowed.has(k)) throw badRequest(`Unknown field: ${k}`);
   const cur = p.contract;
   // Owner, 2026-11-17: changing an existing weekly limit must say whether it is a correction of the original value or the client
   // changing the scope; a scope change needs the date it applies from and is kept as a dated step.
-  const nextLimit = "weeklyLimitMinutes" in body ? int(body.weeklyLimitMinutes, "weeklyLimitMinutes", { min: 1, max: 168 * 60, optional: true }) : cur?.weeklyLimitMinutes ?? null;
+  const nextLimit =
+    "weeklyLimitMinutes" in body
+      ? int(body.weeklyLimitMinutes, "weeklyLimitMinutes", { min: 1, max: 168 * 60, optional: true })
+      : (cur?.weeklyLimitMinutes ?? null);
   const prevLimit = cur?.weeklyLimitMinutes ?? null;
   let history: LimitStep[] = cur?.weeklyLimitHistory ?? [];
   if (nextLimit !== prevLimit) {
@@ -153,16 +184,28 @@ export async function putContract(id: string, body: Record<string, unknown>) {
     weeklyLimitHistory: history,
     type: oneOf(body.type ?? cur?.type ?? "HOURLY", "type", ["HOURLY", "FIXED"] as const),
     weeklyLimitMinutes: nextLimit,
-    hourlyRateCents: "hourlyRateCents" in body ? int(body.hourlyRateCents, "hourlyRateCents", { max: 1_000_000, optional: true }) : cur?.hourlyRateCents ?? null,
-    fixedPriceCents: "fixedPriceCents" in body ? int(body.fixedPriceCents, "fixedPriceCents", { max: 100_000_000, optional: true }) : cur?.fixedPriceCents ?? null,
-    trackingMode: "trackingMode" in body ? (body.trackingMode === null ? null : oneOf(body.trackingMode, "trackingMode", ["TIMER", "MANUAL"] as const)) : cur?.trackingMode ?? null,
-    externalRef: "externalRef" in body ? str(body.externalRef, "externalRef", { optional: true }) : cur?.externalRef ?? null,
-    startDate: "startDate" in body ? isoDay(body.startDate, "startDate") : cur?.startDate ?? null,
-    endDate: "endDate" in body ? isoDay(body.endDate, "endDate") : cur?.endDate ?? null,
+    hourlyRateCents:
+      "hourlyRateCents" in body ? int(body.hourlyRateCents, "hourlyRateCents", { max: 1_000_000, optional: true }) : (cur?.hourlyRateCents ?? null),
+    fixedPriceCents:
+      "fixedPriceCents" in body ? int(body.fixedPriceCents, "fixedPriceCents", { max: 100_000_000, optional: true }) : (cur?.fixedPriceCents ?? null),
+    trackingMode:
+      "trackingMode" in body
+        ? body.trackingMode === null
+          ? null
+          : oneOf(body.trackingMode, "trackingMode", ["TIMER", "MANUAL"] as const)
+        : (cur?.trackingMode ?? null),
+    externalRef: "externalRef" in body ? str(body.externalRef, "externalRef", { optional: true }) : (cur?.externalRef ?? null),
+    startDate: "startDate" in body ? isoDay(body.startDate, "startDate") : (cur?.startDate ?? null),
+    endDate: "endDate" in body ? isoDay(body.endDate, "endDate") : (cur?.endDate ?? null),
     status: oneOf(body.status ?? cur?.status ?? "ACTIVE", "status", ["ACTIVE", "PAUSED", "ENDED"] as const),
   };
   await ServiceProject.updateOne({ _id: id }, { $set: { contract: next } });
-  await recordServiceAudit("contract.set", { projectId: id, type: next.type, weeklyLimitMinutes: next.weeklyLimitMinutes, rateChanged: "hourlyRateCents" in body || "fixedPriceCents" in body });
+  await recordServiceAudit("contract.set", {
+    projectId: id,
+    type: next.type,
+    weeklyLimitMinutes: next.weeklyLimitMinutes,
+    rateChanged: "hourlyRateCents" in body || "fixedPriceCents" in body,
+  });
   return shape(await project(id));
 }
 
@@ -190,21 +233,30 @@ export async function projectWeek(id: string, weekRaw?: string | null, teamOnly 
   // Entries of a client with several projects count here only when they were placed on this one.
   const entries = all.filter((e) => projectOf(e, owner) === id && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
   const hourEntries: HourEntry[] = entries.map((e) => ({ date: day(e.entryDate)!, minutes: e.minutes, source: e.source, confirmed: isConfirmed(e) }));
-  const hours = by === "month"
-    ? periodHours(hourEntries, limitForPeriod(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.start, week.end), week)
-    : weeklyHours(hourEntries, limitForWeek(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.end), week.start);
+  const hours =
+    by === "month"
+      ? periodHours(hourEntries, limitForPeriod(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.start, week.end), week)
+      : weeklyHours(hourEntries, limitForWeek(contract.weeklyLimitHistory, contract.weeklyLimitMinutes, week.end), week.start);
   const dayCount = Math.round((Date.parse(`${week.end}T00:00:00Z`) - Date.parse(`${week.start}T00:00:00Z`)) / 86_400_000) + 1;
   const byDay = Array.from({ length: dayCount }, (_, i) => {
     const d = shiftDays(week.start, i);
     return { date: d, minutes: hourEntries.filter((e) => e.date === d && e.confirmed).reduce((n, e) => n + e.minutes, 0) };
   });
   const bySender = new Map<string, number>();
-  for (const e of entries) if (isConfirmed(e)) {
-    const n = names.get(e.senderExternalId) ?? "Unknown sender";
-    bySender.set(n, (bySender.get(n) ?? 0) + e.minutes);
-  }
+  for (const e of entries)
+    if (isConfirmed(e)) {
+      const n = names.get(e.senderExternalId) ?? "Unknown sender";
+      bySender.set(n, (bySender.get(n) ?? 0) + e.minutes);
+    }
   return {
-    week, by, contract, reason: null, sharedClient: !!p.clientId && shared.has(p.clientId), unassignedEntries: all.filter((e) => projectOf(e, owner) !== id).length, hours, byDay,
+    week,
+    by,
+    contract,
+    reason: null,
+    sharedClient: !!p.clientId && shared.has(p.clientId),
+    unassignedEntries: all.filter((e) => projectOf(e, owner) !== id).length,
+    hours,
+    byDay,
     bySender: [...bySender].map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes),
     needsReview: entries.filter(isPending).length,
   };
@@ -218,7 +270,9 @@ export async function teamHours(id: string, weekRaw?: string | null, teamOnly = 
   const [{ owner }, names] = await Promise.all([loadAttribution(), senderNames()]);
   const today = istDate(new Date());
   const since = shiftDays(today, -29);
-  const all = (await entriesFor({ clientId: p.clientId, projectId: id }, { start: "2000-01-01", end: "2100-01-01" })).filter((e) => projectOf(e, owner) === id && e.minutes > 0 && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null));
+  const all = (await entriesFor({ clientId: p.clientId, projectId: id }, { start: "2000-01-01", end: "2100-01-01" })).filter(
+    (e) => projectOf(e, owner) === id && e.minutes > 0 && (!teamOnly || dmMatch(names.get(e.senderExternalId)) !== null)
+  );
   const people = new Map<string, TeamHoursRow>();
   const monthSet = new Set<string>();
   for (const e of all) {
@@ -239,7 +293,15 @@ export async function teamHours(id: string, weekRaw?: string | null, teamOnly = 
   return { week, rows: [...people.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)), months: [...monthSet].sort() };
 }
 
-export type TeamHoursRow = { name: string; week: number; last30: number; total: number; lastReport: string; /** minutes per IST month "YYYY-MM" */ byMonth: Record<string, number>; /** minutes dated after the current month (typing errors) */ later: number };
+export type TeamHoursRow = {
+  name: string;
+  week: number;
+  last30: number;
+  total: number;
+  lastReport: string;
+  /** minutes per IST month "YYYY-MM" */ byMonth: Record<string, number>;
+  /** minutes dated after the current month (typing errors) */ later: number;
+};
 
 export type LiveReport = {
   id: string;
@@ -263,7 +325,15 @@ export async function liveReports(limitRaw?: string | null): Promise<LiveReport[
     { $match: { state: { $ne: "REJECTED" }, minutes: { $gt: 0 } } },
     { $sort: { entryDate: -1 } },
     { $limit: limit * 20 }, // newest days first, then order by posting time among them
-    { $lookup: { from: "service_chat_messages", localField: "sourceMessageId", foreignField: "_id", as: "msg", pipeline: [{ $project: { postedAt: 1, senderName: 1 } }] } },
+    {
+      $lookup: {
+        from: "service_chat_messages",
+        localField: "sourceMessageId",
+        foreignField: "_id",
+        as: "msg",
+        pipeline: [{ $project: { postedAt: 1, senderName: 1 } }],
+      },
+    },
     { $unwind: "$msg" },
     { $sort: { "msg.postedAt": -1 } },
     { $limit: limit },
@@ -271,14 +341,33 @@ export async function liveReports(limitRaw?: string | null): Promise<LiveReport[
   const { projects, owner } = await loadAttribution();
   const projectName = new Map(projects.map((p) => [p._id, p.name]));
   const clientIds = [...new Set(rows.map((r) => r.clientId).filter((x): x is string => !!x))];
-  const clients = new Map((await ServiceClient.find({ _id: { $in: clientIds } }).select("name inHouse").lean<Array<{ _id: string; name: string; inHouse: boolean }>>()).map((c) => [c._id, c]));
+  const clients = new Map(
+    (
+      await ServiceClient.find({ _id: { $in: clientIds } })
+        .select("name inHouse")
+        .lean<Array<{ _id: string; name: string; inHouse: boolean }>>()
+    ).map((c) => [c._id, c])
+  );
   return rows.map((e) => {
     const pids = e.allocations?.length ? e.allocations.map((a) => a.projectId) : [projectOf(e, owner)];
     const c = e.clientId ? clients.get(e.clientId) : undefined;
     return {
-      id: e._id, entryDate: day(e.entryDate)!, postedAt: new Date(e.msg.postedAt).toISOString(), sender: e.msg.senderName, client: c?.name ?? null, inHouse: c?.inHouse ?? false,
-      project: pids.map((x) => (x ? projectName.get(x) : null)).filter(Boolean).join(" + ") || null,
-      source: e.source, minutes: e.minutes, memo: e.memo, late: e.isLate, flagged: e.state === "NEEDS_REVIEW",
+      id: e._id,
+      entryDate: day(e.entryDate)!,
+      postedAt: new Date(e.msg.postedAt).toISOString(),
+      sender: e.msg.senderName,
+      client: c?.name ?? null,
+      inHouse: c?.inHouse ?? false,
+      project:
+        pids
+          .map((x) => (x ? projectName.get(x) : null))
+          .filter(Boolean)
+          .join(" + ") || null,
+      source: e.source,
+      minutes: e.minutes,
+      memo: e.memo,
+      late: e.isLate,
+      flagged: e.state === "NEEDS_REVIEW",
     };
   });
 }
@@ -296,43 +385,3 @@ export type DashboardRow = {
   sharedClient: boolean;
   active: boolean;
 };
-
-/** One row per live contract, Upwork style: completed, limit, remaining. Inactive ones (no hours in 4 weeks) hidden unless `all`. */
-export async function dashboardWeek(weekRaw?: string | null, all = false) {
-  const week = weekParam(weekRaw);
-  const { projects, owner, shared } = await loadAttribution();
-  const [entries, recent, inHouseRows] = await Promise.all([
-    entriesFor("ANY", week),
-    entriesFor("ANY", { start: shiftDays(week.start, -21), end: week.end }),
-    ServiceClient.find({ inHouse: true }).select("_id").lean<Array<{ _id: string }>>(),
-  ]);
-  const activeProjects = new Set(recent.filter((e) => e.minutes > 0).map((e) => projectOf(e, owner)).filter((x): x is string => x !== null));
-  const byProject = new Map<string, EntryLite[]>();
-  for (const e of entries) {
-    const pid = projectOf(e, owner);
-    if (pid) byProject.set(pid, [...(byProject.get(pid) ?? []), e]);
-  }
-  const everyRow: DashboardRow[] = projects.map((p) => {
-    const own = byProject.get(p._id) ?? [];
-    const sharedClient = p.clientId ? shared.has(p.clientId) : false;
-    const c = p.contract!;
-    return {
-      projectId: p._id, projectName: p.name, projectStatus: p.status, contractType: c.type as "HOURLY" | "FIXED", contractStatus: c.status,
-      hours: weeklyHours(own.map((e) => ({ date: day(e.entryDate)!, minutes: e.minutes, source: e.source, confirmed: isConfirmed(e) })), c.weeklyLimitMinutes, week.start),
-      needsReview: own.filter(isPending).length,
-      idle: c.status === "ACTIVE" && c.type === "HOURLY" && own.length === 0 && !sharedClient,
-      unassigned: false, sharedClient, active: activeProjects.has(p._id),
-    };
-  });
-  const rows = all ? everyRow : everyRow.filter((r) => r.active);
-  const inHouseIds = new Set(inHouseRows.map((c) => c._id));
-  const isInHouse = (e: EntryLite) => !!e.clientId && inHouseIds.has(e.clientId);
-  const loose = entries.filter((e) => projectOf(e, owner) === null && !isInHouse(e));
-  const inHouse = entries.filter(isInHouse);
-  return {
-    week, rows, hiddenInactive: everyRow.length - rows.length,
-    inHouse: { entries: inHouse.length, minutes: inHouse.filter(isConfirmed).reduce((n, e) => n + e.minutes, 0) },
-    unassigned: { entries: loose.length, minutes: loose.filter(isConfirmed).reduce((n, e) => n + e.minutes, 0), needsReview: loose.filter(isPending).length },
-  };
-}
-

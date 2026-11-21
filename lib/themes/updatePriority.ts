@@ -35,8 +35,7 @@ export type UpdatePriorityResult = {
 
 export function computeUpdatePriority(input: UpdatePriorityInput, now: Date = new Date()): UpdatePriorityResult {
   const releasedAt = input.themeStoreVersionReleasedAt ? new Date(input.themeStoreVersionReleasedAt) : null;
-  const daysSinceUpdate =
-    releasedAt && !Number.isNaN(releasedAt.getTime()) ? Math.floor((now.getTime() - releasedAt.getTime()) / 86_400_000) : null;
+  const daysSinceUpdate = releasedAt && !Number.isNaN(releasedAt.getTime()) ? Math.floor((now.getTime() - releasedAt.getTime()) / 86_400_000) : null;
 
   const components: { weight: number; urgency: number }[] = [];
   if (daysSinceUpdate !== null) {

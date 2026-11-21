@@ -81,20 +81,14 @@ function PointCard({
               </span>
             )}
             {isNative && point.nativeCapabilityCompleteness === "partial" && (
-              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
-                Partially appless
-              </span>
+              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">Partially appless</span>
             )}
             {point.adoptionTier ? (
               <span className={`rounded-full px-2 py-0.5 text-xs ${TIER_STYLES[point.adoptionTier] ?? ""}`}>
                 {point.adoptionPercentage}% · {point.themeCount}/{point.themeTotal} themes
               </span>
             ) : (
-              isNative && (
-                <span className="rounded-full bg-zinc-500/10 px-2 py-0.5 text-xs text-zinc-500">
-                  Adoption not reliably measurable
-                </span>
-              )
+              isNative && <span className="rounded-full bg-zinc-500/10 px-2 py-0.5 text-xs text-zinc-500">Adoption not reliably measurable</span>
             )}
             {point.status !== "backlog" && (
               <span className="rounded-full bg-black/[.06] px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/[.08] dark:text-zinc-400">
@@ -169,11 +163,7 @@ function PointCard({
               )}
             </>
           ) : (
-            isNative && (
-              <p className="text-xs text-zinc-500">
-                No release-note adoption measurement for this point — see the description for why.
-              </p>
-            )
+            isNative && <p className="text-xs text-zinc-500">No release-note adoption measurement for this point — see the description for why.</p>
           )}
 
           <div className="flex flex-wrap items-center gap-2 border-t border-black/[.06] pt-3 dark:border-white/[.08]">
@@ -308,10 +298,9 @@ export function FutureUpdatesContent() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Future updates</h2>
         <p className="mt-1 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
-          Two kinds of points, both <strong>not</strong> approval requirements — nothing here affects submission
-          readiness or requirement coverage. <strong>Theme Store trends</strong> are measured from what competing
-          themes already ship. <strong>Native capabilities</strong> are documented Shopify features a theme can build
-          without installing any app.
+          Two kinds of points, both <strong>not</strong> approval requirements — nothing here affects submission readiness or requirement coverage.{" "}
+          <strong>Theme Store trends</strong> are measured from what competing themes already ship. <strong>Native capabilities</strong> are documented Shopify
+          features a theme can build without installing any app.
         </p>
       </div>
 
@@ -427,9 +416,8 @@ export function FutureUpdatesContent() {
         <div className="rounded-lg border border-dashed border-black/[.12] p-8 text-center text-sm text-zinc-500 dark:border-white/[.15]">
           <p className="font-medium text-zinc-700 dark:text-zinc-300">No enhancement points yet.</p>
           <p className="mt-2">
-            Run <code className="font-mono">npm run harvest:trends</code> then{" "}
-            <code className="font-mono">npm run seed:enhancements</code> for Theme Store trends, or{" "}
-            <code className="font-mono">npm run seed:native-capabilities</code> for native capabilities.
+            Run <code className="font-mono">npm run harvest:trends</code> then <code className="font-mono">npm run seed:enhancements</code> for Theme Store
+            trends, or <code className="font-mono">npm run seed:native-capabilities</code> for native capabilities.
           </p>
         </div>
       )}
@@ -470,8 +458,8 @@ export function FutureUpdatesContent() {
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Native capabilities (no app required)</h2>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Documented Shopify platform features — not Shopify Functions/Extensions or Flow, which still require
-              deploying an app — a theme can implement with Liquid/JS/CSS alone, each replacing a category of paid app.
+              Documented Shopify platform features — not Shopify Functions/Extensions or Flow, which still require deploying an app — a theme can implement with
+              Liquid/JS/CSS alone, each replacing a category of paid app.
             </p>
           </div>
           {nativeCategories.map((category) => (
@@ -499,9 +487,7 @@ export function FutureUpdatesContent() {
         </section>
       )}
 
-      {!loading && points.length > 0 && filtered.length === 0 && (
-        <p className="text-sm text-zinc-500">No points match those filters.</p>
-      )}
+      {!loading && points.length > 0 && filtered.length === 0 && <p className="text-sm text-zinc-500">No points match those filters.</p>}
     </div>
   );
 }

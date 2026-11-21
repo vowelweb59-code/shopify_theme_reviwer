@@ -12,10 +12,7 @@ import { Rule } from "@/models/rule";
 export async function GET() {
   await connectToDatabase();
 
-  const [requirements, rules] = await Promise.all([
-    Requirement.find().sort({ requirementId: 1 }).lean(),
-    Rule.find().lean(),
-  ]);
+  const [requirements, rules] = await Promise.all([Requirement.find().sort({ requirementId: 1 }).lean(), Rule.find().lean()]);
 
   const ruleByRequirementId = new Map(rules.filter((r) => r.requirementId).map((r) => [r.requirementId as string, r]));
 

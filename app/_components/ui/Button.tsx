@@ -9,8 +9,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover border border-transparent",
   secondary:
     "bg-transparent text-zinc-700 dark:text-zinc-300 border border-border-subtle hover:text-zinc-950 hover:border-border-strong dark:hover:text-zinc-50",
-  destructive:
-    "bg-transparent text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950",
+  destructive: "bg-transparent text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

@@ -21,7 +21,8 @@ describe("contrastFindingsFromPsi", () => {
       {
         node: {
           selector: "span.hero-title",
-          explanation: "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #f5f5f5, background color: #f7f7f7). Expected contrast ratio of 4.5:1",
+          explanation:
+            "Fix any of the following:\n  Element has insufficient color contrast of 1.01 (foreground color: #f5f5f5, background color: #f7f7f7). Expected contrast ratio of 4.5:1",
         },
       },
     ]);

@@ -11,9 +11,15 @@ describe("parseCatalogCards", () => {
   });
 
   it("keeps a free theme at 0 and dedupes repeated cards", () => {
-    const html = card("colorblock", "colorblock", "Colorblock", "0.00") + card("colorblock", "colorblock", "Colorblock", "0.00") + card("colorblock", "pop", "Pop", "0.00");
+    const html =
+      card("colorblock", "colorblock", "Colorblock", "0.00") +
+      card("colorblock", "colorblock", "Colorblock", "0.00") +
+      card("colorblock", "pop", "Pop", "0.00");
     const cards = parseCatalogCards(html);
-    expect(cards.map((c) => [c.presetSlug, c.price])).toEqual([["colorblock", 0], ["pop", 0]]);
+    expect(cards.map((c) => [c.presetSlug, c.price])).toEqual([
+      ["colorblock", 0],
+      ["pop", 0],
+    ]);
   });
 
   it("ignores links that aren't catalog cards", () => {
@@ -35,7 +41,12 @@ describe("parseLastPage / parseDesigner", () => {
 describe("parseCompanionApp", () => {
   it("reads the suggested app off a theme page", () => {
     const html = `<section data-companion-app-section><a href="https://apps.shopify.com/crawl-hunt?x=1" data-companion-app-listing-link><span data-companion-app-name>CrawlHunt - Fix SEO</span><span data-companion-app-subtitle>Improve &amp; fix</span></a><dd data-companion-app-pricing-summary>Free plan available</dd></section>`;
-    expect(parseCompanionApp(html)).toEqual({ name: "CrawlHunt - Fix SEO", subtitle: "Improve & fix", url: "https://apps.shopify.com/crawl-hunt", pricing: "Free plan available" });
+    expect(parseCompanionApp(html)).toEqual({
+      name: "CrawlHunt - Fix SEO",
+      subtitle: "Improve & fix",
+      url: "https://apps.shopify.com/crawl-hunt",
+      pricing: "Free plan available",
+    });
   });
   it("is null when the page has no such section", () => {
     expect(parseCompanionApp("<p>Features</p>")).toBeNull();

@@ -12,13 +12,16 @@ export default async function ServiceProfilesPage() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Upwork profiles</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          The name written after the client in Chat (Client | Profile). Add spelling variants as aliases and say which Upwork account each profile belongs to. Hours count either way.
+          The name written after the client in Chat (Client | Profile). Add spelling variants as aliases and say which Upwork account each profile belongs to.
+          Hours count either way.
         </p>
       </div>
 
       {data.unmatched.length > 0 && (
         <section aria-labelledby="unmatched" className={SECTION}>
-          <h3 id="unmatched" className="font-medium">Names not matched to a profile</h3>
+          <h3 id="unmatched" className="font-medium">
+            Names not matched to a profile
+          </h3>
           <ul className="mt-2 divide-y divide-border-subtle">
             <UnmatchedProfiles items={data.unmatched} profiles={data.profiles} />
           </ul>
@@ -26,7 +29,9 @@ export default async function ServiceProfilesPage() {
       )}
 
       <section aria-labelledby="profiles" className={SECTION}>
-        <h3 id="profiles" className="font-medium">Profiles</h3>
+        <h3 id="profiles" className="font-medium">
+          Profiles
+        </h3>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
@@ -38,7 +43,9 @@ export default async function ServiceProfilesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {data.profiles.map((p) => <ProfileRow key={p.id} profile={p} accounts={data.accounts} />)}
+              {data.profiles.map((p) => (
+                <ProfileRow key={p.id} profile={p} accounts={data.accounts} />
+              ))}
             </tbody>
           </table>
         </div>

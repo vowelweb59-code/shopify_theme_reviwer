@@ -28,28 +28,53 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const profileByName = new Map<string, string>();
   for (const p of profiles) for (const n of [p.name, ...(p.aliases ?? [])]) profileByName.set(nameKey(n), p._id);
-  const profileOf = (t: string | null) => (t ? profileByName.get(nameKey(t)) ?? null : null);
+  const profileOf = (t: string | null) => (t ? (profileByName.get(nameKey(t)) ?? null) : null);
 
   const ended: Parameters<typeof planClosures>[1] = [];
   const accepted: Parameters<typeof planClosures>[2] = [];
   for (const m of msgs) {
     const posted = new Date(m.postedAt);
     const post = parseNewProjectPost(m.text, posted);
-    if (post?.kind === "ended") ended.push({ client: post.client, rating: post.rating, profileId: profileOf(post.profile), profileText: post.profile, posted, ref: `chat:${m.externalId}` });
+    if (post?.kind === "ended")
+      ended.push({
+        client: post.client,
+        rating: post.rating,
+        profileId: profileOf(post.profile),
+        profileText: post.profile,
+        posted,
+        ref: `chat:${m.externalId}`,
+      });
     else if (post?.kind === "accepted") accepted.push({ client: post.client, profileId: profileOf(post.profile), posted });
   }
 
-  const heldRows = await ServiceProject.find({ status: "ON_HOLD" }).select("name clientId upworkProfileId history reviewRating").lean<Array<{ _id: string; name: string; clientId: string | null; upworkProfileId: string | null; history: Array<{ at: Date }>; reviewRating: number | null }>>();
-  const open = await ServiceProject.find({ status: { $in: ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD"] }, clientId: { $ne: null } }).select("clientId").lean<Array<{ clientId: string }>>();
+  const heldRows = await ServiceProject.find({ status: "ON_HOLD" })
+    .select("name clientId upworkProfileId history reviewRating")
+    .lean<
+      Array<{ _id: string; name: string; clientId: string | null; upworkProfileId: string | null; history: Array<{ at: Date }>; reviewRating: number | null }>
+    >();
+  const open = await ServiceProject.find({
+    status: { $in: ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD"] },
+    clientId: { $ne: null },
+  })
+    .select("clientId")
+    .lean<Array<{ clientId: string }>>();
   const perClient = new Map<string, number>();
   for (const o of open) perClient.set(o.clientId, (perClient.get(o.clientId) ?? 0) + 1);
-  const clients = await ServiceClient.find({ _id: { $in: heldRows.map((p) => p.clientId).filter((x): x is string => !!x) } }).select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
+  const clients = await ServiceClient.find({ _id: { $in: heldRows.map((p) => p.clientId).filter((x): x is string => !!x) } })
+    .select("name aliases")
+    .lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const clientNames = new Map(clients.map((c) => [c._id, [c.name, ...(c.aliases ?? [])]]));
 
   const plan = planClosures(
-    heldRows.map((p) => ({ id: p._id, name: p.name, clientNames: p.clientId ? clientNames.get(p.clientId) ?? [] : [], profileId: p.upworkProfileId, siblings: p.clientId ? Math.max(0, (perClient.get(p.clientId) ?? 1) - 1) : 0 })),
+    heldRows.map((p) => ({
+      id: p._id,
+      name: p.name,
+      clientNames: p.clientId ? (clientNames.get(p.clientId) ?? []) : [],
+      profileId: p.upworkProfileId,
+      siblings: p.clientId ? Math.max(0, (perClient.get(p.clientId) ?? 1) - 1) : 0,
+    })),
     ended,
-    accepted,
+    accepted
   );
   const result: CloseHeldResult = { ...plan, heldCount: heldRows.length, postsRead: msgs.length, applied: [] };
   if (!opts.apply) return result;
@@ -65,8 +90,15 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
       { _id: c.projectId, status: "ON_HOLD" },
       {
         $set: { status: "COMPLETED", ...(p.reviewRating == null && c.rating != null ? { reviewRating: c.rating, reviewedAt: c.endedOn } : {}) },
-        $push: { history: { fromStatus: "ON_HOLD", toStatus: "COMPLETED", reason: `Contract ended (New Project Update post of ${c.endedOn.toISOString().slice(0, 10)})`, at } },
-      },
+        $push: {
+          history: {
+            fromStatus: "ON_HOLD",
+            toStatus: "COMPLETED",
+            reason: `Contract ended (New Project Update post of ${c.endedOn.toISOString().slice(0, 10)})`,
+            at,
+          },
+        },
+      }
     );
     if (r.modifiedCount) result.applied.push(c.name);
   }

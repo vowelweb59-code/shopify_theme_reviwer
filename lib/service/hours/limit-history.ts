@@ -26,7 +26,9 @@ export function withCorrection(history: readonly LimitStep[], today: string, min
   if (!history.length) return [];
   const sorted = [...history].sort((a, b) => (a.from ?? "").localeCompare(b.from ?? ""));
   let idx = 0;
-  sorted.forEach((s, i) => { if (s.from === null || s.from <= today) idx = i; });
+  sorted.forEach((s, i) => {
+    if (s.from === null || s.from <= today) idx = i;
+  });
   return sorted.map((s, i) => (i === idx ? { ...s, minutes } : s));
 }
 
@@ -48,7 +50,10 @@ export function limitForPeriod(history: readonly LimitStep[], current: number | 
     const we = ws + 6 * DAY;
     const days = Math.min(we, endMs) / DAY - Math.max(ws, startMs) / DAY + 1;
     const limit = limitForWeek(history, current, toIso(we));
-    if (limit !== null) { total += (limit * days) / 7; any = true; }
+    if (limit !== null) {
+      total += (limit * days) / 7;
+      any = true;
+    }
   }
   return any ? Math.round(total) : null;
 }

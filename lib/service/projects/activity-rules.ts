@@ -85,10 +85,24 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
   const cutoff = workingDaysCutoff(now);
   const dmCutoff = new Date(new Date(`${istDay(now)}T00:00:00Z`).getTime() - (DM_IDLE_DAYS - 1) * DAY_MS);
   const att = await loadAttribution();
-  const senderName = new Map((await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).map((x) => [x.externalId, x.displayName]));
+  const senderName = new Map(
+    (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).map((x) => [
+      x.externalId,
+      x.displayName,
+    ])
+  );
   const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
     .select("projectId clientId minutes entryDate allocations senderExternalId")
-    .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
+    .lean<
+      Array<{
+        projectId: string | null;
+        clientId: string | null;
+        minutes: number;
+        entryDate: Date;
+        allocations: Array<{ projectId: string; minutes: number }>;
+        senderExternalId: string;
+      }>
+    >();
   const last = new Map<string, Date>();
   const lastDm = new Map<string, Date>();
   const first = new Map<string, Date>();
@@ -105,7 +119,9 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
     .select("name status createdAt startDate history")
     .lean<Array<{ _id: string; name: string; status: string; createdAt: Date; startDate: Date | null; history: Array<{ reason: string | null; at: Date }> }>>();
   const contractStarts = new Map<string, Date[]>();
-  for (const c of await ServiceUpworkContract.find({ projectId: { $in: projects.map((p) => p._id) }, startDate: { $ne: null } }).select("projectId startDate").lean<Array<{ projectId: string; startDate: Date }>>()) {
+  for (const c of await ServiceUpworkContract.find({ projectId: { $in: projects.map((p) => p._id) }, startDate: { $ne: null } })
+    .select("projectId startDate")
+    .lean<Array<{ projectId: string; startDate: Date }>>()) {
     contractStarts.set(c.projectId, [...(contractStarts.get(c.projectId) ?? []), c.startDate]);
   }
 
@@ -120,30 +136,48 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
     if (p.status === "ACTIVE") {
       if (!reason) continue;
       out.reasons[p.name] = reason;
-      if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ACTIVE" }, { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason, at: now } } });
+      if (!opts.dryRun)
+        await ServiceProject.updateOne(
+          { _id: p._id, status: "ACTIVE" },
+          { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason, at: now } } }
+        );
       out.held.push(p.name);
     } else if (latest?.reason === HOLD_UNTIL_TEAM_REASON) {
       // Held by the owner "until my team reports": resumes on the first team report dated after the day it was held.
       const dm = lastDm.get(p._id);
       if (dm && istDay(dm) > istDay(new Date(latest.at))) {
-        if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
+        if (!opts.dryRun)
+          await ServiceProject.updateOne(
+            { _id: p._id, status: "ON_HOLD" },
+            { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } }
+          );
         out.resumed.push(p.name);
       }
     } else if (!reason && isAutoHold(latest?.reason)) {
-      if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "ON_HOLD" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } });
+      if (!opts.dryRun)
+        await ServiceProject.updateOne(
+          { _id: p._id, status: "ON_HOLD" },
+          { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "ON_HOLD", toStatus: "ACTIVE", reason: AUTO_RESUME_REASON, at: now } } }
+        );
       out.resumed.push(p.name);
     }
   }
 
   // Completed projects that have Digital Marketing team hours dated after the day they were completed (`lastDm`: hours attributed to the project by team members).
   const today = new Date(`${istDay(now)}T00:00:00Z`);
-  const completed = await ServiceProject.find({ status: "COMPLETED" }).select("name history").lean<Array<{ _id: string; name: string; history: Array<{ toStatus: string; at: Date }> }>>();
+  const completed = await ServiceProject.find({ status: "COMPLETED" })
+    .select("name history")
+    .lean<Array<{ _id: string; name: string; history: Array<{ toStatus: string; at: Date }> }>>();
   for (const p of completed) {
     if (REOPEN_EXEMPT.has(p.name)) continue;
     const done = p.history.filter((h) => h.toStatus === "COMPLETED").sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
     if (!shouldReopen({ completedOn: done ? new Date(done.at) : null, lastAny: lastDm.get(p._id), today })) continue;
     out.reasons[p.name] = AUTO_REOPEN_REASON;
-    if (!opts.dryRun) await ServiceProject.updateOne({ _id: p._id, status: "COMPLETED" }, { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "COMPLETED", toStatus: "ACTIVE", reason: AUTO_REOPEN_REASON, at: now } } });
+    if (!opts.dryRun)
+      await ServiceProject.updateOne(
+        { _id: p._id, status: "COMPLETED" },
+        { $set: { status: "ACTIVE" }, $push: { history: { fromStatus: "COMPLETED", toStatus: "ACTIVE", reason: AUTO_REOPEN_REASON, at: now } } }
+      );
     out.reopened.push(p.name);
   }
   return out;

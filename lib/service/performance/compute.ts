@@ -11,10 +11,22 @@ export const STANDARD_RATE_CENTS = 1500;
 export const FULL_DAY_MINUTES = 8.5 * 60;
 
 /** A member whose availability depends on the day: a reported full day counts as full, every other weekday as a half day. */
-export interface DailyRule { halfDayMinutes: number; fullDayFromMinutes: number }
+export interface DailyRule {
+  halfDayMinutes: number;
+  fullDayFromMinutes: number;
+}
 
 /** A member's availability for the week starting `weekStart` (Monday). */
-export function capacityForWeek(member: string, weekStart: string, o: { capacityMinutes: number; byMember?: Readonly<Record<string, number>>; daily?: Readonly<Record<string, DailyRule>>; dayMinutes: (member: string, date: string) => number }): number {
+export function capacityForWeek(
+  member: string,
+  weekStart: string,
+  o: {
+    capacityMinutes: number;
+    byMember?: Readonly<Record<string, number>>;
+    daily?: Readonly<Record<string, DailyRule>>;
+    dayMinutes: (member: string, date: string) => number;
+  }
+): number {
   const rule = o.daily?.[member];
   if (!rule) return o.byMember?.[member] ?? o.capacityMinutes;
   let total = 0;
@@ -121,7 +133,25 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
   const memberOf = (key: string) => {
     let m = members.get(key);
     if (!m) {
-      m = { key, totalMinutes: 0, valueCents: 0, unpricedMinutes: 0, projectsHandled: 0, projectsNow: 0, ratedProjects: 0, weightedRating: null, simpleRating: null, weekMinutes: 0, capacityMinutes: capacity, allocatedMinutes: 0, occupancy: 0, lastReport: null, projects: [], byMonth: {}, _p: new Map() };
+      m = {
+        key,
+        totalMinutes: 0,
+        valueCents: 0,
+        unpricedMinutes: 0,
+        projectsHandled: 0,
+        projectsNow: 0,
+        ratedProjects: 0,
+        weightedRating: null,
+        simpleRating: null,
+        weekMinutes: 0,
+        capacityMinutes: capacity,
+        allocatedMinutes: 0,
+        occupancy: 0,
+        lastReport: null,
+        projects: [],
+        byMonth: {},
+        _p: new Map(),
+      };
       members.set(key, m);
     }
     return m;
@@ -141,7 +171,18 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
     const mm = (m.byMonth[month] ??= { minutes: 0, valueCents: 0 });
     mm.minutes += e.minutes;
     mm.valueCents += value;
-    const mp = m._p.get(e.projectId) ?? { projectId: e.projectId, minutes: 0, valueCents: 0, rating: p.reviewRating, last30Minutes: 0, last28Minutes: 0, lastReport: e.date, allocatedMinutes: 0, weeklyMinutes: 0, share: 0 };
+    const mp = m._p.get(e.projectId) ?? {
+      projectId: e.projectId,
+      minutes: 0,
+      valueCents: 0,
+      rating: p.reviewRating,
+      last30Minutes: 0,
+      last28Minutes: 0,
+      lastReport: e.date,
+      allocatedMinutes: 0,
+      weeklyMinutes: 0,
+      share: 0,
+    };
     if (e.date >= since28) mp.last28Minutes += e.minutes;
     mp.minutes += e.minutes;
     mp.valueCents += value;
@@ -169,7 +210,12 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
       x.allocatedMinutes = Math.round(x.last28Minutes / 4);
       m.allocatedMinutes += x.allocatedMinutes;
     }
-    m.capacityMinutes = capacityForWeek(m.key, input.weekStart, { capacityMinutes: capacity, byMember: input.capacityByMember, daily: input.dailyRules, dayMinutes: (k, d) => dayMap.get(`${k}|${d}`) ?? 0 });
+    m.capacityMinutes = capacityForWeek(m.key, input.weekStart, {
+      capacityMinutes: capacity,
+      byMember: input.capacityByMember,
+      daily: input.dailyRules,
+      dayMinutes: (k, d) => dayMap.get(`${k}|${d}`) ?? 0,
+    });
     m.occupancy = m.capacityMinutes ? m.allocatedMinutes / m.capacityMinutes : 0;
   }
   return [...members.values()].map(({ _p, ...m }) => (void _p, m));

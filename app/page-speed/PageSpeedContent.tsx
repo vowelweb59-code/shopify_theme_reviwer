@@ -14,7 +14,6 @@ type ThemePageSpeedRow = {
   openPerformanceFindingCount: number;
 };
 
-
 function formatScore(metrics: PageSpeedMetric[]): string {
   const scored = metrics.filter((m) => typeof m.performanceScore === "number");
   if (scored.length === 0) return "—";
@@ -45,9 +44,8 @@ export function PageSpeedContent() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Page Speed</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Each theme&apos;s latest completed audit — Lighthouse performance score (via Google&apos;s PageSpeed
-          Insights API; a preset it can&apos;t reach shows an error instead of a score) and open Performance
-          findings. Runs with no demo store URL supplied have no page-speed data.
+          Each theme&apos;s latest completed audit — Lighthouse performance score (via Google&apos;s PageSpeed Insights API; a preset it can&apos;t reach shows
+          an error instead of a score) and open Performance findings. Runs with no demo store URL supplied have no page-speed data.
         </p>
       </div>
 
@@ -84,9 +82,7 @@ export function PageSpeedContent() {
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(row.startedAt)}</td>
-                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                  {row.pageSpeed.length > 0 ? formatScore(row.pageSpeed) : "No page-speed data"}
-                </td>
+                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{row.pageSpeed.length > 0 ? formatScore(row.pageSpeed) : "No page-speed data"}</td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{row.openPerformanceFindingCount}</td>
               </tr>
             ))}

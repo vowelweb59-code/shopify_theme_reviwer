@@ -32,8 +32,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ the
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json(
-    { theme, themeVersion: result.themeVersion, themeZip: result.themeZip, reusedZip: result.reusedZip },
-    { status: 201 }
-  );
+  return NextResponse.json({ theme, themeVersion: result.themeVersion, themeZip: result.themeZip, reusedZip: result.reusedZip }, { status: 201 });
 }

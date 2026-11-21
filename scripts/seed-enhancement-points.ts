@@ -60,8 +60,7 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
       "Look for `image.presentation.focal_point` in image output, aspect-ratio settings in section schema, and distinct mobile image settings rather than one image scaled at both breakpoints.",
   },
   "TREND-MEDIA-003": {
-    description:
-      "A draggable slider that wipes between two images to show a before/after comparison. Common in beauty, home-improvement and fitness themes.",
+    description: "A draggable slider that wipes between two images to show a before/after comparison. Common in beauty, home-improvement and fitness themes.",
     auditHint: "Look for a comparison/before-after section with two image settings and a drag handle.",
   },
   "TREND-MEDIA-004": {
@@ -156,15 +155,13 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
       "Check for `option.presentation.type == 'swatch'` / `swatch.color` / `swatch.image` usage. Themes matching option values against a hardcoded colour-name list are on the legacy pattern.",
   },
   "TREND-DISCOVERY-002": {
-    description:
-      "Multi-column dropdown navigation with promotional content and imagery in-menu, driven by the merchant's linklist depth.",
+    description: "Multi-column dropdown navigation with promotional content and imagery in-menu, driven by the merchant's linklist depth.",
     auditHint: "Check mega-menu markup for correct nested-list semantics and keyboard operability, not just hover-driven reveal.",
   },
   "TREND-DISCOVERY-003": {
     description:
       "Shopify's predictive search API for as-you-type suggestions across products, collections, pages and articles, usually with a debounced request and a results panel.",
-    auditHint:
-      "Look for `/search/suggest` calls with a `resources[type]` list, debouncing, and an accessible results region (`aria-live`, managed focus).",
+    auditHint: "Look for `/search/suggest` calls with a `resources[type]` list, debouncing, and an accessible results region (`aria-live`, managed focus).",
   },
   "TREND-DISCOVERY-004": {
     description:
@@ -179,28 +176,21 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
       "Verify the picker keeps a real form input for the selected variant id, updates URL state, and handles unavailable combinations rather than silently allowing an invalid selection.",
   },
   "TREND-DISCOVERY-006": {
-    description:
-      "Alternatives to numbered pagination on collections: infinite scroll and explicit load-more buttons, typically via the Section Rendering API.",
-    auditHint:
-      "Confirm a crawlable/keyboard-reachable fallback exists — infinite scroll with no paginated URLs harms both SEO and accessibility.",
+    description: "Alternatives to numbered pagination on collections: infinite scroll and explicit load-more buttons, typically via the Section Rendering API.",
+    auditHint: "Confirm a crawlable/keyboard-reachable fallback exists — infinite scroll with no paginated URLs harms both SEO and accessibility.",
   },
   "TREND-DISCOVERY-007": {
-    description:
-      "Store locator pages and local pickup availability surfaced on the product page from Shopify's pickup availability API.",
+    description: "Store locator pages and local pickup availability surfaced on the product page from Shopify's pickup availability API.",
     auditHint: "Look for `pickup-availability` usage on the product form, and whether locator content is metaobject-driven.",
   },
 
   "TREND-CART-001": {
-    description:
-      "A slide-out cart drawer instead of (or alongside) a full cart page, updated via the Cart AJAX API. The dominant cart pattern in the store.",
-    auditHint:
-      "Verify the drawer updates from real `/cart/*.js` responses, keeps the `/cart` page working for no-JS access, and traps focus while open.",
+    description: "A slide-out cart drawer instead of (or alongside) a full cart page, updated via the Cart AJAX API. The dominant cart pattern in the store.",
+    auditHint: "Verify the drawer updates from real `/cart/*.js` responses, keeps the `/cart` page working for no-JS access, and traps focus while open.",
   },
   "TREND-CART-002": {
-    description:
-      "Accelerated checkout surfaces: Shop Pay and dynamic checkout buttons on the product page and cart, plus checkout-extension awareness.",
-    auditHint:
-      "Look for `content_for_additional_checkout_buttons` and a `payment_button` in the product form, plus payment-icon display in the footer.",
+    description: "Accelerated checkout surfaces: Shop Pay and dynamic checkout buttons on the product page and cart, plus checkout-extension awareness.",
+    auditHint: "Look for `content_for_additional_checkout_buttons` and a `payment_button` in the product form, plus payment-icon display in the footer.",
   },
   "TREND-CART-003": {
     description:
@@ -218,8 +208,7 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
   "TREND-PLATFORM-001": {
     description:
       "Metafield and metaobject-driven content: dynamic sources on section settings, and metaobject-backed sections so merchants extend content without theme edits.",
-    auditHint:
-      "Look for `dynamic source` support on settings and metaobject rendering; hardcoded content where a metafield would serve is the older pattern.",
+    auditHint: "Look for `dynamic source` support on settings and metaobject rendering; hardcoded content where a metafield would serve is the older pattern.",
   },
   "TREND-PLATFORM-002": {
     description:
@@ -230,25 +219,20 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
   "TREND-PLATFORM-003": {
     description:
       "Volume/quantity pricing and quantity rules — tiered price breaks and minimum/maximum/increment constraints, primarily a B2B surface but exposed on standard product pages too.",
-    auditHint:
-      "Look for `variant.quantity_price_breaks` and `variant.quantity_rule` (min/max/increment) enforcement in the quantity input, not just display.",
+    auditHint: "Look for `variant.quantity_price_breaks` and `variant.quantity_rule` (min/max/increment) enforcement in the quantity input, not just display.",
   },
   "TREND-PLATFORM-004": {
-    description:
-      "A quick order list — a table-style bulk-ordering surface letting buyers add many variants with quantities in one action. Primarily B2B.",
+    description: "A quick order list — a table-style bulk-ordering surface letting buyers add many variants with quantities in one action. Primarily B2B.",
     auditHint: "Check for a bulk quantity form posting multiple line items in one cart request, with quantity rules respected.",
   },
   "TREND-PLATFORM-005": {
-    description:
-      "B2B support: company accounts and locations, location-specific catalogs and pricing, and B2B-aware customer account surfaces.",
-    auditHint:
-      "Look for `customer.b2b?`, `company_location` handling and catalog-aware pricing; a theme with no B2B branching cannot serve B2B merchants.",
+    description: "B2B support: company accounts and locations, location-specific catalogs and pricing, and B2B-aware customer account surfaces.",
+    auditHint: "Look for `customer.b2b?`, `company_location` handling and catalog-aware pricing; a theme with no B2B branching cannot serve B2B merchants.",
   },
   "TREND-PLATFORM-006": {
     description:
       "Shopify's new customer accounts — passwordless/one-time-code sign-in and the hosted account experience, plus the newer account web components for sign-in and account navigation.",
-    auditHint:
-      "Check whether the theme links to new customer accounts and whether legacy `/account` templates still hardcode classic login-only assumptions.",
+    auditHint: "Check whether the theme links to new customer accounts and whether legacy `/account` templates still hardcode classic login-only assumptions.",
   },
   "TREND-PLATFORM-007": {
     description:
@@ -266,20 +250,16 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
   "TREND-I18N-001": {
     description:
       "Full translation coverage via locale files with no hardcoded customer-facing strings, and schema translations so the theme editor itself is localised.",
-    auditHint:
-      "Grep templates/sections for customer-facing literals that bypass `t:` / `| t`, and confirm `locales/*.schema.json` exists alongside `*.json`.",
+    auditHint: "Grep templates/sections for customer-facing literals that bypass `t:` / `| t`, and confirm `locales/*.schema.json` exists alongside `*.json`.",
   },
   "TREND-I18N-002": {
-    description:
-      "Shopify Markets support: country/region and language selectors in header or footer, market-aware currency formatting and domain handling.",
+    description: "Shopify Markets support: country/region and language selectors in header or footer, market-aware currency formatting and domain handling.",
     auditHint:
       "Look for `localization` form rendering with `country_option_tags` / `language_option_tags`, and confirm prices use `money` filters rather than manual formatting.",
   },
   "TREND-I18N-003": {
-    description:
-      "Right-to-left layout support for Arabic, Hebrew and Persian storefronts — direction-aware layout rather than a flipped stylesheet.",
-    auditHint:
-      "Check for logical CSS properties (`margin-inline-start`, `inset-inline`) instead of left/right, and `dir` set from the request locale.",
+    description: "Right-to-left layout support for Arabic, Hebrew and Persian storefronts — direction-aware layout rather than a flipped stylesheet.",
+    auditHint: "Check for logical CSS properties (`margin-inline-start`, `inset-inline`) instead of left/right, and `dir` set from the request locale.",
   },
 
   "TREND-A11Y-001": {
@@ -293,7 +273,7 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
     description:
       "Load-performance work: lazy loading below-the-fold media while eagerly loading the LCP image, deferring non-critical JS, preloading critical assets, and reducing layout shift. Release notes show the common mistake explicitly — lazy-loading top-of-page images, which delays LCP.",
     auditHint:
-      "Check the first hero/banner image is NOT `loading=\"lazy\"`, that below-fold images are, that width/height or aspect-ratio are set to prevent CLS, and that scripts are `defer`red.",
+      'Check the first hero/banner image is NOT `loading="lazy"`, that below-fold images are, that width/height or aspect-ratio are set to prevent CLS, and that scripts are `defer`red.',
   },
   "TREND-PERF-002": {
     description:
@@ -302,29 +282,24 @@ const COPY: Record<string, { description: string; auditHint: string }> = {
   },
 
   "TREND-SEO-001": {
-    description:
-      "Structured data in the theme: Product, Organization/WebSite, BreadcrumbList and Article JSON-LD, kept consistent with rendered page content.",
+    description: "Structured data in the theme: Product, Organization/WebSite, BreadcrumbList and Article JSON-LD, kept consistent with rendered page content.",
     auditHint:
       "Overlaps existing Technical SEO requirements. Confirm JSON-LD is emitted per template type, prices and availability match the rendered variant, and there is exactly one Product node per product page.",
   },
 
   "TREND-TRUST-001": {
-    description:
-      "Newsletter and email capture surfaces: footer signup, dedicated sections and popups, posting to Shopify's customer form.",
+    description: "Newsletter and email capture surfaces: footer signup, dedicated sections and popups, posting to Shopify's customer form.",
     auditHint:
       "Check the form posts via `form 'customer'` with `contact[email]`, shows success/error states, and that any popup is dismissible and does not trap focus.",
   },
   "TREND-TRUST-002": {
-    description:
-      "An age-verification gate before storefront access, for age-restricted categories. Shipped by 87 themes.",
+    description: "An age-verification gate before storefront access, for age-restricted categories. Shipped by 87 themes.",
     auditHint:
       "Verify the gate is merchant-toggleable, remembers its answer, and is keyboard-accessible — a modal that blocks the page must not also block keyboard users.",
   },
   "TREND-TRUST-003": {
-    description:
-      "Privacy and consent handling: cookie-consent banners and integration with Shopify's Customer Privacy API so tracking respects consent state.",
-    auditHint:
-      "Look for `window.Shopify.customerPrivacy` usage rather than a purely cosmetic banner, and confirm analytics/tracking is gated on consent.",
+    description: "Privacy and consent handling: cookie-consent banners and integration with Shopify's Customer Privacy API so tracking respects consent state.",
+    auditHint: "Look for `window.Shopify.customerPrivacy` usage rather than a purely cosmetic banner, and confirm analytics/tracking is gated on consent.",
   },
   "TREND-TRUST-004": {
     description:

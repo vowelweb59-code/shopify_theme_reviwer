@@ -125,10 +125,21 @@ export function parseProfile(html: string): PartnerProfile {
   const emailTag = anchors.find((a) => /partner-directory-contact-email/.test(a) && /href="mailto:/i.test(a));
   const phoneTag = anchors.find((a) => /href="tel:/i.test(a));
   const website = (websiteTag && attr(websiteTag, "href")) || block.match(/href="(https?:\/\/[^"]+)"/)?.[1] || null;
-  const email = (emailTag && attr(emailTag, "href")?.replace(/^mailto:/i, "").split("?")[0]) || block.match(/href="mailto:([^"?]+)/)?.[1] || null;
+  const email =
+    (emailTag &&
+      attr(emailTag, "href")
+        ?.replace(/^mailto:/i, "")
+        .split("?")[0]) ||
+    block.match(/href="mailto:([^"?]+)/)?.[1] ||
+    null;
   const phone = (phoneTag && attr(phoneTag, "href")?.replace(/^tel:/i, "")) || block.match(/href="tel:([^"]+)"/)?.[1] || null;
   const sinceFact = html.match(/Partner since<\/span><\/dt><dd[^>]*>(?:<span[^>]*>)?([^<]+)/)?.[1]?.trim() ?? null;
-  const since = sinceFact ?? textParts(html).find((t) => /^Partner since /i.test(t))?.replace(/^Partner since /i, "") ?? null;
+  const since =
+    sinceFact ??
+    textParts(html)
+      .find((t) => /^Partner since /i.test(t))
+      ?.replace(/^Partner since /i, "") ??
+    null;
   return {
     website: website ? cleanUrl(decode(website)) : null,
     email: email ? decode(email).trim().toLowerCase() : null,

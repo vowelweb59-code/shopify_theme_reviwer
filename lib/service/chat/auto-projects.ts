@@ -41,13 +41,26 @@ export interface AutoCreateResult {
 export async function autoCreateProjects(opts: { dryRun?: boolean; now?: Date; posts?: AcceptedPost[] } = {}): Promise<AutoCreateResult> {
   const now = opts.now ?? new Date();
   const out: AutoCreateResult = { created: [], skipped: [], enriched: [] };
-  const dmSenders = (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).filter((x) => dmMatch(x.displayName) !== null).map((x) => x.externalId);
+  const dmSenders = (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>())
+    .filter((x) => dmMatch(x.displayName) !== null)
+    .map((x) => x.externalId);
   const since = new Date(now.getTime() - RECENT_DAYS * 86_400_000);
-  const loose = await ServiceTimeEntry.find({ clientId: null, clientRaw: { $ne: null }, state: { $in: ["NEEDS_REVIEW", "PARSED"] }, minutes: { $gt: 0 }, senderExternalId: { $in: dmSenders }, entryDate: { $gte: since } })
+  const loose = await ServiceTimeEntry.find({
+    clientId: null,
+    clientRaw: { $ne: null },
+    state: { $in: ["NEEDS_REVIEW", "PARSED"] },
+    minutes: { $gt: 0 },
+    senderExternalId: { $in: dmSenders },
+    entryDate: { $gte: since },
+  })
     .select("clientRaw profile profileId minutes entryDate")
     .lean<Array<{ clientRaw: string; profile: string | null; profileId: string | null; minutes: number; entryDate: Date }>>();
 
-  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({ id: p._id, name: p.name, aliases: p.aliases ?? [] }));
+  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({
+    id: p._id,
+    name: p.name,
+    aliases: p.aliases ?? [],
+  }));
   const profileName = new Map(profiles.map((p) => [p.id, p.name]));
   const clients = await ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const existingNames = clients.flatMap((c) => [c.name, ...(c.aliases ?? [])]);
@@ -57,8 +70,18 @@ export async function autoCreateProjects(opts: { dryRun?: boolean; now?: Date; p
   for (const e of loose) {
     const name = suggestClientName(e.clientRaw);
     if (!name || !looksLikeClientName(name)) continue;
-    const segs = e.clientRaw.replace(/\([^)]*\)/g, " ").split(/\s*\|\s*|\s+[-–—]\s+/).map((s) => s.trim()).filter(Boolean);
-    const profileId = (e.profileId && profileName.has(e.profileId) ? e.profileId : null) ?? segs.slice(1).map((s) => matchProfile(s, profiles)).find((x) => !!x) ?? matchProfile(e.profile, profiles);
+    const segs = e.clientRaw
+      .replace(/\([^)]*\)/g, " ")
+      .split(/\s*\|\s*|\s+[-–—]\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const profileId =
+      (e.profileId && profileName.has(e.profileId) ? e.profileId : null) ??
+      segs
+        .slice(1)
+        .map((s) => matchProfile(s, profiles))
+        .find((x) => !!x) ??
+      matchProfile(e.profile, profiles);
     const g = groups.get(key(name)) ?? { name, minutes: 0, first: e.entryDate, profileId: null };
     g.minutes += e.minutes;
     if (e.entryDate < g.first) g.first = e.entryDate;
@@ -70,15 +93,27 @@ export async function autoCreateProjects(opts: { dryRun?: boolean; now?: Date; p
   if (!posts) posts = await loadAcceptedPosts(now, POST_LOOKBACK_DAYS).catch(() => []);
 
   for (const g of groups.values()) {
-    if (!g.profileId) { out.skipped.push({ name: g.name, why: "no known Upwork profile written" }); continue; }
-    if (key(g.name) === key(profileName.get(g.profileId) ?? "")) { out.skipped.push({ name: g.name, why: "the name is the profile" }); continue; }
+    if (!g.profileId) {
+      out.skipped.push({ name: g.name, why: "no known Upwork profile written" });
+      continue;
+    }
+    if (key(g.name) === key(profileName.get(g.profileId) ?? "")) {
+      out.skipped.push({ name: g.name, why: "the name is the profile" });
+      continue;
+    }
     const near = nearExisting(g.name, existingNames);
-    if (near) { out.skipped.push({ name: g.name, why: `looks like the existing client "${near}"` }); continue; }
+    if (near) {
+      out.skipped.push({ name: g.name, why: `looks like the existing client "${near}"` });
+      continue;
+    }
     const post = posts.find((p) => samePostClient(g.name, p.post.client));
     const profId = g.profileId;
     const pName = profileName.get(profId)!;
     const projectName = `${g.name} – ${pName}`;
-    if (await ServiceProject.exists({ name: projectName })) { out.skipped.push({ name: g.name, why: "a project with that name exists" }); continue; }
+    if (await ServiceProject.exists({ name: projectName })) {
+      out.skipped.push({ name: g.name, why: "a project with that name exists" });
+      continue;
+    }
     if (!opts.dryRun) {
       const clientId = randomUUID();
       await ServiceClient.create({ _id: clientId, name: g.name });
@@ -89,8 +124,22 @@ export async function autoCreateProjects(opts: { dryRun?: boolean; now?: Date; p
       const start = post?.post.startDate ?? g.first;
       const id = randomUUID();
       await ServiceProject.create({
-        _id: id, name: projectName, clientId, status: "ACTIVE", startDate: start, upworkProfileId: profId, people, contractRef: post?.ref ?? null,
-        history: [{ fromStatus: null, toStatus: "ACTIVE", reason: `Created automatically from a TIMER STATUS report${post ? " and its New Project Update post" : ""}`, at: now }],
+        _id: id,
+        name: projectName,
+        clientId,
+        status: "ACTIVE",
+        startDate: start,
+        upworkProfileId: profId,
+        people,
+        contractRef: post?.ref ?? null,
+        history: [
+          {
+            fromStatus: null,
+            toStatus: "ACTIVE",
+            reason: `Created automatically from a TIMER STATUS report${post ? " and its New Project Update post" : ""}`,
+            at: now,
+          },
+        ],
         contract: { type: "HOURLY", trackingMode: "TIMER", startDate: start, hourlyRateCents: post?.post.hourlyRateCents ?? null, weeklyLimitMinutes: null },
       });
       await recordServiceAudit("project.auto_create", { projectId: id, name: projectName, fromPost: !!post }).catch(() => undefined);
@@ -112,9 +161,22 @@ export async function autoCreateProjects(opts: { dryRun?: boolean; now?: Date; p
  */
 export async function enrichAutoCreated(posts: AcceptedPost[], dryRun: boolean): Promise<string[]> {
   if (!posts.length) return [];
-  const projects = await ServiceProject.find({ "history.0.reason": /^Created automatically/ }).select("name clientId upworkProfileId people contract contractRef")
-    .lean<Array<{ _id: string; name: string; clientId: string | null; upworkProfileId: string | null; people: Array<{ role: string; name: string }>; contract: { hourlyRateCents: number | null } | null; contractRef: string | null }>>();
-  const clients = await ServiceClient.find({ _id: { $in: projects.map((p) => p.clientId) } }).select("name").lean<Array<{ _id: string; name: string }>>();
+  const projects = await ServiceProject.find({ "history.0.reason": /^Created automatically/ })
+    .select("name clientId upworkProfileId people contract contractRef")
+    .lean<
+      Array<{
+        _id: string;
+        name: string;
+        clientId: string | null;
+        upworkProfileId: string | null;
+        people: Array<{ role: string; name: string }>;
+        contract: { hourlyRateCents: number | null } | null;
+        contractRef: string | null;
+      }>
+    >();
+  const clients = await ServiceClient.find({ _id: { $in: projects.map((p) => p.clientId) } })
+    .select("name")
+    .lean<Array<{ _id: string; name: string }>>();
   const clientName = new Map(clients.map((c) => [c._id, c.name]));
   const done: string[] = [];
   for (const p of projects) {
@@ -130,7 +192,11 @@ export async function enrichAutoCreated(posts: AcceptedPost[], dryRun: boolean):
     if (bd && !p.people.some((x) => x.role === "BUSINESS_DEVELOPER")) add.push({ role: "BUSINESS_DEVELOPER", name: bd.name });
     if (ba && !p.people.some((x) => x.role === "BUSINESS_ANALYST")) add.push({ role: "BUSINESS_ANALYST", name: ba.name });
     if (!Object.keys(set).length && !add.length) continue;
-    if (!dryRun) await ServiceProject.updateOne({ _id: p._id }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(add.length ? { $push: { people: { $each: add } } } : {}) });
+    if (!dryRun)
+      await ServiceProject.updateOne(
+        { _id: p._id },
+        { ...(Object.keys(set).length ? { $set: set } : {}), ...(add.length ? { $push: { people: { $each: add } } } : {}) }
+      );
     done.push(p.name);
   }
   return done;

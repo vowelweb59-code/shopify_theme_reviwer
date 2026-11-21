@@ -1,7 +1,23 @@
 // The Digital Marketing people (owner, 2026-11-14/16): the only people whose hours the live Service section keeps. Used by the
 // Postgres migration (--digital-marketing) and by the TIMER STATUS sync, so both pick the same people.
 // First names match the first word of a person's name; a two-word entry must match the whole start of the name.
-export const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", "Rupali", "Hamza", "Neha", "Priyanka Raut", "Kunal", "Adnan", "Mustufa", "Saloni", "Alefiya", "Batul"];
+export const DM_MEMBERS = [
+  "Himanshi",
+  "Aman",
+  "Pranjal",
+  "Bhavesh",
+  "Trishul",
+  "Rupali",
+  "Hamza",
+  "Neha",
+  "Priyanka Raut",
+  "Kunal",
+  "Adnan",
+  "Mustufa",
+  "Saloni",
+  "Alefiya",
+  "Batul",
+];
 
 /** Team members who have left the company (owner): still in DM_MEMBERS so their past hours keep counting, but never shown as a current member. */
 export const DM_LEFT = ["Priyanka Raut", "Batul"];
@@ -14,9 +30,18 @@ export const DM_AVAILABILITY: Record<string, number> = { Bhavesh: 0.5 };
  * (8h 30m), every other weekday (Monday to Friday) as a half day of `halfDayMinutes` (6 hours). `fullDayFromMinutes` is how much they must
  * have reported that day for it to count as a full day.
  */
-export const DM_DAILY_AVAILABILITY: Record<string, { halfDayMinutes: number; fullDayFromMinutes: number }> = { Hamza: { halfDayMinutes: 6 * 60, fullDayFromMinutes: 8 * 60 } };
+export const DM_DAILY_AVAILABILITY: Record<string, { halfDayMinutes: number; fullDayFromMinutes: number }> = {
+  Hamza: { halfDayMinutes: 6 * 60, fullDayFromMinutes: 8 * 60 },
+};
 
-const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+const normName = (s: string | null | undefined) =>
+  (s ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 /** The list entry this name matches, or null. */
 export function dmMatch(name: string | null | undefined): string | null {

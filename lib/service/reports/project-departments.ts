@@ -9,11 +9,13 @@ export type DepartmentRow = { _id: string; name: string; isDefault: boolean; man
 export async function loadProjectDepartments() {
   const [departments, projects, users] = await Promise.all([
     ServiceDepartment.find().sort({ createdAt: 1 }).lean<Array<Omit<DepartmentRow, "managerName">>>(),
-    ServiceProject.find().select("name inHouse assignments").lean<Array<{ _id: string; name: string; inHouse: boolean; assignments: Array<{ userId: string; role: string }> }>>(),
+    ServiceProject.find()
+      .select("name inHouse assignments")
+      .lean<Array<{ _id: string; name: string; inHouse: boolean; assignments: Array<{ userId: string; role: string }> }>>(),
     ServiceUser.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
   ]);
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
-  const withManager: DepartmentRow[] = departments.map((d) => ({ ...d, managerName: d.managerUserId ? userName.get(d.managerUserId) ?? null : null }));
+  const withManager: DepartmentRow[] = departments.map((d) => ({ ...d, managerName: d.managerUserId ? (userName.get(d.managerUserId) ?? null) : null }));
   const fallback = withManager.find((d) => d.isDefault) ?? null;
   const led = withManager.filter((d) => d.managerUserId);
   const deptOf = new Map<string, string | null>();

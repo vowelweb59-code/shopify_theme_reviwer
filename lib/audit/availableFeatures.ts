@@ -58,7 +58,13 @@ export const AVAILABLE_FEATURES: AvailableFeature[] = [
 
   // --- Content & promotion ---
   { id: "customizable-contact-form", label: "Customizable contact form", category: "Content & promotion", pointIds: ["NATIVE-PLATFORM-001"] },
-  { id: "blogs", label: "Blogs", category: "Content & promotion", pointIds: [], note: "Blog template structure is checked separately as a static Theme Store Compliance rule, not here." },
+  {
+    id: "blogs",
+    label: "Blogs",
+    category: "Content & promotion",
+    pointIds: [],
+    note: "Blog template structure is checked separately as a static Theme Store Compliance rule, not here.",
+  },
   { id: "countdown-timer", label: "Countdown timer", category: "Content & promotion", pointIds: ["TREND-MERCH-003"] },
   { id: "in-menu-promos", label: "In-menu promos", category: "Content & promotion", pointIds: [] },
   { id: "press-coverage", label: "Press coverage", category: "Content & promotion", pointIds: [] },
@@ -93,7 +99,13 @@ export const AVAILABLE_FEATURES: AvailableFeature[] = [
   { id: "right-to-left", label: "Right-to-left", category: "Trust & localization", pointIds: ["TREND-I18N-003"] },
 
   // --- Media ---
-  { id: "high-resolution-images", label: "High-resolution images", category: "Media", pointIds: [], note: "Checked separately via a live per-image resolution check, not this system." },
+  {
+    id: "high-resolution-images",
+    label: "High-resolution images",
+    category: "Media",
+    pointIds: [],
+    note: "Checked separately via a live per-image resolution check, not this system.",
+  },
   {
     id: "image-galleries",
     label: "Image galleries",
@@ -128,7 +140,13 @@ export const AVAILABLE_FEATURES: AvailableFeature[] = [
   // --- Navigation & browsing ---
   { id: "animation", label: "Animation", category: "Navigation & browsing", pointIds: [] },
   { id: "back-to-top-button", label: "Back-to-top button", category: "Navigation & browsing", pointIds: [] },
-  { id: "breadcrumbs", label: "Breadcrumbs", category: "Navigation & browsing", pointIds: [], note: "Breadcrumb JSON-LD structured data is checked separately as a static SEO/AEO rule; visible breadcrumb navigation isn't checked here." },
+  {
+    id: "breadcrumbs",
+    label: "Breadcrumbs",
+    category: "Navigation & browsing",
+    pointIds: [],
+    note: "Breadcrumb JSON-LD structured data is checked separately as a static SEO/AEO rule; visible breadcrumb navigation isn't checked here.",
+  },
   { id: "collection-page-navigation", label: "Collection page navigation", category: "Navigation & browsing", pointIds: ["TREND-DISCOVERY-004"] },
   { id: "enhanced-search", label: "Enhanced search", category: "Navigation & browsing", pointIds: ["TREND-DISCOVERY-003"] },
   { id: "infinite-scroll", label: "Infinite scroll", category: "Navigation & browsing", pointIds: ["TREND-DISCOVERY-006"] },

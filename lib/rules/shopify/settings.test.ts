@@ -94,7 +94,13 @@ describe("SHOPIFY-COLOR-SYSTEM-001", () => {
   it("flags fewer than 4 color settings theme-wide", () => {
     const theme = buildTestTheme({
       "config/settings_schema.json": JSON.stringify([
-        { name: "Colors", settings: [{ type: "color", id: "c1" }, { type: "color", id: "c2" }] },
+        {
+          name: "Colors",
+          settings: [
+            { type: "color", id: "c1" },
+            { type: "color", id: "c2" },
+          ],
+        },
       ]),
     });
     cleanup = theme.cleanup;
@@ -142,8 +148,7 @@ describe("SHOPIFY-SOCIAL-OG-TAGS-001", () => {
 
   it("does not flag when both Open Graph and Twitter card tags are present", () => {
     const theme = buildTestTheme({
-      "layout/theme.liquid":
-        '<html><head><meta property="og:title" content="Store"><meta name="twitter:card" content="summary"></head><body></body></html>',
+      "layout/theme.liquid": '<html><head><meta property="og:title" content="Store"><meta name="twitter:card" content="summary"></head><body></body></html>',
     });
     cleanup = theme.cleanup;
     expect(findingsFor("SHOPIFY-SOCIAL-OG-TAGS-001", theme)).toHaveLength(0);
@@ -165,9 +170,7 @@ describe("SHOPIFY-SOCIAL-PLACEHOLDER-001", () => {
 
   it("does not flag a social link setting left empty", () => {
     const theme = buildTestTheme({
-      "config/settings_schema.json": JSON.stringify([
-        { name: "Social media", settings: [{ id: "social_facebook_link", type: "text", default: "" }] },
-      ]),
+      "config/settings_schema.json": JSON.stringify([{ name: "Social media", settings: [{ id: "social_facebook_link", type: "text", default: "" }] }]),
     });
     cleanup = theme.cleanup;
     expect(findingsFor("SHOPIFY-SOCIAL-PLACEHOLDER-001", theme)).toHaveLength(0);

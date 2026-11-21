@@ -289,6 +289,8 @@ function extractLatestRelease(html: string): LatestRelease | null {
 export async function fetchThemeStoreFeatureLabels(themeName: string): Promise<ThemeStoreFeaturesResult> {
   const slug = deriveThemeStoreSlug(themeName);
   if (!slug) return { ok: false, slug, error: "Could not derive a Theme Store URL from this theme's name." };
+  // The listing page's HTML is dropped on purpose: this function returns only the labels.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { html: _html, ...result } = (await fetchThemeStoreListingBySlug(slug)) as ThemeStoreFeaturesResult & { html?: string };
   return result as ThemeStoreFeaturesResult;
 }

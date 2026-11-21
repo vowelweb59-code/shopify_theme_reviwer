@@ -1,14 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { computePerformance, type PerfProject } from "./compute";
 
-const project = (o: Partial<PerfProject> & { id: string }): PerfProject => ({ name: o.id, status: "ACTIVE", reviewRating: null, fixed: false, hourlyRateCents: 1500, weeklyLimitMinutes: 40 * 60, ...o });
+const project = (o: Partial<PerfProject> & { id: string }): PerfProject => ({
+  name: o.id,
+  status: "ACTIVE",
+  reviewRating: null,
+  fixed: false,
+  hourlyRateCents: 1500,
+  weeklyLimitMinutes: 40 * 60,
+  ...o,
+});
 const e = (member: string, projectId: string, date: string, minutes: number) => ({ member, projectId, date, minutes });
 const base = { today: "2026-11-20", weekStart: "2026-11-16", weekEnd: "2026-11-22" };
 const by = (r: ReturnType<typeof computePerformance>, k: string) => r.find((m) => m.key === k)!;
 
 describe("computePerformance", () => {
   it("values hours at the project's rate and counts this week", () => {
-    const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Hamza", "a", "2026-11-17", 120), e("Hamza", "a", "2026-11-02", 60)] });
+    const r = computePerformance({
+      ...base,
+      projects: [project({ id: "a" })],
+      entries: [e("Hamza", "a", "2026-11-17", 120), e("Hamza", "a", "2026-11-02", 60)],
+    });
     expect(by(r, "Hamza")).toMatchObject({ totalMinutes: 180, valueCents: 4500, weekMinutes: 120, projectsHandled: 1 });
   });
 
@@ -49,14 +61,24 @@ describe("computePerformance", () => {
     const r = computePerformance({
       ...base,
       projects: [project({ id: "run" }), project({ id: "hold", status: "ON_HOLD" }), project({ id: "old" }), project({ id: "part", status: "PARTIAL_HOLD" })],
-      entries: [e("Neha", "run", "2026-11-10", 240), e("Neha", "hold", "2026-11-10", 600), e("Neha", "old", "2026-09-01", 600), e("Neha", "part", "2026-11-12", 120)],
+      entries: [
+        e("Neha", "run", "2026-11-10", 240),
+        e("Neha", "hold", "2026-11-10", 600),
+        e("Neha", "old", "2026-09-01", 600),
+        e("Neha", "part", "2026-11-12", 120),
+      ],
     });
     expect(by(r, "Neha").allocatedMinutes).toBe(60 + 30);
   });
 
   it("measures a part-time member against their own availability", () => {
     const half = (8.5 * 5 * 60) / 2;
-    const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Bhavesh", "a", "2026-11-10", 600)], capacityByMember: { Bhavesh: half } });
+    const r = computePerformance({
+      ...base,
+      projects: [project({ id: "a" })],
+      entries: [e("Bhavesh", "a", "2026-11-10", 600)],
+      capacityByMember: { Bhavesh: half },
+    });
     expect(by(r, "Bhavesh").capacityMinutes).toBe(half);
     expect(by(r, "Bhavesh").occupancy).toBeCloseTo(150 / half);
   });
@@ -74,7 +96,11 @@ describe("computePerformance", () => {
   });
 
   it("ignores entries dated after today", () => {
-    const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Bhavesh", "a", "2029-10-19", 240), e("Bhavesh", "a", "2026-11-10", 60)] });
+    const r = computePerformance({
+      ...base,
+      projects: [project({ id: "a" })],
+      entries: [e("Bhavesh", "a", "2029-10-19", 240), e("Bhavesh", "a", "2026-11-10", 60)],
+    });
     expect(by(r, "Bhavesh").totalMinutes).toBe(60);
   });
 });

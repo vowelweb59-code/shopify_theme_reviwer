@@ -78,7 +78,7 @@ describe("A11Y-TABINDEX-001", () => {
   // accessibility technique, not the page-load focus-theft anti-pattern
   // this rule targets. Flagging it would tell a developer to remove
   // something that makes the theme *more* accessible, not less.
-  it("does not flag autofocus paired with tabindex=\"-1\" (focus management for a dynamic status message)", () => {
+  it('does not flag autofocus paired with tabindex="-1" (focus management for a dynamic status message)', () => {
     const theme = buildTestTheme({
       "layout/theme.liquid": '<h2 tabindex="-1" autofocus>Submitted successfully</h2>',
     });

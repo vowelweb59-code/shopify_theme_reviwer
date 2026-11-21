@@ -74,7 +74,9 @@ async function readSpace(options: { all?: boolean }): Promise<SyncResult> {
     const messages = await listSpaceMessages(space, accessToken, since, memberNames);
     const reports = messages.filter((m) => looksLikeReport(m.text));
 
-    const summary = await importReports(reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: istDay(new Date(m.createTime)), postedAt: m.createTime, messageId: m.id })));
+    const summary = await importReports(
+      reports.map((m) => ({ sender: m.senderName, text: m.text, postedOn: istDay(new Date(m.createTime)), postedAt: m.createTime, messageId: m.id }))
+    );
 
     const newest = messages.reduce<Date | null>((latest, m) => {
       const at = new Date(m.createTime);

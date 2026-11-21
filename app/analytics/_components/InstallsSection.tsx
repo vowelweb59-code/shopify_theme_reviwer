@@ -36,15 +36,27 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
       },
       sortValue: (r) => (r.values[i] ?? "").toLowerCase(),
     })),
-    { key: "installs", header: "Installs", render: (r) => <span className="tabular-nums">{r.installs}</span>, sortValue: (r) => r.installs, className: "text-right" },
+    {
+      key: "installs",
+      header: "Installs",
+      render: (r) => <span className="tabular-nums">{r.installs}</span>,
+      sortValue: (r) => r.installs,
+      className: "text-right",
+    },
   ];
 
   function exportCsv() {
-    const lines = [["Date", ...group.dimensions.map((d) => d.label), "Installs"].map(cell).join(","), ...rows.map((r) => [r.date, ...r.values, r.installs].map(cell).join(","))];
+    const lines = [
+      ["Date", ...group.dimensions.map((d) => d.label), "Installs"].map(cell).join(","),
+      ...rows.map((r) => [r.date, ...r.values, r.installs].map(cell).join(",")),
+    ];
     const url = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `theme-installs-${group.themes.join("-").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${group.range.start}-${group.range.end}.csv`;
+    a.download = `theme-installs-${group.themes
+      .join("-")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")}-${group.range.start}-${group.range.end}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -67,23 +79,32 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
         <div className="flex flex-col gap-3">
           {group.filteredTo && (
             <p className="rounded-md bg-surface-muted p-3 text-sm text-zinc-700 dark:text-zinc-300">
-              This property also tracks other themes. Showing only {group.filteredTo}: each install event names its theme (or one of its presets), and that is what is matched.
-              {group.unnamed > 0 && ` ${group.unnamed} install${group.unnamed === 1 ? "" : "s"} with no theme recorded (from before GA4 started recording it) ${group.unnamed === 1 ? "is" : "are"} left out.`}
+              This property also tracks other themes. Showing only {group.filteredTo}: each install event names its theme (or one of its presets), and that is
+              what is matched.
+              {group.unnamed > 0 &&
+                ` ${group.unnamed} install${group.unnamed === 1 ? "" : "s"} with no theme recorded (from before GA4 started recording it) ${group.unnamed === 1 ? "is" : "are"} left out.`}
             </p>
           )}
           {shared && (
             <p className="rounded-md bg-status-warning-bg p-3 text-sm text-status-warning-text">
-              {group.themes.join(" and ")} share this GA4 property. These are every install on it; where a column below names the theme, pick one theme above to narrow to it, or use the
-              search box.
+              {group.themes.join(" and ")} share this GA4 property. These are every install on it; where a column below names the theme, pick one theme above to
+              narrow to it, or use the search box.
             </p>
           )}
           {group.dimensions.length === 0 && (
             <p className="rounded-md bg-status-warning-bg p-3 text-sm text-status-warning-text">
-              This property has no custom event parameters registered, so GA4 cannot return the store URL or title. In GA4: Admin → Custom definitions → Create custom dimension, scope
-              “Event”, once for each parameter the install event sends (see it under Reports → Realtime or DebugView, on a shopify_theme_install event). They appear here the next day.
+              This property has no custom event parameters registered, so GA4 cannot return the store URL or title. In GA4: Admin → Custom definitions → Create
+              custom dimension, scope “Event”, once for each parameter the install event sends (see it under Reports → Realtime or DebugView, on a
+              shopify_theme_install event). They appear here the next day.
             </p>
           )}
-          <ResponsiveTable columns={columns} rows={rows} rowKey={(r) => `${r.date}|${r.values.join("|")}`} pageSize={25} emptyMessage="No install events in this range." />
+          <ResponsiveTable
+            columns={columns}
+            rows={rows}
+            rowKey={(r) => `${r.date}|${r.values.join("|")}`}
+            pageSize={25}
+            emptyMessage="No install events in this range."
+          />
         </div>
       )}
     </Card>
@@ -98,7 +119,14 @@ export function InstallsSection() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
-        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search store URL, title or any detail" aria-label="Search installs" className="min-w-64 rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search store URL, title or any detail"
+          aria-label="Search installs"
+          className="min-w-64 rounded-md border border-border-subtle bg-transparent px-3 py-1.5 text-sm"
+        />
         <span className="text-xs text-zinc-500">Read live from GA4 for the theme and dates chosen above: each install with the details its event carries.</span>
       </div>
       {error && <ErrorState title="Couldn't load the installs" description={error} />}

@@ -21,9 +21,23 @@ describe("fixedDayInputs", () => {
 describe("fixedDayInputs with a split", () => {
   it("shares the days between people by their shares, ahead of a single recorded person", () => {
     const inputs = fixedDayInputs(
-      [{ _id: "p1", themeId: "t1", developmentDays: 10, developmentDaysBy: "x", developmentDaysSplit: [{ memberId: "a", share: 0.6 }, { memberId: "b", share: 0.4 }] }],
+      [
+        {
+          _id: "p1",
+          themeId: "t1",
+          developmentDays: 10,
+          developmentDaysBy: "x",
+          developmentDaysSplit: [
+            { memberId: "a", share: 0.6 },
+            { memberId: "b", share: 0.4 },
+          ],
+        },
+      ],
       (p) => p.themeId
     );
-    expect(inputs.map((i) => [i.memberId, i.hours])).toEqual([["a", 51], ["b", 34]]);
+    expect(inputs.map((i) => [i.memberId, i.hours])).toEqual([
+      ["a", 51],
+      ["b", 34],
+    ]);
   });
 });

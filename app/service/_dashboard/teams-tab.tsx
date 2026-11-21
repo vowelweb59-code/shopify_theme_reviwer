@@ -17,17 +17,29 @@ export async function TeamsTab({ period, flat, base = "/service", tab = "teams" 
     <div className="space-y-6">
       <Overview title="Teams overview">
         <Kpi label="Team hours" value={fmtMinutes(o.minutes)} note={fmtDeltaPeriod(o.minutes, o.previousMinutes, fmtMinutes)} />
-        <Kpi label="People who logged time" value={String(o.people)} note={o.topPerson ? `Most hours: ${o.topPerson.name}, ${fmtMinutes(o.topPerson.minutes)}` : undefined} />
+        <Kpi
+          label="People who logged time"
+          value={String(o.people)}
+          note={o.topPerson ? `Most hours: ${o.topPerson.name}, ${fmtMinutes(o.topPerson.minutes)}` : undefined}
+        />
         <Kpi label="Average per person" value={o.people ? fmtMinutes(o.avgPerPerson) : "—"} />
         <Kpi label="On timer" value={fmtMinutes(o.timerMinutes)} note={o.minutes ? `${Math.round((o.timerMinutes / o.minutes) * 100)}% of hours` : undefined} />
-        <Kpi label="Manual reports" value={fmtMinutes(o.manualMinutes)} note={o.minutes ? `${Math.round((o.manualMinutes / o.minutes) * 100)}% of hours` : undefined} />
+        <Kpi
+          label="Manual reports"
+          value={fmtMinutes(o.manualMinutes)}
+          note={o.minutes ? `${Math.round((o.manualMinutes / o.minutes) * 100)}% of hours` : undefined}
+        />
         <Kpi label="Entries to check" value={String(o.flagged)} tone={o.flagged ? WARN : undefined} note="on the Review page" />
       </Overview>
 
       {r.groups.length > 0 && (
         <nav aria-label="Team view" className="flex gap-2 text-sm">
-          <Link href={periodHref(base, tab, period)} aria-current={split ? "true" : undefined} className={toggle(split)}>By department</Link>
-          <Link href={periodHref(base, tab, period, "&view=all")} aria-current={split ? undefined : "true"} className={toggle(!split)}>Everyone together</Link>
+          <Link href={periodHref(base, tab, period)} aria-current={split ? "true" : undefined} className={toggle(split)}>
+            By department
+          </Link>
+          <Link href={periodHref(base, tab, period, "&view=all")} aria-current={split ? undefined : "true"} className={toggle(!split)}>
+            Everyone together
+          </Link>
         </nav>
       )}
 
@@ -36,16 +48,23 @@ export async function TeamsTab({ period, flat, base = "/service", tab = "teams" 
           <section key={g.id ?? "none"} aria-label={g.name} className={SECTION}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-medium">
-                {g.name} <span className="font-normal text-zinc-500">· {fmtMinutes(g.minutes)} · {g.people.length} {g.people.length === 1 ? "person" : "people"}</span>
+                {g.name}{" "}
+                <span className="font-normal text-zinc-500">
+                  · {fmtMinutes(g.minutes)} · {g.people.length} {g.people.length === 1 ? "person" : "people"}
+                </span>
               </h2>
-              <span className="text-xs text-zinc-500">{g.isDefault ? "Default: every other project" : g.manager ? `Manager: ${g.manager}` : g.id ? "No manager set" : "Unknown client or in-house"}</span>
+              <span className="text-xs text-zinc-500">
+                {g.isDefault ? "Default: every other project" : g.manager ? `Manager: ${g.manager}` : g.id ? "No manager set" : "Unknown client or in-house"}
+              </span>
             </div>
             <PeopleTable people={g.people} period={period} workingDays={r.workingDays} showDelta={false} />
           </section>
         ))
       ) : (
         <section aria-labelledby="people" className={SECTION}>
-          <h2 id="people" className="font-medium">People</h2>
+          <h2 id="people" className="font-medium">
+            People
+          </h2>
           <p className="mt-1 text-xs text-zinc-500">
             Reported and tracked hours, not Upwork-verified. {r.workingDays} working day{r.workingDays === 1 ? "" : "s"} (Monday to Saturday) in this period.
           </p>
@@ -78,18 +97,25 @@ function PeopleTable({ people, period, workingDays, showDelta }: { people: TeamP
           {people.map((p) => (
             <tr key={p.id} className="hover:bg-surface-muted/60">
               <td className="whitespace-nowrap py-2 pr-3">
-                <Link href={`/service/team/${p.id}?week=${period.from}`} className={LINK}>{p.name}</Link>
+                <Link href={`/service/team/${p.id}?week=${period.from}`} className={LINK}>
+                  {p.name}
+                </Link>
               </td>
               <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">
                 <div className="font-medium">{fmtMinutes(p.minutes)}</div>
                 {showDelta && <div className="text-xs text-zinc-500">{fmtDeltaPeriod(p.minutes, p.previousMinutes, fmtMinutes)}</div>}
               </td>
-              <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">{p.activeDays} <span className="text-zinc-500">of {workingDays}</span></td>
+              <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">
+                {p.activeDays} <span className="text-zinc-500">of {workingDays}</span>
+              </td>
               <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">{p.activeDays ? fmtMinutes(p.avgPerActiveDay) : "—"}</td>
               <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">{p.timerMinutes ? fmtMinutes(p.timerMinutes) : dash}</td>
               <td className="whitespace-nowrap py-2 pr-3 text-right tabular-nums">{p.manualMinutes ? fmtMinutes(p.manualMinutes) : dash}</td>
               <td className="py-2 pr-3 text-xs">
-                {p.projects.slice(0, 3).map((x) => `${x.name} ${fmtMinutes(x.minutes)}`).join(" · ")}
+                {p.projects
+                  .slice(0, 3)
+                  .map((x) => `${x.name} ${fmtMinutes(x.minutes)}`)
+                  .join(" · ")}
                 {p.projects.length > 3 && <span className="text-zinc-500"> · +{p.projects.length - 3} more</span>}
               </td>
               <td className="py-2 text-right tabular-nums">{p.flagged > 0 ? <span className={WARN}>{p.flagged}</span> : dash}</td>

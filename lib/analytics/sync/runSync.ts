@@ -5,7 +5,15 @@ import { AnalyticsTheme } from "@/models/analytics-theme";
 import { GoogleConnection } from "@/models/google-connection";
 import { Ga4ConnectionError, getAuthorizedClient, markConnectionRevoked } from "../googleConnections";
 import { themeNames } from "../themeNames";
-import { attributeInstalls, installRows, installsByThemeRequest, mergeInstallRows, pickThemeDimension, themeAliases, unattributedReportRows } from "../installAttribution";
+import {
+  attributeInstalls,
+  installRows,
+  installsByThemeRequest,
+  mergeInstallRows,
+  pickThemeDimension,
+  themeAliases,
+  unattributedReportRows,
+} from "../installAttribution";
 import { createAdminApi, getPropertyDetails, Ga4PropertyError, type AdminApi } from "../properties";
 import { PRIMARY_EVENTS } from "../constants";
 import { GA4_EARLIEST_DATE, addDays, chunkDateRange, dateInTimeZone, maxDate, todayInTimeZone } from "./dates";
@@ -233,7 +241,11 @@ export async function planSync(theme: ThemeForSync, trigger: SyncTrigger, deps: 
 
   const floor = theme.historyStartDate ?? configuredHistoryFloor();
   const rangeStart = maxDate(addDays(theme.syncedThroughDate, -REFETCH_DAYS), floor);
-  return { syncType: trigger === "manual" ? ("manual" as const) : ("scheduled" as const), rangeStart: rangeStart > today ? today : rangeStart, rangeEnd: today };
+  return {
+    syncType: trigger === "manual" ? ("manual" as const) : ("scheduled" as const),
+    rangeStart: rangeStart > today ? today : rangeStart,
+    rangeEnd: today,
+  };
 }
 
 const isDuplicateKey = (err: unknown) => (err as { code?: number })?.code === 11000;
@@ -250,7 +262,14 @@ export async function recoverInterruptedSyncs(now: Date, { all = false }: { all?
       ...(queue.currentJobId ? { _id: { $ne: queue.currentJobId } } : {}),
       ...(all ? {} : { updatedAt: { $lt: new Date(now.getTime() - STALE_AFTER_MS) } }),
     },
-    { $set: { status: "queued", nextRetryAt: now, "error.message": "Interrupted (the server restarted); resuming from the last completed chunk.", "error.code": "interrupted" } }
+    {
+      $set: {
+        status: "queued",
+        nextRetryAt: now,
+        "error.message": "Interrupted (the server restarted); resuming from the last completed chunk.",
+        "error.code": "interrupted",
+      },
+    }
   );
   return result.modifiedCount;
 }
@@ -363,7 +382,10 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
     // burns more quota and fails the same way.
     const quotaWait = active?.error?.code === "quota_hourly" || active?.error?.code === "quota_daily";
     if (active?.status === "queued" && trigger === "manual" && quotaWait && active.nextRetryAt) {
-      throw new SyncRequestError(409, `${theme.name}'s sync is waiting for GA4's API quota to reset; it resumes on its own at ${new Date(active.nextRetryAt).toISOString()}.`);
+      throw new SyncRequestError(
+        409,
+        `${theme.name}'s sync is waiting for GA4's API quota to reset; it resumes on its own at ${new Date(active.nextRetryAt).toISOString()}.`
+      );
     }
     if (active?.status === "queued" && trigger === "manual") {
       // Due now: it runs when the worker reaches it.
@@ -375,7 +397,10 @@ export async function startSync(themeId: string, trigger: SyncTrigger, deps: Syn
 
   if (plan.syncType === "initial") {
     // Rows from a property this theme used to be mapped to don't belong to it any more.
-    await AnalyticsAggregate.deleteMany({ analyticsThemeId: theme._id, ga4PropertyId: { $nin: [theme.ga4PropertyId, ...(theme.earlierPropertyId ? [theme.earlierPropertyId] : [])] } });
+    await AnalyticsAggregate.deleteMany({
+      analyticsThemeId: theme._id,
+      ga4PropertyId: { $nin: [theme.ga4PropertyId, ...(theme.earlierPropertyId ? [theme.earlierPropertyId] : [])] },
+    });
     await AnalyticsTheme.updateOne({ _id: theme._id }, { $set: { historyStartDate: plan.rangeStart } });
   }
 
@@ -403,7 +428,10 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
   const theme = await AnalyticsTheme.findById(job.analyticsThemeId).lean<ThemeForSync>();
   const pagePathPrefix = job.pagePathPrefix ?? null;
   const main: Source = { propertyId: job.ga4PropertyId, pagePathPrefix };
-  const earlier = job.earlierPropertyId && job.earlierUntil ? { propertyId: job.earlierPropertyId, pagePathPrefix: job.earlierPagePathPrefix ?? null, until: job.earlierUntil } : null;
+  const earlier =
+    job.earlierPropertyId && job.earlierUntil
+      ? { propertyId: job.earlierPropertyId, pagePathPrefix: job.earlierPagePathPrefix ?? null, until: job.earlierUntil }
+      : null;
   const mappingMatch = {
     _id: job.analyticsThemeId,
     ga4PropertyId: job.ga4PropertyId,
@@ -418,12 +446,20 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
   const cancelStale = async () => {
     await AnalyticsSync.updateOne(
       { _id: syncId },
-      { $set: { status: "cancelled", completedAt: deps.now(), error: { message: "The theme's GA4 property or page filter changed; a new sync was queued.", code: "cancelled" } }, $unset: { isActive: "" } }
+      {
+        $set: {
+          status: "cancelled",
+          completedAt: deps.now(),
+          error: { message: "The theme's GA4 property or page filter changed; a new sync was queued.", code: "cancelled" },
+        },
+        $unset: { isActive: "" },
+      }
     );
     // Waits only for the new job to be queued (never for `done`: this runs
     // inside the worker, which then picks the new job up itself).
     await startSync(job.analyticsThemeId.toString(), "mapped", deps).catch((err) => {
-      if (!(err instanceof SyncRequestError)) console.error("[ga4-sync] couldn't queue a sync after a mapping change:", err instanceof Error ? err.message : err);
+      if (!(err instanceof SyncRequestError))
+        console.error("[ga4-sync] couldn't queue a sync after a mapping change:", err instanceof Error ? err.message : err);
     });
   };
   const stillMapped = async () => Boolean(await AnalyticsTheme.exists(mappingMatch));
@@ -523,7 +559,10 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
             if (attribution.unattributed.size > 0) {
               const property = await runFullReport(api, source.propertyId, installEstimateRequest(range), { sleep: deps.sleep });
               noteMetadata(property);
-              const rest = [...property.rows.filter((r) => r.dimensions[1] !== PRIMARY_EVENTS.themeInstall), ...unattributedReportRows(attribution.unattributed)];
+              const rest = [
+                ...property.rows.filter((r) => r.dimensions[1] !== PRIMARY_EVENTS.themeInstall),
+                ...unattributedReportRows(attribution.unattributed),
+              ];
               rows = mergeInstallRows(rows, estimateInstallRows(themeTotals, rest));
             }
             await upsertRows(rows, named.rows.length, source.propertyId);
@@ -547,13 +586,19 @@ export async function executeSync(syncId: string, deps: SyncDeps = defaultSyncDe
     }
 
     const now = deps.now();
-    await AnalyticsSync.updateOne({ _id: syncId }, { $set: { status: "succeeded", completedAt: now, error: { message: null, code: null } }, $unset: { isActive: "" } });
+    await AnalyticsSync.updateOne(
+      { _id: syncId },
+      { $set: { status: "succeeded", completedAt: now, error: { message: null, code: null } }, $unset: { isActive: "" } }
+    );
     // Record how this theme's installs were counted, so the dashboard can say "estimated" only where it is. Left alone when the
     // property's metadata could not be read this time.
     const own = pagePathPrefix ? await themeParameterOf(job.ga4PropertyId) : null;
     const counting =
       pagePathPrefix && own?.known
-        ? { installsExactBy: sharedSources > 0 && namedSources === sharedSources ? own.dimension : null, installsExactFrom: sharedSources > 0 && namedSources === sharedSources ? mergeFrom(theme, own.dimension, firstNamedDate) : null }
+        ? {
+            installsExactBy: sharedSources > 0 && namedSources === sharedSources ? own.dimension : null,
+            installsExactFrom: sharedSources > 0 && namedSources === sharedSources ? mergeFrom(theme, own.dimension, firstNamedDate) : null,
+          }
         : {};
     await AnalyticsTheme.updateOne(mappingMatch, { $set: { lastSuccessfulSyncAt: now, lastError: null, ...counting } });
   } catch (raw) {
@@ -598,13 +643,20 @@ async function handleFailure(job: SyncLean, theme: ThemeForSync | null, raw: unk
   );
   if (theme) {
     const lostAccess = err.code === "permission_denied" || err.code === "not_found";
-    await AnalyticsTheme.updateOne({ _id: theme._id }, { $set: { lastError: `Sync failed: ${err.message}`, ...(lostAccess ? { connectionStatus: "error" } : {}) } });
+    await AnalyticsTheme.updateOne(
+      { _id: theme._id },
+      { $set: { lastError: `Sync failed: ${err.message}`, ...(lostAccess ? { connectionStatus: "error" } : {}) } }
+    );
   }
 }
 
 /** The newest job per theme — what the UI shows as each theme's sync state. */
 export async function latestSyncByTheme(): Promise<Record<string, PublicSync>> {
-  const docs = await AnalyticsSync.aggregate<SyncLean>([{ $sort: { createdAt: -1 } }, { $group: { _id: "$analyticsThemeId", doc: { $first: "$$ROOT" } } }, { $replaceRoot: { newRoot: "$doc" } }]);
+  const docs = await AnalyticsSync.aggregate<SyncLean>([
+    { $sort: { createdAt: -1 } },
+    { $group: { _id: "$analyticsThemeId", doc: { $first: "$$ROOT" } } },
+    { $replaceRoot: { newRoot: "$doc" } },
+  ]);
   return Object.fromEntries(docs.map((d) => [d.analyticsThemeId.toString(), toPublicSync(d)]));
 }
 

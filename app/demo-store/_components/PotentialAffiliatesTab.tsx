@@ -92,13 +92,22 @@ export function PotentialAffiliatesTab() {
       (p) =>
         (!country || p.countrySlugs.includes(country)) &&
         (!tier || (tier === "none" ? !p.tier : p.tier === tier)) &&
-        (!q || p.name.toLowerCase().includes(q) || (p.location ?? "").toLowerCase().includes(q) || p.services.some((s) => s.toLowerCase().includes(q)) || (p.email ?? "").includes(q) || (p.website ?? "").toLowerCase().includes(q))
+        (!q ||
+          p.name.toLowerCase().includes(q) ||
+          (p.location ?? "").toLowerCase().includes(q) ||
+          p.services.some((s) => s.toLowerCase().includes(q)) ||
+          (p.email ?? "").includes(q) ||
+          (p.website ?? "").toLowerCase().includes(q))
     );
   }, [partners, country, tier, query]);
 
   function exportCsv() {
     const header = ["Partner", "Country", "Tier", "Location", "Rating", "Reviews", "Email", "Phone", "Website", "Profile"];
-    const lines = shown.map((p) => [p.name, countryFromLocation(p.location), p.tier ? TIER_LABEL[p.tier] : "", p.location, p.rating, p.reviewCount, p.email, p.phone, p.website, p.url].map(cell).join(","));
+    const lines = shown.map((p) =>
+      [p.name, countryFromLocation(p.location), p.tier ? TIER_LABEL[p.tier] : "", p.location, p.rating, p.reviewCount, p.email, p.phone, p.website, p.url]
+        .map(cell)
+        .join(",")
+    );
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -112,7 +121,12 @@ export function PotentialAffiliatesTab() {
       key: "name",
       header: "Partner",
       render: (p) => (
-        <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
+        <a
+          href={p.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50"
+        >
           {p.name}
           <ExternalLink className="h-3 w-3 text-zinc-400" aria-hidden />
         </a>
@@ -128,19 +142,38 @@ export function PotentialAffiliatesTab() {
     {
       key: "tier",
       header: "Tier",
-      render: (p) => (p.tier ? <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">{TIER_LABEL[p.tier] ?? p.tier}</span> : <span className="text-zinc-400">—</span>),
+      render: (p) =>
+        p.tier ? (
+          <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">{TIER_LABEL[p.tier] ?? p.tier}</span>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
       sortValue: (p) => TIER_ORDER.indexOf(p.tier ?? ""),
     },
     {
       key: "email",
       header: "Email",
-      render: (p) => (p.email ? <a href={`mailto:${p.email}`} className="text-xs hover:text-primary hover:underline">{p.email}</a> : <span className="text-zinc-400">—</span>),
+      render: (p) =>
+        p.email ? (
+          <a href={`mailto:${p.email}`} className="text-xs hover:text-primary hover:underline">
+            {p.email}
+          </a>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
       sortValue: (p) => p.email ?? "~",
     },
     {
       key: "phone",
       header: "Phone",
-      render: (p) => (p.phone ? <a href={`tel:${p.phone}`} className="text-xs tabular-nums hover:text-primary hover:underline">{p.phone}</a> : <span className="text-zinc-400">—</span>),
+      render: (p) =>
+        p.phone ? (
+          <a href={`tel:${p.phone}`} className="text-xs tabular-nums hover:text-primary hover:underline">
+            {p.phone}
+          </a>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
       sortValue: (p) => p.phone ?? "~",
     },
     {
@@ -156,7 +189,12 @@ export function PotentialAffiliatesTab() {
         ),
       sortValue: (p) => p.website ?? "~",
     },
-    { key: "location", header: "Location", render: (p) => <span className="text-zinc-600 dark:text-zinc-400">{p.location ?? "—"}</span>, sortValue: (p) => (p.location ?? "~").toLowerCase() },
+    {
+      key: "location",
+      header: "Location",
+      render: (p) => <span className="text-zinc-600 dark:text-zinc-400">{p.location ?? "—"}</span>,
+      sortValue: (p) => (p.location ?? "~").toLowerCase(),
+    },
     {
       key: "rating",
       header: "Rating",
@@ -172,7 +210,13 @@ export function PotentialAffiliatesTab() {
       sortValue: (p) => p.rating ?? -1,
       className: "text-right",
     },
-    { key: "reviews", header: "Reviews", render: (p) => <span className="tabular-nums">{p.reviewCount?.toLocaleString() ?? "—"}</span>, sortValue: (p) => p.reviewCount ?? -1, className: "text-right" },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (p) => <span className="tabular-nums">{p.reviewCount?.toLocaleString() ?? "—"}</span>,
+      sortValue: (p) => p.reviewCount ?? -1,
+      className: "text-right",
+    },
     {
       key: "price",
       header: "From",
@@ -201,7 +245,11 @@ export function PotentialAffiliatesTab() {
         <a href="https://www.shopify.com/partners/directory" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           Partner Directory
         </a>
-        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with a short pause between them, so it takes roughly 15 minutes. Contact details (email, phone, website) are on each partner’s own profile page, so they are a separate step: about one request per partner, roughly two hours for everyone, and it picks up where it stopped. Both steps now run by themselves: the contact details are read once for everyone, then the whole directory is read again every 30 days while the server is awake; the buttons start a read early.
+        , collected country by country as a pool of potential affiliates. A refresh reads about 700 directory pages (the partners, then one pass per tier) with
+        a short pause between them, so it takes roughly 15 minutes. Contact details (email, phone, website) are on each partner’s own profile page, so they are
+        a separate step: about one request per partner, roughly two hours for everyone, and it picks up where it stopped. Both steps now run by themselves: the
+        contact details are read once for everyone, then the whole directory is read again every 30 days while the server is awake; the buttons start a read
+        early.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -217,7 +265,12 @@ export function PotentialAffiliatesTab() {
           <Download className="mr-1.5 h-4 w-4" aria-hidden />
           Export CSV
         </Button>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Country" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
+        <select
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          aria-label="Country"
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+        >
           <option value="">All countries ({partners.length})</option>
           {(data?.countries ?? []).map((c) => (
             <option key={c.slug} value={c.slug}>
@@ -225,7 +278,12 @@ export function PotentialAffiliatesTab() {
             </option>
           ))}
         </select>
-        <select value={tier} onChange={(e) => setTier(e.target.value)} aria-label="Tier" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
+        <select
+          value={tier}
+          onChange={(e) => setTier(e.target.value)}
+          aria-label="Tier"
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+        >
           <option value="">All tiers</option>
           {Object.entries(TIER_LABEL).map(([k, label]) => (
             <option key={k} value={k}>
@@ -249,7 +307,13 @@ export function PotentialAffiliatesTab() {
 
       {progress?.running && (
         <div className="max-w-xl">
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-1 text-xs text-zinc-500">
@@ -260,12 +324,15 @@ export function PotentialAffiliatesTab() {
       )}
       {details?.running && (
         <p className="text-xs text-zinc-500">
-          Reading profiles: {details.done.toLocaleString()} of {details.total.toLocaleString()} (about 1 per 1.5 s, highest-reviewed first; safe to leave and come back — it resumes where it stopped).
+          Reading profiles: {details.done.toLocaleString()} of {details.total.toLocaleString()} (about 1 per 1.5 s, highest-reviewed first; safe to leave and
+          come back — it resumes where it stopped).
           {details.errors > 0 ? ` ${details.errors} failed.` : ""}
         </p>
       )}
       {details && !details.running && details.lastError && <p className="text-xs text-status-fail-text">Contact details stopped: {details.lastError}</p>}
-      {progress && !progress.running && progress.errors.length > 0 && <p className="text-xs text-status-fail-text">Some countries failed: {progress.errors.join("; ")}</p>}
+      {progress && !progress.running && progress.errors.length > 0 && (
+        <p className="text-xs text-status-fail-text">Some countries failed: {progress.errors.join("; ")}</p>
+      )}
 
       {!loading && partners.length === 0 ? (
         <EmptyState icon={Users} title="No partners yet" description="Press “Collect partners” to read the directory." />

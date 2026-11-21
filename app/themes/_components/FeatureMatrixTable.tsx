@@ -52,7 +52,10 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
       <table className="w-full border-separate border-spacing-0 text-left text-xs">
         <thead>
           <tr>
-            <th rowSpan={2} className="sticky left-0 top-0 z-40 min-w-[150px] border-b border-r border-border-subtle bg-surface-muted px-4 py-3 align-bottom text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+            <th
+              rowSpan={2}
+              className="sticky left-0 top-0 z-40 min-w-[150px] border-b border-r border-border-subtle bg-surface-muted px-4 py-3 align-bottom text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+            >
               Theme
             </th>
             {GROUPS.map((g) => (
@@ -73,7 +76,9 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
                   title={`${f.label} (${f.category})`}
                   className={`sticky top-8 z-20 ${LABEL_ROW_HEIGHT} min-w-[38px] border-b border-border-subtle bg-surface-muted px-1 pb-3 align-bottom ${i === 0 ? "border-l" : ""}`}
                 >
-                  <span className="inline-block whitespace-nowrap text-[11px] font-medium text-zinc-600 [writing-mode:vertical-rl] rotate-180 dark:text-zinc-300">{f.label}</span>
+                  <span className="inline-block whitespace-nowrap text-[11px] font-medium text-zinc-600 [writing-mode:vertical-rl] rotate-180 dark:text-zinc-300">
+                    {f.label}
+                  </span>
                 </th>
               ))
             )}
@@ -107,7 +112,10 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
                     const verified = cell?.sources.live === true;
                     const why = cell ? sourcesText(cell) : "";
                     return (
-                      <td key={f.id} className={`border-b border-border-subtle px-1 py-2.5 text-center group-hover:bg-primary-tint/60 ${i === 0 ? "border-l" : ""}`}>
+                      <td
+                        key={f.id}
+                        className={`border-b border-border-subtle px-1 py-2.5 text-center group-hover:bg-primary-tint/60 ${i === 0 ? "border-l" : ""}`}
+                      >
                         {status === "detected" && verified && (
                           <span
                             className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow-sm ring-1 ring-emerald-600/40"
@@ -121,7 +129,10 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
                             className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30"
                             title={`${r.theme.name}: ${f.label} is available, not seen on the live store. ${why}`}
                           >
-                            <Check className="h-3.5 w-3.5 stroke-[3] text-emerald-600 dark:text-emerald-400" aria-label="Available, not seen on the live store" />
+                            <Check
+                              className="h-3.5 w-3.5 stroke-[3] text-emerald-600 dark:text-emerald-400"
+                              aria-label="Available, not seen on the live store"
+                            />
                           </span>
                         )}
                         {status === "conflict" && (
@@ -133,7 +144,11 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
                           </span>
                         )}
                         {status !== "detected" && status !== "conflict" && (
-                          <span className="mx-auto block h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600" title={`${r.theme.name}: ${f.label} not found. ${why}`} aria-label="Not available" />
+                          <span
+                            className="mx-auto block h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600"
+                            title={`${r.theme.name}: ${f.label} not found. ${why}`}
+                            aria-label="Not available"
+                          />
                         )}
                       </td>
                     );
@@ -143,12 +158,17 @@ export function FeatureMatrixTable({ rows }: { rows: FeatureMatrixRow[] }) {
             );
           })}
           <tr>
-            <td className="sticky left-0 z-10 border-r border-border-subtle bg-surface-muted px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Themes with it</td>
+            <td className="sticky left-0 z-10 border-r border-border-subtle bg-surface-muted px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+              Themes with it
+            </td>
             {GROUPS.flatMap((g) =>
               g.features.map((f, i) => {
                 const n = cells.filter((c) => hasFeature(c.get(f.id))).length;
                 return (
-                  <td key={f.id} className={`bg-surface-muted px-1 py-2.5 text-center tabular-nums text-[11px] font-medium ${n === rows.length ? "text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} ${i === 0 ? "border-l border-border-subtle" : ""}`}>
+                  <td
+                    key={f.id}
+                    className={`bg-surface-muted px-1 py-2.5 text-center tabular-nums text-[11px] font-medium ${n === rows.length ? "text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} ${i === 0 ? "border-l border-border-subtle" : ""}`}
+                  >
                     {n}
                   </td>
                 );

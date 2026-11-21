@@ -17,7 +17,17 @@ function hostOf(url: string): string | null {
  * stored encrypted on the server and used by every audit of the theme to read that store; it is never shown again (only "saved").
  * Speed (PageSpeed Insights) can't log in, so a password-protected store gets no Core Web Vitals.
  */
-export function DemoStorePasswords({ themeId, presets, onSaved, saveHint }: { themeId: string; presets: DemoStorePreset[]; /** Called after the store accepted a password and it was saved (the Under development card runs the check then). */ onSaved?: () => void; saveHint?: string }) {
+export function DemoStorePasswords({
+  themeId,
+  presets,
+  onSaved,
+  saveHint,
+}: {
+  themeId: string;
+  presets: DemoStorePreset[];
+  /** Called after the store accepted a password and it was saved (the Under development card runs the check then). */ onSaved?: () => void;
+  saveHint?: string;
+}) {
   const [saved, setSaved] = useState<string[]>([]);
   const hosts = [...new Map(presets.map((p) => [hostOf(p.url), p.url.trim()] as const).filter(([h]) => h)).entries()] as [string, string][];
 
@@ -31,7 +41,8 @@ export function DemoStorePasswords({ themeId, presets, onSaved, saveHint }: { th
   if (hosts.length === 0) {
     return (
       <p className="text-xs text-zinc-500">
-        Is the demo store password-protected? Type its URL above and a password box appears here; once the store accepts the password the live checks can read it.
+        Is the demo store password-protected? Type its URL above and a password box appears here; once the store accepts the password the live checks can read
+        it.
       </p>
     );
   }
@@ -39,7 +50,16 @@ export function DemoStorePasswords({ themeId, presets, onSaved, saveHint }: { th
     <div className="flex flex-col gap-2">
       <span className="text-zinc-700 dark:text-zinc-300">Store password (only if the demo store is password-protected)</span>
       {hosts.map(([host, url]) => (
-        <HostPassword key={host} themeId={themeId} host={host} url={url} isSaved={saved.includes(host)} onHosts={setSaved} onSaved={onSaved} saveHint={saveHint} />
+        <HostPassword
+          key={host}
+          themeId={themeId}
+          host={host}
+          url={url}
+          isSaved={saved.includes(host)}
+          onHosts={setSaved}
+          onSaved={onSaved}
+          saveHint={saveHint}
+        />
       ))}
       <p className="text-xs text-zinc-500">
         The password is checked with the store, then kept encrypted and used by the checks to read the pages. Google&apos;s PageSpeed cannot log in, so a
@@ -49,7 +69,23 @@ export function DemoStorePasswords({ themeId, presets, onSaved, saveHint }: { th
   );
 }
 
-function HostPassword({ themeId, host, url, isSaved, onHosts, onSaved, saveHint }: { themeId: string; host: string; url: string; isSaved: boolean; onHosts: (h: string[]) => void; onSaved?: () => void; saveHint?: string }) {
+function HostPassword({
+  themeId,
+  host,
+  url,
+  isSaved,
+  onHosts,
+  onSaved,
+  saveHint,
+}: {
+  themeId: string;
+  host: string;
+  url: string;
+  isSaved: boolean;
+  onHosts: (h: string[]) => void;
+  onSaved?: () => void;
+  saveHint?: string;
+}) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -58,7 +94,11 @@ function HostPassword({ themeId, host, url, isSaved, onHosts, onSaved, saveHint 
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/themes/${themeId}/demo-passwords`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ url, password }) });
+      const res = await fetch(`/api/themes/${themeId}/demo-passwords`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url, password }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setMessage({ ok: false, text: data.error ?? "Could not save the password." });
       else {

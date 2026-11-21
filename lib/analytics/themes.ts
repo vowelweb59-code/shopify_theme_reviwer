@@ -6,7 +6,15 @@ import { isValidObjectId } from "@/lib/api/validation";
 import { GA4_DATE_PATTERN, GA4_PROPERTY_ID_PATTERN } from "./constants";
 import { slugify } from "./slug";
 import { Ga4ConnectionError, getAuthorizedClient, markConnectionRevoked } from "./googleConnections";
-import { Ga4PropertyError, createAdminApi, getPropertyDetails, listAccessibleProperties, type AdminApi, type Ga4PropertyDetails, type Ga4PropertySummary } from "./properties";
+import {
+  Ga4PropertyError,
+  createAdminApi,
+  getPropertyDetails,
+  listAccessibleProperties,
+  type AdminApi,
+  type Ga4PropertyDetails,
+  type Ga4PropertySummary,
+} from "./properties";
 
 // GA4 themes: CRUD plus the Theme → GA4 property mapping. A mapping is only
 // saved after the chosen Google account has proved it can read the
@@ -87,7 +95,9 @@ function toPublicTheme(doc: ThemeLean, accounts: Map<string, AccountLean>): Publ
     ga4PropertyTimeZone: doc.ga4PropertyTimeZone ?? null,
     pagePathPrefix: doc.pagePathPrefix ?? null,
     earlierSource:
-      doc.earlierPropertyId && doc.earlierUntil ? { ga4PropertyId: doc.earlierPropertyId, pagePathPrefix: doc.earlierPagePathPrefix ?? null, until: doc.earlierUntil } : null,
+      doc.earlierPropertyId && doc.earlierUntil
+        ? { ga4PropertyId: doc.earlierPropertyId, pagePathPrefix: doc.earlierPagePathPrefix ?? null, until: doc.earlierUntil }
+        : null,
     connectionStatus: doc.connectionStatus,
     isActive: doc.isActive,
     lastValidatedAt: doc.lastValidatedAt ? new Date(doc.lastValidatedAt).toISOString() : null,
@@ -100,7 +110,9 @@ function toPublicTheme(doc: ThemeLean, accounts: Map<string, AccountLean>): Publ
 
 async function withAccounts(docs: ThemeLean[]): Promise<PublicAnalyticsTheme[]> {
   const ids = [...new Set(docs.map((d) => d.googleConnectionId?.toString()).filter(Boolean))];
-  const accounts = await GoogleConnection.find({ _id: { $in: ids } }).select("email status").lean<AccountLean[]>();
+  const accounts = await GoogleConnection.find({ _id: { $in: ids } })
+    .select("email status")
+    .lean<AccountLean[]>();
   const byId = new Map(accounts.map((a) => [a._id.toString(), a]));
   return docs.map((d) => toPublicTheme(d, byId));
 }
@@ -161,13 +173,23 @@ function parseEarlierSource(raw: unknown): EarlierSource | null | undefined {
   return { ga4PropertyId, pagePathPrefix: parsePagePathPrefix(r.pagePathPrefix ?? null) ?? null, until: r.until };
 }
 
-const earlierFields = (s: EarlierSource | null) => ({ earlierPropertyId: s?.ga4PropertyId ?? null, earlierPagePathPrefix: s?.pagePathPrefix ?? null, earlierUntil: s?.until ?? null });
+const earlierFields = (s: EarlierSource | null) => ({
+  earlierPropertyId: s?.ga4PropertyId ?? null,
+  earlierPagePathPrefix: s?.pagePathPrefix ?? null,
+  earlierUntil: s?.until ?? null,
+});
 const sameEarlier = (a: EarlierSource | null, b: EarlierSource | null) => JSON.stringify(a) === JSON.stringify(b);
 
 /** The theme's account must be able to read the earlier property too. */
-async function checkEarlierSource(source: EarlierSource, connectionId: string | null, mainPropertyId: string | null, resolveAdmin: AdminResolver): Promise<void> {
+async function checkEarlierSource(
+  source: EarlierSource,
+  connectionId: string | null,
+  mainPropertyId: string | null,
+  resolveAdmin: AdminResolver
+): Promise<void> {
   if (!connectionId || !mainPropertyId) throw new ThemeRequestError(400, "Map the theme's own GA4 property before adding earlier history.");
-  if (source.ga4PropertyId === mainPropertyId) throw new ThemeRequestError(400, "Earlier history must come from a different GA4 property than the theme's own.");
+  if (source.ga4PropertyId === mainPropertyId)
+    throw new ThemeRequestError(400, "Earlier history must come from a different GA4 property than the theme's own.");
   try {
     await getPropertyDetails(await resolveAdmin(connectionId), source.ga4PropertyId);
   } catch (err) {
@@ -225,7 +247,12 @@ const PROPERTY_ERROR_STATUS: Record<Ga4PropertyError["code"], ThemeRequestError[
  * Proves `googleConnectionId` can read `ga4PropertyId` and that sharing it
  * with any other theme is allowed. Returns the property's details to store.
  */
-async function checkMapping(mapping: NonNullable<ParsedMapping>, prefix: string | null, resolveAdmin: AdminResolver, excludeThemeId?: string): Promise<Ga4PropertyDetails> {
+async function checkMapping(
+  mapping: NonNullable<ParsedMapping>,
+  prefix: string | null,
+  resolveAdmin: AdminResolver,
+  excludeThemeId?: string
+): Promise<Ga4PropertyDetails> {
   await checkPropertySharing(mapping.ga4PropertyId, prefix, excludeThemeId);
 
   const connection = await GoogleConnection.findById(mapping.googleConnectionId).select("email status").lean<AccountLean>();
@@ -264,7 +291,9 @@ const isDuplicateKey = (err: unknown) => (err as { code?: number })?.code === 11
 
 async function findAuditThemeId(name: string) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = await Theme.findOne({ name: new RegExp(`^${escaped}$`, "i") }).select("_id").lean<{ _id: unknown }>();
+  const match = await Theme.findOne({ name: new RegExp(`^${escaped}$`, "i") })
+    .select("_id")
+    .lean<{ _id: unknown }>();
   return match?._id ?? null;
 }
 
@@ -295,7 +324,9 @@ export async function createTheme(input: ThemeInput, resolveAdmin: AdminResolver
 
 /** Rename and/or (re)map. The slug never changes, so it stays a stable identifier. */
 export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: AdminResolver = defaultResolver): Promise<PublicAnalyticsTheme> {
-  const current = await AnalyticsTheme.findById(id).select("googleConnectionId ga4PropertyId pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil").lean<ThemeLean>();
+  const current = await AnalyticsTheme.findById(id)
+    .select("googleConnectionId ga4PropertyId pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil")
+    .lean<ThemeLean>();
   if (!current) throw new ThemeRequestError(404, "Theme not found.");
 
   const set: Record<string, unknown> = {};
@@ -315,7 +346,13 @@ export async function updateTheme(id: string, input: ThemeInput, resolveAdmin: A
   const currentEarlier = toPublicTheme(current, new Map()).earlierSource;
   const earlier = parseEarlierSource(input.earlierSource);
   if (earlier !== undefined && !sameEarlier(earlier, currentEarlier)) {
-    if (earlier) await checkEarlierSource(earlier, mapping?.googleConnectionId ?? current.googleConnectionId?.toString() ?? null, mapping?.ga4PropertyId ?? current.ga4PropertyId ?? null, resolveAdmin);
+    if (earlier)
+      await checkEarlierSource(
+        earlier,
+        mapping?.googleConnectionId ?? current.googleConnectionId?.toString() ?? null,
+        mapping?.ga4PropertyId ?? current.ga4PropertyId ?? null,
+        resolveAdmin
+      );
     Object.assign(set, earlierFields(earlier), RESET_SYNC_STATE);
   }
   if (Object.keys(set).length === 0) throw new ThemeRequestError(400, "Nothing to update.");

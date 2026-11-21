@@ -35,7 +35,8 @@ export function authMode(env: Env): "check" | "open" | "misconfigured" {
  */
 export function sessionSecretProblem(env: Env): string | null {
   if (authMode(env) !== "check" || env.NODE_ENV !== "production") return null;
-  if (!env.SESSION_SECRET) return "SESSION_SECRET is not set: sessions are signed with a key derived from the login password. Set a random 32+ character value.";
+  if (!env.SESSION_SECRET)
+    return "SESSION_SECRET is not set: sessions are signed with a key derived from the login password. Set a random 32+ character value.";
   if (env.SESSION_SECRET.length < 32) return "SESSION_SECRET is shorter than 32 characters.";
   return null;
 }

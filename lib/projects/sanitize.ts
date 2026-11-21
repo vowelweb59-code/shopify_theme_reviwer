@@ -38,7 +38,9 @@ function text(raw: unknown, label: string, max: number, required: boolean): Resu
 
 type Pay = { inactive?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null };
 
-export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean } & Pay> {
+export function parseTeamMemberInput(
+  body: Record<string, unknown>
+): Result<{ name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean } & Pay> {
   const name = text(body.name, "Name", MAX_NAME, true);
   if (!name.ok) return name;
   const designation = text(body.designation, "Designation", MAX_TEXT, true);
@@ -50,7 +52,11 @@ export function parseTeamMemberInput(body: Record<string, unknown>): Result<{ na
   const flag = typeof body.updatesAndPresetsOnly === "boolean" ? { updatesAndPresetsOnly: body.updatesAndPresetsOnly } : {};
   // Pay (INR), each only when sent; blank / null clears an amount.
   const salary: Pay = {};
-  for (const [key, label] of [["monthlySalary", "Monthly salary"], ["perLiveTheme", "Amount per live theme"], ["perLivePreset", "Amount per live preset"]] as const) {
+  for (const [key, label] of [
+    ["monthlySalary", "Monthly salary"],
+    ["perLiveTheme", "Amount per live theme"],
+    ["perLivePreset", "Amount per live preset"],
+  ] as const) {
     if (!(key in body)) continue;
     const raw = body[key];
     if (raw === null || raw === "" || raw === undefined) salary[key] = null;
@@ -160,7 +166,16 @@ export function parseRounds(raw: unknown): Result<Round[]> {
     if (!members.ok) return members;
     const note = text(r.note, "Note", MAX_DESCRIPTION, false);
     if (!note.ok) return note;
-    rounds.push({ status: status.value, rejectionStage: rejectionStage.value, rejectionType: rejectionType.value, rejectedOn: rejectedOn.value, designDays: designDays.value, developmentDays: developmentDays.value, members: members.value, note: note.value });
+    rounds.push({
+      status: status.value,
+      rejectionStage: rejectionStage.value,
+      rejectionType: rejectionType.value,
+      rejectedOn: rejectedOn.value,
+      designDays: designDays.value,
+      developmentDays: developmentDays.value,
+      members: members.value,
+      note: note.value,
+    });
   }
   return { ok: true, value: rounds };
 }
@@ -175,7 +190,18 @@ export function parseDays(raw: unknown, label: string): Result<number | null> {
   return { ok: true, value: Math.round(days * 100) / 100 };
 }
 
-type ProjectFields = { deadline?: Date | null; rejectedOn?: Date | null; rejectionStage?: RejectionStage | null; rejectionType?: RejectionType | null; name?: string; portal?: Portal | null; description?: string; status?: ProjectStatus; designDays?: number | null; developmentDays?: number | null };
+type ProjectFields = {
+  deadline?: Date | null;
+  rejectedOn?: Date | null;
+  rejectionStage?: RejectionStage | null;
+  rejectionType?: RejectionType | null;
+  name?: string;
+  portal?: Portal | null;
+  description?: string;
+  status?: ProjectStatus;
+  designDays?: number | null;
+  developmentDays?: number | null;
+};
 
 /** `partial` (PATCH) validates only the keys present; otherwise (POST) a name is required. */
 export function parseProjectFields(body: Record<string, unknown>, partial: boolean): Result<ProjectFields> {

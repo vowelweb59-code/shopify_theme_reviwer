@@ -91,12 +91,7 @@ export function installRate(installs: number | null, netSales: number): number |
   return installs != null && netSales > 0 ? Math.round((installs / netSales) * 1000) / 10 : null;
 }
 
-export function buildSummary(
-  sales: SaleInput[],
-  ga: GaMonth[],
-  themeNames: Map<string, string>,
-  categoryLabel: (slug: string | null) => string
-): SalesSummary {
+export function buildSummary(sales: SaleInput[], ga: GaMonth[], themeNames: Map<string, string>, categoryLabel: (slug: string | null) => string): SalesSummary {
   const hasGa = new Set(ga.map((g) => g.themeId));
   const gaByKey = new Map(ga.map((g) => [`${g.themeId}|${g.month}`, g]));
   const months = [...new Set([...sales.map((s) => s.month), ...ga.map((g) => g.month)])].sort();
@@ -145,7 +140,13 @@ export function buildSummary(
     const stores = new Set(rows.map((s) => s.shopDomain)).size;
     // "Unknown" preset rows can land in several "Theme (store closed)"-style categories.
     const cats = [...new Set(rows.map((s) => s.category ?? ""))];
-    const category = cats.length === 1 ? cats[0] || null : cats.filter(Boolean).map((c) => categoryLabel(c)).join(", ");
+    const category =
+      cats.length === 1
+        ? cats[0] || null
+        : cats
+            .filter(Boolean)
+            .map((c) => categoryLabel(c))
+            .join(", ");
     return { themeId, themeName: themeNames.get(themeId) ?? "Unknown theme", preset, category, stores, ...m };
   });
   presets.sort((a, b) => b.netSales - a.netSales || a.preset.localeCompare(b.preset));
@@ -163,7 +164,11 @@ export function buildSummary(
       ...m,
     }))
     .sort((a, b) => b.netSales - a.netSales);
-  const categoryMonths = matrix(sales, (s) => s.category ?? "", (k) => categoryLabel(k || null));
+  const categoryMonths = matrix(
+    sales,
+    (s) => s.category ?? "",
+    (k) => categoryLabel(k || null)
+  );
 
   const countries = [...groupBy(sales, (s) => s.country || "—")].map(([country, m]) => ({ country, ...m })).sort((a, b) => b.netSales - a.netSales);
 

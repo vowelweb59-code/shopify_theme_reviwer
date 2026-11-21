@@ -11,7 +11,14 @@ import { MissedReports } from "./_components/MissedReports";
 
 type Kind = "theme" | "preset" | "update" | null;
 type Item = { work: string; kind: Kind; memo: string; minutes: number };
-type Person = { name: string; designation: string | null; current: { work: string; kind: Kind; memo: string; postedAt: string | null } | null; today: Item[]; lastReportedOn: string | null; daysAgo: number | null };
+type Person = {
+  name: string;
+  designation: string | null;
+  current: { work: string; kind: Kind; memo: string; postedAt: string | null } | null;
+  today: Item[];
+  lastReportedOn: string | null;
+  daysAgo: number | null;
+};
 type Data = { todayIst: string; people: Person[]; unmatched: Person[] };
 
 const KIND_LABEL = { theme: "New theme", preset: "Preset", update: "Update" } as const;
@@ -70,7 +77,11 @@ export default function CurrentWorkPage() {
           <div>
             <div className="font-medium text-zinc-950 dark:text-zinc-50">
               {p.current.work}
-              {p.current.kind && <span className="ml-1.5 rounded-full bg-primary-tint px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary-tint-text">{KIND_LABEL[p.current.kind]}</span>}
+              {p.current.kind && (
+                <span className="ml-1.5 rounded-full bg-primary-tint px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary-tint-text">
+                  {KIND_LABEL[p.current.kind]}
+                </span>
+              )}
             </div>
             {p.current.memo && <div className="mt-0.5 max-w-xl text-xs text-zinc-500">{p.current.memo}</div>}
           </div>
@@ -97,7 +108,11 @@ export default function CurrentWorkPage() {
       render: (p) => (
         <div>
           {freshness(p.daysAgo)}
-          {p.current?.postedAt ? <div className="text-xs text-zinc-500">{formatDateTime(p.current.postedAt)}</div> : p.lastReportedOn ? <div className="text-xs text-zinc-500">{p.lastReportedOn}</div> : null}
+          {p.current?.postedAt ? (
+            <div className="text-xs text-zinc-500">{formatDateTime(p.current.postedAt)}</div>
+          ) : p.lastReportedOn ? (
+            <div className="text-xs text-zinc-500">{p.lastReportedOn}</div>
+          ) : null}
         </div>
       ),
       sortValue: (p) => p.daysAgo ?? 9999,
@@ -112,7 +127,8 @@ export default function CurrentWorkPage() {
         <div>
           <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">Current Work</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-            What each person is working on, from their latest report in the Theme Status Group. The group is read every 5 minutes, so a new report shows here shortly after it is posted.
+            What each person is working on, from their latest report in the Theme Status Group. The group is read every 5 minutes, so a new report shows here
+            shortly after it is posted.
             {data ? ` ${reportedToday} of ${data.people.length} have reported today.` : ""}
           </p>
         </div>
@@ -126,13 +142,21 @@ export default function CurrentWorkPage() {
       {loading && !data ? (
         <p className="text-sm text-zinc-500">Loading…</p>
       ) : (
-        <ResponsiveTable columns={columns} rows={data?.people ?? []} rowKey={(p) => p.name} theadClassName="bg-primary-tint text-primary-tint-text" emptyMessage="No team members yet." />
+        <ResponsiveTable
+          columns={columns}
+          rows={data?.people ?? []}
+          rowKey={(p) => p.name}
+          theadClassName="bg-primary-tint text-primary-tint-text"
+          emptyMessage="No team members yet."
+        />
       )}
 
       {data && data.unmatched.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Posters not matched to a team member</h2>
-          <p className="max-w-2xl text-sm text-zinc-500">Their reports are stored, but the name in the group matches nobody on the Team page. Add it as an alias of the right member and it moves up.</p>
+          <p className="max-w-2xl text-sm text-zinc-500">
+            Their reports are stored, but the name in the group matches nobody on the Team page. Add it as an alias of the right member and it moves up.
+          </p>
           <ResponsiveTable columns={columns} rows={data.unmatched} rowKey={(p) => `u-${p.name}`} theadClassName="bg-primary-tint text-primary-tint-text" />
         </section>
       )}

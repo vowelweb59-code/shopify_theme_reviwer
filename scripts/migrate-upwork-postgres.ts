@@ -48,10 +48,40 @@ async function main() {
 
   const q = async (sql: string) => (await client.query(sql)).rows as Row[];
 
-  const [users, clients, accounts, profiles, projects, contracts, people, assignments, history, departments, spaces, senders, checkpoints, upworkContracts, allocations, audit] = await Promise.all([
-    q(`select * from "user"`), q(`select * from client`), q(`select * from upwork_account`), q(`select * from upwork_profile`), q(`select * from project`), q(`select * from contract`),
-    q(`select * from project_person`), q(`select * from project_assignment`), q(`select * from project_status_history order by at`), q(`select * from department`),
-    q(`select * from chat_space`), q(`select * from chat_sender`), q(`select * from sync_checkpoint`), q(`select * from upwork_contract`), q(`select * from entry_allocation`), q(`select * from audit_log order by id`),
+  const [
+    users,
+    clients,
+    accounts,
+    profiles,
+    projects,
+    contracts,
+    people,
+    assignments,
+    history,
+    departments,
+    spaces,
+    senders,
+    checkpoints,
+    upworkContracts,
+    allocations,
+    audit,
+  ] = await Promise.all([
+    q(`select * from "user"`),
+    q(`select * from client`),
+    q(`select * from upwork_account`),
+    q(`select * from upwork_profile`),
+    q(`select * from project`),
+    q(`select * from contract`),
+    q(`select * from project_person`),
+    q(`select * from project_assignment`),
+    q(`select * from project_status_history order by at`),
+    q(`select * from department`),
+    q(`select * from chat_space`),
+    q(`select * from chat_sender`),
+    q(`select * from sync_checkpoint`),
+    q(`select * from upwork_contract`),
+    q(`select * from entry_allocation`),
+    q(`select * from audit_log order by id`),
   ]);
   const messages = await q(`select * from chat_message`);
   const entries = await q(`select * from time_entry`);
@@ -73,7 +103,10 @@ async function main() {
     const isDmEntry = (e: Row) => (e.user_id && dmUsers.has(e.user_id)) || dmSenders.has(entrySender(e) ?? "");
     const allocOf = new Map<string, Row[]>();
     for (const a of allocations) allocOf.set(a.entry_id, [...(allocOf.get(a.entry_id) ?? []), a]);
-    const entryProjects = (e: Row) => [e.contract_id ? contractProject.get(e.contract_id) : null, ...(allocOf.get(e.id) ?? []).map((a) => contractProject.get(a.contract_id))].filter(Boolean) as string[];
+    const entryProjects = (e: Row) =>
+      [e.contract_id ? contractProject.get(e.contract_id) : null, ...(allocOf.get(e.id) ?? []).map((a) => contractProject.get(a.contract_id))].filter(
+        Boolean
+      ) as string[];
 
     const keep = new Set<string>();
     const dmSenderIds = new Set(senders.filter((x) => dmSenders.has(x.external_id)).map((x) => x.id as string));
@@ -88,8 +121,11 @@ async function main() {
     const keptProjects = projects.filter((p) => keep.has(p.id));
     const keptClientIds = new Set([...keptProjects.map((p) => p.client_id), ...keptEntries.map((e) => e.client_id)].filter(Boolean));
 
-    console.log(`Digital Marketing filter: ${keptProjects.length} of ${projects.length} projects, ${keptEntries.length} of ${entries.length} hours entries, ${keptMessages.length} of ${messages.length} Chat messages, ${keptClientIds.size} of ${clients.length} clients.`);
-    for (const entry of DM_MEMBERS) console.log(`  ${entry.padEnd(14)} -> ${[...(matched.get(entry) ?? [])].join(", ") || "MATCHED NOBODY (check the spelling)"}`);
+    console.log(
+      `Digital Marketing filter: ${keptProjects.length} of ${projects.length} projects, ${keptEntries.length} of ${entries.length} hours entries, ${keptMessages.length} of ${messages.length} Chat messages, ${keptClientIds.size} of ${clients.length} clients.`
+    );
+    for (const entry of DM_MEMBERS)
+      console.log(`  ${entry.padEnd(14)} -> ${[...(matched.get(entry) ?? [])].join(", ") || "MATCHED NOBODY (check the spelling)"}`);
     console.log("");
 
     const keepRows = <T extends Row>(rows: T[], ok: (r: T) => boolean) => rows.splice(0, rows.length, ...rows.filter(ok));
@@ -116,44 +152,203 @@ async function main() {
   const allocBy = group(allocations, "entry_id");
   const senderOfMessage = new Map(messages.map((m) => [m.id, m.sender_external_id as string]));
 
-  const docs: Array<[Model<any>, string, Row[]]> = [ // eslint-disable-line @typescript-eslint/no-explicit-any
-    [ServiceUser, "users", users.map((u) => ({ _id: u.id, email: u.email, displayName: u.display_name, kind: u.kind, active: u.active, createdAt: u.created_at, updatedAt: u.created_at }))],
+  // The models differ in shape, so the list is typed loosely on purpose.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const docs: Array<[Model<any>, string, Row[]]> = [
+    [
+      ServiceUser,
+      "users",
+      users.map((u) => ({
+        _id: u.id,
+        email: u.email,
+        displayName: u.display_name,
+        kind: u.kind,
+        active: u.active,
+        createdAt: u.created_at,
+        updatedAt: u.created_at,
+      })),
+    ],
     [ServiceClient, "clients", clients.map((c) => ({ _id: c.id, name: c.name, aliases: c.aliases ?? [], inHouse: c.in_house, splitUnclear: c.split_unclear }))],
     [ServiceUpworkAccount, "Upwork accounts", accounts.map((a) => ({ _id: a.id, name: a.name }))],
-    [ServiceUpworkProfile, "Upwork profiles", profiles.map((p) => ({ _id: p.id, name: p.name, aliases: p.aliases ?? [], accountId: p.account_id, createdAt: p.created_at, updatedAt: p.created_at }))],
-    [ServiceProject, "projects", projects.map((p) => {
-      const c = contractByProject.get(p.id);
-      return {
-        _id: p.id, name: p.name, clientId: p.client_id, upworkAccountId: p.upwork_account_id, upworkProfileId: p.upwork_profile_id, chatKeywords: p.chat_keywords ?? [], inHouse: p.in_house,
-        reviewRating: num(p.review_rating), reviewComment: p.review_comment, reviewedAt: p.reviewed_at, contractRef: p.contract_ref, description: p.description, projectType: p.project_type,
-        status: p.status, startDate: day(p.start_date), targetDate: day(p.target_date), revisedDate: day(p.revised_date), createdAt: p.created_at, updatedAt: p.created_at,
-        people: (peopleBy.get(p.id) ?? []).map((x) => ({ role: x.role, name: x.name, senderId: x.sender_id })),
-        assignments: (assignBy.get(p.id) ?? []).map((a) => ({ userId: a.user_id, role: a.assignment_role })),
-        history: (historyBy.get(p.id) ?? []).map((h) => ({ fromStatus: h.from_status, toStatus: h.to_status, reason: h.reason, at: h.at })),
-        contract: c ? { externalRef: c.external_ref, type: c.type, weeklyLimitMinutes: c.weekly_limit_minutes, hourlyRateCents: c.hourly_rate_cents, fixedPriceCents: c.fixed_price_cents, trackingMode: c.tracking_mode, startDate: day(c.start_date), endDate: day(c.end_date), status: c.status } : null,
-      };
-    })],
-    [ServiceDepartment, "departments", departments.map((d) => ({ _id: d.id, name: d.name, isDefault: d.is_default, managerUserId: d.manager_user_id, createdAt: d.created_at, updatedAt: d.created_at }))],
-    [ServiceChatSpace, "Chat spaces", spaces.map((s) => ({ _id: s.id, externalId: s.external_id, name: s.name, type: s.type, clientId: s.client_id, createdAt: s.created_at, updatedAt: s.created_at }))],
-    [ServiceChatSender, "Chat senders", senders.map((s) => ({ _id: s.id, externalId: s.external_id, displayName: s.display_name, userId: s.user_id, matchedBy: s.matched_by, designation: s.designation, team: s.team, salaryMonthlyMinor: s.salary_monthly_minor, salaryCurrency: s.salary_currency, createdAt: s.created_at, updatedAt: s.created_at }))],
-    [ServiceChatMessage, "Chat messages", messages.map((m) => ({ _id: m.id, spaceId: m.space_id, externalId: m.external_id, senderExternalId: m.sender_external_id, senderName: m.sender_name, userId: m.user_id, postedAt: m.posted_at, text: m.text, kind: m.kind, parserVersion: m.parser_version, createdAt: m.imported_at, updatedAt: m.imported_at }))],
-    [ServiceSyncCheckpoint, "sync checkpoints", checkpoints.map((c) => ({ spaceId: c.space_id, month: c.month, completedAt: c.completed_at, createdAt: c.updated_at, updatedAt: c.updated_at }))],
-    [ServiceTimeEntry, "time entries", entries.map((e) => ({
-      _id: e.id, userId: e.user_id, senderExternalId: senderOfMessage.get(e.source_message_id) ?? "unknown", profile: e.profile, clientRaw: e.client_raw, profileId: e.profile_id, ordinal: e.ordinal, clientId: e.client_id,
-      projectId: e.contract_id ? contractProject.get(e.contract_id) ?? null : null,
-      allocations: (allocBy.get(e.id) ?? []).map((a) => ({ projectId: contractProject.get(a.contract_id)!, minutes: a.minutes })).filter((a) => a.projectId),
-      entryDate: day(e.entry_date), minutes: e.minutes, source: e.source, state: e.state, flags: e.flags ?? [], notes: e.notes ?? [], memo: e.memo, reportedOnTimerMinutes: e.reported_on_timer_minutes,
-      reconciliation: e.reconciliation, isLate: e.is_late, parserVersion: e.parser_version, startMessageId: e.start_message_id, sourceMessageId: e.source_message_id, createdAt: e.created_at, updatedAt: e.created_at,
-    }))],
-    [ServiceUpworkContract, "Upwork contract list rows", upworkContracts.map((c) => ({
-      _id: c.id, sheetRef: c.sheet_ref, clientId: c.client_id, projectId: c.project_id, clientName: c.client_name, profile: c.profile, bde: c.bde, ba: c.ba, url: c.url, endedBy: c.ended_by,
-      startDate: day(c.start_date), endDate: day(c.end_date), finalRating: num(c.final_rating), changedRating: num(c.changed_rating), duration: c.duration, createdAt: c.created_at, updatedAt: c.created_at,
-    }))],
-    [ServiceAuditLog, "audit log rows", audit.map((a) => ({ seq: Number(a.id), actorId: a.actor_id, action: a.action, detail: a.detail ?? {}, at: a.at, prevHash: a.prev_hash, hash: a.hash }))],
+    [
+      ServiceUpworkProfile,
+      "Upwork profiles",
+      profiles.map((p) => ({ _id: p.id, name: p.name, aliases: p.aliases ?? [], accountId: p.account_id, createdAt: p.created_at, updatedAt: p.created_at })),
+    ],
+    [
+      ServiceProject,
+      "projects",
+      projects.map((p) => {
+        const c = contractByProject.get(p.id);
+        return {
+          _id: p.id,
+          name: p.name,
+          clientId: p.client_id,
+          upworkAccountId: p.upwork_account_id,
+          upworkProfileId: p.upwork_profile_id,
+          chatKeywords: p.chat_keywords ?? [],
+          inHouse: p.in_house,
+          reviewRating: num(p.review_rating),
+          reviewComment: p.review_comment,
+          reviewedAt: p.reviewed_at,
+          contractRef: p.contract_ref,
+          description: p.description,
+          projectType: p.project_type,
+          status: p.status,
+          startDate: day(p.start_date),
+          targetDate: day(p.target_date),
+          revisedDate: day(p.revised_date),
+          createdAt: p.created_at,
+          updatedAt: p.created_at,
+          people: (peopleBy.get(p.id) ?? []).map((x) => ({ role: x.role, name: x.name, senderId: x.sender_id })),
+          assignments: (assignBy.get(p.id) ?? []).map((a) => ({ userId: a.user_id, role: a.assignment_role })),
+          history: (historyBy.get(p.id) ?? []).map((h) => ({ fromStatus: h.from_status, toStatus: h.to_status, reason: h.reason, at: h.at })),
+          contract: c
+            ? {
+                externalRef: c.external_ref,
+                type: c.type,
+                weeklyLimitMinutes: c.weekly_limit_minutes,
+                hourlyRateCents: c.hourly_rate_cents,
+                fixedPriceCents: c.fixed_price_cents,
+                trackingMode: c.tracking_mode,
+                startDate: day(c.start_date),
+                endDate: day(c.end_date),
+                status: c.status,
+              }
+            : null,
+        };
+      }),
+    ],
+    [
+      ServiceDepartment,
+      "departments",
+      departments.map((d) => ({
+        _id: d.id,
+        name: d.name,
+        isDefault: d.is_default,
+        managerUserId: d.manager_user_id,
+        createdAt: d.created_at,
+        updatedAt: d.created_at,
+      })),
+    ],
+    [
+      ServiceChatSpace,
+      "Chat spaces",
+      spaces.map((s) => ({
+        _id: s.id,
+        externalId: s.external_id,
+        name: s.name,
+        type: s.type,
+        clientId: s.client_id,
+        createdAt: s.created_at,
+        updatedAt: s.created_at,
+      })),
+    ],
+    [
+      ServiceChatSender,
+      "Chat senders",
+      senders.map((s) => ({
+        _id: s.id,
+        externalId: s.external_id,
+        displayName: s.display_name,
+        userId: s.user_id,
+        matchedBy: s.matched_by,
+        designation: s.designation,
+        team: s.team,
+        salaryMonthlyMinor: s.salary_monthly_minor,
+        salaryCurrency: s.salary_currency,
+        createdAt: s.created_at,
+        updatedAt: s.created_at,
+      })),
+    ],
+    [
+      ServiceChatMessage,
+      "Chat messages",
+      messages.map((m) => ({
+        _id: m.id,
+        spaceId: m.space_id,
+        externalId: m.external_id,
+        senderExternalId: m.sender_external_id,
+        senderName: m.sender_name,
+        userId: m.user_id,
+        postedAt: m.posted_at,
+        text: m.text,
+        kind: m.kind,
+        parserVersion: m.parser_version,
+        createdAt: m.imported_at,
+        updatedAt: m.imported_at,
+      })),
+    ],
+    [
+      ServiceSyncCheckpoint,
+      "sync checkpoints",
+      checkpoints.map((c) => ({ spaceId: c.space_id, month: c.month, completedAt: c.completed_at, createdAt: c.updated_at, updatedAt: c.updated_at })),
+    ],
+    [
+      ServiceTimeEntry,
+      "time entries",
+      entries.map((e) => ({
+        _id: e.id,
+        userId: e.user_id,
+        senderExternalId: senderOfMessage.get(e.source_message_id) ?? "unknown",
+        profile: e.profile,
+        clientRaw: e.client_raw,
+        profileId: e.profile_id,
+        ordinal: e.ordinal,
+        clientId: e.client_id,
+        projectId: e.contract_id ? (contractProject.get(e.contract_id) ?? null) : null,
+        allocations: (allocBy.get(e.id) ?? []).map((a) => ({ projectId: contractProject.get(a.contract_id)!, minutes: a.minutes })).filter((a) => a.projectId),
+        entryDate: day(e.entry_date),
+        minutes: e.minutes,
+        source: e.source,
+        state: e.state,
+        flags: e.flags ?? [],
+        notes: e.notes ?? [],
+        memo: e.memo,
+        reportedOnTimerMinutes: e.reported_on_timer_minutes,
+        reconciliation: e.reconciliation,
+        isLate: e.is_late,
+        parserVersion: e.parser_version,
+        startMessageId: e.start_message_id,
+        sourceMessageId: e.source_message_id,
+        createdAt: e.created_at,
+        updatedAt: e.created_at,
+      })),
+    ],
+    [
+      ServiceUpworkContract,
+      "Upwork contract list rows",
+      upworkContracts.map((c) => ({
+        _id: c.id,
+        sheetRef: c.sheet_ref,
+        clientId: c.client_id,
+        projectId: c.project_id,
+        clientName: c.client_name,
+        profile: c.profile,
+        bde: c.bde,
+        ba: c.ba,
+        url: c.url,
+        endedBy: c.ended_by,
+        startDate: day(c.start_date),
+        endDate: day(c.end_date),
+        finalRating: num(c.final_rating),
+        changedRating: num(c.changed_rating),
+        duration: c.duration,
+        createdAt: c.created_at,
+        updatedAt: c.created_at,
+      })),
+    ],
+    [
+      ServiceAuditLog,
+      "audit log rows",
+      audit.map((a) => ({ seq: Number(a.id), actorId: a.actor_id, action: a.action, detail: a.detail ?? {}, at: a.at, prevHash: a.prev_hash, hash: a.hash })),
+    ],
   ];
 
   const mongoose = await connectToDatabase();
-  console.log(`${apply ? "APPLYING to" : "Dry run against"} ${mongoose.connection.host} / ${mongoose.connection.name} (source ${SOURCE.replace(/:[^:@/]+@/, ":***@")})\n`);
+  console.log(
+    `${apply ? "APPLYING to" : "Dry run against"} ${mongoose.connection.host} / ${mongoose.connection.name} (source ${SOURCE.replace(/:[^:@/]+@/, ":***@")})\n`
+  );
   for (const [, label, rows] of docs) console.log(`  ${String(rows.length).padStart(6)} ${label}`);
   const lostAllocations = allocations.filter((a) => !contractProject.has(a.contract_id)).length;
   if (lostAllocations) console.log(`\n  ${lostAllocations} allocation(s) point at a missing contract and are dropped.`);

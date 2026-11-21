@@ -51,8 +51,20 @@ const SOURCE: Record<Store["detectedSource"], string> = {
   none: "",
 };
 
-export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeId: string; detection: DetectionProgress | null; onChanged: () => void; onRecheck: () => void }) {
-  const { data, loading, reload } = useApi<{ stores: Store[]; themePresets?: ThemePresets[] }>(`/api/sales/stores${themeId ? `?themeId=${themeId}` : ""}#${detection?.done ?? 0}`);
+export function StoresTab({
+  themeId,
+  detection,
+  onChanged,
+  onRecheck,
+}: {
+  themeId: string;
+  detection: DetectionProgress | null;
+  onChanged: () => void;
+  onRecheck: () => void;
+}) {
+  const { data, loading, reload } = useApi<{ stores: Store[]; themePresets?: ThemePresets[] }>(
+    `/api/sales/stores${themeId ? `?themeId=${themeId}` : ""}#${detection?.done ?? 0}`
+  );
   const [filter, setFilter] = useState<"all" | Store["status"] | "unknown">("all");
   const [error, setError] = useState<string | null>(null);
   const stores = data?.stores ?? [];
@@ -84,7 +96,12 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-zinc-900 dark:text-zinc-100">{s.shopName || s.shopDomain}</p>
-          <a href={s.liveUrl ?? `https://${s.shopDomain}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-primary">
+          <a
+            href={s.liveUrl ?? `https://${s.shopDomain}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-primary"
+          >
             {s.liveUrl ? new URL(s.liveUrl).host : s.shopDomain}
             <ExternalLink className="h-3 w-3" aria-hidden />
           </a>
@@ -92,7 +109,12 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       ),
       sortValue: (s) => (s.shopName || s.shopDomain).toLowerCase(),
     },
-    { key: "theme", header: "Theme", render: (s) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{s.themeName || "—"}</span>, sortValue: (s) => s.themeName.toLowerCase() },
+    {
+      key: "theme",
+      header: "Theme",
+      render: (s) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{s.themeName || "—"}</span>,
+      sortValue: (s) => s.themeName.toLowerCase(),
+    },
     { key: "sales", header: "Sales", render: (s) => <span className="tabular-nums">{s.netSales}</span>, sortValue: (s) => s.netSales, className: "text-right" },
     {
       key: "status",
@@ -101,12 +123,21 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
         <div>
           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS[s.status].cls}`}>{STATUS[s.status].label}</span>
           {s.status === "dropped" && s.liveSchemaName && <p className="mt-0.5 text-xs text-zinc-500">now on {s.liveSchemaName}</p>}
-          {s.status === "error" && s.error && <p className="mt-0.5 max-w-56 truncate text-xs text-zinc-500" title={s.error}>{s.error}</p>}
+          {s.status === "error" && s.error && (
+            <p className="mt-0.5 max-w-56 truncate text-xs text-zinc-500" title={s.error}>
+              {s.error}
+            </p>
+          )}
         </div>
       ),
       sortValue: (s) => s.status,
     },
-    { key: "live", header: "Live theme name", render: (s) => <span className="text-zinc-600 dark:text-zinc-400">{s.liveThemeName ?? "—"}</span>, sortValue: (s) => s.liveThemeName ?? "" },
+    {
+      key: "live",
+      header: "Live theme name",
+      render: (s) => <span className="text-zinc-600 dark:text-zinc-400">{s.liveThemeName ?? "—"}</span>,
+      sortValue: (s) => s.liveThemeName ?? "",
+    },
     {
       key: "preset",
       header: "Preset",
@@ -118,7 +149,12 @@ export function StoresTab({ themeId, detection, onChanged, onRecheck }: { themeI
       ),
       sortValue: (s) => s.preset ?? "~",
     },
-    { key: "checked", header: "Checked", render: (s) => <span className="text-xs text-zinc-500">{s.checkedAt ? formatDateTime(s.checkedAt) : "—"}</span>, sortValue: (s) => s.checkedAt ?? "" },
+    {
+      key: "checked",
+      header: "Checked",
+      render: (s) => <span className="text-xs text-zinc-500">{s.checkedAt ? formatDateTime(s.checkedAt) : "—"}</span>,
+      sortValue: (s) => s.checkedAt ?? "",
+    },
   ];
 
   const FILTERS: { id: typeof filter; label: string }[] = [
@@ -200,7 +236,9 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
           if (draft.trim()) void save(draft.trim());
         }}
       >
-        <label className="sr-only" htmlFor={`preset-name-${store.id}`}>Preset name for {label}</label>
+        <label className="sr-only" htmlFor={`preset-name-${store.id}`}>
+          Preset name for {label}
+        </label>
         <input
           id={`preset-name-${store.id}`}
           value={draft}
@@ -210,15 +248,21 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
           placeholder="Preset name"
           className="w-32 rounded-md border border-border-strong bg-surface px-2 py-1 text-sm"
         />
-        <Button type="submit" size="sm" loading={saving} disabled={!draft.trim()}>Save</Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => setTyping(false)}>Cancel</Button>
+        <Button type="submit" size="sm" loading={saving} disabled={!draft.trim()}>
+          Save
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => setTyping(false)}>
+          Cancel
+        </Button>
       </form>
     );
   }
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <label className="sr-only" htmlFor={`preset-${store.id}`}>Preset for {label}</label>
+      <label className="sr-only" htmlFor={`preset-${store.id}`}>
+        Preset for {label}
+      </label>
       <select
         id={`preset-${store.id}`}
         value={pending ?? saved}
@@ -235,27 +279,37 @@ function PresetPicker({ store, themePresets, onSave }: { store: Store; themePres
         {isCustom && <option value={store.manualPreset!}>{store.manualPreset}</option>}
         <optgroup label={store.themeName ? `${store.themeName} presets` : "Presets"}>
           {store.presetOptions.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p} value={p}>
+              {p}
+            </option>
           ))}
         </optgroup>
         {otherThemes.map((t) => (
           <optgroup key={t.themeId} label={`${t.themeName} presets`}>
             {t.presets.map((p) => (
-              <option key={p} value={p}>{p}</option>
+              <option key={p} value={p}>
+                {p}
+              </option>
             ))}
           </optgroup>
         ))}
         <optgroup label="Store status">
           {STATUS_PRESETS.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p} value={p}>
+              {p}
+            </option>
           ))}
         </optgroup>
         <option value={CUSTOM}>Type a name…</option>
       </select>
       {dirty && (
         <>
-          <Button type="button" size="sm" loading={saving} onClick={() => void save(pending!)}>Save</Button>
-          <Button type="button" size="sm" variant="secondary" disabled={saving} onClick={() => setPending(null)}>Cancel</Button>
+          <Button type="button" size="sm" loading={saving} onClick={() => void save(pending!)}>
+            Save
+          </Button>
+          <Button type="button" size="sm" variant="secondary" disabled={saving} onClick={() => setPending(null)}>
+            Cancel
+          </Button>
         </>
       )}
     </div>

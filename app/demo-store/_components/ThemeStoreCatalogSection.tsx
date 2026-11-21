@@ -32,7 +32,16 @@ type StoreTheme = {
 };
 type PublisherRow = { publisher: string; count: number; themes: string[] };
 type StoreData = { detailsPending: number; lastCrawledAt: string | null; themes: StoreTheme[] };
-type Progress = { running: boolean; phase: "catalog" | "categories" | "details" | null; total: number; done: number; current: string | null; themesSeen: number; errors: string[]; finishedAt: string | null };
+type Progress = {
+  running: boolean;
+  phase: "catalog" | "categories" | "details" | null;
+  total: number;
+  done: number;
+  current: string | null;
+  themesSeen: number;
+  errors: string[];
+  finishedAt: string | null;
+};
 
 const PHASE_LABEL = { catalog: "Reading the catalog", categories: "Reading categories", details: "Reading theme pages" } as const;
 const dash = <span className="text-zinc-400">—</span>;
@@ -50,11 +59,24 @@ function PriceHistory({ theme }: { theme: StoreTheme }) {
     points.push({ x, y: e.price });
   });
   if (h.length > 0) points.push({ x: Math.max(now, new Date(h[h.length - 1].at).getTime()), y: h[h.length - 1].price });
-  const changes = h.slice(1).map((e, i) => ({ ...e, from: h[i].price })).reverse();
+  const changes = h
+    .slice(1)
+    .map((e, i) => ({ ...e, from: h[i].price }))
+    .reverse();
   return (
     <div className="flex flex-col gap-3">
-      <LineChart series={[{ key: "price", label: "Price", points }]} yTickFormat={(v) => `$${Math.round(v)}`} xTickFormat={(ms) => shortDate(new Date(ms).toISOString())} yFloor={0} emptyMessage="No price recorded yet." />
-      {h.length > 0 && <p className="text-xs text-zinc-500">Tracked since {shortDate(h[0].at)}, starting at {priceLabel(h[0].price)}.</p>}
+      <LineChart
+        series={[{ key: "price", label: "Price", points }]}
+        yTickFormat={(v) => `$${Math.round(v)}`}
+        xTickFormat={(ms) => shortDate(new Date(ms).toISOString())}
+        yFloor={0}
+        emptyMessage="No price recorded yet."
+      />
+      {h.length > 0 && (
+        <p className="text-xs text-zinc-500">
+          Tracked since {shortDate(h[0].at)}, starting at {priceLabel(h[0].price)}.
+        </p>
+      )}
       {changes.length === 0 ? (
         <p className="text-sm text-zinc-500">The price hasn&apos;t changed since tracking began.</p>
       ) : (
@@ -64,7 +86,9 @@ function PriceHistory({ theme }: { theme: StoreTheme }) {
               <span className="text-zinc-500">{shortDate(c.at)}</span>
               <span className="tabular-nums">
                 {priceLabel(c.from)} → <strong>{priceLabel(c.price)}</strong>
-                <span className={c.price > c.from ? "ml-2 text-status-fail-text" : "ml-2 text-green-600"}>{c.price > c.from ? "+" : "−"}${Math.abs(c.price - c.from).toLocaleString()}</span>
+                <span className={c.price > c.from ? "ml-2 text-status-fail-text" : "ml-2 text-green-600"}>
+                  {c.price > c.from ? "+" : "−"}${Math.abs(c.price - c.from).toLocaleString()}
+                </span>
               </span>
             </li>
           ))}
@@ -130,12 +154,21 @@ export function ThemeStoreCatalogSection() {
     const byPublisher = new Map<string, StoreTheme[]>();
     for (const t of themes) byPublisher.set(t.designer ?? "Not read yet", [...(byPublisher.get(t.designer ?? "Not read yet") ?? []), t]);
     return [...byPublisher]
-      .map(([publisher, list]) => ({ publisher, count: list.length, themes: list.sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)).map((t) => t.name) }))
+      .map(([publisher, list]) => ({
+        publisher,
+        count: list.length,
+        themes: list.sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)).map((t) => t.name),
+      }))
       .sort((a, b) => b.count - a.count || a.publisher.localeCompare(b.publisher));
   }, [themes]);
 
   const publisherColumns: TableColumn<PublisherRow>[] = [
-    { key: "publisher", header: "Publisher", render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.publisher}</span>, sortValue: (r) => r.publisher.toLowerCase() },
+    {
+      key: "publisher",
+      header: "Publisher",
+      render: (r) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{r.publisher}</span>,
+      sortValue: (r) => r.publisher.toLowerCase(),
+    },
     { key: "count", header: "Themes", render: (r) => <span className="tabular-nums">{r.count}</span>, sortValue: (r) => r.count, className: "text-right" },
     { key: "themes", header: "Which themes", render: (r) => <span className="text-xs text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> },
   ];
@@ -143,7 +176,22 @@ export function ThemeStoreCatalogSection() {
   function exportCsv() {
     const header = ["Rank", "Theme", "Publisher", "Price", "Positive %", "Reviews", "Presets", "Categories", "Latest version", "Released", "Features", "Link"];
     const lines = shown.map((t) =>
-      [t.rank, t.name, t.designer, t.price, t.positivePercent, t.reviewCount, t.presetCount, t.industries.map(industryLabel).join("; "), t.latestVersion, t.latestVersionReleasedAt, t.features.join("; "), t.url].map(cell).join(",")
+      [
+        t.rank,
+        t.name,
+        t.designer,
+        t.price,
+        t.positivePercent,
+        t.reviewCount,
+        t.presetCount,
+        t.industries.map(industryLabel).join("; "),
+        t.latestVersion,
+        t.latestVersionReleasedAt,
+        t.features.join("; "),
+        t.url,
+      ]
+        .map(cell)
+        .join(",")
     );
     const url = URL.createObjectURL(new Blob([[header.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -154,12 +202,23 @@ export function ThemeStoreCatalogSection() {
   }
 
   const columns: TableColumn<StoreTheme>[] = [
-    { key: "rank", header: "#", render: (t) => <span className="tabular-nums text-zinc-500">{t.rank ?? "—"}</span>, sortValue: (t) => t.rank ?? Number.MAX_SAFE_INTEGER, className: "text-right" },
+    {
+      key: "rank",
+      header: "#",
+      render: (t) => <span className="tabular-nums text-zinc-500">{t.rank ?? "—"}</span>,
+      sortValue: (t) => t.rank ?? Number.MAX_SAFE_INTEGER,
+      className: "text-right",
+    },
     {
       key: "name",
       header: "Theme",
       render: (t) => (
-        <a href={t.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50">
+        <a
+          href={t.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-medium text-zinc-950 hover:text-primary dark:text-zinc-50"
+        >
           {t.name}
           {t.isNew && <span className="rounded-full bg-primary-tint px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary-tint-text">New</span>}
           <ExternalLink className="h-3 w-3 text-zinc-400" aria-hidden />
@@ -167,7 +226,12 @@ export function ThemeStoreCatalogSection() {
       ),
       sortValue: (t) => t.name.toLowerCase(),
     },
-    { key: "designer", header: "Publisher", render: (t) => (t.designer ? <span>{t.designer}</span> : dash), sortValue: (t) => (t.designer ?? "~").toLowerCase() },
+    {
+      key: "designer",
+      header: "Publisher",
+      render: (t) => (t.designer ? <span>{t.designer}</span> : dash),
+      sortValue: (t) => (t.designer ?? "~").toLowerCase(),
+    },
     {
       key: "price",
       header: "Price",
@@ -175,27 +239,74 @@ export function ThemeStoreCatalogSection() {
         const last = t.priceHistory.length > 1 ? t.priceHistory[t.priceHistory.length - 1] : null;
         const prev = last ? t.priceHistory[t.priceHistory.length - 2].price : null;
         return (
-          <button type="button" onClick={() => setHistoryFor(t)} title="Price history" className="inline-flex items-center gap-1 tabular-nums underline-offset-2 hover:text-primary hover:underline">
-            {last && prev !== null && (last.price > prev ? <ArrowUp className="h-3 w-3 text-status-fail-text" aria-label="Price went up" /> : <ArrowDown className="h-3 w-3 text-green-600" aria-label="Price went down" />)}
+          <button
+            type="button"
+            onClick={() => setHistoryFor(t)}
+            title="Price history"
+            className="inline-flex items-center gap-1 tabular-nums underline-offset-2 hover:text-primary hover:underline"
+          >
+            {last &&
+              prev !== null &&
+              (last.price > prev ? (
+                <ArrowUp className="h-3 w-3 text-status-fail-text" aria-label="Price went up" />
+              ) : (
+                <ArrowDown className="h-3 w-3 text-green-600" aria-label="Price went down" />
+              ))}
             {priceLabel(t.price)}
           </button>
         );
-      }, sortValue: (t) => t.price ?? -1, className: "text-right" },
-    { key: "positive", header: "Positive", render: (t) => <span className="tabular-nums">{t.positivePercent === null ? "—" : `${t.positivePercent}%`}</span>, sortValue: (t) => t.positivePercent ?? -1, className: "text-right" },
-    { key: "reviews", header: "Reviews", render: (t) => <span className="tabular-nums">{t.reviewCount?.toLocaleString() ?? "—"}</span>, sortValue: (t) => t.reviewCount ?? -1, className: "text-right" },
-    { key: "presets", header: "Presets", render: (t) => <span className="tabular-nums">{t.presetCount}</span>, sortValue: (t) => t.presetCount, className: "text-right" },
+      },
+      sortValue: (t) => t.price ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "positive",
+      header: "Positive",
+      render: (t) => <span className="tabular-nums">{t.positivePercent === null ? "—" : `${t.positivePercent}%`}</span>,
+      sortValue: (t) => t.positivePercent ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "reviews",
+      header: "Reviews",
+      render: (t) => <span className="tabular-nums">{t.reviewCount?.toLocaleString() ?? "—"}</span>,
+      sortValue: (t) => t.reviewCount ?? -1,
+      className: "text-right",
+    },
+    {
+      key: "presets",
+      header: "Presets",
+      render: (t) => <span className="tabular-nums">{t.presetCount}</span>,
+      sortValue: (t) => t.presetCount,
+      className: "text-right",
+    },
     {
       key: "categories",
       header: "Categories",
-      render: (t) => (t.industries.length ? <span className="text-xs text-zinc-600 dark:text-zinc-400">{t.industries.map(industryLabel).join(", ")}</span> : dash),
+      render: (t) =>
+        t.industries.length ? <span className="text-xs text-zinc-600 dark:text-zinc-400">{t.industries.map(industryLabel).join(", ")}</span> : dash,
     },
     {
       key: "version",
       header: "Latest version",
-      render: (t) => (t.latestVersion ? <span className="text-xs tabular-nums">{t.latestVersion}{t.latestVersionReleasedAt ? <span className="text-zinc-500"> · {t.latestVersionReleasedAt}</span> : null}</span> : dash),
+      render: (t) =>
+        t.latestVersion ? (
+          <span className="text-xs tabular-nums">
+            {t.latestVersion}
+            {t.latestVersionReleasedAt ? <span className="text-zinc-500"> · {t.latestVersionReleasedAt}</span> : null}
+          </span>
+        ) : (
+          dash
+        ),
       sortValue: (t) => (t.latestVersionReleasedAt ? new Date(t.latestVersionReleasedAt).getTime() || 0 : 0),
     },
-    { key: "features", header: "Features", render: (t) => <span className="tabular-nums">{t.features.length || "—"}</span>, sortValue: (t) => t.features.length, className: "text-right" },
+    {
+      key: "features",
+      header: "Features",
+      render: (t) => <span className="tabular-nums">{t.features.length || "—"}</span>,
+      sortValue: (t) => t.features.length,
+      className: "text-right",
+    },
   ];
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
@@ -208,8 +319,9 @@ export function ThemeStoreCatalogSection() {
         <a href="https://themes.shopify.com/themes" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
           themes.shopify.com
         </a>
-        , whoever made it. A refresh reads the catalog, then each category, then each theme&apos;s own page (publisher, reviews, version, features) with a short pause between requests, so it takes roughly 10–15 minutes. Theme pages already read in the last
-        week are skipped. The # is the theme&apos;s place among main themes in the store&apos;s default order; presets (style variants) are only counted, not listed.
+        , whoever made it. A refresh reads the catalog, then each category, then each theme&apos;s own page (publisher, reviews, version, features) with a short
+        pause between requests, so it takes roughly 10–15 minutes. Theme pages already read in the last week are skipped. The # is the theme&apos;s place among
+        main themes in the store&apos;s default order; presets (style variants) are only counted, not listed.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -221,7 +333,12 @@ export function ThemeStoreCatalogSection() {
           <Download className="mr-1.5 h-4 w-4" aria-hidden />
           Export CSV
         </Button>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Category"
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+        >
           <option value="">All categories</option>
           {INDUSTRIES.map((i) => (
             <option key={i.slug} value={i.slug}>
@@ -230,7 +347,12 @@ export function ThemeStoreCatalogSection() {
           ))}
           <option value="none">No category</option>
         </select>
-        <select value={price} onChange={(e) => setPrice(e.target.value)} aria-label="Price" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
+        <select
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          aria-label="Price"
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+        >
           <option value="">Free and paid</option>
           <option value="free">Free</option>
           <option value="paid">Paid</option>
@@ -250,7 +372,13 @@ export function ThemeStoreCatalogSection() {
 
       {progress?.running && progress.phase && (
         <div className="max-w-xl">
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div className="h-full bg-primary transition-all" style={{ width: `${progress.phase === "catalog" ? 5 : pct}%` }} />
           </div>
           <p className="mt-1 text-xs text-zinc-500">
@@ -275,15 +403,34 @@ export function ThemeStoreCatalogSection() {
             {shown.length.toLocaleString()} themes shown
             {(data?.detailsPending ?? 0) > 0 ? ` · ${data!.detailsPending} theme pages not read yet` : ""}
           </p>
-          <Modal open={historyFor !== null} onOpenChange={(o) => !o && setHistoryFor(null)} title={historyFor ? `${historyFor.name} price history` : "Price history"}>
+          <Modal
+            open={historyFor !== null}
+            onOpenChange={(o) => !o && setHistoryFor(null)}
+            title={historyFor ? `${historyFor.name} price history` : "Price history"}
+          >
             {historyFor && <PriceHistory theme={historyFor} />}
           </Modal>
-          <ResponsiveTable columns={columns} rows={shown} rowKey={(t) => t.slug} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={50} emptyMessage="No themes match." />
+          <ResponsiveTable
+            columns={columns}
+            rows={shown}
+            rowKey={(t) => t.slug}
+            theadClassName="bg-primary-tint text-primary-tint-text"
+            pageSize={50}
+            emptyMessage="No themes match."
+          />
 
           <section className="mt-6 flex flex-col gap-3">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes per publisher</h3>
-            <p className="max-w-2xl text-sm text-zinc-500">How many themes each publisher has on the Theme Store, most first. Publishers appear once their theme pages have been read.</p>
-            <ResponsiveTable columns={publisherColumns} rows={publishers} rowKey={(r) => r.publisher} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} />
+            <p className="max-w-2xl text-sm text-zinc-500">
+              How many themes each publisher has on the Theme Store, most first. Publishers appear once their theme pages have been read.
+            </p>
+            <ResponsiveTable
+              columns={publisherColumns}
+              rows={publishers}
+              rowKey={(r) => r.publisher}
+              theadClassName="bg-primary-tint text-primary-tint-text"
+              pageSize={25}
+            />
           </section>
         </>
       )}

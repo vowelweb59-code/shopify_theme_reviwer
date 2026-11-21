@@ -11,7 +11,25 @@ import { ResponsiveTable, type TableColumn } from "@/app/_components/ui/Table";
 import { DESIGNATION_SUGGESTIONS } from "@/lib/projects/constants";
 import { successRate, type OutcomeEntry } from "@/lib/projects/rounds";
 
-type Member = { _id: string; name: string; email: string | null; designation: string; updatesAndPresetsOnly?: boolean; inactive?: boolean; monthlySalary?: number | null; payModel?: "salary" | "per_live"; perLiveTheme?: number | null; perLivePreset?: number | null; projectCount: number; rejectionCount: number; approvedCount: number; decidedRejectedCount: number; decidedRejectedWeight?: number; approvedIn: OutcomeEntry[]; rejectedIn: OutcomeEntry[] };
+type Member = {
+  _id: string;
+  name: string;
+  email: string | null;
+  designation: string;
+  updatesAndPresetsOnly?: boolean;
+  inactive?: boolean;
+  monthlySalary?: number | null;
+  payModel?: "salary" | "per_live";
+  perLiveTheme?: number | null;
+  perLivePreset?: number | null;
+  projectCount: number;
+  rejectionCount: number;
+  approvedCount: number;
+  decidedRejectedCount: number;
+  decidedRejectedWeight?: number;
+  approvedIn: OutcomeEntry[];
+  rejectedIn: OutcomeEntry[];
+};
 
 // Designations are free text ("Product Manager", "Sr Shopify Developer", ...), so a role is matched by keyword.
 const ROLE_TABS = [
@@ -31,7 +49,17 @@ function OutcomeButton({ count, label, onClick }: { count: number; label: string
 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
-function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: () => void }) {
+function MemberModal({
+  member,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  member: Member | null;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSaved: () => void;
+}) {
   const [name, setName] = useState(member?.name ?? "");
   const [email, setEmail] = useState(member?.email ?? "");
   const [designation, setDesignation] = useState(member?.designation ?? "");
@@ -52,7 +80,17 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
       const res = await fetch(member ? `/api/team/${member._id}` : "/api/team", {
         method: member ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, designation, updatesAndPresetsOnly: updatesOnly, inactive, monthlySalary: salary.trim() === "" ? null : salary, payModel, perLiveTheme: perTheme.trim() === "" ? null : perTheme, perLivePreset: perPreset.trim() === "" ? null : perPreset }),
+        body: JSON.stringify({
+          name,
+          email,
+          designation,
+          updatesAndPresetsOnly: updatesOnly,
+          inactive,
+          monthlySalary: salary.trim() === "" ? null : salary,
+          payModel,
+          perLiveTheme: perTheme.trim() === "" ? null : perTheme,
+          perLivePreset: perPreset.trim() === "" ? null : perPreset,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -77,7 +115,14 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">Designation</span>
-          <input required list="designations" value={designation} onChange={(e) => setDesignation(e.target.value)} className={INPUT} placeholder="e.g. Shopify Developer" />
+          <input
+            required
+            list="designations"
+            value={designation}
+            onChange={(e) => setDesignation(e.target.value)}
+            className={INPUT}
+            placeholder="e.g. Shopify Developer"
+          />
           <datalist id="designations">
             {DESIGNATION_SUGGESTIONS.map((d) => (
               <option key={d} value={d} />
@@ -98,39 +143,78 @@ function MemberModal({ member, open, onOpenChange, onSaved }: { member: Member |
         {payModel === "salary" ? (
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Monthly salary, INR (optional)</span>
-            <input type="number" min={0} step="1" inputMode="numeric" value={salary} onChange={(e) => setSalary(e.target.value)} className={INPUT} placeholder="e.g. 45000" />
-            <span className="text-xs text-zinc-500">Used only for project costs: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.</span>
+            <input
+              type="number"
+              min={0}
+              step="1"
+              inputMode="numeric"
+              value={salary}
+              onChange={(e) => setSalary(e.target.value)}
+              className={INPUT}
+              placeholder="e.g. 45000"
+            />
+            <span className="text-xs text-zinc-500">
+              Used only for project costs: an hour of this person&apos;s reported time costs salary / (26 days x 8.5 h). Shown to everyone signed in.
+            </span>
           </label>
         ) : (
           <div className="flex flex-col gap-1 text-sm">
             <div className="flex gap-3">
               <label className="flex flex-1 flex-col gap-1">
                 <span className="text-zinc-700 dark:text-zinc-300">Per live theme, INR</span>
-                <input type="number" min={0} step="1" inputMode="numeric" value={perTheme} onChange={(e) => setPerTheme(e.target.value)} className={INPUT} placeholder="e.g. 10000" />
+                <input
+                  type="number"
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  value={perTheme}
+                  onChange={(e) => setPerTheme(e.target.value)}
+                  className={INPUT}
+                  placeholder="e.g. 10000"
+                />
               </label>
               <label className="flex flex-1 flex-col gap-1">
                 <span className="text-zinc-700 dark:text-zinc-300">Per live preset, INR</span>
-                <input type="number" min={0} step="1" inputMode="numeric" value={perPreset} onChange={(e) => setPerPreset(e.target.value)} className={INPUT} placeholder="e.g. 5000" />
+                <input
+                  type="number"
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  value={perPreset}
+                  onChange={(e) => setPerPreset(e.target.value)}
+                  className={INPUT}
+                  placeholder="e.g. 5000"
+                />
               </label>
             </div>
-            <span className="text-xs text-zinc-500">Earned for each Theme / Preset Design &amp; Development project that goes Live and that this person is on (assigned or reported). Their hours are not priced by the hour.</span>
+            <span className="text-xs text-zinc-500">
+              Earned for each Theme / Preset Design &amp; Development project that goes Live and that this person is on (assigned or reported). Their hours are
+              not priced by the hour.
+            </span>
           </div>
         )}
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={updatesOnly} onChange={(e) => setUpdatesOnly(e.target.checked)} className="mt-1" />
           <span className="text-zinc-700 dark:text-zinc-300">
             Only works on theme updates and presets
-            <span className="block text-xs text-zinc-500">Never on a new theme. Their Google Chat time reports are then logged as preset work or Theme Update hours.</span>
+            <span className="block text-xs text-zinc-500">
+              Never on a new theme. Their Google Chat time reports are then logged as preset work or Theme Update hours.
+            </span>
           </span>
         </label>
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={inactive} onChange={(e) => setInactive(e.target.checked)} className="mt-1" />
           <span className="text-zinc-700 dark:text-zinc-300">
             Inactive (no longer on the team)
-            <span className="block text-xs text-zinc-500">Kept instead of deleted so their projects and rounds stay on record. Hidden from this list, the project pickers, Current Work and automatic project assignment.</span>
+            <span className="block text-xs text-zinc-500">
+              Kept instead of deleted so their projects and rounds stay on record. Hidden from this list, the project pickers, Current Work and automatic
+              project assignment.
+            </span>
           </span>
         </label>
-        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
+        {error && (
+          <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>
+        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
@@ -181,7 +265,17 @@ export default function TeamPage() {
   }
 
   const columns: TableColumn<Member>[] = [
-    { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}{m.inactive && <span className="ml-2 text-xs font-normal text-zinc-500">inactive</span>}</span> },
+    {
+      key: "name",
+      header: "Name",
+      sortValue: (m) => m.name.toLowerCase(),
+      render: (m) => (
+        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+          {m.name}
+          {m.inactive && <span className="ml-2 text-xs font-normal text-zinc-500">inactive</span>}
+        </span>
+      ),
+    },
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
     { key: "email", header: "Email", render: (m) => m.email ?? <span className="text-zinc-400">—</span> },
     { key: "projects", header: "Projects", sortValue: (m) => m.projectCount, render: (m) => m.projectCount },
@@ -208,19 +302,50 @@ export default function TeamPage() {
   const successRows = members.filter((m) => activeTab.match(m) && m.approvedCount + m.decidedRejectedCount > 0);
   const rate = (m: Member) => successRate({ approved: m.approvedCount, rejected: m.decidedRejectedCount, rejectedWeight: m.decidedRejectedWeight });
   const successColumns: TableColumn<Member>[] = [
-    { key: "name", header: "Name", sortValue: (m) => m.name.toLowerCase(), render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
+    {
+      key: "name",
+      header: "Name",
+      sortValue: (m) => m.name.toLowerCase(),
+      render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span>,
+    },
     { key: "designation", header: "Designation", sortValue: (m) => m.designation.toLowerCase(), render: (m) => m.designation },
-    { key: "approved", header: "Approved", sortValue: (m) => m.approvedCount, render: (m) => <OutcomeButton count={m.approvedCount} label={`Approved projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — approved`, entries: m.approvedIn })} /> },
-    { key: "rejected", header: "Rejected", sortValue: (m) => m.decidedRejectedCount, render: (m) => (
+    {
+      key: "approved",
+      header: "Approved",
+      sortValue: (m) => m.approvedCount,
+      render: (m) => (
+        <OutcomeButton
+          count={m.approvedCount}
+          label={`Approved projects of ${m.name}`}
+          onClick={() => setOutcomeView({ title: `${m.name} — approved`, entries: m.approvedIn })}
+        />
+      ),
+    },
+    {
+      key: "rejected",
+      header: "Rejected",
+      sortValue: (m) => m.decidedRejectedCount,
+      render: (m) => (
         <span className="inline-flex items-baseline gap-1.5">
-          <OutcomeButton count={m.decidedRejectedCount} label={`Rejected projects of ${m.name}`} onClick={() => setOutcomeView({ title: `${m.name} — rejected`, entries: m.rejectedIn })} />
+          <OutcomeButton
+            count={m.decidedRejectedCount}
+            label={`Rejected projects of ${m.name}`}
+            onClick={() => setOutcomeView({ title: `${m.name} — rejected`, entries: m.rejectedIn })}
+          />
           {m.decidedRejectedWeight !== undefined && m.decidedRejectedWeight !== m.decidedRejectedCount && (
-            <span className="text-xs text-zinc-500" title="Internal rejections count half for a Team Lead, so this many rejections count in the success rate">counts as {m.decidedRejectedWeight}</span>
+            <span className="text-xs text-zinc-500" title="Internal rejections count half for a Team Lead, so this many rejections count in the success rate">
+              counts as {m.decidedRejectedWeight}
+            </span>
           )}
         </span>
       ),
     },
-    { key: "rate", header: "Success rate", sortValue: (m) => rate(m) ?? -1, render: (m) => (rate(m) === null ? <span className="text-zinc-400">—</span> : `${rate(m)}%`) },
+    {
+      key: "rate",
+      header: "Success rate",
+      sortValue: (m) => rate(m) ?? -1,
+      render: (m) => (rate(m) === null ? <span className="text-zinc-400">—</span> : `${rate(m)}%`),
+    },
   ];
 
   return (
@@ -240,7 +365,10 @@ export default function TeamPage() {
         <section className="flex flex-col gap-3">
           <div>
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Success rate</h2>
-            <p className="mt-1 text-sm text-zinc-500">Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren&apos;t counted. A rejection by Shopify counts in full for everyone; an internal rejection counts half for a Team Lead and in full for the rest.</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Approved (Live) rounds out of all decided rounds (Live or Rejected) each member worked on. Rounds still in progress aren&apos;t counted. A
+              rejection by Shopify counts in full for everyone; an internal rejection counts half for a Team Lead and in full for the rest.
+            </p>
           </div>
           <div role="tablist" aria-label="Success rate by role" className="flex flex-wrap gap-1 border-b border-border-subtle">
             {ROLE_TABS.map((tab) => {
@@ -253,7 +381,9 @@ export default function TeamPage() {
                   aria-selected={active}
                   onClick={() => setRoleTab(tab.label)}
                   className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
-                    active ? "border-primary font-medium text-zinc-950 dark:text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                    active
+                      ? "border-primary font-medium text-zinc-950 dark:text-zinc-50"
+                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
                   }`}
                 >
                   {tab.label} ({members.filter(tab.match).length})
@@ -265,7 +395,9 @@ export default function TeamPage() {
         </section>
       )}
 
-      {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>}
+      {error && (
+        <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-sm text-status-fail-text dark:border-red-900/50">{error}</div>
+      )}
 
       {loading ? (
         <p className="text-sm text-zinc-500">Loading…</p>
@@ -275,7 +407,11 @@ export default function TeamPage() {
         <div className="flex flex-col gap-2">
           <ResponsiveTable columns={columns} rows={members.filter((m) => showInactive || !m.inactive)} rowKey={(m) => m._id} />
           {members.some((m) => m.inactive) && (
-            <button type="button" onClick={() => setShowInactive((v) => !v)} className="w-fit text-xs text-zinc-500 underline hover:text-zinc-800 dark:hover:text-zinc-200">
+            <button
+              type="button"
+              onClick={() => setShowInactive((v) => !v)}
+              className="w-fit text-xs text-zinc-500 underline hover:text-zinc-800 dark:hover:text-zinc-200"
+            >
               {showInactive ? "Hide inactive members" : `Show inactive members (${members.filter((m) => m.inactive).length})`}
             </button>
           )}

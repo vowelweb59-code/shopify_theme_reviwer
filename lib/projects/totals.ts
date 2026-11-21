@@ -60,7 +60,8 @@ export function projectTotals(entered: Fixed, reports: TotalsReport[], share: nu
     if (/designer|ui\/ux/i.test(r.designation ?? "")) design += r.minutes;
     else if (/developer/i.test(r.designation ?? "")) development += r.minutes;
   }
-  const days = (fixedDays: number | null, minutes: number) => (fixedDays === null && minutes === 0 ? null : round2((fixedDays ?? 0) + minutes / 60 / HOURS_PER_DAY));
+  const days = (fixedDays: number | null, minutes: number) =>
+    fixedDays === null && minutes === 0 ? null : round2((fixedDays ?? 0) + minutes / 60 / HOURS_PER_DAY);
   const spaceHours = round2(all / 60);
   const fixedHours = round2(((fixed.designDays ?? 0) + (fixed.developmentDays ?? 0)) * HOURS_PER_DAY);
   return {

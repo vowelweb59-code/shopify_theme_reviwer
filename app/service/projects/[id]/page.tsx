@@ -19,7 +19,13 @@ export const dynamic = "force-dynamic";
 
 const SECTION = "rounded-lg border border-border-subtle bg-surface p-4";
 
-export default async function ServiceProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; on?: string; by?: string; view?: string; hours?: string }> }) {
+export default async function ServiceProjectPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ week?: string; on?: string; by?: string; view?: string; hours?: string }>;
+}) {
   const { id } = await params;
   const { week, on: onRaw, by: byRaw, view, hours: scope } = await searchParams;
   const byMonth = byRaw === "month";
@@ -29,17 +35,35 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   const pick = onRaw ?? week;
   const wk = pick && /^\d{4}-\d{2}-\d{2}$/.test(pick) ? pick : pick && /^\d{4}-\d{2}$/.test(pick) ? `${pick}-01` : null;
   const [project, assignments, pw, details, team_, users] = await load(() =>
-    Promise.all([getProject(id), getAssignments(id), projectWeek(id, wk, teamOnly, byMonth ? "month" : "week"), getDetails(id), teamHours(id, wk, teamOnly, byMonth ? "month" : "week"), assignableUsers()])
+    Promise.all([
+      getProject(id),
+      getAssignments(id),
+      projectWeek(id, wk, teamOnly, byMonth ? "month" : "week"),
+      getDetails(id),
+      teamHours(id, wk, teamOnly, byMonth ? "month" : "week"),
+      assignableUsers(),
+    ])
   );
   const managers = assignments.filter((a) => a.assignmentRole === "MANAGER");
   const team = assignments.filter((a) => a.assignmentRole === "EMPLOYEE");
   const base = `/service/projects/${project.id}`;
-  const q = (on?: string, h = teamOnly, m = byMonth) => { const p = new URLSearchParams(); if (on) p.set("on", on); if (m) p.set("by", "month"); if (h) p.set("hours", "team"); return p.size ? `?${p}` : ""; };
+  const q = (on?: string, h = teamOnly, m = byMonth) => {
+    const p = new URLSearchParams();
+    if (on) p.set("on", on);
+    if (m) p.set("by", "month");
+    if (h) p.set("hours", "team");
+    return p.size ? `?${p}` : "";
+  };
   const unit = byMonth ? "month" : "week";
-  const monthStart = (anchor: string, by: number) => { const [y, m] = anchor.split("-").map(Number); return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10); };
+  const monthStart = (anchor: string, by: number) => {
+    const [y, m] = anchor.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10);
+  };
   const prevOn = byMonth ? monthStart(pw.week.start, -1) : shiftWeek(pw.week.start, -1);
   const nextOn = byMonth ? monthStart(pw.week.start, 1) : shiftWeek(pw.week.start, 1);
-  const periodText = byMonth ? new Date(`${pw.week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(pw.week);
+  const periodText = byMonth
+    ? new Date(`${pw.week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })
+    : weekLabel(pw.week);
   const todayIso = istDate(new Date());
   const isCurrent = todayIso >= pw.week.start && todayIso <= pw.week.end;
   const navBtn = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
@@ -53,12 +77,15 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
   const amountPeriod = pw.hours && rateCents !== null && !details.inHouse ? Math.round((pw.hours.completedMinutes * rateCents) / 60) : null;
   const limit = pw.hours?.limitMinutes ?? null;
   const rating = details.review.rating;
-  const seg = (on: boolean) => `px-3 py-1.5 text-sm ${on ? "bg-primary-tint font-medium text-primary-tint-text" : "text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`;
+  const seg = (on: boolean) =>
+    `px-3 py-1.5 text-sm ${on ? "bg-primary-tint font-medium text-primary-tint-text" : "text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`;
 
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/service" className="text-sm text-primary hover:underline">← Projects</Link>
+        <Link href="/service" className="text-sm text-primary hover:underline">
+          ← Projects
+        </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h2>
           <ServiceStatusBadge status={project.status} />
@@ -68,10 +95,18 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
       </div>
 
       <nav aria-label="Project sections" className="flex gap-1 border-b border-border-subtle">
-        {[{ id: "overview", label: "Overview", href: base }, { id: "settings", label: "Settings", href: `${base}?view=settings` }].map((t) => {
+        {[
+          { id: "overview", label: "Overview", href: base },
+          { id: "settings", label: "Settings", href: `${base}?view=settings` },
+        ].map((t) => {
           const on = (t.id === "settings") === settings;
           return (
-            <Link key={t.id} href={t.href} aria-current={on ? "page" : undefined} className={`-mb-px border-b-2 px-3 py-2 text-sm ${on ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}>
+            <Link
+              key={t.id}
+              href={t.href}
+              aria-current={on ? "page" : undefined}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm ${on ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+            >
               {t.label}
             </Link>
           );
@@ -85,26 +120,56 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
               label={`Hours this ${unit}`}
               value={pw.hours ? fmtMinutes(pw.hours.completedMinutes) : "—"}
               meter={pw.hours && limit ? { value: pw.hours.completedMinutes, max: limit, over: pw.hours.overLimitMinutes > 0 } : undefined}
-              sub={!pw.hours ? "No contract yet" : limit ? (pw.hours.overLimitMinutes > 0 ? `Over the ${fmtMinutes(limit)} limit by ${fmtMinutes(pw.hours.overLimitMinutes)}` : `${fmtMinutes(pw.hours.remainingMinutes ?? 0)} left of ${fmtMinutes(limit)}`) : "No limit set"}
+              sub={
+                !pw.hours
+                  ? "No contract yet"
+                  : limit
+                    ? pw.hours.overLimitMinutes > 0
+                      ? `Over the ${fmtMinutes(limit)} limit by ${fmtMinutes(pw.hours.overLimitMinutes)}`
+                      : `${fmtMinutes(pw.hours.remainingMinutes ?? 0)} left of ${fmtMinutes(limit)}`
+                    : "No limit set"
+              }
               tone={pw.hours && pw.hours.overLimitMinutes > 0 ? "bad" : "default"}
             />
             <Metric
               label={`Amount this ${unit}`}
               value={amountPeriod !== null ? fmtUsd(amountPeriod) : "—"}
-              sub={c ? (c.type === "FIXED" && c.hourlyRateCents == null ? (budgetTotal !== null ? "Valued at $15/h against the fixed price" : "Fixed price") : c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "No hourly rate set") : undefined}
+              sub={
+                c
+                  ? c.type === "FIXED" && c.hourlyRateCents == null
+                    ? budgetTotal !== null
+                      ? "Valued at $15/h against the fixed price"
+                      : "Fixed price"
+                    : c.hourlyRateCents != null
+                      ? `${fmtUsd(c.hourlyRateCents)}/h`
+                      : "No hourly rate set"
+                  : undefined
+              }
             />
             <Metric
               label="Total hours worked"
               value={fmtMinutes(used)}
               meter={budgetTotal !== null ? { value: used, max: budgetTotal, over: used > budgetTotal } : undefined}
-              sub={budgetTotal !== null
-                ? `${used > budgetTotal ? `Over the budget by ${fmtMinutes(used - budgetTotal)}` : `${fmtMinutes(budgetTotal - used)} left`} of ${fmtMinutes(budgetTotal)} (${fmtUsd(c!.fixedPriceCents!)} ÷ $15)`
-                : revenueSoFar !== null ? `${fmtUsd(revenueSoFar)} earned so far${billedByHours ? " · billed by the hours" : ""}` : "No rate set"}
+              sub={
+                budgetTotal !== null
+                  ? `${used > budgetTotal ? `Over the budget by ${fmtMinutes(used - budgetTotal)}` : `${fmtMinutes(budgetTotal - used)} left`} of ${fmtMinutes(budgetTotal)} (${fmtUsd(c!.fixedPriceCents!)} ÷ $15)`
+                  : revenueSoFar !== null
+                    ? `${fmtUsd(revenueSoFar)} earned so far${billedByHours ? " · billed by the hours" : ""}`
+                    : "No rate set"
+              }
               tone={budgetTotal !== null && used > budgetTotal ? "bad" : "default"}
             />
             <Metric
               label="Client review"
-              value={rating ? <span><span className="text-status-warning-icon">★</span> {rating.toFixed(1)}</span> : "Pending"}
+              value={
+                rating ? (
+                  <span>
+                    <span className="text-status-warning-icon">★</span> {rating.toFixed(1)}
+                  </span>
+                ) : (
+                  "Pending"
+                )
+              }
               sub={rating ? details.review.comment || "Closing review" : "Given when the project closes"}
             />
           </div>
@@ -113,12 +178,17 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
             <div className="space-y-2 text-sm">
               {pw.needsReview ? (
                 <p className="rounded-lg border border-status-warning-icon/30 bg-status-warning-bg px-4 py-2 text-status-warning-text">
-                  {pw.needsReview} entr{pw.needsReview === 1 ? "y" : "ies"} still to check on the <Link href="/service/review" className="underline">Review page</Link>. They already count.
+                  {pw.needsReview} entr{pw.needsReview === 1 ? "y" : "ies"} still to check on the{" "}
+                  <Link href="/service/review" className="underline">
+                    Review page
+                  </Link>
+                  . They already count.
                 </p>
               ) : null}
               {pw.sharedClient ? (
                 <p className="rounded-lg border border-border-subtle bg-surface-muted/50 px-4 py-2 text-zinc-600 dark:text-zinc-400">
-                  This client has several contracts, so only hours assigned to this one on the Review page count here{pw.unassignedEntries ? ` (${pw.unassignedEntries} not assigned yet)` : ""}.
+                  This client has several contracts, so only hours assigned to this one on the Review page count here
+                  {pw.unassignedEntries ? ` (${pw.unassignedEntries} not assigned yet)` : ""}.
                 </p>
               ) : null}
             </div>
@@ -128,31 +198,78 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
             <div className="space-y-4 lg:col-span-2">
               <Card
                 title="Hours"
-                subtitle={<>{periodText}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text">now</span>}</>}
+                subtitle={
+                  <>
+                    {periodText}
+                    {isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text">now</span>}
+                  </>
+                }
                 action={
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <div className="inline-flex overflow-hidden rounded-lg border border-border-subtle">
-                      <Link href={`${base}${q(wk ?? undefined, teamOnly, false)}`} aria-current={!byMonth ? "page" : undefined} className={`border-r border-border-subtle ${seg(!byMonth)}`}>Week</Link>
-                      <Link href={`${base}${q(wk ?? undefined, teamOnly, true)}`} aria-current={byMonth ? "page" : undefined} className={seg(byMonth)}>Month</Link>
+                      <Link
+                        href={`${base}${q(wk ?? undefined, teamOnly, false)}`}
+                        aria-current={!byMonth ? "page" : undefined}
+                        className={`border-r border-border-subtle ${seg(!byMonth)}`}
+                      >
+                        Week
+                      </Link>
+                      <Link href={`${base}${q(wk ?? undefined, teamOnly, true)}`} aria-current={byMonth ? "page" : undefined} className={seg(byMonth)}>
+                        Month
+                      </Link>
                     </div>
-                    <Link href={`${base}${q(prevOn)}`} aria-label={`Previous ${unit}`} className={navBtn}>←</Link>
-                    <Link href={`${base}${q(nextOn)}`} aria-label={`Next ${unit}`} className={navBtn}>→</Link>
-                    {!isCurrent && <Link href={`${base}${q()}`} className="text-primary hover:underline">This {unit}</Link>}
+                    <Link href={`${base}${q(prevOn)}`} aria-label={`Previous ${unit}`} className={navBtn}>
+                      ←
+                    </Link>
+                    <Link href={`${base}${q(nextOn)}`} aria-label={`Next ${unit}`} className={navBtn}>
+                      →
+                    </Link>
+                    {!isCurrent && (
+                      <Link href={`${base}${q()}`} className="text-primary hover:underline">
+                        This {unit}
+                      </Link>
+                    )}
                     <form action={base} method="get" className="flex items-center gap-2">
                       {byMonth && <input type="hidden" name="by" value="month" />}
                       {teamOnly && <input type="hidden" name="hours" value="team" />}
-                      <label htmlFor="period-pick" className="sr-only">Choose a {unit}</label>
-                      {byMonth
-                        ? <input id="period-pick" type="month" name="on" defaultValue={pw.week.start.slice(0, 7)} max={todayIso.slice(0, 7)} className="rounded-lg border border-border-subtle bg-surface px-2 py-1" />
-                        : <input id="period-pick" type="date" name="on" defaultValue={pw.week.start} max={todayIso} className="rounded-lg border border-border-subtle bg-surface px-2 py-1" />}
+                      <label htmlFor="period-pick" className="sr-only">
+                        Choose a {unit}
+                      </label>
+                      {byMonth ? (
+                        <input
+                          id="period-pick"
+                          type="month"
+                          name="on"
+                          defaultValue={pw.week.start.slice(0, 7)}
+                          max={todayIso.slice(0, 7)}
+                          className="rounded-lg border border-border-subtle bg-surface px-2 py-1"
+                        />
+                      ) : (
+                        <input
+                          id="period-pick"
+                          type="date"
+                          name="on"
+                          defaultValue={pw.week.start}
+                          max={todayIso}
+                          className="rounded-lg border border-border-subtle bg-surface px-2 py-1"
+                        />
+                      )}
                       <button className={navBtn}>Go</button>
                     </form>
                   </div>
                 }
               >
                 <div className="mb-4 inline-flex overflow-hidden rounded-lg border border-border-subtle text-sm" role="group" aria-label="Whose hours to count">
-                  <Link href={`${base}${q(wk ?? undefined, false)}`} aria-current={!teamOnly ? "true" : undefined} className={`border-r border-border-subtle ${seg(!teamOnly)}`}>Everyone</Link>
-                  <Link href={`${base}${q(wk ?? undefined, true)}`} aria-current={teamOnly ? "true" : undefined} className={seg(teamOnly)}>My team only</Link>
+                  <Link
+                    href={`${base}${q(wk ?? undefined, false)}`}
+                    aria-current={!teamOnly ? "true" : undefined}
+                    className={`border-r border-border-subtle ${seg(!teamOnly)}`}
+                  >
+                    Everyone
+                  </Link>
+                  <Link href={`${base}${q(wk ?? undefined, true)}`} aria-current={teamOnly ? "true" : undefined} className={seg(teamOnly)}>
+                    My team only
+                  </Link>
                 </div>
                 {pw.hours && pw.byDay ? (
                   <div className="space-y-4">
@@ -160,14 +277,22 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                     {pw.bySender && pw.bySender.length > 0 && (
                       <ul className="flex flex-wrap gap-2">
                         {pw.bySender.map((p) => (
-                          <li key={p.name} className="flex items-center gap-2 rounded-full border border-border-subtle bg-surface-muted/40 py-1 pl-1 pr-3 text-sm">
-                            <Avatar name={p.name} />{outsider(p.name)}{p.name}<span className="tabular-nums text-zinc-500">{fmtMinutes(p.minutes)}</span>
+                          <li
+                            key={p.name}
+                            className="flex items-center gap-2 rounded-full border border-border-subtle bg-surface-muted/40 py-1 pl-1 pr-3 text-sm"
+                          >
+                            <Avatar name={p.name} />
+                            {outsider(p.name)}
+                            {p.name}
+                            <span className="tabular-nums text-zinc-500">{fmtMinutes(p.minutes)}</span>
                           </li>
                         ))}
                       </ul>
                     )}
                     <p className="text-xs text-zinc-500">
-                      {pw.hours.trackedMinutes > 0 ? `Tracked ${fmtMinutes(pw.hours.trackedMinutes)} · manual ${fmtMinutes(pw.hours.manualMinutes)}. ` : ""}Hours come from the daily reports. Reported hours, not Upwork-verified; a report shared across projects counts here only for this project&apos;s share.
+                      {pw.hours.trackedMinutes > 0 ? `Tracked ${fmtMinutes(pw.hours.trackedMinutes)} · manual ${fmtMinutes(pw.hours.manualMinutes)}. ` : ""}
+                      Hours come from the daily reports. Reported hours, not Upwork-verified; a report shared across projects counts here only for this
+                      project&apos;s share.
                     </p>
                   </div>
                 ) : (
@@ -185,7 +310,13 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                 <dl>
                   <Row label="Type">{c ? (c.type === "HOURLY" ? "Hourly" : billedByHours ? "Fixed, billed by hours" : "Fixed price") : "—"}</Row>
                   <Row label={c?.type === "FIXED" && !billedByHours ? "Fixed price" : "Hourly rate"}>
-                    {c?.type === "FIXED" && !billedByHours ? (c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "—") : c?.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "—"}
+                    {c?.type === "FIXED" && !billedByHours
+                      ? c.fixedPriceCents != null
+                        ? fmtUsd(c.fixedPriceCents)
+                        : "—"
+                      : c?.hourlyRateCents != null
+                        ? `${fmtUsd(c.hourlyRateCents)}/h`
+                        : "—"}
                   </Row>
                   {billedByHours && <Row label="First fixed price">{c!.fixedPriceCents != null ? fmtUsd(c!.fixedPriceCents) : "—"}</Row>}
                   <Row label="Weekly hours">{c?.weeklyLimitMinutes ? fmtMinutes(c.weeklyLimitMinutes) : "—"}</Row>
@@ -211,17 +342,40 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
                       <li key={k.ref} className="py-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">{k.profile ?? "No profile"}</span>
-                          {k.endDate ? <span className="text-xs text-zinc-500">Ended {k.endDate}</span> : <span className="rounded-full bg-status-pass-bg px-2 py-0.5 text-[11px] font-medium text-status-pass-text">Running</span>}
+                          {k.endDate ? (
+                            <span className="text-xs text-zinc-500">Ended {k.endDate}</span>
+                          ) : (
+                            <span className="rounded-full bg-status-pass-bg px-2 py-0.5 text-[11px] font-medium text-status-pass-text">Running</span>
+                          )}
                         </div>
                         <div className="mt-0.5 text-xs text-zinc-500">
-                          Started {k.startDate ?? "—"}{k.bde ? ` · BD ${k.bde}` : ""}{k.ba ? ` · BA ${k.ba}` : ""}{k.endedBy ? ` · ended by ${k.endedBy}` : ""}{k.rating !== null ? ` · ${k.rating.toFixed(1)}★` : ""}
-                          {k.url && <> · <a href={k.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">Upwork</a></>}
+                          Started {k.startDate ?? "—"}
+                          {k.bde ? ` · BD ${k.bde}` : ""}
+                          {k.ba ? ` · BA ${k.ba}` : ""}
+                          {k.endedBy ? ` · ended by ${k.endedBy}` : ""}
+                          {k.rating !== null ? ` · ${k.rating.toFixed(1)}★` : ""}
+                          {k.url && (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <a href={k.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                Upwork
+                              </a>
+                            </>
+                          )}
                         </div>
                       </li>
                     ))}
                   </ul>
                   {!["COMPLETED", "CANCELLED", "ARCHIVED"].includes(project.status) && details.upworkContracts.every((k) => k.endDate) && (
-                    <p className="mt-3 text-xs text-status-pass-text">Rehired: the last contract ended on {details.upworkContracts.map((k) => k.endDate!).sort().at(-1)}, but the team has worked on it since, so it stays open.</p>
+                    <p className="mt-3 text-xs text-status-pass-text">
+                      Rehired: the last contract ended on{" "}
+                      {details.upworkContracts
+                        .map((k) => k.endDate!)
+                        .sort()
+                        .at(-1)}
+                      , but the team has worked on it since, so it stays open.
+                    </p>
                   )}
                 </Card>
               )}
@@ -237,19 +391,29 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
           </section>
 
           <section aria-labelledby="edit" className={SECTION}>
-            <h3 id="edit" className="mb-3 font-medium">Edit details</h3>
+            <h3 id="edit" className="mb-3 font-medium">
+              Edit details
+            </h3>
             <div className="space-y-4">
-              <PeopleEditor key={`p:${details.businessAnalysts.map((x) => x.name).join()}|${details.executives.map((x) => x.name).join()}|${details.businessDevelopers.map((x) => x.name).join()}`} projectId={project.id} details={details} />
+              <PeopleEditor
+                key={`p:${details.businessAnalysts.map((x) => x.name).join()}|${details.executives.map((x) => x.name).join()}|${details.businessDevelopers.map((x) => x.name).join()}`}
+                projectId={project.id}
+                details={details}
+              />
               <ReviewEditor key={`r:${details.review.rating}:${details.review.comment}`} projectId={project.id} details={details} />
               <ProfileEditor key={`u:${details.upworkProfile?.id}`} projectId={project.id} details={details} />
               <InHouseEditor key={`h:${details.inHouse}`} projectId={project.id} details={details} />
               <KeywordsEditor key={`k:${details.chatKeywords.join()}`} projectId={project.id} details={details} />
-              <p className="text-xs text-zinc-500">Project manager is set under Edit assignments below. Project type, hourly rate and weekly hours are in the Contract box.</p>
+              <p className="text-xs text-zinc-500">
+                Project manager is set under Edit assignments below. Project type, hourly rate and weekly hours are in the Contract box.
+              </p>
             </div>
           </section>
 
           <section aria-labelledby="contract" className={SECTION}>
-            <h3 id="contract" className="mb-3 font-medium">Contract</h3>
+            <h3 id="contract" className="mb-3 font-medium">
+              Contract
+            </h3>
             <ContractEditor
               key={`${pw.contract?.type}:${pw.contract?.weeklyLimitMinutes}:${pw.contract?.status}:${pw.contract?.externalRef}:${pw.contract?.hourlyRateCents}:${pw.contract?.fixedPriceCents}:${pw.contract?.trackingMode}`}
               projectId={project.id}
@@ -258,10 +422,15 @@ export default async function ServiceProjectPage({ params, searchParams }: { par
           </section>
 
           <section aria-labelledby="assign" className={SECTION}>
-            <h3 id="assign" className="mb-3 font-medium">Edit assignments</h3>
+            <h3 id="assign" className="mb-3 font-medium">
+              Edit assignments
+            </h3>
             {/* key forces a fresh editor state after a save refreshes the server data */}
             <AssignmentsEditor
-              key={assignments.map((a) => `${a.userId}:${a.assignmentRole}`).sort().join(",")}
+              key={assignments
+                .map((a) => `${a.userId}:${a.assignmentRole}`)
+                .sort()
+                .join(",")}
               projectId={project.id}
               users={users}
               current={assignments.map((a) => ({ userId: a.userId, role: a.assignmentRole }))}

@@ -189,8 +189,7 @@ describe("SHOPIFY-FEATURES-NEWSLETTER-001", () => {
 
   it("does not flag when a customer form references newsletter", () => {
     const theme = buildTestTheme({
-      "sections/footer.liquid":
-        "{% form 'customer' %}<input type=\"hidden\" name=\"contact[tags]\" value=\"newsletter\">{% endform %}",
+      "sections/footer.liquid": '{% form \'customer\' %}<input type="hidden" name="contact[tags]" value="newsletter">{% endform %}',
     });
     cleanup = theme.cleanup;
     expect(findingsFor("SHOPIFY-FEATURES-NEWSLETTER-001", theme)).toHaveLength(0);
@@ -255,7 +254,7 @@ describe("SHOPIFY-FEATURES-SEARCH-BOX-001", () => {
   });
 
   it("does not flag when predictive search is referenced", () => {
-    const theme = buildTestTheme({ "sections/header.liquid": '<predictive-search></predictive-search>' });
+    const theme = buildTestTheme({ "sections/header.liquid": "<predictive-search></predictive-search>" });
     cleanup = theme.cleanup;
     expect(findingsFor("SHOPIFY-FEATURES-SEARCH-BOX-001", theme)).toHaveLength(0);
   });

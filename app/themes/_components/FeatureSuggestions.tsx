@@ -27,11 +27,16 @@ export function FeatureSuggestions({ themes }: { themes: ThemeFeatureInput[] }) 
           <div>
             <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Suggested feature updates</h3>
             <p className="mt-0.5 max-w-2xl text-sm text-zinc-500">
-              Features the themes still lack, from the catalog below. Feature updates keep a theme competitive on the Theme Store, so these are the next ones to build.
+              Features the themes still lack, from the catalog below. Feature updates keep a theme competitive on the Theme Store, so these are the next ones to
+              build.
             </p>
           </div>
         </div>
-        <div className="inline-flex rounded-lg border border-border-subtle bg-surface-muted p-0.5 text-xs font-medium" role="tablist" aria-label="Suggestion view">
+        <div
+          className="inline-flex rounded-lg border border-border-subtle bg-surface-muted p-0.5 text-xs font-medium"
+          role="tablist"
+          aria-label="Suggestion view"
+        >
           {(
             [
               ["features", "Across themes"],
@@ -61,7 +66,9 @@ export function FeatureSuggestions({ themes }: { themes: ThemeFeatureInput[] }) 
               <li key={g.feature.id} className="rounded-lg border border-border-subtle bg-surface-muted/50 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[11px] font-semibold text-primary-tint-text">{i + 1}</span>
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[11px] font-semibold text-primary-tint-text">
+                      {i + 1}
+                    </span>
                     <div>
                       <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{g.feature.label}</div>
                       <div className="text-[11px] text-zinc-500">{g.feature.category}</div>
@@ -74,7 +81,10 @@ export function FeatureSuggestions({ themes }: { themes: ThemeFeatureInput[] }) 
                     <div className="text-[11px] text-zinc-500">missing</div>
                   </div>
                 </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700" title={`${g.have.length} of ${themes.length} themes have it`}>
+                <div
+                  className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"
+                  title={`${g.have.length} of ${themes.length} themes have it`}
+                >
                   <div className="h-full rounded-full bg-amber-500" style={{ width: `${Math.round((g.missing.length / themes.length) * 100)}%` }} />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -108,7 +118,9 @@ export function FeatureSuggestions({ themes }: { themes: ThemeFeatureInput[] }) 
                       title={`${g.feature.category}. ${g.haveCount} of ${themes.length} themes already have it`}
                     >
                       {g.feature.label}
-                      <span className="ml-1 text-amber-700/70 dark:text-amber-300/70">{g.haveCount}/{themes.length}</span>
+                      <span className="ml-1 text-amber-700/70 dark:text-amber-300/70">
+                        {g.haveCount}/{themes.length}
+                      </span>
                     </span>
                   ))}
                   {t.total > t.gaps.length && <span className="px-1 py-0.5 text-[11px] text-zinc-500">+{t.total - t.gaps.length} more</span>}
@@ -118,7 +130,9 @@ export function FeatureSuggestions({ themes }: { themes: ThemeFeatureInput[] }) 
           ))}
         </ul>
       )}
-      <p className="mt-3 text-[11px] text-zinc-500">Per-theme chips show how many of the {themes.length} themes already have that feature: the higher, the more proven it is.</p>
+      <p className="mt-3 text-[11px] text-zinc-500">
+        Per-theme chips show how many of the {themes.length} themes already have that feature: the higher, the more proven it is.
+      </p>
     </section>
   );
 }

@@ -7,7 +7,18 @@ import { listTrackedMembers, dayKey, todayInIst } from "@/lib/chat/teamActivity"
 const WINDOW_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-type Report = { memberId: unknown; sender: string; date: Date; postedAt: Date | null; createdAt: Date; themeName: string; kind: "theme" | "preset" | "update" | null; preset: string | null; memo: string; minutes: number };
+type Report = {
+  memberId: unknown;
+  sender: string;
+  date: Date;
+  postedAt: Date | null;
+  createdAt: Date;
+  themeName: string;
+  kind: "theme" | "preset" | "update" | null;
+  preset: string | null;
+  memo: string;
+  minutes: number;
+};
 
 /** What the report is work on: the theme being built, one of its presets, or its Update project. */
 function workLabel(r: Report): string {
@@ -21,7 +32,9 @@ export async function GET() {
   const since = new Date(Date.now() - WINDOW_DAYS * DAY_MS);
   const [members, reports] = await Promise.all([
     listTrackedMembers(),
-    ChatReport.find({ date: { $gte: since } }).select("memberId sender date postedAt createdAt themeName kind preset memo minutes").lean<Report[]>(),
+    ChatReport.find({ date: { $gte: since } })
+      .select("memberId sender date postedAt createdAt themeName kind preset memo minutes")
+      .lean<Report[]>(),
   ]);
 
   // Newest first: by day, then by the time posted within the day.

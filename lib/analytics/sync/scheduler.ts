@@ -50,7 +50,10 @@ async function nextThemeInRotation(): Promise<string | null> {
 
   const ids = themes.map((t) => t._id);
   const [latest, busy] = await Promise.all([
-    AnalyticsSync.aggregate<{ _id: { toString(): string }; last: Date }>([{ $match: { analyticsThemeId: { $in: ids } } }, { $group: { _id: "$analyticsThemeId", last: { $max: "$createdAt" } } }]),
+    AnalyticsSync.aggregate<{ _id: { toString(): string }; last: Date }>([
+      { $match: { analyticsThemeId: { $in: ids } } },
+      { $group: { _id: "$analyticsThemeId", last: { $max: "$createdAt" } } },
+    ]),
     AnalyticsSync.distinct("analyticsThemeId", { isActive: true }),
   ]);
   const lastAttempt = new Map(latest.map((l) => [l._id.toString(), new Date(l.last).getTime()]));

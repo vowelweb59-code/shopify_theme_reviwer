@@ -38,17 +38,28 @@ export function StatusControl({ projectId, status }: { projectId: string; status
         <span className="mb-1 block text-zinc-500">Change status</span>
         <select value={to} onChange={(e) => setTo(e.target.value as ServiceProjectStatus | "")} className={input}>
           <option value="">Move to…</option>
-          {options.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+          {options.map((s) => (
+            <option key={s} value={s}>
+              {statusLabel(s)}
+            </option>
+          ))}
         </select>
       </label>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Reason{reopening ? " (required)" : " (optional)"}</span>
         <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} required={reopening} className={`${input} w-64`} />
       </label>
-      <button disabled={!to || busy} className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60">
+      <button
+        disabled={!to || busy}
+        className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60"
+      >
         {busy ? "Saving…" : "Apply"}
       </button>
-      {error && <p role="alert" className="basis-full text-sm text-status-fail-text">{error}</p>}
+      {error && (
+        <p role="alert" className="basis-full text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

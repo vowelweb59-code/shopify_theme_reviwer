@@ -40,7 +40,7 @@ describe("SHOPIFY-LOCALE-HARDCODED-001", () => {
   });
 
   it("does not flag a brand name or marketing copy outside the curated list", () => {
-    const theme = buildTestTheme({ "sections/hero.liquid": "<a href=\"/collections/all\">Shop the Acme Collection</a>" });
+    const theme = buildTestTheme({ "sections/hero.liquid": '<a href="/collections/all">Shop the Acme Collection</a>' });
     cleanup = theme.cleanup;
     expect(hardcodedTextFindings(theme)).toHaveLength(0);
   });

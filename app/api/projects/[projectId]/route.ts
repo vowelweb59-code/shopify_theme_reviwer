@@ -67,7 +67,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   if ("members" in body) {
     const members = parseProjectMembers(body.members);
     if (!members.ok) return NextResponse.json({ error: members.error }, { status: 400 });
-    const existing = new Set((await TeamMember.find({ _id: { $in: members.value.map((m) => m.memberId) } }).select("_id").lean()).map((m) => String(m._id)));
+    const existing = new Set(
+      (
+        await TeamMember.find({ _id: { $in: members.value.map((m) => m.memberId) } })
+          .select("_id")
+          .lean()
+      ).map((m) => String(m._id))
+    );
     update.members = members.value.filter((m) => existing.has(m.memberId));
   }
 
@@ -77,7 +83,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
     const rounds = parseRounds(body.rounds);
     if (!rounds.ok) return NextResponse.json({ error: rounds.error }, { status: 400 });
     const ids = rounds.value.flatMap((r) => r.members.map((m) => m.memberId));
-    const existing = new Set((await TeamMember.find({ _id: { $in: ids } }).select("_id").lean()).map((m) => String(m._id)));
+    const existing = new Set(
+      (
+        await TeamMember.find({ _id: { $in: ids } })
+          .select("_id")
+          .lean()
+      ).map((m) => String(m._id))
+    );
     update.rounds = rounds.value.map((r) => ({ ...r, members: r.members.filter((m) => existing.has(m.memberId)) }));
   }
 

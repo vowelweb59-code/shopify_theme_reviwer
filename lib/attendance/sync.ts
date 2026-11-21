@@ -37,11 +37,19 @@ async function readAttendance(months: number) {
         })) as never
       );
     }
-    await AttendanceSync.updateOne({ key: "attendance" }, { $set: { lastSyncAt: new Date(), lastCount: messages.length, lastWindowFrom: from, lastError: null } }, { upsert: true });
+    await AttendanceSync.updateOne(
+      { key: "attendance" },
+      { $set: { lastSyncAt: new Date(), lastCount: messages.length, lastWindowFrom: from, lastError: null } },
+      { upsert: true }
+    );
     return { fetched: messages.length, from, space };
   } catch (err) {
     const lost = await noteIfGoogleAccessLost(err);
-    await AttendanceSync.updateOne({ key: "attendance" }, { $set: { lastError: lost ?? (err instanceof Error ? err.message : String(err)) } }, { upsert: true });
+    await AttendanceSync.updateOne(
+      { key: "attendance" },
+      { $set: { lastError: lost ?? (err instanceof Error ? err.message : String(err)) } },
+      { upsert: true }
+    );
     throw lost ? new Error(lost) : err;
   }
 }

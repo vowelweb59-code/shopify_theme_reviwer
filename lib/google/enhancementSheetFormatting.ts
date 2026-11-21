@@ -24,19 +24,9 @@ const STATUS_COLORS: Record<string, { background: RGB; text: RGB }> = {
 // categories (models/enhancement-point.ts's ENHANCEMENT_CATEGORIES) and,
 // unlike the audit checklist's severity colors, no existing app-side badge
 // palette to mirror exactly, so this is purely a scannable tab-navigation aid.
-const TAB_COLOR_PALETTE = [
-  "#3b82f6",
-  "#a855f7",
-  "#22c55e",
-  "#14b8a6",
-  "#f97316",
-  "#ef4444",
-  "#0ea5e9",
-  "#eab308",
-  "#8b5cf6",
-  "#ec4899",
-  "#64748b",
-].map(hexToRgb);
+const TAB_COLOR_PALETTE = ["#3b82f6", "#a855f7", "#22c55e", "#14b8a6", "#f97316", "#ef4444", "#0ea5e9", "#eab308", "#8b5cf6", "#ec4899", "#64748b"].map(
+  hexToRgb
+);
 
 function tabColorFor(category: string): RGB {
   const categories = [
@@ -93,12 +83,7 @@ const DETECTED_COLORS: Record<string, { background: RGB; text: RGB }> = {
  * per-theme "Future Updates" tab — genuinely different column orders and
  * counts — can share this instead of two near-identical copies.
  */
-function buildFormattingForColumns(
-  sheetId: number,
-  dataRowCount: number,
-  category: string,
-  columns: readonly string[]
-): SheetFormattingRequest[] {
+function buildFormattingForColumns(sheetId: number, dataRowCount: number, category: string, columns: readonly string[]): SheetFormattingRequest[] {
   const endRowIndex = dataRowCount + 1;
   const tierColumnIndex = columns.indexOf("Tier");
   const statusColumnIndex = columns.indexOf("Status");
@@ -156,12 +141,8 @@ function buildFormattingForColumns(
       };
     }),
     ...(tierColumnIndex >= 0 ? Object.entries(TIER_COLORS).map(([tier, colors]) => colorRule(tierColumnIndex, tier, colors)) : []),
-    ...(statusColumnIndex >= 0
-      ? Object.entries(STATUS_COLORS).map(([status, colors]) => colorRule(statusColumnIndex, status, colors))
-      : []),
-    ...(detectedColumnIndex >= 0
-      ? Object.entries(DETECTED_COLORS).map(([detected, colors]) => colorRule(detectedColumnIndex, detected, colors))
-      : []),
+    ...(statusColumnIndex >= 0 ? Object.entries(STATUS_COLORS).map(([status, colors]) => colorRule(statusColumnIndex, status, colors)) : []),
+    ...(detectedColumnIndex >= 0 ? Object.entries(DETECTED_COLORS).map(([detected, colors]) => colorRule(detectedColumnIndex, detected, colors)) : []),
     {
       addBanding: {
         bandedRange: {
@@ -181,11 +162,7 @@ function buildFormattingForColumns(
  * buildSheetFormattingRequests, for the one-tab-per-category standalone
  * "Future updates" backlog export.
  */
-export function buildEnhancementSheetFormattingRequests(
-  sheetId: number,
-  dataRowCount: number,
-  category: string
-): SheetFormattingRequest[] {
+export function buildEnhancementSheetFormattingRequests(sheetId: number, dataRowCount: number, category: string): SheetFormattingRequest[] {
   return buildFormattingForColumns(sheetId, dataRowCount, category, ENHANCEMENT_TAB_COLUMNS);
 }
 

@@ -34,7 +34,6 @@ type ThemeRow = {
 
 type PrioritizedThemeRow = ThemeRow & { priority: UpdatePriorityResult };
 
-
 function healthPercent(totals: CheckTotals | null): number | null {
   if (!totals || totals.total === 0) return null;
   return Math.round((totals.passed / totals.total) * 100);
@@ -164,7 +163,9 @@ export default function ThemesPage() {
       }
       for (let i = 0; i < 1000; i++) {
         await new Promise((r) => setTimeout(r, 10_000));
-        const state = await fetch("/api/themes/audit-all-from-git").then((r) => r.json()).catch(() => null);
+        const state = await fetch("/api/themes/audit-all-from-git")
+          .then((r) => r.json())
+          .catch(() => null);
         if (!state) continue;
         const p = state.progress as { total: number; done: number; current: string | null; failed: { name: string; error: string }[] } | null;
         if (state.running === false) {
@@ -345,8 +346,8 @@ export default function ThemesPage() {
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <p className="text-sm text-zinc-500">
-              The theme most in need of an update is listed first — ranked by how long it&apos;s been since its last Theme Store release,
-              feature coverage, Core Web Vitals, and future-update opportunities, together.{" "}
+              The theme most in need of an update is listed first — ranked by how long it&apos;s been since its last Theme Store release, feature coverage, Core
+              Web Vitals, and future-update opportunities, together.{" "}
               <span className="inline-flex items-center gap-1 font-medium text-status-fail-text">
                 <span className="inline-block h-2.5 w-2.5 rounded-sm bg-status-fail-icon" /> Red rows
               </span>{" "}
@@ -366,7 +367,11 @@ export default function ThemesPage() {
             </div>
           </div>
           {auditAll && (
-            <div className={`rounded-md border px-3 py-2 text-xs ${auditAll.error ? "border-red-300 bg-status-fail-bg text-status-fail-text" : "border-green-300 text-status-pass-text"}`}>{auditAll.message}</div>
+            <div
+              className={`rounded-md border px-3 py-2 text-xs ${auditAll.error ? "border-red-300 bg-status-fail-bg text-status-fail-text" : "border-green-300 text-status-pass-text"}`}
+            >
+              {auditAll.message}
+            </div>
           )}
           <ResponsiveTable
             columns={columns}
@@ -387,16 +392,9 @@ export default function ThemesPage() {
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Compare Themes</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Features, future-update opportunities, and performance across every theme&apos;s latest audit.
-            </p>
+            <p className="mt-1 text-sm text-zinc-500">Features, future-update opportunities, and performance across every theme&apos;s latest audit.</p>
           </div>
-          <ResponsiveTable
-            columns={comparisonColumns}
-            rows={rows}
-            rowKey={(r) => r.theme._id}
-            theadClassName="bg-primary-tint text-primary-tint-text"
-          />
+          <ResponsiveTable columns={comparisonColumns} rows={rows} rowKey={(r) => r.theme._id} theadClassName="bg-primary-tint text-primary-tint-text" />
         </div>
       )}
 
@@ -415,10 +413,14 @@ export default function ThemesPage() {
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Feature Availability</h2>
-            <p className="mt-1 text-sm text-zinc-500">Every feature in the catalog, per theme: from the theme&apos;s code, its live demo stores (read on each audit) and its Shopify Theme Store listing. Hover a check to see which sources found it.</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Every feature in the catalog, per theme: from the theme&apos;s code, its live demo stores (read on each audit) and its Shopify Theme Store
+              listing. Hover a check to see which sources found it.
+            </p>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Available (found in the code or listed on the Theme Store; not seen on the live demo store)
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Available (found in the code or listed on the Theme Store; not seen on the
+                live demo store)
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-2.5 py-1 font-medium text-white ring-1 ring-emerald-600/40">
                 <span className="inline-block h-2 w-2 rounded-full bg-white" /> Seen on the live demo store

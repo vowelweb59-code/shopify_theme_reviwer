@@ -9,7 +9,17 @@ import { ServiceTimeEntry } from "@/models/service-time-entry";
 
 export async function syncReporters(): Promise<number> {
   const [entries, senderRows, projects, att] = await Promise.all([
-    ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } }).select("projectId clientId minutes allocations senderExternalId").lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>(),
+    ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
+      .select("projectId clientId minutes allocations senderExternalId")
+      .lean<
+        Array<{
+          projectId: string | null;
+          clientId: string | null;
+          minutes: number;
+          allocations: Array<{ projectId: string; minutes: number }>;
+          senderExternalId: string;
+        }>
+      >(),
     ServiceChatSender.find().select("externalId displayName").lean<Array<{ _id: string; externalId: string; displayName: string }>>(),
     ServiceProject.find().select("people").lean<Array<{ _id: string; people: Array<{ role: string; name: string; senderId: string | null }> }>>(),
     loadAttribution(),
@@ -31,7 +41,10 @@ export async function syncReporters(): Promise<number> {
     const listed = peopleOf.get(projectId) ?? [];
     const covered = new Set(listed.map((p) => p.senderId ?? matchSender(p.name, senders)).filter((x): x is string => !!x));
     const names = new Set(listed.filter((p) => p.role === "EXECUTIVE").map((p) => p.name.toLowerCase()));
-    const rows = [...ids].map((id) => byId.get(id)!).filter((s) => !covered.has(s._id) && !names.has(s.displayName.toLowerCase())).map((s) => ({ role: "EXECUTIVE", name: s.displayName.slice(0, 80), senderId: s._id }));
+    const rows = [...ids]
+      .map((id) => byId.get(id)!)
+      .filter((s) => !covered.has(s._id) && !names.has(s.displayName.toLowerCase()))
+      .map((s) => ({ role: "EXECUTIVE", name: s.displayName.slice(0, 80), senderId: s._id }));
     if (rows.length) {
       await ServiceProject.updateOne({ _id: projectId }, { $push: { people: { $each: rows } } });
       added += rows.length;

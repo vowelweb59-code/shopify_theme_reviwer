@@ -56,7 +56,9 @@ export async function listAttendanceMessages(refreshToken: string, space: string
       if (!text.trim()) continue;
       // Mention positions index the plain `text`; with any other body they would point at the wrong characters.
       const mentions: Mention[] = plain
-        ? (m.annotations ?? []).filter((a) => a.type === "USER_MENTION" && typeof a.length === "number").map((a) => ({ start: a.startIndex ?? 0, length: a.length!, displayName: a.userMention?.user?.displayName ?? null }))
+        ? (m.annotations ?? [])
+            .filter((a) => a.type === "USER_MENTION" && typeof a.length === "number")
+            .map((a) => ({ start: a.startIndex ?? 0, length: a.length!, displayName: a.userMention?.user?.displayName ?? null }))
         : [];
       out.push({ externalId: m.name, senderName: m.sender?.displayName ?? "", senderType: m.sender?.type ?? null, postedAt: m.createTime, text, mentions });
     }

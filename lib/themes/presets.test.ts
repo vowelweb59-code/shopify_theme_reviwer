@@ -9,9 +9,7 @@ describe("sanitizePresets", () => {
   });
 
   it("keeps valid http(s) entries and fills in a default label", () => {
-    expect(sanitizePresets([{ label: "", url: "https://a.myshopify.com" }])).toEqual([
-      { label: "Preset 1", url: "https://a.myshopify.com" },
-    ]);
+    expect(sanitizePresets([{ label: "", url: "https://a.myshopify.com" }])).toEqual([{ label: "Preset 1", url: "https://a.myshopify.com" }]);
   });
 
   it("drops entries without a valid http(s) url", () => {

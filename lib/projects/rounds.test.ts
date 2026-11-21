@@ -6,7 +6,14 @@ const m = (id: string) => ({ memberId: id, role: null });
 describe("countRejections", () => {
   it("counts each rejected round, earlier and current, for everyone on it", () => {
     const counts = countRejections([
-      { status: "live", members: [m("a"), m("b")], rounds: [{ status: "rejected", members: [m("a")] }, { status: "rejected", members: [m("a"), m("c")] }] },
+      {
+        status: "live",
+        members: [m("a"), m("b")],
+        rounds: [
+          { status: "rejected", members: [m("a")] },
+          { status: "rejected", members: [m("a"), m("c")] },
+        ],
+      },
       { status: "rejected", members: [m("b")] },
       { status: "under_review", members: [m("c")] },
     ]);
@@ -42,16 +49,29 @@ describe("countOutcomes / successRate", () => {
   });
 
   it("leaves developers out of a round rejected at the design stage", () => {
-    const designation = new Map([["dev", "Sr Shopify Developer"], ["pm", "Product Manager"], ["ui", "UI/UX Designer"]]);
-    const tally = countOutcomes([{ status: "live", members: [m("dev"), m("pm")], rounds: [{ status: "rejected", rejectionStage: "design", members: [m("dev"), m("pm"), m("ui")] }] }], designation);
+    const designation = new Map([
+      ["dev", "Sr Shopify Developer"],
+      ["pm", "Product Manager"],
+      ["ui", "UI/UX Designer"],
+    ]);
+    const tally = countOutcomes(
+      [{ status: "live", members: [m("dev"), m("pm")], rounds: [{ status: "rejected", rejectionStage: "design", members: [m("dev"), m("pm"), m("ui")] }] }],
+      designation
+    );
     expect(tally.get("dev")).toMatchObject({ approved: 1, rejected: 0 });
     expect(tally.get("pm")).toMatchObject({ approved: 1, rejected: 1 });
     expect(tally.get("ui")).toMatchObject({ approved: 0, rejected: 1 });
   });
 
   it("counts the current round only for people who reported time on the theme, except managers; earlier rounds count everyone", () => {
-    const designation = new Map([["dev", "Shopify Developer"], ["other", "Shopify Developer"], ["pm", "Product Manager"]]);
-    const projects = [{ themeId: "t1", status: "live", members: [m("dev"), m("other"), m("pm")], rounds: [{ status: "rejected", members: [m("dev"), m("other"), m("pm")] }] }];
+    const designation = new Map([
+      ["dev", "Shopify Developer"],
+      ["other", "Shopify Developer"],
+      ["pm", "Product Manager"],
+    ]);
+    const projects = [
+      { themeId: "t1", status: "live", members: [m("dev"), m("other"), m("pm")], rounds: [{ status: "rejected", members: [m("dev"), m("other"), m("pm")] }] },
+    ];
     const worked = { themesWithReports: new Set(["t1"]), byTheme: new Map([["t1", new Set(["dev"])]]) };
     const tally = countOutcomes(projects, designation, worked);
     expect(tally.get("dev")).toMatchObject({ approved: 1, rejected: 1 });
@@ -65,8 +85,13 @@ describe("countOutcomes / successRate", () => {
 describe("rejection types and the Team Lead weighting", () => {
   const lead = { memberId: "lead", role: "Team Lead" };
   const dev = { memberId: "dev", role: null };
-  const project = (type: "internal" | "shopify" | null) => [{ _id: "p", name: "Soft", status: "live", members: [lead, dev], rounds: [{ status: "rejected", rejectionType: type, members: [lead, dev] }] }];
-  const designations = new Map([["dev", "Shopify Developer"], ["lead", "Sr Shopify Developer"]]);
+  const project = (type: "internal" | "shopify" | null) => [
+    { _id: "p", name: "Soft", status: "live", members: [lead, dev], rounds: [{ status: "rejected", rejectionType: type, members: [lead, dev] }] },
+  ];
+  const designations = new Map([
+    ["dev", "Shopify Developer"],
+    ["lead", "Sr Shopify Developer"],
+  ]);
 
   it("counts an internal rejection at half for a Team Lead and in full for everyone else", () => {
     const tally = countOutcomes(project("internal"), designations);
@@ -89,7 +114,18 @@ describe("rejection types and the Team Lead weighting", () => {
   });
   it("still leaves a design-stage rejection out of a developer's rate, and says which kind each rejection was", () => {
     const tally = countOutcomes(
-      [{ _id: "p", name: "Soft", status: "live", members: [dev], rounds: [{ status: "rejected", rejectionStage: "design", rejectionType: "shopify", members: [dev] }, { status: "rejected", rejectionType: "internal", members: [dev] }] }],
+      [
+        {
+          _id: "p",
+          name: "Soft",
+          status: "live",
+          members: [dev],
+          rounds: [
+            { status: "rejected", rejectionStage: "design", rejectionType: "shopify", members: [dev] },
+            { status: "rejected", rejectionType: "internal", members: [dev] },
+          ],
+        },
+      ],
       designations
     );
     expect(tally.get("dev")).toMatchObject({ approved: 1, rejected: 1 });

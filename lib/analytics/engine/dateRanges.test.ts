@@ -22,7 +22,12 @@ describe("resolveRange", () => {
   });
 
   it("covers every preset", () => {
-    expect(cases.map(([p]) => p).concat("custom").sort()).toEqual([...DATE_RANGE_PRESETS].sort());
+    expect(
+      cases
+        .map(([p]) => p)
+        .concat("custom")
+        .sort()
+    ).toEqual([...DATE_RANGE_PRESETS].sort());
   });
 
   it("last N days are exactly N days, ending yesterday (like GA4)", () => {

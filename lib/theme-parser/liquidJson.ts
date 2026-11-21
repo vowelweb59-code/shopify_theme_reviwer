@@ -22,9 +22,7 @@ const BARE_STRUCTURED_DATA_RE = /^\{\{-?\s*[\w.]+(?:\s*\|\s*\w+(?::[^|{}]*)?)*\s
 const LOOP_TAG_RE = /\{%-?\s*for\b/;
 
 function neutralizeConditionals(text: string): string {
-  return text
-    .replace(/\{%-?\s*(?:if|unless|elsif|else)\b[^%]*?-?%\}/g, "")
-    .replace(/\{%-?\s*(?:endif|endunless)\s*-?%\}/g, "");
+  return text.replace(/\{%-?\s*(?:if|unless|elsif|else)\b[^%]*?-?%\}/g, "").replace(/\{%-?\s*(?:endif|endunless)\s*-?%\}/g, "");
 }
 
 function neutralizeOutputs(text: string): string {

@@ -22,5 +22,8 @@ export const flagLabel = (f: string) => FLAG_LABELS[f] ?? f.replaceAll("_", " ")
 
 export const BTN = "rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60";
 export const SECTION = "rounded-lg border border-border-subtle bg-surface p-4";
-export const LINK = "text-primary hover:underline";
-export const splitList = (v: string) => v.split(",").map((a) => a.trim()).filter(Boolean);
+export const splitList = (v: string) =>
+  v
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);

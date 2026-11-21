@@ -21,14 +21,7 @@ import {
 } from "@/app/_components/findings";
 import { CategoryDashboard } from "@/app/_components/categoryDashboard";
 import { EnhancementReportSection, type EnhancementReportPoint } from "@/app/_components/enhancementReport";
-import {
-  CategoryDiffTable,
-  DiffFindingsView,
-  DiffSummaryBar,
-  RegressionAlert,
-  SeverityDiffTable,
-  type FindingsDiffResult,
-} from "@/app/_components/diff";
+import { CategoryDiffTable, DiffFindingsView, DiffSummaryBar, RegressionAlert, SeverityDiffTable, type FindingsDiffResult } from "@/app/_components/diff";
 import type { CoverageResult } from "@/lib/audit/coverage";
 import { computeReadiness, DEFAULT_READINESS_CONFIG, type ReadinessConfig } from "@/lib/audit/readiness";
 import type { PageSpeedMetric } from "@/lib/audit/pageSpeed";
@@ -63,7 +56,6 @@ type AuditRunListItem = {
   status: string;
   startedAt: string;
 };
-
 
 /**
  * The full audit report — status/exports card, readiness, summaries,
@@ -342,9 +334,7 @@ export function ReportContent({
           </div>
         )}
         {auditRun.liveCheckError && (
-          <p className="mt-2 text-amber-700 dark:text-amber-400">
-            Could not check the live demo store: {auditRun.liveCheckError.error}
-          </p>
+          <p className="mt-2 text-amber-700 dark:text-amber-400">Could not check the live demo store: {auditRun.liveCheckError.error}</p>
         )}
       </div>
 
@@ -365,9 +355,7 @@ export function ReportContent({
         ))}
       </div>
 
-      {activeTab === "future-updates" && (
-        <EnhancementReportSection points={enhancementPoints} detectionAvailable={enhancementDetectionAvailable} />
-      )}
+      {activeTab === "future-updates" && <EnhancementReportSection points={enhancementPoints} detectionAvailable={enhancementDetectionAvailable} />}
 
       {activeTab === "findings" && (
         <>

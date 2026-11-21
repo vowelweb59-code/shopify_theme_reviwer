@@ -35,19 +35,29 @@ const userIdOf = (v: unknown, field = "managerUserId") => (v === null || v === "
 export async function listDepartments() {
   const [{ departments, deptOf, projects }, users] = await Promise.all([
     loadProjectDepartments(),
-    ServiceUser.find().sort({ displayName: 1 }).select("displayName email kind active").lean<Array<{ _id: string; displayName: string; email: string | null; kind: string; active: boolean }>>(),
+    ServiceUser.find()
+      .sort({ displayName: 1 })
+      .select("displayName email kind active")
+      .lean<Array<{ _id: string; displayName: string; email: string | null; kind: string; active: boolean }>>(),
   ]);
   const name = new Map(users.map((u) => [u._id, u.displayName]));
   return {
     users: users.filter((u) => u.active).map((u) => ({ id: u._id, displayName: u.displayName })),
     directory: users.map((u) => ({ id: u._id, displayName: u.displayName, email: u.email, kind: u.kind, active: u.active })),
     departments: departments.map((d) => ({
-      id: d._id, name: d.name, isDefault: d.isDefault, manager: d.managerUserId ? { id: d.managerUserId, displayName: d.managerName ?? "Unknown" } : null,
-      projects: projects.filter((p) => deptOf.get(p._id) === d._id).map((p) => ({ id: p._id, name: p.name })).sort((a, b) => a.name.localeCompare(b.name)),
+      id: d._id,
+      name: d.name,
+      isDefault: d.isDefault,
+      manager: d.managerUserId ? { id: d.managerUserId, displayName: d.managerName ?? "Unknown" } : null,
+      projects: projects
+        .filter((p) => deptOf.get(p._id) === d._id)
+        .map((p) => ({ id: p._id, name: p.name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     })),
     projects: projects
       .map((p) => ({
-        id: p._id, name: p.name,
+        id: p._id,
+        name: p.name,
         managers: p.assignments.filter((a) => a.role === "MANAGER").map((a) => ({ id: a.userId, displayName: name.get(a.userId) ?? "Unknown" })),
         departmentId: deptOf.get(p._id) ?? null,
       }))
@@ -119,9 +129,16 @@ export async function setProjectManagers(body: Record<string, unknown>) {
   if (!(await ServiceUser.exists({ _id: userId, active: true }))) throw badRequest("Unknown person.");
   const found = await ServiceProject.countDocuments({ _id: { $in: projectIds } });
   if (found !== projectIds.length) throw badRequest("Unknown project.");
-  const r = action === "add"
-    ? await ServiceProject.updateMany({ _id: { $in: projectIds }, assignments: { $not: { $elemMatch: { userId, role: "MANAGER" } } } }, { $push: { assignments: { userId, role: "MANAGER" } } })
-    : await ServiceProject.updateMany({ _id: { $in: projectIds }, assignments: { $elemMatch: { userId, role: "MANAGER" } } }, { $pull: { assignments: { userId, role: "MANAGER" } } });
+  const r =
+    action === "add"
+      ? await ServiceProject.updateMany(
+          { _id: { $in: projectIds }, assignments: { $not: { $elemMatch: { userId, role: "MANAGER" } } } },
+          { $push: { assignments: { userId, role: "MANAGER" } } }
+        )
+      : await ServiceProject.updateMany(
+          { _id: { $in: projectIds }, assignments: { $elemMatch: { userId, role: "MANAGER" } } },
+          { $pull: { assignments: { userId, role: "MANAGER" } } }
+        );
   await recordServiceAudit("project.managers_bulk", { userId, action, projects: projectIds.length, changed: r.modifiedCount });
   return { changed: r.modifiedCount };
 }
@@ -129,7 +146,9 @@ export async function setProjectManagers(body: Record<string, unknown>) {
 // --- service users (managers directory) -------------------------------------------------------------------------------------
 
 export async function listUsers() {
-  const users = await ServiceUser.find().sort({ displayName: 1 }).lean<Array<{ _id: string; displayName: string; email: string | null; kind: string; active: boolean }>>();
+  const users = await ServiceUser.find()
+    .sort({ displayName: 1 })
+    .lean<Array<{ _id: string; displayName: string; email: string | null; kind: string; active: boolean }>>();
   return users.map((u) => ({ id: u._id, displayName: u.displayName, email: u.email, kind: u.kind, active: u.active }));
 }
 
@@ -141,7 +160,13 @@ function email(v: unknown) {
 
 export async function createUser(body: Record<string, unknown>) {
   const displayName = str(body.displayName, "displayName", { max: 80 })!;
-  const row = await ServiceUser.create({ _id: randomUUID(), displayName, email: email(body.email), kind: body.kind === "EMPLOYEE" ? "EMPLOYEE" : "MANAGEMENT", active: true });
+  const row = await ServiceUser.create({
+    _id: randomUUID(),
+    displayName,
+    email: email(body.email),
+    kind: body.kind === "EMPLOYEE" ? "EMPLOYEE" : "MANAGEMENT",
+    active: true,
+  });
   await recordServiceAudit("service_user.create", { userId: row._id });
   return { id: row._id as string };
 }

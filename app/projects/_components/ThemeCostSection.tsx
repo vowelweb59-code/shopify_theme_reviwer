@@ -9,7 +9,15 @@ import { Button } from "@/app/_components/ui/Button";
 import { csvCell as cell } from "@/lib/export/csvUtil";
 
 type Lines = { build: number; presets: number; updates: number; total: number };
-type PersonRow = { memberId: string; name: string; designation: string; hours: number; cost: number | null; byLine: { build: number; presets: number; updates: number }; perLive: number };
+type PersonRow = {
+  memberId: string;
+  name: string;
+  designation: string;
+  hours: number;
+  cost: number | null;
+  byLine: { build: number; presets: number; updates: number };
+  perLive: number;
+};
 type ThemeRow = {
   themeId: string;
   name: string;
@@ -34,7 +42,8 @@ type Data = {
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const money = (n: number) => inr.format(n);
 /** "2026-10" -> "Oct 2026" (a calendar month, no time zone shift). */
-const monthLabel = (m: string) => (m === "undated" ? "No date" : new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" }));
+const monthLabel = (m: string) =>
+  m === "undated" ? "No date" : new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
 const dash = <span className="text-zinc-400">—</span>;
 const amount = (n: number) => (n > 0 ? money(n) : dash);
 
@@ -53,7 +62,21 @@ function download(name: string, header: string[], rows: (string | number | null)
 /** One row per theme: the lines, totals, hours, rework, and the cost of each month as its own column. */
 function exportThemes(data: Data) {
   const months = data.months.map((m) => m.month);
-  const header = ["Theme", "Status", "Build (INR)", "Presets (INR)", "Updates (INR)", "Total cost (INR)", "Hours", "Hours not priced", "Rejections", "First rejection", "Rework (INR)", "Rework hours", ...months.map((m) => `${m} (INR)`)];
+  const header = [
+    "Theme",
+    "Status",
+    "Build (INR)",
+    "Presets (INR)",
+    "Updates (INR)",
+    "Total cost (INR)",
+    "Hours",
+    "Hours not priced",
+    "Rejections",
+    "First rejection",
+    "Rework (INR)",
+    "Rework hours",
+    ...months.map((m) => `${m} (INR)`),
+  ];
   const rows = data.themes.map((t) => {
     const byMonth = new Map(t.byMonth.map((m) => [m.month, m.cost]));
     return [
@@ -72,14 +95,27 @@ function exportThemes(data: Data) {
       ...months.map((m) => byMonth.get(m) ?? 0),
     ];
   });
-  rows.push(["All themes", "", ...(["build", "presets", "updates", "total"] as const).map((k) => data.themes.reduce((n, t) => n + t.cost[k], 0)), data.totals.hours, data.themes.reduce((n, t) => Math.round((n + t.unpricedHours) * 10) / 10, 0), data.themes.reduce((n, t) => n + t.rejections, 0), "", "", "", ...data.months.map((m) => m.cost)]);
+  rows.push([
+    "All themes",
+    "",
+    ...(["build", "presets", "updates", "total"] as const).map((k) => data.themes.reduce((n, t) => n + t.cost[k], 0)),
+    data.totals.hours,
+    data.themes.reduce((n, t) => Math.round((n + t.unpricedHours) * 10) / 10, 0),
+    data.themes.reduce((n, t) => n + t.rejections, 0),
+    "",
+    "",
+    "",
+    ...data.months.map((m) => m.cost),
+  ]);
   download(`theme-cost-${new Date().toISOString().slice(0, 10)}.csv`, header, rows);
 }
 
 /** One row per theme and person: hours by kind of work and the cost (empty when the person has no salary entered). */
 function exportPeople(data: Data) {
   const header = ["Theme", "Person", "Designation", "Build hours", "Preset hours", "Update hours", "Hours", "Cost (INR)", "Of which commission (INR)"];
-  const rows = data.themes.flatMap((t) => t.people.map((p) => [t.name, p.name, p.designation, p.byLine.build, p.byLine.presets, p.byLine.updates, p.hours, p.cost ?? "", p.perLive]));
+  const rows = data.themes.flatMap((t) =>
+    t.people.map((p) => [t.name, p.name, p.designation, p.byLine.build, p.byLine.presets, p.byLine.updates, p.hours, p.cost ?? "", p.perLive])
+  );
   download(`theme-cost-by-person-${new Date().toISOString().slice(0, 10)}.csv`, header, rows);
 }
 
@@ -113,7 +149,11 @@ function ThemeCostBody() {
       render: (t) => (
         <div>
           <span className="font-medium text-zinc-950 dark:text-zinc-50">{t.name}</span>
-          {!t.live && <span className="ml-2 rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">Under development</span>}
+          {!t.live && (
+            <span className="ml-2 rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              Under development
+            </span>
+          )}
         </div>
       ),
       sortValue: (t) => t.name.toLowerCase(),
@@ -121,14 +161,18 @@ function ThemeCostBody() {
     { key: "build", header: "Build", render: (t) => amount(t.cost.build), sortValue: (t) => t.cost.build },
     { key: "presets", header: "Presets", render: (t) => amount(t.cost.presets), sortValue: (t) => t.cost.presets },
     { key: "updates", header: "Updates", render: (t) => amount(t.cost.updates), sortValue: (t) => t.cost.updates },
-    { key: "total", header: "Total cost", render: (t) => <span className="font-semibold tabular-nums">{money(t.cost.total)}</span>, sortValue: (t) => t.cost.total },
+    {
+      key: "total",
+      header: "Total cost",
+      render: (t) => <span className="font-semibold tabular-nums">{money(t.cost.total)}</span>,
+      sortValue: (t) => t.cost.total,
+    },
     {
       key: "hours",
       header: "Hours",
       render: (t) => (
         <span className="tabular-nums">
-          {t.hours.total} h
-          {t.unpricedHours > 0 && <span className="block text-xs text-status-warning-text">{t.unpricedHours} h not priced</span>}
+          {t.hours.total} h{t.unpricedHours > 0 && <span className="block text-xs text-status-warning-text">{t.unpricedHours} h not priced</span>}
         </span>
       ),
       sortValue: (t) => t.hours.total,
@@ -168,9 +212,12 @@ function ThemeCostBody() {
           )}
         </div>
         <p className="mt-1 max-w-3xl text-sm text-zinc-500">
-          What each theme cost to make: every hour reported on it, priced at the reporter&apos;s own hourly cost (monthly salary / {data?.rate.hoursPerMonth ?? 221} h, which is{" "}
-          {data?.rate.workingDaysPerMonth ?? 26} days of 8.5 h). Build is new-theme work, presets is preset work, updates is theme-update work. Product Managers are included at their own rate. People paid a commission per live theme / preset cost that commission on each live project they are on (dated to its last report; “No date” when it has none), not their hours.
-          Rework is the build work done after the theme&apos;s first rejection: enter the date in “Rejected on” on the project page (and on each earlier round) and it appears here. It is part of Build, not added on top.
+          What each theme cost to make: every hour reported on it, priced at the reporter&apos;s own hourly cost (monthly salary /{" "}
+          {data?.rate.hoursPerMonth ?? 221} h, which is {data?.rate.workingDaysPerMonth ?? 26} days of 8.5 h). Build is new-theme work, presets is preset work,
+          updates is theme-update work. Product Managers are included at their own rate. People paid a commission per live theme / preset cost that commission
+          on each live project they are on (dated to its last report; “No date” when it has none), not their hours. Rework is the build work done after the
+          theme&apos;s first rejection: enter the date in “Rejected on” on the project page (and on each earlier round) and it appears here. It is part of
+          Build, not added on top.
         </p>
       </div>
 
@@ -195,8 +242,12 @@ function ThemeCostBody() {
 
           {data.missingSalary.length > 0 && (
             <div className="rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-sm text-status-warning-text">
-              No salary is entered for {data.missingSalary.map((p) => `${p.name} (${p.hours} h)`).join(", ")}, so those hours are counted but not priced and the costs below are
-              lower than they really are. Add the salaries on the <Link href="/team" className="underline">Team</Link> page.
+              No salary is entered for {data.missingSalary.map((p) => `${p.name} (${p.hours} h)`).join(", ")}, so those hours are counted but not priced and the
+              costs below are lower than they really are. Add the salaries on the{" "}
+              <Link href="/team" className="underline">
+                Team
+              </Link>{" "}
+              page.
             </div>
           )}
 
@@ -211,7 +262,10 @@ function ThemeCostBody() {
 
           {data.months.length > 0 && (
             <Card>
-              <CardHeader title="Cost by month" description="What was worked each month, priced the same way: the month a report's day falls in. Newest month last." />
+              <CardHeader
+                title="Cost by month"
+                description="What was worked each month, priced the same way: the month a report's day falls in. Newest month last."
+              />
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -257,7 +311,9 @@ function ThemeCostBody() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-2 text-xs text-zinc-500">A grey “N h” means hours were reported that month but nobody on them has a salary entered yet. Hover a cell for the hours.</p>
+              <p className="mt-2 text-xs text-zinc-500">
+                A grey “N h” means hours were reported that month but nobody on them has a salary entered yet. Hover a cell for the hours.
+              </p>
             </Card>
           )}
 
@@ -289,7 +345,10 @@ function ThemeCostBody() {
                         <td className="py-2 pr-3 tabular-nums">{p.byLine.presets || dash}</td>
                         <td className="py-2 pr-3 tabular-nums">{p.byLine.updates || dash}</td>
                         <td className="py-2 pr-3 tabular-nums">{p.hours}</td>
-                        <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : money(p.cost)}{p.perLive > 0 && <span className="block text-xs text-zinc-500">commission per live theme / preset</span>}</td>
+                        <td className="py-2 tabular-nums">
+                          {p.cost === null ? <span className="text-status-warning-text">no salary</span> : money(p.cost)}
+                          {p.perLive > 0 && <span className="block text-xs text-zinc-500">commission per live theme / preset</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

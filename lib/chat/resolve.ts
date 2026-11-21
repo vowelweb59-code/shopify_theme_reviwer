@@ -14,8 +14,7 @@ export type ThemeRef = {
   building?: boolean;
 };
 export type Resolved =
-  | { ok: true; themeId: string; themeName: string; kind: "theme" | "preset" | "update"; preset: string | null }
-  | { ok: false; reason: string };
+  { ok: true; themeId: string; themeName: string; kind: "theme" | "preset" | "update"; preset: string | null } | { ok: false; reason: string };
 
 /** Accents are ignored when comparing names: "Home Décor" and "Home Decor" are the same name. */
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -37,9 +36,7 @@ export function isUpdateMemo(memo: string): boolean {
  * app doesn't list yet, so it is flagged for review.
  */
 /** Which theme a Theme Name line is about, and what is left of the line once the theme's own name is set aside. */
-export type FoundTheme =
-  | { ok: true; theme: ThemeRef; others: string[]; known: string | undefined; saysPreset: boolean }
-  | { ok: false; reason: string };
+export type FoundTheme = { ok: true; theme: ThemeRef; others: string[]; known: string | undefined; saysPreset: boolean } | { ok: false; reason: string };
 
 /** Other names a theme goes by in reports (lower case): "Pearl" is Pretty. */
 const THEME_NAME_ALIASES: Record<string, string> = { pearl: "pretty", space: "home décor", automobile: "auto" };
@@ -51,7 +48,15 @@ const UPDATE_PART_RE = /^(theme[\s-]*(updates?|support)|featured images?)$/i;
  * Theme lines that are not theme work at all (owner, 2026-11-12: client work, days spread over several themes, Webflow, the portals,
  * one-off tasks). A report with such a line is ignored, not flagged and not counted anywhere.
  */
-const IGNORED_THEME_LINES: RegExp[] = [/^clients?\s+work$/i, /^multiple\s+themes?$/i, /\bwebflow\b/i, /\bportal$/i, /^(vowel\s*web|themeshopy|fresco\s+solutions)$/i, /^\(?\s*task\s*\)?\s*[:\-]/i, /supplement and investment/i];
+const IGNORED_THEME_LINES: RegExp[] = [
+  /^clients?\s+work$/i,
+  /^multiple\s+themes?$/i,
+  /\bwebflow\b/i,
+  /\bportal$/i,
+  /^(vowel\s*web|themeshopy|fresco\s+solutions)$/i,
+  /^\(?\s*task\s*\)?\s*[:\-]/i,
+  /supplement and investment/i,
+];
 export function isIgnoredThemeLine(themeParts: string[]): boolean {
   const first = (themeParts[0] ?? "").trim();
   return IGNORED_THEME_LINES.some((re) => re.test(first));
@@ -73,7 +78,10 @@ export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
   }
   if (matches.length === 0) {
     // "Rare - Rare | Jewellery": a dash can join the theme name to a second name.
-    const dashed = name.split(/\s+[-–—]\s+/).map((p) => p.trim()).filter(Boolean);
+    const dashed = name
+      .split(/\s+[-–—]\s+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (dashed.length > 1) {
       const viaDash = findTheme([...dashed, ...parts.slice(1)], themes);
       if (viaDash.ok) return viaDash;
@@ -85,7 +93,8 @@ export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
       const known = owners[0].presets.find((preset) => lower(preset) === presetName);
       return { ok: true, theme: owners[0], others: [name], known, saysPreset: true };
     }
-    if (owners.length > 1) return { ok: false, reason: `"${name}" is a preset of more than one theme: ${owners.map((t) => t.name).join(", ")}. Say which theme.` };
+    if (owners.length > 1)
+      return { ok: false, reason: `"${name}" is a preset of more than one theme: ${owners.map((t) => t.name).join(", ")}. Say which theme.` };
     return { ok: false, reason: `No theme named "${name}".` };
   }
   // "Dynamic and Voltix": two themes named together, joined by "and", "&" or a comma; the first one named takes the report.
@@ -100,11 +109,17 @@ export function findTheme(rawParts: string[], themes: ThemeRef[]): FoundTheme {
   // The other parts, once the one naming the theme is set aside, are where a preset name would be.
   const others = parts.filter((p, i) => !(fuzzy ? hasWord(p, theme.name) : i === 0));
   // "Jewelry Preset", "Touch theme": a trailing "preset" / "theme" is not part of the preset's name.
-  const known = others.map((p) => theme.presets.find((preset) => lower(preset) === lower(p) || lower(preset) === lower(p).replace(/\s+(preset|theme)$/, ""))).find(Boolean);
+  const known = others
+    .map((p) => theme.presets.find((preset) => lower(preset) === lower(p) || lower(preset) === lower(p).replace(/\s+(preset|theme)$/, "")))
+    .find(Boolean);
   return { ok: true, theme, others, known, saysPreset: /\bpreset\b/i.test(line) };
 }
 
-function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
+function resolveThemeUnmerged(
+  parsed: Pick<ParsedReport, "themeParts"> & { memo?: string },
+  themes: ThemeRef[],
+  options: { updatesAndPresetsOnly?: boolean } = {}
+): Resolved {
   const found = findTheme(parsed.themeParts, themes);
   if (!found.ok) return found;
   const { theme, others, known, saysPreset } = found;
@@ -113,7 +128,14 @@ function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?
   // "Zeal | Theme Update", "Dynamic | Theme Support", "Zeal | Featured Images": the second part says what the work is (update work), it isn't a preset.
   if (second && UPDATE_PART_RE.test(second.trim()) && !known) return { ok: true, themeId: theme.id, themeName: theme.name, kind: "update", preset: null };
 
-  if (known || saysPreset) return { ok: true, themeId: theme.id, themeName: theme.name, kind: "preset", preset: known ?? (saysPreset ? (others.find((p) => !/\bpreset\b/i.test(p)) ?? null) : null) };
+  if (known || saysPreset)
+    return {
+      ok: true,
+      themeId: theme.id,
+      themeName: theme.name,
+      kind: "preset",
+      preset: known ?? (saysPreset ? (others.find((p) => !/\bpreset\b/i.test(p)) ?? null) : null),
+    };
 
   // A second part that isn't a known preset: on a theme still being built it is a category ("Kombat | Gaming Theme"), so
   // new-theme work. On a Live theme it is probably a preset the app doesn't list yet, which would wrongly count as
@@ -138,7 +160,10 @@ function resolveThemeUnmerged(parsed: Pick<ParsedReport, "themeParts"> & { memo?
  * resolved to the new theme here, so a re-check or a late report lands on the right theme.
  */
 export const MERGED_THEMES: Record<string, { into: string; presets: Record<string, string> }> = {
-  aspire: { into: "Rare", presets: { beauty: "Touch", wellness: "Synergy", clothing: "Charisma", arts: "Presence", art: "Presence", jewellery: "Jewellery", jewelry: "Jewellery" } },
+  aspire: {
+    into: "Rare",
+    presets: { beauty: "Touch", wellness: "Synergy", clothing: "Charisma", arts: "Presence", art: "Presence", jewellery: "Jewellery", jewelry: "Jewellery" },
+  },
 };
 
 /**
@@ -172,7 +197,11 @@ export function applyThemeMerge(resolved: Resolved, themes: ThemeRef[]): Resolve
   return { ...resolved, themeId: target.id, themeName: target.name, preset };
 }
 
-export function resolveTheme(parsed: Pick<ParsedReport, "themeParts"> & { memo?: string }, themes: ThemeRef[], options: { updatesAndPresetsOnly?: boolean } = {}): Resolved {
+export function resolveTheme(
+  parsed: Pick<ParsedReport, "themeParts"> & { memo?: string },
+  themes: ThemeRef[],
+  options: { updatesAndPresetsOnly?: boolean } = {}
+): Resolved {
   // A merged theme's old preset names (Beauty, Wellness, ...) must still read as presets of it, so they resolve before being renamed.
   const withOldPresets = themes.map((t) => {
     const merge = MERGED_THEMES[lower(t.name)];

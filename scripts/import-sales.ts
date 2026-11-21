@@ -85,7 +85,11 @@ async function main() {
       console.log(`    imported ${result.inserted} new, ${result.duplicates} duplicate, ${result.newStores} new stores`);
     }
   }
-  console.log(apply ? `\nDone: ${added} sales added${problems ? `, ${problems} tab(s) had problems` : ""}.` : `\nDry run finished${problems ? `, ${problems} tab(s) had problems` : ""}. Nothing was changed.`);
+  console.log(
+    apply
+      ? `\nDone: ${added} sales added${problems ? `, ${problems} tab(s) had problems` : ""}.`
+      : `\nDry run finished${problems ? `, ${problems} tab(s) had problems` : ""}. Nothing was changed.`
+  );
   if (apply && added > 0) console.log("New stores are marked pending; the app's preset detection picks them up on its next run.");
   await mongoose.disconnect();
 }

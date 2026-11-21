@@ -26,8 +26,7 @@ export type EnhancementReportPoint = {
   matches: EnhancementMatch[];
 };
 
-const sortByAdoption = (a: EnhancementReportPoint, b: EnhancementReportPoint) =>
-  (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name);
+const sortByAdoption = (a: EnhancementReportPoint, b: EnhancementReportPoint) => (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name);
 
 const TIER_STYLES: Record<string, string> = {
   established: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -68,9 +67,7 @@ function PointRow({
             {showDetection && (
               <span
                 className={`rounded-full px-2 py-0.5 text-xs ${
-                  point.detected
-                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                    : "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
+                  point.detected ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
                 }`}
               >
                 {point.detected ? "Detected" : "Not detected"}
@@ -128,13 +125,7 @@ function PointRow({
   );
 }
 
-export function EnhancementReportSection({
-  points,
-  detectionAvailable,
-}: {
-  points: EnhancementReportPoint[];
-  detectionAvailable: boolean;
-}) {
+export function EnhancementReportSection({ points, detectionAvailable }: { points: EnhancementReportPoint[]; detectionAvailable: boolean }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const detected = points.filter((p) => p.detected === true).sort(sortByAdoption);
@@ -157,17 +148,15 @@ export function EnhancementReportSection({
           <Link href="/insights?tab=future-updates" className="underline hover:text-zinc-950 dark:hover:text-zinc-50">
             Future updates
           </Link>{" "}
-          for the full backlog, including sources). <strong>Not</strong> approval requirements — nothing here affects
-          readiness or coverage.
+          for the full backlog, including sources). <strong>Not</strong> approval requirements — nothing here affects readiness or coverage.
         </p>
       </div>
 
       {!detectionAvailable && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-800 dark:text-amber-300">
-          This audit ran before per-theme detection was added, so which of these this theme already has isn&apos;t
-          known.{" "}
-          <strong>Re-run the audit</strong> to check the theme&apos;s source against every point below. Detection is
-          heuristic (pattern matching, not exhaustive) — treat results as a starting point.
+          This audit ran before per-theme detection was added, so which of these this theme already has isn&apos;t known. <strong>Re-run the audit</strong> to
+          check the theme&apos;s source against every point below. Detection is heuristic (pattern matching, not exhaustive) — treat results as a starting
+          point.
         </div>
       )}
 
@@ -175,9 +164,9 @@ export function EnhancementReportSection({
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             <strong className="text-zinc-950 dark:text-zinc-50">{detected.length}</strong> of{" "}
-            <strong className="text-zinc-950 dark:text-zinc-50">{detected.length + notDetected.length}</strong> checked
-            points detected in this theme&apos;s source. Detection is heuristic pattern matching — a miss doesn&apos;t
-            prove the theme lacks the capability, and a hit doesn&apos;t prove it works correctly.
+            <strong className="text-zinc-950 dark:text-zinc-50">{detected.length + notDetected.length}</strong> checked points detected in this theme&apos;s
+            source. Detection is heuristic pattern matching — a miss doesn&apos;t prove the theme lacks the capability, and a hit doesn&apos;t prove it works
+            correctly.
             {notChecked.length > 0 &&
               ` ${notChecked.length} point${notChecked.length === 1 ? "" : "s"} ${
                 notChecked.length === 1 ? "was" : "were"

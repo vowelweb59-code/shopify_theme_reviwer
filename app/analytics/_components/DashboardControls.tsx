@@ -56,7 +56,12 @@ export function DashboardControls({
 
       {params.range === "custom" && (
         // Keyed on the applied dates, so back/forward navigation resets the pickers.
-        <CustomRange key={`${params.start}|${params.end}`} initialStart={params.start ?? ""} initialEnd={params.end ?? ""} onApply={(start, end) => onChange({ start, end })} />
+        <CustomRange
+          key={`${params.start}|${params.end}`}
+          initialStart={params.start ?? ""}
+          initialEnd={params.end ?? ""}
+          onApply={(start, end) => onChange({ start, end })}
+        />
       )}
 
       <label className="flex items-center gap-2 pb-2 text-sm text-zinc-700 dark:text-zinc-300">

@@ -14,18 +14,40 @@ const PAUSE_MS = 1_200;
 const RATE_LIMIT_WAIT_MS = 60_000;
 const MAX_PAGES_PER_COUNTRY = 200; // safety net; the largest country is ~81 pages
 
-type CrawlState = { running: Promise<void> | null; total: number; done: number; current: string | null; partnersSeen: number; errors: string[]; finishedAt: Date | null };
+type CrawlState = {
+  running: Promise<void> | null;
+  total: number;
+  done: number;
+  current: string | null;
+  partnersSeen: number;
+  errors: string[];
+  finishedAt: Date | null;
+};
 const g = globalThis as typeof globalThis & { _partnerCrawl?: CrawlState };
 const crawl = (g._partnerCrawl ??= { running: null, total: 0, done: 0, current: null, partnersSeen: 0, errors: [], finishedAt: null });
 
 export function partnerCrawlProgress() {
-  return { running: crawl.running !== null, total: crawl.total, done: crawl.done, current: crawl.current, partnersSeen: crawl.partnersSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
+  return {
+    running: crawl.running !== null,
+    total: crawl.total,
+    done: crawl.done,
+    current: crawl.current,
+    partnersSeen: crawl.partnersSeen,
+    errors: crawl.errors,
+    finishedAt: crawl.finishedAt,
+  };
 }
-
 
 /** GET a directory page. Returns null for a redirect (an unknown country) or a 404 (a profile that was removed). */
 async function fetchPage(url: string): Promise<string | null> {
-  return fetchPublicText(url, { attempts: 2, rateLimitWaitMs: RATE_LIMIT_WAIT_MS, redirect: "manual", nullOnRedirect: true, nullOn404: true, headers: { Accept: "text/html" } });
+  return fetchPublicText(url, {
+    attempts: 2,
+    rateLimitWaitMs: RATE_LIMIT_WAIT_MS,
+    redirect: "manual",
+    nullOnRedirect: true,
+    nullOn404: true,
+    headers: { Accept: "text/html" },
+  });
 }
 
 /** Pages through one listing (a country, optionally narrowed by a query like `partnerTiers=tier_plus`). */

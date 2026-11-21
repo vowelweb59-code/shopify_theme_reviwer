@@ -65,8 +65,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "JSON templates must support sections",
-    description:
-      "All templates must support sections (JSON templates), with the exception of Customer Account pages, Gift Card pages, and Checkout.",
+    description: "All templates must support sections (JSON templates), with the exception of Customer Account pages, Gift Card pages, and Checkout.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
@@ -152,8 +151,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Theme must use the routes object for dynamic URLs",
-    description:
-      "Theme must use the `routes` object for generating dynamic storefront URLs (e.g. `routes.root_url`) instead of hardcoded paths like `/`.",
+    description: "Theme must use the `routes` object for generating dynamic storefront URLs (e.g. `routes.root_url`) instead of hardcoded paths like `/`.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -173,7 +171,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Links to Shopify domains must use rel=nofollow",
-    description: "Any link in theme code that points to a Shopify domain must include a rel=\"nofollow\" attribute.",
+    description: 'Any link in theme code that points to a Shopify domain must include a rel="nofollow" attribute.',
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -279,24 +277,24 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Minimum Lighthouse performance score of 60",
-    description:
-      "Theme must average a Lighthouse performance score of at least 60 across product, collection, and home page, on both desktop and mobile.",
+    description: "Theme must average a Lighthouse performance score of at least 60 across product, collection, and home page, on both desktop and mobile.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
-    notes: "Requires real browser/Lighthouse execution — explicitly out of scope for the static rule engine (Phases 3-4, 8). Cannot get an automated rule under the current architecture.",
+    notes:
+      "Requires real browser/Lighthouse execution — explicitly out of scope for the static rule engine (Phases 3-4, 8). Cannot get an automated rule under the current architecture.",
   },
   {
     requirementId: "SHOPIFY-A11Y-008",
     sourceType: "shopify_theme_store",
     category: "Accessibility",
     title: "Minimum Lighthouse accessibility score of 90",
-    description:
-      "Theme must average a Lighthouse accessibility score of at least 90 across product, collection, and home page, on both desktop and mobile.",
+    description: "Theme must average a Lighthouse accessibility score of at least 90 across product, collection, and home page, on both desktop and mobile.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
-    notes: "Requires real browser/Lighthouse execution — explicitly out of scope for the static rule engine (Phases 3-4, 8). Cannot get an automated rule under the current architecture.",
+    notes:
+      "Requires real browser/Lighthouse execution — explicitly out of scope for the static rule engine (Phases 3-4, 8). Cannot get an automated rule under the current architecture.",
   },
 
   // --- Shopify Theme Store Compliance: product/cart/collection templates ---
@@ -362,8 +360,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "accessibility",
     category: "Accessibility",
     title: "Every image must have an alt attribute",
-    description:
-      "All <img> elements must have an alt attribute. Decorative images should use an empty alt (\"\") rather than omitting the attribute.",
+    description: 'All <img> elements must have an alt attribute. Decorative images should use an empty alt ("") rather than omitting the attribute.',
     sourceName: "Accessibility best practices for Shopify themes",
     sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
     severity: "high",
@@ -446,7 +443,7 @@ const requirements: SeedRequirement[] = [
     category: "Accessibility",
     title: "aria-hidden must not be applied to a focusable element",
     description:
-      "An element with aria-hidden=\"true\" must not remain reachable via keyboard Tab — pair it with tabindex=\"-1\", or remove aria-hidden. Otherwise it creates an invisible-but-focusable trap: screen reader users never learn it exists, while keyboard users can still land on it with no announced purpose.",
+      'An element with aria-hidden="true" must not remain reachable via keyboard Tab — pair it with tabindex="-1", or remove aria-hidden. Otherwise it creates an invisible-but-focusable trap: screen reader users never learn it exists, while keyboard users can still land on it with no announced purpose.',
     sourceName: "Accessibility best practices for Shopify themes",
     sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
     severity: "medium",
@@ -501,7 +498,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "best_practice",
     category: "Technical SEO",
     title: "Below-the-fold images should lazy-load",
-    description: "Images below the fold should use loading=\"lazy\".",
+    description: 'Images below the fold should use loading="lazy".',
     sourceName: "General technical SEO best practice",
     severity: "low",
   },
@@ -716,7 +713,7 @@ const requirements: SeedRequirement[] = [
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
     notes:
-      "Checked via SHOPIFY-LOCALE-HARDCODED-001 against a small curated list of well-known, exact-match storefront controls (\"Add to cart\", \"Sold out\", etc.) in button/link text and aria-label — bounded to avoid false positives on brand names or marketing copy, so it only catches the common cases, not every hardcoded string. A full audit still benefits from manually switching the demo store's language and reviewing each layout element.",
+      'Checked via SHOPIFY-LOCALE-HARDCODED-001 against a small curated list of well-known, exact-match storefront controls ("Add to cart", "Sold out", etc.) in button/link text and aria-label — bounded to avoid false positives on brand names or marketing copy, so it only catches the common cases, not every hardcoded string. A full audit still benefits from manually switching the demo store\'s language and reviewing each layout element.',
   },
   {
     requirementId: "SHOPIFY-FEATURES-MULTILEVEL-MENU-001",
@@ -795,7 +792,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Selling plans must be shown in the cart",
-    description: "Merchants can create selling plans to offer subscriptions — selected selling plans must be shown to customers in the cart and on customer order pages.",
+    description:
+      "Merchants can create selling plans to offer subscriptions — selected selling plans must be shown to customers in the cart and on customer order pages.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -805,7 +803,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Unit pricing on collection, product, and cart pages",
-    description: "Merchants in some regions are required to show unit prices. Unit pricing must be supported on the Collection page, Product page, and Cart page.",
+    description:
+      "Merchants in some regions are required to show unit prices. Unit pricing must be supported on the Collection page, Product page, and Cart page.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -815,7 +814,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Variant image association support",
-    description: "Theme must support variant images so merchants can associate an image with a product variant, and the associated image must display when that variant is selected.",
+    description:
+      "Theme must support variant images so merchants can associate an image with a product variant, and the associated image must display when that variant is selected.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -836,7 +836,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Shop Pay Installments banner on the product page",
-    description: "Add a Shop Pay Installments banner on product.liquid to let customers know they can pay for their order in installments. Must be supported on the Product page.",
+    description:
+      "Add a Shop Pay Installments banner on product.liquid to let customers know they can pay for their order in installments. Must be supported on the Product page.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "low",
@@ -901,7 +902,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Gift card page must support Apple Wallet and a minimum-size QR code",
-    description: "Gift card page must support Apple Wallet, display the gift card code, and show a QR code at least 120px x 120px, alongside the shop's logo or shop.name.",
+    description:
+      "Gift card page must support Apple Wallet, display the gift card code, and show a QR code at least 120px x 120px, alongside the shop's logo or shop.name.",
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
@@ -988,7 +990,7 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Section, preset, and category names must use sentence case",
-    description: "Write section, preset, and category names in sentence case — only the first word and proper nouns (e.g. \"Facebook\") should be capitalized.",
+    description: 'Write section, preset, and category names in sentence case — only the first word and proper nouns (e.g. "Facebook") should be capitalized.',
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "low",
@@ -1029,7 +1031,8 @@ const requirements: SeedRequirement[] = [
     sourceType: "shopify_theme_store",
     category: "Theme Store Compliance",
     title: "Header/footer link_list settings must default to main-menu/footer",
-    description: "link_list settings for the header and footer must default to \"main-menu\" and \"footer\" respectively, so navigation renders immediately on install.",
+    description:
+      'link_list settings for the header and footer must default to "main-menu" and "footer" respectively, so navigation renders immediately on install.',
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "medium",
@@ -1113,7 +1116,8 @@ const requirements: SeedRequirement[] = [
     sourceName: "Shopify Theme Store requirements",
     sourceUrl: THEME_STORE_REQUIREMENTS_URL,
     severity: "high",
-    notes: "Full verification requires runtime/browser interaction testing; static analysis can only catch obvious structural indicators (e.g. hover-only dropdown triggers with no keyboard handler).",
+    notes:
+      "Full verification requires runtime/browser interaction testing; static analysis can only catch obvious structural indicators (e.g. hover-only dropdown triggers with no keyboard handler).",
   },
 
   // --- Shopify Theme Store Compliance: Design & UX (visual review only) --
@@ -1264,7 +1268,8 @@ const requirements: SeedRequirement[] = [
       "When a theme has several merchandising or content sections (e.g. multiple product-grid variants, a featured-product block, a recommendation engine, a routine/bundle builder), each should serve a clearly different customer job — browse, filter by need, get a personalized recommendation, learn about one product in depth, or assemble a set/routine — rather than presenting the same underlying browsing experience with a different visual skin. Overlapping sections raise internal-repetition risk and weaken submission strength even when each section is individually well designed. Two sections aren't repetitive merely because both involve products — compare their actual purpose and interaction; a collection browser, a personalized finder, a featured product, and a set builder can validly coexist as long as each has a distinct job. Recommend consolidating sections only when they materially duplicate each other, and prefer adding duplicate filters/discovery controls only when the theme doesn't already have a working equivalent mechanism.",
     sourceName: "Internal design-review standard (originality audit framework)",
     severity: "low",
-    notes: "Editorial/structural judgment — requires reviewing what each section's interaction actually accomplishes for the customer, not just its visual template. Not an official Shopify requirement.",
+    notes:
+      "Editorial/structural judgment — requires reviewing what each section's interaction actually accomplishes for the customer, not just its visual template. Not an official Shopify requirement.",
   },
   {
     requirementId: "INTERNAL-DESIGN-WORKFLOW-COHERENCE-001",
@@ -1275,7 +1280,8 @@ const requirements: SeedRequirement[] = [
       "A theme reads as more distinctive when its sections build toward a specific, connected customer journey (e.g. a concern/need → guided recommendation → product → routine/bundle → cart flow) rather than existing as an unconnected list of individually attractive sections. When reviewing a theme, check whether adjacent sections reference or build on each other's outputs rather than just sitting side by side with no relationship. Prefer connecting a theme's existing sections into a coherent journey over adding more sections — a strong, cohesive workflow across a few sections beats many isolated unusual ones.",
     sourceName: "Internal design-review standard (originality audit framework)",
     severity: "low",
-    notes: "Editorial/structural judgment, not statically checkable — requires reviewing the actual customer journey across sections. Not an official Shopify requirement.",
+    notes:
+      "Editorial/structural judgment, not statically checkable — requires reviewing the actual customer journey across sections. Not an official Shopify requirement.",
   },
   {
     requirementId: "INTERNAL-PRESET-SYNC-001",
@@ -1286,7 +1292,8 @@ const requirements: SeedRequirement[] = [
       "When a theme ships multiple presets (style variants of the same codebase, each typically published as its own live demo store), the presets should present a comparably complete, structurally consistent experience — similar homepage/product-page section composition, and the same structured data (JSON-LD, canonical, meta description) — the way established multi-preset Theme Store themes (e.g. Prestige) keep their own presets in sync. A preset that renders noticeably fewer sections, or is missing structured data another preset has, has likely fallen out of sync as the theme evolved (a setting or section added to one preset but never carried over to its siblings), not a deliberate design choice.",
     sourceName: "Internal quality standard (multi-preset consistency)",
     severity: "medium",
-    notes: "Checked live, per preset's actual rendered demo store (lib/audit/liveCheck.ts's comparePresets), not from config/settings_data.json — each preset is a separately published, independently admin-configured store, so live rendered output is what can genuinely drift, and what a merchant/reviewer actually sees. Requires 2+ preset demo URLs supplied on the audit run; the first one supplied is treated as the baseline every other preset is compared against. Not an official Shopify requirement — sourced from the user's own quality bar for this project, informed by studying top multi-preset Theme Store themes.",
+    notes:
+      "Checked live, per preset's actual rendered demo store (lib/audit/liveCheck.ts's comparePresets), not from config/settings_data.json — each preset is a separately published, independently admin-configured store, so live rendered output is what can genuinely drift, and what a merchant/reviewer actually sees. Requires 2+ preset demo URLs supplied on the audit run; the first one supplied is treated as the baseline every other preset is compared against. Not an official Shopify requirement — sourced from the user's own quality bar for this project, informed by studying top multi-preset Theme Store themes.",
   },
 
   // --- Performance -------------------------------------------------------
@@ -1315,7 +1322,7 @@ const requirements: SeedRequirement[] = [
     category: "Performance",
     title: "External scripts in <head> should not block rendering",
     description:
-      "An external <script src=\"...\"> placed in <head> without async, defer, or type=\"module\" blocks HTML parsing until it downloads and executes, delaying first render.",
+      'An external <script src="..."> placed in <head> without async, defer, or type="module" blocks HTML parsing until it downloads and executes, delaying first render.',
     sourceName: "web.dev — Eliminate render-blocking resources",
     sourceUrl: WEB_DEV_RENDER_BLOCKING_URL,
     severity: "high",
@@ -1375,7 +1382,8 @@ const requirements: SeedRequirement[] = [
     sourceName: "web.dev — Time to First Byte (TTFB)",
     sourceUrl: WEB_DEV_TTFB_URL,
     severity: "medium",
-    notes: "A bounded heuristic, deliberately capped at 'medium' severity (never higher) and using distinct LIVE-PERF-TTFB-001/LIVE-PERF-WEIGHT-001 ruleIds so it's never confused with a real Lighthouse-grounded finding.",
+    notes:
+      "A bounded heuristic, deliberately capped at 'medium' severity (never higher) and using distinct LIVE-PERF-TTFB-001/LIVE-PERF-WEIGHT-001 ruleIds so it's never confused with a real Lighthouse-grounded finding.",
   },
   {
     requirementId: "PERF-BP-008",

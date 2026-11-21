@@ -110,11 +110,7 @@ export function LineChart({
   }
 
   if (nonEmpty.length === 0) {
-    return (
-      <div className="flex h-[180px] items-center justify-center rounded-lg border border-border-subtle text-sm text-zinc-400">
-        {emptyMessage}
-      </div>
-    );
+    return <div className="flex h-[180px] items-center justify-center rounded-lg border border-border-subtle text-sm text-zinc-400">{emptyMessage}</div>;
   }
 
   // The hovered point per series — nearest by x, independently, so series
@@ -144,24 +140,11 @@ export function LineChart({
       `}</style>
 
       <div className="relative">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="w-full"
-          onMouseMove={handleMove}
-          onMouseLeave={() => setHoverX(null)}
-        >
+        <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" onMouseMove={handleMove} onMouseLeave={() => setHoverX(null)}>
           {/* Recessive horizontal gridlines + y-axis labels */}
           {yTickValues.map((v, i) => (
             <g key={i}>
-              <line
-                x1={PAD.left}
-                x2={WIDTH - PAD.right}
-                y1={scaleY(v)}
-                y2={scaleY(v)}
-                className="stroke-border-subtle"
-                strokeWidth={1}
-              />
+              <line x1={PAD.left} x2={WIDTH - PAD.right} y1={scaleY(v)} y2={scaleY(v)} className="stroke-border-subtle" strokeWidth={1} />
               <text x={PAD.left - 8} y={scaleY(v)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
                 {yTickFormat(v)}
               </text>
@@ -179,9 +162,7 @@ export function LineChart({
           {nonEmpty.map((s, i) => {
             const d = s.points.map((p, idx) => `${idx === 0 ? "M" : "L"}${scaleX(p.x)},${scaleY(p.y)}`).join(" ");
             const color = `var(${SERIES_VARS[i % SERIES_VARS.length]})`;
-            return (
-              <path key={s.key} d={d} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            );
+            return <path key={s.key} d={d} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />;
           })}
 
           {/* Hover crosshair + per-series dots */}

@@ -13,7 +13,8 @@ export default async function ServiceSendersPage() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Chat senders</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Each person who posts in Chat is matched to a person in the service team directory when the full name is identical. Link the rest by hand. Hours are counted either way; linking only attributes them to that person.
+          Each person who posts in Chat is matched to a person in the service team directory when the full name is identical. Link the rest by hand. Hours are
+          counted either way; linking only attributes them to that person.
         </p>
       </div>
       {data.senders.length === 0 ? (
@@ -30,7 +31,9 @@ export default async function ServiceSendersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {data.senders.map((s) => <SenderRow key={s.id} sender={s} users={data.users} hours={fmtMinutes(s.minutes)} />)}
+              {data.senders.map((s) => (
+                <SenderRow key={s.id} sender={s} users={data.users} hours={fmtMinutes(s.minutes)} />
+              ))}
             </tbody>
           </table>
         </div>

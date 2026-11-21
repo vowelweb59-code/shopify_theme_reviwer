@@ -34,7 +34,10 @@ describe("imageSizeFromBytes", () => {
     l.write("WEBP", 8, "latin1");
     l.write("VP8L", 12, "latin1");
     // width 600, height 400 -> w-1 = 599 (0x257), h-1 = 399 (0x18F): b0=0x57, b1=(0x02)|((0x18F&3)<<6)=0xC2, b2=(0x18F>>2)&0xFF=0x63, b3=(0x18F>>10)=0
-    l[21] = 0x57; l[22] = 0xc2; l[23] = 0x63; l[24] = 0x00;
+    l[21] = 0x57;
+    l[22] = 0xc2;
+    l[23] = 0x63;
+    l[24] = 0x00;
     expect(imageSizeFromBytes(l)).toEqual({ width: 600, height: 400 });
   });
   it("returns null for SVG text and truncated data", () => {

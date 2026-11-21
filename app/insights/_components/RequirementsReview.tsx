@@ -80,12 +80,7 @@ function RequirementRow({ requirement, isOpen, onToggle }: { requirement: Requir
             <span>Source type: {SOURCE_TYPE_LABELS[requirement.sourceType] ?? requirement.sourceType}</span>
           </div>
           {requirement.sourceUrl ? (
-            <a
-              href={requirement.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="w-fit text-xs text-primary underline hover:text-primary-hover"
-            >
+            <a href={requirement.sourceUrl} target="_blank" rel="noreferrer" className="w-fit text-xs text-primary underline hover:text-primary-hover">
               {requirement.sourceName ?? "Source"}
             </a>
           ) : (
@@ -109,15 +104,7 @@ function RequirementRow({ requirement, isOpen, onToggle }: { requirement: Requir
  * description inline, which made every row a different, often very tall,
  * height and was hard to scan.
  */
-export function RequirementsReview({
-  scope,
-  title,
-  description,
-}: {
-  scope: "code" | "store";
-  title: string;
-  description: string;
-}) {
+export function RequirementsReview({ scope, title, description }: { scope: "code" | "store"; title: string; description: string }) {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [sourceTypeFilter, setSourceTypeFilter] = useState("");
@@ -253,12 +240,7 @@ export function RequirementsReview({
             </h3>
             <ul className="flex flex-col gap-2">
               {items.map((r) => (
-                <RequirementRow
-                  key={r._id}
-                  requirement={r}
-                  isOpen={expanded === r._id}
-                  onToggle={() => setExpanded(expanded === r._id ? null : r._id)}
-                />
+                <RequirementRow key={r._id} requirement={r} isOpen={expanded === r._id} onToggle={() => setExpanded(expanded === r._id ? null : r._id)} />
               ))}
             </ul>
           </div>

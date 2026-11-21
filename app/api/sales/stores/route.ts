@@ -29,7 +29,9 @@ export async function GET(request: Request) {
   if (themeId && !isValidObjectId(themeId)) return invalidIdResponse("themeId");
   await connectToDatabase();
   const [stores, counts, themes] = await Promise.all([
-    SalesStore.find(themeId ? { themeId } : {}).sort({ shopDomain: 1 }).lean<StoreDoc[]>(),
+    SalesStore.find(themeId ? { themeId } : {})
+      .sort({ shopDomain: 1 })
+      .lean<StoreDoc[]>(),
     SaleRecord.aggregate<{ _id: { t: unknown; d: string }; sales: number; name: string; last: Date }>([
       { $match: themeId ? { themeId: new Types.ObjectId(themeId) } : {} },
       { $sort: { soldAt: -1 } },

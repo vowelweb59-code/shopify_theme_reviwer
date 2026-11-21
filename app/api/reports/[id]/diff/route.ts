@@ -32,10 +32,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
   if (!isValidObjectId(baselineId)) return invalidIdResponse("Baseline audit run id");
 
-  const [currentRun, baselineRun] = await Promise.all([
-    AuditRun.findById(id).lean(),
-    AuditRun.findById(baselineId).lean(),
-  ]);
+  const [currentRun, baselineRun] = await Promise.all([AuditRun.findById(id).lean(), AuditRun.findById(baselineId).lean()]);
   if (!currentRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
   if (!baselineRun) return NextResponse.json({ error: "Baseline audit run not found." }, { status: 404 });
   if (String(currentRun.themeId) !== String(baselineRun.themeId)) {
@@ -48,11 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   ]);
 
   const diff = computeFindingsDiff(baselineFindings as unknown as DiffableFinding[], currentFindings as unknown as DiffableFinding[]);
-  const attributedFindings = attributeNewFindings(
-    diff.findings,
-    toPlainRecord(baselineRun.ruleVersionSnapshot),
-    toPlainRecord(currentRun.ruleVersionSnapshot)
-  );
+  const attributedFindings = attributeNewFindings(diff.findings, toPlainRecord(baselineRun.ruleVersionSnapshot), toPlainRecord(currentRun.ruleVersionSnapshot));
   const attributedDiff = { ...diff, findings: attributedFindings };
   const categorySummary = summarizeDiffByCategory(attributedDiff);
   const severitySummary = summarizeDiffBySeverity(attributedDiff);

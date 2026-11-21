@@ -50,7 +50,16 @@ export async function autoAssignProjects(clientId?: string): Promise<number> {
   const [allProjects, senderRows, profiles, splitClients] = await Promise.all([
     ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" }, clientId: clientId ?? { $ne: null } })
       .select("clientId status chatKeywords upworkProfileId people")
-      .lean<Array<{ _id: string; clientId: string; status: string; chatKeywords: string[]; upworkProfileId: string | null; people: Array<{ role: string; name: string; senderId: string | null }> }>>(),
+      .lean<
+        Array<{
+          _id: string;
+          clientId: string;
+          status: string;
+          chatKeywords: string[];
+          upworkProfileId: string | null;
+          people: Array<{ role: string; name: string; senderId: string | null }>;
+        }>
+      >(),
     ServiceChatSender.find().select("externalId displayName").lean<Array<{ _id: string; externalId: string; displayName: string }>>(),
     ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     ServiceClient.find({ splitUnclear: true }).select("_id").lean<Array<{ _id: string }>>(),
@@ -68,9 +77,21 @@ export async function autoAssignProjects(clientId?: string): Promise<number> {
     if (p.chatKeywords.length) g.candidates.push({ projectId: p._id, keywords: p.chatKeywords });
     if (p.upworkProfileId) {
       const prof = profileById.get(p.upworkProfileId);
-      g.profiles.push({ projectId: p._id, profileId: p.upworkProfileId, names: new Set([prof?.name, ...(prof?.aliases ?? [])].filter((x): x is string => !!x).map(normalizeName)) });
+      g.profiles.push({
+        projectId: p._id,
+        profileId: p.upworkProfileId,
+        names: new Set([prof?.name, ...(prof?.aliases ?? [])].filter((x): x is string => !!x).map(normalizeName)),
+      });
     }
-    g.team.push({ projectId: p._id, senderIds: new Set(p.people.filter((x) => x.role === "EXECUTIVE").map((x) => x.senderId ?? matchSender(x.name, senders)).filter((x): x is string => !!x)) });
+    g.team.push({
+      projectId: p._id,
+      senderIds: new Set(
+        p.people
+          .filter((x) => x.role === "EXECUTIVE")
+          .map((x) => x.senderId ?? matchSender(x.name, senders))
+          .filter((x): x is string => !!x)
+      ),
+    });
     byClient.set(p.clientId, g);
   }
 
@@ -79,13 +100,26 @@ export async function autoAssignProjects(clientId?: string): Promise<number> {
     if (g.projectIds.length < 2) continue; // one project owns its client's hours without any rule
     const waiting = await ServiceTimeEntry.find({ clientId: cid, projectId: null, state: { $ne: "REJECTED" } })
       .select("clientRaw profile profileId minutes entryDate allocations senderExternalId")
-      .lean<Array<{ _id: string; clientRaw: string | null; profile: string | null; profileId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
+      .lean<
+        Array<{
+          _id: string;
+          clientRaw: string | null;
+          profile: string | null;
+          profileId: string | null;
+          minutes: number;
+          entryDate: Date;
+          allocations: Array<{ projectId: string; minutes: number }>;
+          senderExternalId: string;
+        }>
+      >();
     const unplaced: typeof waiting = [];
     for (const e of waiting) {
       const sender = senderByExternal.get(e.senderExternalId);
       const projectId =
         pickProjectByKeywords(e.clientRaw, g.candidates) ??
-        onlyOne(g.profiles.filter((p) => p.profileId === e.profileId || (e.profile != null && p.names.has(normalizeName(e.profile)))).map((p) => p.projectId)) ??
+        onlyOne(
+          g.profiles.filter((p) => p.profileId === e.profileId || (e.profile != null && p.names.has(normalizeName(e.profile)))).map((p) => p.projectId)
+        ) ??
         onlyOne(g.team.filter((t) => sender && t.senderIds.has(sender)).map((t) => t.projectId));
       if (!projectId) {
         unplaced.push(e);
@@ -100,10 +134,16 @@ export async function autoAssignProjects(clientId?: string): Promise<number> {
       if (e.minutes === 0) continue;
       if (e.allocations.length > 0 && e.allocations.reduce((n, a) => n + a.minutes, 0) === e.minutes) continue; // already shared
       const from = new Date(e.entryDate.getTime() - LOOKBACK_DAYS * DAY_MS);
-      const active = ((await ServiceTimeEntry.distinct("projectId", {
-        clientId: cid, state: { $ne: "REJECTED" }, minutes: { $gt: 0 }, _id: { $ne: e._id },
-        entryDate: { $gte: from, $lte: e.entryDate }, projectId: { $in: g.projectIds },
-      })) as string[]).sort();
+      const active = (
+        (await ServiceTimeEntry.distinct("projectId", {
+          clientId: cid,
+          state: { $ne: "REJECTED" },
+          minutes: { $gt: 0 },
+          _id: { $ne: e._id },
+          entryDate: { $gte: from, $lte: e.entryDate },
+          projectId: { $in: g.projectIds },
+        })) as string[]
+      ).sort();
       if (active.length === 0) {
         if (e.allocations.length) await ServiceTimeEntry.updateOne({ _id: e._id }, { $set: { allocations: [] } });
         continue; // nothing to share it across: a person decides

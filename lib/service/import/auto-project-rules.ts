@@ -2,7 +2,26 @@
 import { normalizeName } from "./text";
 
 const key = normalizeName;
-const LABEL_WORDS = new Set(["task", "tasks", "meeting", "call", "internal", "training", "review", "report", "study", "client", "clients", "na", "none", "test", "break", "leave", "holiday", "work"]);
+const LABEL_WORDS = new Set([
+  "task",
+  "tasks",
+  "meeting",
+  "call",
+  "internal",
+  "training",
+  "review",
+  "report",
+  "study",
+  "client",
+  "clients",
+  "na",
+  "none",
+  "test",
+  "break",
+  "leave",
+  "holiday",
+  "work",
+]);
 
 /** Does a Chat post about `postClient` talk about `name`? Same name, or one is the other's leading words ("Ledty" / "Ledty LavishCo"). */
 export function samePostClient(name: string, postClient: string): boolean {
@@ -28,4 +47,3 @@ export function looksLikeClientName(name: string): boolean {
   if (k.length < 3 || k.length > 60 || /[:;]/.test(name) || !/[a-z]{2}/.test(k)) return false;
   return !k.split(" ").some((w, i) => i === 0 && LABEL_WORDS.has(w));
 }
-

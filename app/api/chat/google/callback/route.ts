@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
     const existing = await ChatConnection.findOne({ key: "chat" }).select("+encryptedRefreshToken");
     // Google only issues a refresh token on consent; keep the stored one if this sign-in didn't return one.
     const refresh = result.refreshToken ? encryptSecret(result.refreshToken) : existing?.encryptedRefreshToken;
-    if (!refresh) return finish({ chat: "error", chatError: "Google didn't return a refresh token. Remove the app's access in your Google account and connect again." });
+    if (!refresh)
+      return finish({ chat: "error", chatError: "Google didn't return a refresh token. Remove the app's access in your Google account and connect again." });
 
     const sameAccount = existing?.googleAccountId === result.googleAccountId;
     await ChatConnection.updateOne(

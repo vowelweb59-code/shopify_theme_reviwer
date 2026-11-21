@@ -6,7 +6,9 @@ import { isUpdateMemo, resolveMember, resolveTheme, type ThemeRef } from "./reso
 
 describe("parseReport", () => {
   it("reads the two sample reports", () => {
-    expect(parseReport("Date:- (22-10-2026)\n\nTheme Name: Kombat | Gaming Theme | Theme Studio\nMemo: Worked on the product page development\nTimer: 08.30 hrs")).toEqual({
+    expect(
+      parseReport("Date:- (22-10-2026)\n\nTheme Name: Kombat | Gaming Theme | Theme Studio\nMemo: Worked on the product page development\nTimer: 08.30 hrs")
+    ).toEqual({
       ok: true,
       value: { date: "2026-10-22", themeParts: ["Kombat", "Gaming Theme", "Theme Studio"], memo: "Worked on the product page development", minutes: 510 },
     });
@@ -24,7 +26,8 @@ describe("parseReport", () => {
   });
 
   it("reads the older Timer Report layout, with its own date and timer styles", () => {
-    const old = (timer: string) => `============\nTimer Report (02-07-2026)\nTheme Name: Soft theme\nMemo: Worked 'Soft' theme testing.\nOFF-Timer: ${timer}\n------------\nStore URL: x`;
+    const old = (timer: string) =>
+      `============\nTimer Report (02-07-2026)\nTheme Name: Soft theme\nMemo: Worked 'Soft' theme testing.\nOFF-Timer: ${timer}\n------------\nStore URL: x`;
     expect(parseReport(old("1:10:hr"))).toMatchObject({ ok: true, value: { date: "2026-07-02", themeParts: ["Soft theme"], minutes: 70 } });
     expect(parseReport(old("45:min"))).toMatchObject({ ok: true, value: { minutes: 45 } });
     expect(parseReport(old("04 hr"))).toMatchObject({ ok: true, value: { minutes: 240 } });
@@ -34,11 +37,14 @@ describe("parseReport", () => {
   });
 
   it("splits several older-layout reports in one message", () => {
-    expect(splitReports("=====\nTimer Report (01-07-2026)\nTheme Name: A\nTimer: 1:00:hr\n=====\nTimer Report (02-07-2026)\nTheme Name: B\nTimer: 2:00:hr")).toHaveLength(2);
+    expect(
+      splitReports("=====\nTimer Report (01-07-2026)\nTheme Name: A\nTimer: 1:00:hr\n=====\nTimer Report (02-07-2026)\nTheme Name: B\nTimer: 2:00:hr")
+    ).toHaveLength(2);
   });
 
   it("adds the minutes of '2 hours 30 minutes' (they used to be dropped)", () => {
-    const m = (timer: string) => parseReport(`Date: 12-11-2026
+    const m = (timer: string) =>
+      parseReport(`Date: 12-11-2026
 Theme Name: A
 Timer: ${timer}`);
     expect(m("2 hours 30 minutes")).toMatchObject({ ok: true, value: { minutes: 150 } });
@@ -87,7 +93,11 @@ describe("resolveTheme / resolveMember", () => {
     expect(isUpdateMemo("Worked on the product page development")).toBe(false);
     expect(isUpdateMemo("Bug fixes")).toBe(false);
     const withNoble = [...themes, { id: "n", name: "Noble", presets: [] }];
-    expect(resolveTheme({ themeParts: ["Noble Theme"], memo: "Working on updating and Adding Features" }, withNoble)).toMatchObject({ ok: true, themeId: "n", kind: "update" });
+    expect(resolveTheme({ themeParts: ["Noble Theme"], memo: "Working on updating and Adding Features" }, withNoble)).toMatchObject({
+      ok: true,
+      themeId: "n",
+      kind: "update",
+    });
     expect(resolveTheme({ themeParts: ["Gravity", "Decor"], memo: "updated demo" }, withNoble)).toMatchObject({ kind: "preset" });
   });
 
@@ -110,7 +120,11 @@ describe("resolveTheme / resolveMember", () => {
     ];
     expect(resolveTheme({ themeParts: ["Aspire Preset", "Beauty"] }, known)).toMatchObject({ ok: true, themeId: "a", kind: "preset", preset: "Beauty" });
     expect(resolveTheme({ themeParts: ["Clothing Theme (Voltix Preset)"] }, known)).toMatchObject({ ok: true, themeId: "v", kind: "preset" });
-    expect(resolveTheme({ themeParts: ["Women's Clothing Shopify Theme ( Nexus )"], memo: "Fixes" }, known)).toMatchObject({ ok: true, themeId: "n", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Women's Clothing Shopify Theme ( Nexus )"], memo: "Fixes" }, known)).toMatchObject({
+      ok: true,
+      themeId: "n",
+      kind: "theme",
+    });
     expect(resolveTheme({ themeParts: ["Zeal Theme - Zeal"] }, known)).toMatchObject({ ok: true, themeId: "z" });
     expect(resolveTheme({ themeParts: ["Soft Theme"] }, known)).toMatchObject({ ok: true, themeId: "s" });
     expect(resolveTheme({ themeParts: ["Pearl", "Beauty"] }, known)).toMatchObject({ ok: false });
@@ -118,7 +132,10 @@ describe("resolveTheme / resolveMember", () => {
   });
 
   it("splits a capital I used as a separator", () => {
-    expect(parseReport("Date: 1-1-2026\nTheme Name : Voltix I Scarlet I Jewelry\nTimer: 1 hrs")).toMatchObject({ ok: true, value: { themeParts: ["Voltix", "Scarlet", "Jewelry"] } });
+    expect(parseReport("Date: 1-1-2026\nTheme Name : Voltix I Scarlet I Jewelry\nTimer: 1 hrs")).toMatchObject({
+      ok: true,
+      value: { themeParts: ["Voltix", "Scarlet", "Jewelry"] },
+    });
   });
 
   it("matches a poster to one team member by name", () => {
@@ -157,8 +174,30 @@ describe("summarizeDays", () => {
       { memberId: "m", name: "Max", designation: "Product Manager", minutes: 5000, kind: "theme" },
     ]);
     expect(rows).toEqual([
-      { memberId: "b", name: "Bob", designation: "Sr Shopify Developer", theme: 2, preset: 0, update: 1, total: 3, spaceHours: 25.5, manualHours: 0, totalHours: 25.5 },
-      { memberId: "a", name: "Ann", designation: "UI/UX Designer", theme: 1, preset: 0.5, update: 0, total: 1.5, spaceHours: 12.75, manualHours: 0, totalHours: 12.75 },
+      {
+        memberId: "b",
+        name: "Bob",
+        designation: "Sr Shopify Developer",
+        theme: 2,
+        preset: 0,
+        update: 1,
+        total: 3,
+        spaceHours: 25.5,
+        manualHours: 0,
+        totalHours: 25.5,
+      },
+      {
+        memberId: "a",
+        name: "Ann",
+        designation: "UI/UX Designer",
+        theme: 1,
+        preset: 0.5,
+        update: 0,
+        total: 1.5,
+        spaceHours: 12.75,
+        manualHours: 0,
+        totalHours: 12.75,
+      },
     ]);
   });
 
@@ -181,8 +220,16 @@ describe("parseReport: other layouts", () => {
     return r.ok ? { date: r.value.date, theme: r.value.themeParts[0], minutes: r.value.minutes } : r;
   };
   it("reads 'Theme Report' headers and a Time line", () => {
-    expect(ok("========\nTheme Report (24/09/2026)\nTheme Name: Breeze | Fresco Solutions\nTask Assign: X\nTime: 5.00 Hours\nMemo: Worked")).toEqual({ date: "2026-09-24", theme: "Breeze", minutes: 300 });
-    expect(ok("Theme Report:- 25/09/2026\nTheme Name:- Breeze | Fresco Solutions\nMemo:- x\nTimer:- 8:30 hrs")).toEqual({ date: "2026-09-25", theme: "Breeze", minutes: 510 });
+    expect(ok("========\nTheme Report (24/09/2026)\nTheme Name: Breeze | Fresco Solutions\nTask Assign: X\nTime: 5.00 Hours\nMemo: Worked")).toEqual({
+      date: "2026-09-24",
+      theme: "Breeze",
+      minutes: 300,
+    });
+    expect(ok("Theme Report:- 25/09/2026\nTheme Name:- Breeze | Fresco Solutions\nMemo:- x\nTimer:- 8:30 hrs")).toEqual({
+      date: "2026-09-25",
+      theme: "Breeze",
+      minutes: 510,
+    });
   });
   it("reads month names and spaces in the date", () => {
     expect((ok("Date:- 26 sept 2026\nTheme Name:- Aspire\nMemo:- x\nTimer:- 2:00 hrs") as { date: string }).date).toBe("2026-09-26");
@@ -194,7 +241,9 @@ describe("parseReport: other layouts", () => {
     expect(ok("Theme Name:- Flaunt\nTimer:- 1:00 hrs")).toEqual({ ok: false, error: "No date found." });
   });
   it("splits a message with several themes that each have a timer", () => {
-    const parts = splitThemes("Date:- (12-10-2026)\nTheme Name: Versatile (Zeal Preset)\nMemo: a\nTime: 3.00 Hour\nTheme Name: Breeze\nMemo: b\nTime: 2.00 Hour");
+    const parts = splitThemes(
+      "Date:- (12-10-2026)\nTheme Name: Versatile (Zeal Preset)\nMemo: a\nTime: 3.00 Hour\nTheme Name: Breeze\nMemo: b\nTime: 2.00 Hour"
+    );
     expect(parts).toHaveLength(2);
     expect(parts.map((p) => ok(p))).toEqual([
       { date: "2026-10-12", theme: "Versatile (Zeal Preset)", minutes: 180 },
@@ -216,7 +265,13 @@ describe("merged themes (Aspire is Rare)", () => {
     { id: "r", name: "Rare", presets: ["Rare", "Touch", "Charisma", "Synergy", "Presence"] },
   ];
   it("resolves a report naming Aspire to Rare and renames its preset", () => {
-    expect(resolveTheme({ themeParts: ["Aspire Preset", "Beauty"] }, withAspire)).toMatchObject({ ok: true, themeId: "r", themeName: "Rare", kind: "preset", preset: "Touch" });
+    expect(resolveTheme({ themeParts: ["Aspire Preset", "Beauty"] }, withAspire)).toMatchObject({
+      ok: true,
+      themeId: "r",
+      themeName: "Rare",
+      kind: "preset",
+      preset: "Touch",
+    });
     expect(resolveTheme({ themeParts: ["Aspire", "Wellness"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Synergy" });
     expect(resolveTheme({ themeParts: ["Aspire", "Clothing"] }, withAspire)).toMatchObject({ themeId: "r", preset: "Charisma" });
     expect(resolveTheme({ themeParts: ["Aspire Art"] }, withAspire)).toMatchObject({ themeId: "r" });
@@ -258,7 +313,12 @@ describe("flagged-report fixes", () => {
     { id: "s", name: "Soft", presets: ["Twinkle"] },
   ];
   it("finds the theme from a preset only one theme has ('Clear Preset', 'Automobile Theme')", () => {
-    expect(resolveTheme({ themeParts: ["Clear Preset", "Latest Version Demo Update"] }, t)).toMatchObject({ ok: true, themeId: "f", kind: "preset", preset: "Clear" });
+    expect(resolveTheme({ themeParts: ["Clear Preset", "Latest Version Demo Update"] }, t)).toMatchObject({
+      ok: true,
+      themeId: "f",
+      kind: "preset",
+      preset: "Clear",
+    });
     expect(resolveTheme({ themeParts: ["Gemstone Theme"] }, t)).toMatchObject({ ok: true, themeId: "n", kind: "preset", preset: "Gemstone" });
     expect(resolveTheme({ themeParts: ["Sundrift"] }, t)).toMatchObject({ themeId: "f", preset: "Sundrift" });
   });
@@ -268,7 +328,12 @@ describe("flagged-report fixes", () => {
     expect(resolveTheme({ themeParts: ["Noble"] }, t)).toMatchObject({ themeId: "n" }); // a theme's own name still wins over its default preset
   });
   it("reads 'Theme Update' in the second slot as update work", () => {
-    expect(resolveTheme({ themeParts: ["Zeal", "Theme Update"] }, t, { updatesAndPresetsOnly: true })).toMatchObject({ ok: true, themeId: "z", kind: "update", preset: null });
+    expect(resolveTheme({ themeParts: ["Zeal", "Theme Update"] }, t, { updatesAndPresetsOnly: true })).toMatchObject({
+      ok: true,
+      themeId: "z",
+      kind: "update",
+      preset: null,
+    });
     expect(resolveTheme({ themeParts: ["Zeal", "Theme Updates"] }, t)).toMatchObject({ kind: "update" });
   });
   it("ignores accents in theme names", () => {
@@ -284,13 +349,22 @@ import { isIgnoredThemeLine } from "./resolve";
 
 describe("portal names are not theme work", () => {
   it("ignores a line that is just a portal, however it is spelled", () => {
-    for (const line of ["VowelWeb", "Vowel Web", "vowel web", "Themeshopy", "Fresco Solutions", "Vowel Web Portal"]) expect(isIgnoredThemeLine([line])).toBe(true);
+    for (const line of ["VowelWeb", "Vowel Web", "vowel web", "Themeshopy", "Fresco Solutions", "Vowel Web Portal"])
+      expect(isIgnoredThemeLine([line])).toBe(true);
     expect(isIgnoredThemeLine(["Velocity", "Vowel Web"])).toBe(false);
   });
 });
 describe("owner decisions on flagged reports (2026-11-12)", () => {
   it("ignores lines that are not theme work", () => {
-    for (const line of ["Clients Work", "Multiple Theme", "Webflow Template", "Themagnifico Themes Portal", "Themeshopy Portal", "( Task ) :- Asam White", "Beauty Store, Supplement And Investment Theme"]) {
+    for (const line of [
+      "Clients Work",
+      "Multiple Theme",
+      "Webflow Template",
+      "Themagnifico Themes Portal",
+      "Themeshopy Portal",
+      "( Task ) :- Asam White",
+      "Beauty Store, Supplement And Investment Theme",
+    ]) {
       expect(isIgnoredThemeLine([line, "x"])).toBe(true);
     }
     for (const line of ["Zeal", "Aspire Preset", "Home Décor", "Noble Theme"]) expect(isIgnoredThemeLine([line])).toBe(false);
@@ -303,7 +377,11 @@ describe("owner decisions on flagged reports (2026-11-12)", () => {
     { id: "k", name: "Kombat", presets: [], building: true },
   ];
   it("reads Space as Home Décor, even with a capital I for the pipe", () => {
-    expect(resolveTheme({ themeParts: ["Space I Home Theme I Themeshopy"], memo: "Theme Design - Worked On Landing Page" }, t)).toMatchObject({ ok: true, themeId: "h", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Space I Home Theme I Themeshopy"], memo: "Theme Design - Worked On Landing Page" }, t)).toMatchObject({
+      ok: true,
+      themeId: "h",
+      kind: "theme",
+    });
     expect(resolveTheme({ themeParts: ["Space"] }, t)).toMatchObject({ themeId: "h" });
   });
   it("puts 'Dynamic and Voltix | Theme Support' and 'Zeal | Featured Images' under update work", () => {
@@ -312,7 +390,9 @@ describe("owner decisions on flagged reports (2026-11-12)", () => {
     expect(resolveTheme({ themeParts: ["Zeal Theme", "Featured Images", "Murtaza Sir"] }, t)).toMatchObject({ ok: true, themeId: "z", kind: "update" });
   });
   it("keeps a 'Theme Development' memo as new-theme work on an unfinished theme, even if it says 'content update'", () => {
-    expect(resolveTheme({ themeParts: ["Kombat - Kombat", "Gaming"], memo: "Theme Development - Worked on the contact form and content update." }, t)).toMatchObject({ ok: true, themeId: "k", kind: "theme" });
+    expect(
+      resolveTheme({ themeParts: ["Kombat - Kombat", "Gaming"], memo: "Theme Development - Worked on the contact form and content update." }, t)
+    ).toMatchObject({ ok: true, themeId: "k", kind: "theme" });
     expect(resolveTheme({ themeParts: ["Kombat", "Gaming Theme"], memo: "Updating product page" }, t)).toMatchObject({ kind: "update" });
   });
 });
@@ -323,7 +403,14 @@ describe("Automobile is its own theme (alias to Auto)", () => {
     { id: "n", name: "Noble", presets: ["Noble", "Automobile"] },
   ];
   it("reads Automobile and Automobile Theme as the theme Auto, not as a Noble preset", () => {
-    expect(resolveTheme({ themeParts: ["Automobile", "New Theme"], memo: "Theme Design - Worked on landing page" }, t)).toMatchObject({ ok: true, themeId: "a" });
-    expect(resolveTheme({ themeParts: ["Automobile Theme"], memo: "Theme Development - Worked on homepage section development." }, t)).toMatchObject({ ok: true, themeId: "a", kind: "theme" });
+    expect(resolveTheme({ themeParts: ["Automobile", "New Theme"], memo: "Theme Design - Worked on landing page" }, t)).toMatchObject({
+      ok: true,
+      themeId: "a",
+    });
+    expect(resolveTheme({ themeParts: ["Automobile Theme"], memo: "Theme Development - Worked on homepage section development." }, t)).toMatchObject({
+      ok: true,
+      themeId: "a",
+      kind: "theme",
+    });
   });
 });

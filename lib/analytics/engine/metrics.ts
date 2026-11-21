@@ -105,13 +105,17 @@ type Context = {
 };
 
 async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Context> {
-  const fields = "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil installsExactBy installsExactFrom syncedThroughDate lastSuccessfulSyncAt";
+  const fields =
+    "name slug ga4PropertyId ga4PropertyTimeZone pagePathPrefix earlierPropertyId earlierPagePathPrefix earlierUntil installsExactBy installsExactFrom syncedThroughDate lastSuccessfulSyncAt";
   let docs: ThemeLean[];
   let selected: PublicThemeRef | null = null;
   const warnings: string[] = [];
 
   if (query.theme === "all") {
-    docs = await AnalyticsTheme.find({ isActive: true, ga4PropertyId: { $type: "string" } }).select(fields).sort({ name: 1 }).lean<ThemeLean[]>();
+    docs = await AnalyticsTheme.find({ isActive: true, ga4PropertyId: { $type: "string" } })
+      .select(fields)
+      .sort({ name: 1 })
+      .lean<ThemeLean[]>();
     if (docs.length === 0) warnings.push("No themes are mapped to a GA4 property yet.");
   } else {
     const filter = isValidObjectId(query.theme) ? { _id: query.theme } : { slug: query.theme.toLowerCase() };
@@ -133,7 +137,10 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
       timeZone: d.ga4PropertyTimeZone ?? null,
       pagePathPrefix: d.pagePathPrefix ?? null,
       installsExactFrom: d.installsExactBy ? (d.installsExactFrom ?? null) : null,
-      earlier: d.earlierPropertyId && d.earlierUntil ? { propertyId: d.earlierPropertyId, pagePathPrefix: d.earlierPagePathPrefix ?? null, until: d.earlierUntil } : null,
+      earlier:
+        d.earlierPropertyId && d.earlierUntil
+          ? { propertyId: d.earlierPropertyId, pagePathPrefix: d.earlierPagePathPrefix ?? null, until: d.earlierUntil }
+          : null,
       syncedThroughDate: d.syncedThroughDate ?? null,
       lastSuccessfulSyncAt: d.lastSuccessfulSyncAt ? new Date(d.lastSuccessfulSyncAt).toISOString() : null,
       period: resolvePeriod(query.range, d.ga4PropertyTimeZone, query.compare, now),
@@ -145,7 +152,8 @@ async function loadContext(query: MetricsQuery, deps: EngineDeps): Promise<Conte
   }
 
   const unsynced = themes.filter((t) => !t.syncedThroughDate).map((t) => t.name);
-  if (unsynced.length) warnings.push(`${unsynced.join(", ")} ${unsynced.length === 1 ? "hasn't" : "haven't"} finished a first GA4 sync, so data may be missing.`);
+  if (unsynced.length)
+    warnings.push(`${unsynced.join(", ")} ${unsynced.length === 1 ? "hasn't" : "haven't"} finished a first GA4 sync, so data may be missing.`);
   const estimated = themes.filter(installsAreEstimated).map((t) => t.name);
   if (estimated.length) warnings.push(installsEstimatedWarning(estimated));
   return { query, scope: query.theme === "all" ? "all" : "theme", selected, themes, warnings };
@@ -168,7 +176,13 @@ function buildMeta(ctx: Context, breakdown: AggregateBreakdown, now: Date): Metr
       current: t.period.current,
       previous: t.period.previous,
     })),
-    range: { preset: ctx.query.range.preset, label: DATE_RANGE_LABELS[ctx.query.range.preset], current: period.current, previous: period.previous, timeZone: reference?.timeZone ?? "UTC" },
+    range: {
+      preset: ctx.query.range.preset,
+      label: DATE_RANGE_LABELS[ctx.query.range.preset],
+      current: period.current,
+      previous: period.previous,
+      timeZone: reference?.timeZone ?? "UTC",
+    },
     mixedTimeZones: new Set(ctx.themes.map((t) => t.timeZone ?? "UTC")).size > 1,
     filters: ctx.query.filters,
     breakdown,
@@ -242,7 +256,10 @@ async function loadPoints(
       // Only previous-period rows reach the default; bucket each at its own theme's previous start.
       default: {
         $switch: {
-          branches: themes.map((t) => ({ case: { $eq: ["$analyticsThemeId", new Types.ObjectId(t.id)] }, then: (t.period.previous ?? t.period.current).start })),
+          branches: themes.map((t) => ({
+            case: { $eq: ["$analyticsThemeId", new Types.ObjectId(t.id)] },
+            then: (t.period.previous ?? t.period.current).start,
+          })),
           default: "$date",
         },
       },

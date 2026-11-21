@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
   const [apps, catalog] = await Promise.all([
     ShopifyApp.find({ categories: slug })
       .sort({ reviewCount: -1 })
-      .select("-_id handle name tagline rating reviewCount pricingLabel builtForShopify developer launchedAt description features plans languages worksWith detailAt detailVersion")
+      .select(
+        "-_id handle name tagline rating reviewCount pricingLabel builtForShopify developer launchedAt description features plans languages worksWith detailAt detailVersion"
+      )
       .lean<AppDoc[]>(),
     ShopifyAppFeature.find({}).select("-_id handle label group").lean<{ handle: string; label: string; group: string }[]>(),
   ]);

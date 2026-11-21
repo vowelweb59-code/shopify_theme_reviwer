@@ -12,7 +12,11 @@ import type { AggregateRow } from "./sync/reports";
 // estimated, so history is not lost, and the date from which the parameter exists is kept (installsExactFrom) so a range that
 // reaches back before it is still shown as partly estimated. Pure.
 
-const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 const toGa4Date = (day: string) => day.replace(/-/g, "");
 const isUnset = (value: string) => value.trim() === "" || value === "(not set)";
 
@@ -74,7 +78,14 @@ export function attributeInstalls(rows: readonly ReportRow[], aliases: string[])
 export function installRows(counts: ReadonlyMap<string, number>): AggregateRow[] {
   return [...counts]
     .filter(([, n]) => n > 0)
-    .map(([date, n]) => ({ date, breakdown: "total" as const, eventName: PRIMARY_EVENTS.themeInstall, dims: {}, dimsKey: buildDimsKey("total", {}), metrics: { eventCount: n } }));
+    .map(([date, n]) => ({
+      date,
+      breakdown: "total" as const,
+      eventName: PRIMARY_EVENTS.themeInstall,
+      dims: {},
+      dimsKey: buildDimsKey("total", {}),
+      metrics: { eventCount: n },
+    }));
 }
 
 /** Install rows for the same day add up (a day's exact installs plus its estimated share of the unattributed ones). */

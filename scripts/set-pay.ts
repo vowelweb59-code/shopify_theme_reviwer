@@ -48,12 +48,22 @@ async function main() {
   for (const [key, amount] of Object.entries(input.salaries ?? {})) {
     const m = matchMember(key, members);
     if (typeof m === "string") problems.push(`"${key}": ${m}`);
-    else writes.push({ member: m, set: { payModel: "salary", monthlySalary: Math.round(amount), perLiveTheme: null, perLivePreset: null }, label: `salary ${amount}/month` });
+    else
+      writes.push({
+        member: m,
+        set: { payModel: "salary", monthlySalary: Math.round(amount), perLiveTheme: null, perLivePreset: null },
+        label: `salary ${amount}/month`,
+      });
   }
   for (const [key, rates] of Object.entries(input.perLive ?? {})) {
     const m = matchMember(key, members);
     if (typeof m === "string") problems.push(`"${key}": ${m}`);
-    else writes.push({ member: m, set: { payModel: "per_live", monthlySalary: null, perLiveTheme: rates.theme ?? null, perLivePreset: rates.preset ?? null }, label: `commission ${rates.theme ?? 0} per live theme, ${rates.preset ?? 0} per live preset` });
+    else
+      writes.push({
+        member: m,
+        set: { payModel: "per_live", monthlySalary: null, perLiveTheme: rates.theme ?? null, perLivePreset: rates.preset ?? null },
+        label: `commission ${rates.theme ?? 0} per live theme, ${rates.preset ?? 0} per live preset`,
+      });
   }
   const twice = writes.filter((w, i) => writes.findIndex((x) => String(x.member._id) === String(w.member._id)) !== i);
   for (const w of twice) problems.push(`${w.member.name} is matched by two names`);

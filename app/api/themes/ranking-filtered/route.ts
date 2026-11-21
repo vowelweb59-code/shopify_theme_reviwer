@@ -41,7 +41,13 @@ export async function GET(request: Request) {
   await connectToDatabase();
   const { sortBy, industry } = parsed;
 
-  const filter = await ThemeRankingFilter.findOne({ sortBy, industry }).lean<{ _id: unknown; sortBy: string; industry: string | null; lastCheckedAt?: Date | null; lastError?: string | null }>();
+  const filter = await ThemeRankingFilter.findOne({ sortBy, industry }).lean<{
+    _id: unknown;
+    sortBy: string;
+    industry: string | null;
+    lastCheckedAt?: Date | null;
+    lastError?: string | null;
+  }>();
   if (!filter) return NextResponse.json({ filter: { sortBy, industry, lastCheckedAt: null, lastError: null }, rows: [] });
   const rows = await currentRows(filter._id);
 

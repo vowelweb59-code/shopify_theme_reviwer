@@ -42,12 +42,7 @@ function Dropzone({ file, onFile }: { file: File | null; onFile: (file: File | n
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Drag &amp; drop a theme .zip here</p>
           <label className="cursor-pointer text-sm font-medium text-primary underline">
             Browse files
-            <input
-              type="file"
-              accept=".zip"
-              className="sr-only"
-              onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-            />
+            <input type="file" accept=".zip" className="sr-only" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
           </label>
         </>
       )}
@@ -124,8 +119,7 @@ export function AddThemeModal({ open, onOpenChange, onCreated }: { open: boolean
           <span className="text-zinc-700 dark:text-zinc-300">Theme ZIP</span>
           <Dropzone file={file} onFile={setFile} />
           <p className="text-xs text-zinc-500">
-            Version detected from config/settings_schema.json&apos;s theme_info block, or a README &quot;Version: x.y.z&quot;
-            line — never entered manually.
+            Version detected from config/settings_schema.json&apos;s theme_info block, or a README &quot;Version: x.y.z&quot; line — never entered manually.
           </p>
         </div>
 
@@ -137,9 +131,7 @@ export function AddThemeModal({ open, onOpenChange, onCreated }: { open: boolean
         </details>
 
         {error && (
-          <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">
-            {error}
-          </div>
+          <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>
         )}
 
         <div className="mt-2 flex items-center justify-end gap-2">

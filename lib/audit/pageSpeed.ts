@@ -75,7 +75,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         severity: "high",
         presetLabel: label,
         finding: `Lighthouse performance score (${strategy}) is ${metrics.performanceScore}/100 — Google classifies scores below 50 as "poor".`,
-        recommendation: "See the \"Suggested fixes\" list below for the specific opportunities and diagnostics behind this score, ranked by impact.",
+        recommendation: 'See the "Suggested fixes" list below for the specific opportunities and diagnostics behind this score, ranked by impact.',
       });
     } else if (metrics.performanceScore < 90) {
       findings.push({
@@ -86,7 +86,7 @@ export function psiThresholdFindings(label: string, url: string, metrics: PsiMet
         severity: "medium",
         presetLabel: label,
         finding: `Lighthouse performance score (${strategy}) is ${metrics.performanceScore}/100 — Google classifies scores under 90 as "needs improvement".`,
-        recommendation: "See the \"Suggested fixes\" list below for the specific opportunities and diagnostics behind this score, ranked by impact.",
+        recommendation: 'See the "Suggested fixes" list below for the specific opportunities and diagnostics behind this score, ranked by impact.',
       });
     }
   }
@@ -282,8 +282,7 @@ function summarizeAuditItems(details: LighthouseAuditDetails | undefined): strin
     .map((item) => {
       const rawUrl = typeof item.url === "string" ? item.url : null;
       const label = rawUrl ? rawUrl.split("/").pop() || rawUrl : null;
-      const bytes =
-        typeof item.wastedBytes === "number" ? item.wastedBytes : typeof item.totalBytes === "number" ? item.totalBytes : null;
+      const bytes = typeof item.wastedBytes === "number" ? item.wastedBytes : typeof item.totalBytes === "number" ? item.totalBytes : null;
       const ms = typeof item.wastedMs === "number" ? item.wastedMs : null;
       const parts = [label, bytes ? `${Math.round(bytes / 1024)}KB` : null, ms ? `${Math.round(ms)}ms` : null].filter(Boolean);
       return parts.length > 0 ? parts.join(" — ") : null;
@@ -403,17 +402,17 @@ export async function measurePresetHome(preset: PresetLink): Promise<{ metrics: 
     fetchPsiLighthouseResult(preset.url, "mobile", ["performance", "accessibility"]),
     fetchPsiLighthouseResult(preset.url, "desktop", ["performance", "accessibility"]),
   ]);
-  for (const [strategy, lhr] of [["mobile", mobile], ["desktop", desktop]] as const) {
+  for (const [strategy, lhr] of [
+    ["mobile", mobile],
+    ["desktop", desktop],
+  ] as const) {
     if (lhr) metrics.push({ label: preset.label, url: preset.url, pageType: "home", strategy, ...extractCoreMetrics(lhr) });
     else errors.push(`PageSpeed Insights request failed for the home page (${strategy}).`);
   }
   return { metrics, errors };
 }
 
-export async function runPageSpeedChecksForPresets(
-  presets: PresetLink[],
-  onItemComplete?: () => void
-): Promise<PageSpeedCheckResult> {
+export async function runPageSpeedChecksForPresets(presets: PresetLink[], onItemComplete?: () => void): Promise<PageSpeedCheckResult> {
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const metrics: PageSpeedMetric[] = [];
@@ -441,7 +440,12 @@ export async function runPageSpeedChecksForPresets(
     // Google's servers can't log in to a password-protected store (they would measure its password page), so no speed score
     // is taken for it; the rest of the audit still reads it with the saved password.
     if (preset.session) {
-      errors.push({ label: preset.label, url: preset.url, error: "Speed and Core Web Vitals were not measured: this demo store is password-protected and Google's PageSpeed Insights cannot log in. Remove the store password to measure it." });
+      errors.push({
+        label: preset.label,
+        url: preset.url,
+        error:
+          "Speed and Core Web Vitals were not measured: this demo store is password-protected and Google's PageSpeed Insights cannot log in. Remove the store password to measure it.",
+      });
       onItemComplete?.();
       return;
     }

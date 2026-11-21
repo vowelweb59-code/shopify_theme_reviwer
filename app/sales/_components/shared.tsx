@@ -8,7 +8,14 @@ export type MonthMatrixRow = { key: string; label: string; total: Metrics; byMon
 export type SalesSummary = {
   months: string[];
   totals: Metrics & { tryTheme: number | null; installs: number | null };
-  themeMonths: (Metrics & { themeId: string; themeName: string; month: string; tryTheme: number | null; installs: number | null; installRate: number | null })[];
+  themeMonths: (Metrics & {
+    themeId: string;
+    themeName: string;
+    month: string;
+    tryTheme: number | null;
+    installs: number | null;
+    installRate: number | null;
+  })[];
   themes: (Metrics & { themeId: string; themeName: string; tryTheme: number | null; installs: number | null; installRate: number | null })[];
   presets: (Metrics & { themeId: string; themeName: string; preset: string; category: string | null; stores: number })[];
   presetMonths: MonthMatrixRow[];
@@ -60,7 +67,11 @@ export function SalesCell({ m }: { m: Metrics }) {
   return (
     <span className="tabular-nums">
       <span className="font-medium text-zinc-900 dark:text-zinc-100">{formatCount(m.netSales)}</span>
-      {m.refunds > 0 && <span className="ml-1 text-xs text-zinc-500">({m.refunds} refund{m.refunds > 1 ? "s" : ""})</span>}
+      {m.refunds > 0 && (
+        <span className="ml-1 text-xs text-zinc-500">
+          ({m.refunds} refund{m.refunds > 1 ? "s" : ""})
+        </span>
+      )}
     </span>
   );
 }
@@ -80,8 +91,12 @@ export function MonthMatrix({ rows, months, rowHeader, emptyMessage }: { rows: M
       <table className="min-w-full border-collapse text-sm">
         <thead className="bg-surface-muted text-xs uppercase tracking-wide text-zinc-500">
           <tr>
-            <th scope="col" className="sticky left-0 z-10 bg-surface-muted px-3 py-2 text-left font-medium">{rowHeader}</th>
-            <th scope="col" className="px-3 py-2 text-right font-medium">Total</th>
+            <th scope="col" className="sticky left-0 z-10 bg-surface-muted px-3 py-2 text-left font-medium">
+              {rowHeader}
+            </th>
+            <th scope="col" className="px-3 py-2 text-right font-medium">
+              Total
+            </th>
             {cols.map((m) => (
               <th key={m} scope="col" className="whitespace-nowrap px-3 py-2 text-right font-medium">
                 {formatMonth(m, true)}
@@ -103,7 +118,11 @@ export function MonthMatrix({ rows, months, rowHeader, emptyMessage }: { rows: M
                     key={m}
                     className="px-3 py-2 text-right tabular-nums"
                     style={v > 0 ? { backgroundColor: `color-mix(in srgb, var(--primary) ${Math.round((v / max) * 28) + 4}%, transparent)` } : undefined}
-                    title={r.byMonth[m] ? `${r.label}, ${formatMonth(m)}: ${r.byMonth[m].sales} sold, ${r.byMonth[m].refunds} refunded, ${formatMoney(r.byMonth[m].gross)}` : undefined}
+                    title={
+                      r.byMonth[m]
+                        ? `${r.label}, ${formatMonth(m)}: ${r.byMonth[m].sales} sold, ${r.byMonth[m].refunds} refunded, ${formatMoney(r.byMonth[m].gross)}`
+                        : undefined
+                    }
                   >
                     {v === 0 ? <span className="text-zinc-300 dark:text-zinc-600">·</span> : v}
                   </td>
@@ -112,7 +131,9 @@ export function MonthMatrix({ rows, months, rowHeader, emptyMessage }: { rows: M
             </tr>
           ))}
           <tr className="border-t-2 border-border-strong bg-surface-muted font-semibold">
-            <th scope="row" className="sticky left-0 z-10 bg-surface-muted px-3 py-2 text-left">All</th>
+            <th scope="row" className="sticky left-0 z-10 bg-surface-muted px-3 py-2 text-left">
+              All
+            </th>
             <td className="px-3 py-2 text-right tabular-nums">{formatCount(rows.reduce((n, r) => n + r.total.netSales, 0))}</td>
             {monthTotals.map((v, i) => (
               <td key={cols[i]} className="px-3 py-2 text-right tabular-nums">

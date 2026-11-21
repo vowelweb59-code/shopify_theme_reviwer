@@ -7,8 +7,7 @@ import { storeZipBuffer } from "./zipStorage";
 import { sha256 } from "./checksum";
 
 export type UploadVersionResult =
-  | { ok: true; themeVersion: InstanceType<typeof ThemeVersion>; themeZip: InstanceType<typeof ThemeZip>; reusedZip: boolean }
-  | { ok: false; error: string };
+  { ok: true; themeVersion: InstanceType<typeof ThemeVersion>; themeZip: InstanceType<typeof ThemeZip>; reusedZip: boolean } | { ok: false; error: string };
 
 function versionErrorMessage(result: Extract<Awaited<ReturnType<typeof extractThemeVersionFromZip>>, { ok: false }>): string {
   switch (result.reason) {

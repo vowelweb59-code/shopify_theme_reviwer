@@ -22,16 +22,14 @@ export async function POST(request: Request) {
   if (body?.month && !month) return NextResponse.json({ error: "Month must look like 2026-10." }, { status: 400 });
   if (!themeName) return NextResponse.json({ error: "Enter the main theme name." }, { status: 400 });
   if (!text.trim()) return NextResponse.json({ error: "Paste the sales rows." }, { status: 400 });
-  if (text.length > MAX_TEXT_CHARS) return NextResponse.json({ error: "That's more than 5 MB of text. Upload the workbook as .xlsx instead." }, { status: 400 });
+  if (text.length > MAX_TEXT_CHARS)
+    return NextResponse.json({ error: "That's more than 5 MB of text. Upload the workbook as .xlsx instead." }, { status: 400 });
 
   await connectToDatabase();
   const themes = await Theme.find({}).select("name").lean<{ _id: unknown; name: string }[]>();
   const theme = matchThemeForTab(themeName, themes);
   if (!theme) {
-    return NextResponse.json(
-      { error: `No theme called “${themeName}”. Use one of: ${themes.map((t) => t.name).join(", ")}.` },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: `No theme called “${themeName}”. Use one of: ${themes.map((t) => t.name).join(", ")}.` }, { status: 400 });
   }
 
   try {
@@ -46,7 +44,14 @@ export async function POST(request: Request) {
     if (picked.sales.length === 0) return NextResponse.json({ error: `None of the ${parsed.sales.length} pasted rows are from ${month}.` }, { status: 400 });
     const result = await importSales(String(theme._id), picked.sales);
     startDetection();
-    const tab: TabResult = { tab: "Pasted rows", themeName: theme.name, ...result, rowsRead: picked.sales.length, skipped: parsed.skipped, otherMonths: picked.otherMonths };
+    const tab: TabResult = {
+      tab: "Pasted rows",
+      themeName: theme.name,
+      ...result,
+      rowsRead: picked.sales.length,
+      skipped: parsed.skipped,
+      otherMonths: picked.otherMonths,
+    };
     return NextResponse.json({ tabs: [tab] });
   } catch (err) {
     if (err instanceof SalesFileError) return NextResponse.json({ error: err.message }, { status: 400 });

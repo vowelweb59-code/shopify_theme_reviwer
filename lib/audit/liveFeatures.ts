@@ -46,7 +46,12 @@ const SIGNATURES: Record<string, RegExp[]> = {
   "ingredients-nutritional-information": [/ingredients/i, /nutrition(al)?[-_ ](facts|info)/i],
   "product-options": [/variant[-_](picker|selects?)/i, /product-form__input/i, /name=["']options\[/i],
   "product-videos": [/product[-_]video/i, /data-media-type=["']video/i, /youtube(-nocookie)?\.com\/embed/i, /player\.vimeo\.com/i],
-  "shipping-delivery-information": [/shipping[-_ ](info|policy|returns)/i, /estimated[-_ ]delivery/i, /delivery[-_ ](info|estimate)/i, /shipping[-_]calculator/i],
+  "shipping-delivery-information": [
+    /shipping[-_ ](info|policy|returns)/i,
+    /estimated[-_ ]delivery/i,
+    /delivery[-_ ](info|estimate)/i,
+    /shipping[-_]calculator/i,
+  ],
   "size-chart": [/size[-_ ]?(chart|guide)/i, /sizing[-_ ]guide/i],
   "usage-information": [/how to use/i, /usage[-_ ](info|instructions)/i, /directions for use/i],
   // Navigation & browsing
@@ -63,7 +68,10 @@ const SIGNATURES: Record<string, RegExp[]> = {
 export const LIVE_CHECKABLE: ReadonlySet<string> = new Set(Object.keys(SIGNATURES));
 
 function markupOnly(html: string): string {
-  return html.replace(/<!--[\s\S]*?-->/g, " ").replace(/<script\b[\s\S]*?<\/script>/gi, " ").replace(/<style\b[\s\S]*?<\/style>/gi, " ");
+  return html
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ");
 }
 
 /** Feature ids whose markup appears in this page's HTML. */

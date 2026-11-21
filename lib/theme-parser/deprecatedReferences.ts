@@ -18,12 +18,6 @@ export const DEPRECATED_LIQUID_REFERENCES: DeprecatedEntry[] = [
   },
 ];
 
-export const DEPRECATED_TAG_NAMES = new Set(
-  DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "tag").map((e) => e.token)
-);
-export const DEPRECATED_FILTER_NAMES = new Set(
-  DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "filter").map((e) => e.token)
-);
-export const DEPRECATED_OBJECT_NAMES = new Set(
-  DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "object").map((e) => e.token)
-);
+export const DEPRECATED_TAG_NAMES = new Set(DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "tag").map((e) => e.token));
+export const DEPRECATED_FILTER_NAMES = new Set(DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "filter").map((e) => e.token));
+export const DEPRECATED_OBJECT_NAMES = new Set(DEPRECATED_LIQUID_REFERENCES.filter((e) => e.referenceType === "object").map((e) => e.token));

@@ -207,16 +207,14 @@ export function extractLiquidStructure(rawText: string): LiquidStructure {
   // --- asset references (quoted strings that look like a file path) -------
   for (const match of withoutSchema.matchAll(ASSET_URL_RE)) {
     const ext = match[3].toLowerCase();
-    const kind: ParsedAssetReference["kind"] =
-      ext === "css" ? "css" : ext === "js" ? "js" : ["woff", "woff2", "ttf", "eot"].includes(ext) ? "font" : "image";
+    const kind: ParsedAssetReference["kind"] = ext === "css" ? "css" : ext === "js" ? "js" : ["woff", "woff2", "ttf", "eot"].includes(ext) ? "font" : "image";
     assetReferences.push({ line: toLine(match.index ?? 0), kind, reference: match[2] });
   }
 
   // --- settings.* references -------------------------------------------------
   for (const match of withoutSchema.matchAll(SETTINGS_REF_RE)) {
     const prefix = match[1];
-    const scope: ParsedSettingReference["scope"] =
-      prefix === undefined ? "global" : prefix === "section" ? "section" : prefix === "block" ? "block" : "other";
+    const scope: ParsedSettingReference["scope"] = prefix === undefined ? "global" : prefix === "section" ? "section" : prefix === "block" ? "block" : "other";
     settingReferences.push({ line: toLine(match.index ?? 0), key: match[2], scope });
   }
 
@@ -240,9 +238,7 @@ export function extractLiquidStructure(rawText: string): LiquidStructure {
     .replace(JAVASCRIPT_TAG_BLOCK_RE, blank)
     .replace(CAPTURE_BLOCK_RE, blank)
     .replace(DOC_BLOCK_RE, blank);
-  const withoutScriptStyle = withoutComments
-    .replace(/<script[\s\S]*?<\/script>/gi, blank)
-    .replace(/<style[\s\S]*?<\/style>/gi, blank);
+  const withoutScriptStyle = withoutComments.replace(/<script[\s\S]*?<\/script>/gi, blank).replace(/<style[\s\S]*?<\/style>/gi, blank);
   const withoutLiquid = withoutScriptStyle.replace(OUTPUT_RE, blank).replace(TAG_RE, blank);
   // HTML tags routinely span multiple lines (attributes one per line, custom
   // elements with conditionally-included attributes) — stripped globally

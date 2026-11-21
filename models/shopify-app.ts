@@ -29,7 +29,12 @@ const shopifyAppSchema = new Schema(
     /** Feature handles the app ticks ("cf.faq.display_options.search_bar"); labels live in ShopifyAppFeature. */
     features: { type: [String], default: [] },
     plans: {
-      type: [new Schema({ name: String, price: { type: String, default: null }, note: { type: String, default: null }, features: { type: [String], default: [] } }, { _id: false })],
+      type: [
+        new Schema(
+          { name: String, price: { type: String, default: null }, note: { type: String, default: null }, features: { type: [String], default: [] } },
+          { _id: false }
+        ),
+      ],
       default: [],
     },
     languages: { type: [String], default: [] },

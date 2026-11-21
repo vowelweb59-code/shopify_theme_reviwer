@@ -3,7 +3,19 @@ import type { ReactNode } from "react";
 // Building blocks of the project overview, in the style of Shopify's admin: roomy rounded cards with a quiet title row, one big number per
 // metric card, secondary text kept small and grey, and a thin meter where a figure has a limit.
 
-export function Card({ title, subtitle, action, children, className = "" }: { title?: ReactNode; subtitle?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+}: {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <section className={`rounded-xl border border-border-subtle bg-surface shadow-sm ${className}`}>
       {(title || action) && (
@@ -20,7 +32,19 @@ export function Card({ title, subtitle, action, children, className = "" }: { ti
   );
 }
 
-export function Metric({ label, value, sub, meter, tone = "default" }: { label: string; value: ReactNode; sub?: ReactNode; meter?: { value: number; max: number; over?: boolean }; tone?: "default" | "bad" }) {
+export function Metric({
+  label,
+  value,
+  sub,
+  meter,
+  tone = "default",
+}: {
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+  meter?: { value: number; max: number; over?: boolean };
+  tone?: "default" | "bad";
+}) {
   const pct = meter && meter.max > 0 ? Math.min(100, (meter.value / meter.max) * 100) : 0;
   const bar = meter?.over ? "bg-status-fail-icon" : pct >= 80 ? "bg-status-warning-icon" : "bg-status-pass-icon";
   return (
@@ -49,23 +73,50 @@ export function DayBars({ days, month }: { days: Array<{ date: string; minutes: 
     <div role="img" aria-label="Hours per day">
       <div className="flex h-24 items-end gap-1">
         {days.map((d) => (
-          <div key={d.date} className="flex h-full min-w-0 flex-1 items-end" title={`${new Date(`${d.date}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}: ${hm(d.minutes)}`}>
-            <div className={`w-full rounded-t-[4px] ${d.minutes > 0 ? "bg-primary" : "bg-surface-muted"}`} style={{ height: `${d.minutes > 0 ? Math.max(4, (d.minutes / max) * 100) : 3}%` }} />
+          <div
+            key={d.date}
+            className="flex h-full min-w-0 flex-1 items-end"
+            title={`${new Date(`${d.date}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}: ${hm(d.minutes)}`}
+          >
+            <div
+              className={`w-full rounded-t-[4px] ${d.minutes > 0 ? "bg-primary" : "bg-surface-muted"}`}
+              style={{ height: `${d.minutes > 0 ? Math.max(4, (d.minutes / max) * 100) : 3}%` }}
+            />
           </div>
         ))}
       </div>
       <div className="mt-1.5 flex gap-1 text-[11px] text-zinc-500">
-        {days.map((d, i) => <div key={d.date} className="min-w-0 flex-1 text-center">{label(d, i)}</div>)}
+        {days.map((d, i) => (
+          <div key={d.date} className="min-w-0 flex-1 text-center">
+            {label(d, i)}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-const hm = (m: number) => { const h = Math.floor(m / 60); const r = Math.round(m % 60); return h === 0 ? `${r}m` : r === 0 ? `${h}h` : `${h}h ${r}m`; };
+const hm = (m: number) => {
+  const h = Math.floor(m / 60);
+  const r = Math.round(m % 60);
+  return h === 0 ? `${r}m` : r === 0 ? `${h}h` : `${h}h ${r}m`;
+};
 
 export function Avatar({ name }: { name: string }) {
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
-  return <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[11px] font-semibold text-primary-tint-text" aria-hidden="true">{initials}</span>;
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+  return (
+    <span
+      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-tint text-[11px] font-semibold text-primary-tint-text"
+      aria-hidden="true"
+    >
+      {initials}
+    </span>
+  );
 }
 
 /** A label/value line in a details card. */
@@ -88,7 +139,10 @@ export function PeopleLine({ role, names, empty }: { role: string; names: string
       ) : (
         <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5">
           {names.map((n) => (
-            <li key={n} className="flex items-center gap-2 text-sm"><Avatar name={n} />{n}</li>
+            <li key={n} className="flex items-center gap-2 text-sm">
+              <Avatar name={n} />
+              {n}
+            </li>
           ))}
         </ul>
       )}

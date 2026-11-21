@@ -31,13 +31,7 @@ function countByStatus(findings: FindingRow[]) {
   return { open, resolved, ignored };
 }
 
-export function CategoryDashboard({
-  findings,
-  coverageByCategory,
-}: {
-  findings: FindingRow[];
-  coverageByCategory?: Record<string, CoverageResult>;
-}) {
+export function CategoryDashboard({ findings, coverageByCategory }: { findings: FindingRow[]; coverageByCategory?: Record<string, CoverageResult> }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
@@ -51,13 +45,11 @@ export function CategoryDashboard({
 
         return (
           <div key={category} className="rounded-lg border border-black/[.08] p-4 text-sm dark:border-white/[.145]">
-            <button
-              type="button"
-              onClick={() => setExpanded(isOpen ? null : category)}
-              className="flex w-full items-center justify-between text-left"
-            >
+            <button type="button" onClick={() => setExpanded(isOpen ? null : category)} className="flex w-full items-center justify-between text-left">
               <span className="font-medium text-zinc-950 dark:text-zinc-50">{category}</span>
-              <span className="text-xs text-zinc-500">{items.length} finding{items.length === 1 ? "" : "s"}</span>
+              <span className="text-xs text-zinc-500">
+                {items.length} finding{items.length === 1 ? "" : "s"}
+              </span>
             </button>
 
             {isOpen && (

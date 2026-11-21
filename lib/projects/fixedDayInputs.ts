@@ -23,11 +23,15 @@ export function fixedDayInputs<P extends FixedDayProject>(projects: P[], keyOf: 
   const out: HoursInput[] = [];
   for (const p of projects) {
     if ((p.type ?? "theme_development") !== "theme_development") continue;
-    for (const [days, by, split] of [[p.designDays, p.designDaysBy, p.designDaysSplit], [p.developmentDays, p.developmentDaysBy, p.developmentDaysSplit]] as const) {
+    for (const [days, by, split] of [
+      [p.designDays, p.designDaysBy, p.designDaysSplit],
+      [p.developmentDays, p.developmentDaysBy, p.developmentDaysSplit],
+    ] as const) {
       if (!days || days <= 0) continue;
       // Several people: each one's share of the days; else the one person recorded.
       const shares = split && split.length > 0 ? split : by ? [{ memberId: by, share: 1 }] : [];
-      for (const s of shares) out.push({ themeId: keyOf(p), memberId: String(s.memberId), line: "build", hours: days * s.share * HOURS_PER_DAY, month: UNDATED });
+      for (const s of shares)
+        out.push({ themeId: keyOf(p), memberId: String(s.memberId), line: "build", hours: days * s.share * HOURS_PER_DAY, month: UNDATED });
     }
   }
   return out;

@@ -14,7 +14,6 @@ type AuditRunRow = {
   error: string | null;
 };
 
-
 export default function ReportsPage() {
   const [auditRuns, setAuditRuns] = useState<AuditRunRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +38,7 @@ export default function ReportsPage() {
       <div>
         <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Reports</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Audit run history. Open a run to see its findings and severity summary, export to CSV/PDF, or compare it
-          against a previous audit of the same theme.
+          Audit run history. Open a run to see its findings and severity summary, export to CSV/PDF, or compare it against a previous audit of the same theme.
         </p>
       </div>
 
@@ -79,9 +77,7 @@ export default function ReportsPage() {
                 </td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{run.status}</td>
                 <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(run.startedAt)}</td>
-                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                  {run.completedAt ? formatDate(run.completedAt) : "—"}
-                </td>
+                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{run.completedAt ? formatDate(run.completedAt) : "—"}</td>
                 <td className="px-4 py-3 text-zinc-500">{run.error ?? ""}</td>
               </tr>
             ))}

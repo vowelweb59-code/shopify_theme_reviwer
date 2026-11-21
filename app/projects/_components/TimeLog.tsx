@@ -108,7 +108,17 @@ export function TimeLog({ projectId, members }: { projectId: string; members: { 
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Hours</span>
-            <input required type="number" inputMode="decimal" min={0.25} max={MAX_HOURS_PER_ENTRY} step={0.25} value={hours} onChange={(e) => setHours(e.target.value)} className={INPUT} />
+            <input
+              required
+              type="number"
+              inputMode="decimal"
+              min={0.25}
+              max={MAX_HOURS_PER_ENTRY}
+              step={0.25}
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              className={INPUT}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">What was done (optional)</span>
@@ -120,7 +130,9 @@ export function TimeLog({ projectId, members }: { projectId: string; members: { 
         </form>
       )}
 
-      {error && <div className="mb-4 rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
+      {error && (
+        <div className="mb-4 rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>
+      )}
 
       {log && log.byMember.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">

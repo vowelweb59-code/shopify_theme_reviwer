@@ -11,7 +11,14 @@ const versions = [
 
 describe("versionTimeRows", () => {
   it("windows work between dated releases, newest first, with a next-release row", () => {
-    const entries = [e("2026-07-20", 8.5), e("2026-07-27", 8.5), e("2026-07-28", 4), e("2026-10-01", 8.5, "b", "Bo"), e("2026-10-01", 4, "a"), e("2026-10-20", 8.5)];
+    const entries = [
+      e("2026-07-20", 8.5),
+      e("2026-07-27", 8.5),
+      e("2026-07-28", 4),
+      e("2026-10-01", 8.5, "b", "Bo"),
+      e("2026-10-01", 4, "a"),
+      e("2026-10-20", 8.5),
+    ];
     const { rows, undated } = versionTimeRows(versions, entries, "2026-11-12");
     expect(rows.map((r) => r.version)).toEqual(["Next release", "1.1.3", "1.1.2", "1.0.0"]);
     expect(undated).toEqual(["1.1.1"]);
@@ -47,7 +54,11 @@ describe("what each version shipped", () => {
   const note = (date: string, hours: number, text: string, name = "Asha", memberId = "a"): TimeEntryDay => ({ date, hours, memberId, name, note: text });
 
   it("carries the release note and the developers' reports of the same window on each row", () => {
-    const { rows } = versionTimeRows(withNotes, [note("2026-08-01", 8.5, "Built   the quick\norder list"), note("2026-07-20", 4, "Fixed the cart"), note("2026-08-02", 2, "  ")], "2026-11-12");
+    const { rows } = versionTimeRows(
+      withNotes,
+      [note("2026-08-01", 8.5, "Built   the quick\norder list"), note("2026-07-20", 4, "Fixed the cart"), note("2026-08-02", 2, "  ")],
+      "2026-11-12"
+    );
     const v113 = rows.find((r) => r.version === "1.1.3")!;
     expect(v113.summary).toBe("Adds a quick order list.");
     expect(v113.notes).toEqual([{ heading: "Added", items: ["Quick order list."] }]);

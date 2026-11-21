@@ -35,10 +35,7 @@ export const sheetsOAuthStateCookieOptions = {
 // this app created (all of its export sheets); the broader `spreadsheets`
 // scope, which reaches every spreadsheet on the account, was dropped
 // 2026-09-29.
-const SHEETS_SCOPES = [
-  "https://www.googleapis.com/auth/drive.file",
-  "https://www.googleapis.com/auth/userinfo.email",
-];
+const SHEETS_SCOPES = ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/userinfo.email"];
 const BROAD_SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 function requireEnv(name: string): string {
@@ -48,11 +45,7 @@ function requireEnv(name: string): string {
 }
 
 export function createOAuthClient() {
-  return new OAuth2Client(
-    requireEnv("GOOGLE_CLIENT_ID"),
-    requireEnv("GOOGLE_CLIENT_SECRET"),
-    requireEnv("GOOGLE_REDIRECT_URI")
-  );
+  return new OAuth2Client(requireEnv("GOOGLE_CLIENT_ID"), requireEnv("GOOGLE_CLIENT_SECRET"), requireEnv("GOOGLE_REDIRECT_URI"));
 }
 
 export function getGoogleAuthUrl(state: string): string {

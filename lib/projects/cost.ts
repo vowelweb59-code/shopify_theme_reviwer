@@ -28,7 +28,15 @@ export type FixedPayment = { themeId: string; memberId: string; line: CostLine; 
 /** Months key for payments with no date. */
 export const UNDATED = "undated";
 
-export type PersonCost = { memberId: string; name: string; designation: string; hours: number; cost: number | null; byLine: Record<CostLine, number>; /** Per-live amounts included in `cost`. */ perLive: number };
+export type PersonCost = {
+  memberId: string;
+  name: string;
+  designation: string;
+  hours: number;
+  cost: number | null;
+  byLine: Record<CostLine, number>;
+  /** Per-live amounts included in `cost`. */ perLive: number;
+};
 export type ThemeCost = {
   cost: Record<CostLine, number> & { total: number };
   hours: Record<CostLine, number> & { total: number };
@@ -52,10 +60,30 @@ export function hourlyCost(monthlySalary: number | null | undefined): number | n
   return monthlySalary === null || monthlySalary === undefined ? null : monthlySalary / HOURS_PER_MONTH;
 }
 
-export function computeThemeCosts(inputs: HoursInput[], people: Map<string, Person>, firstRejection: Map<string, string> = new Map(), payments: FixedPayment[] = []): Map<string, ThemeCost> {
+export function computeThemeCosts(
+  inputs: HoursInput[],
+  people: Map<string, Person>,
+  firstRejection: Map<string, string> = new Map(),
+  payments: FixedPayment[] = []
+): Map<string, ThemeCost> {
   const rework = new Map<string, { cost: number; hours: number }>();
-  const raw = new Map<string, { hours: Record<CostLine, number>; cost: Record<CostLine, number>; unpriced: number; months: Map<string, { cost: number; hours: number }>; people: Map<string, { hours: number; cost: number; priced: boolean; perLive: number; byLine: Record<CostLine, number> }> }>();
-  const newTheme = () => ({ hours: zeroLines(), cost: zeroLines(), unpriced: 0, months: new Map<string, { cost: number; hours: number }>(), people: new Map<string, { hours: number; cost: number; priced: boolean; perLive: number; byLine: Record<CostLine, number> }>() });
+  const raw = new Map<
+    string,
+    {
+      hours: Record<CostLine, number>;
+      cost: Record<CostLine, number>;
+      unpriced: number;
+      months: Map<string, { cost: number; hours: number }>;
+      people: Map<string, { hours: number; cost: number; priced: boolean; perLive: number; byLine: Record<CostLine, number> }>;
+    }
+  >();
+  const newTheme = () => ({
+    hours: zeroLines(),
+    cost: zeroLines(),
+    unpriced: 0,
+    months: new Map<string, { cost: number; hours: number }>(),
+    people: new Map<string, { hours: number; cost: number; priced: boolean; perLive: number; byLine: Record<CostLine, number> }>(),
+  });
   for (const input of inputs) {
     // A per-live person's hours are priced at 0: their cost is the per-live payments below.
     const rate = people.get(input.memberId)?.perLive ? 0 : hourlyCost(people.get(input.memberId)?.monthlySalary);
@@ -103,7 +131,12 @@ export function computeThemeCosts(inputs: HoursInput[], people: Map<string, Pers
   for (const [themeId, t] of raw) {
     const cost = { build: Math.round(t.cost.build), presets: Math.round(t.cost.presets), updates: Math.round(t.cost.updates), total: 0 };
     cost.total = cost.build + cost.presets + cost.updates;
-    const hours = { build: round1(t.hours.build), presets: round1(t.hours.presets), updates: round1(t.hours.updates), total: round1(t.hours.build + t.hours.presets + t.hours.updates) };
+    const hours = {
+      build: round1(t.hours.build),
+      presets: round1(t.hours.presets),
+      updates: round1(t.hours.updates),
+      total: round1(t.hours.build + t.hours.presets + t.hours.updates),
+    };
     out.set(themeId, {
       cost,
       hours,
@@ -112,7 +145,9 @@ export function computeThemeCosts(inputs: HoursInput[], people: Map<string, Pers
         ? { from: firstRejection.get(themeId) as string, cost: Math.round(rework.get(themeId)?.cost ?? 0), hours: round1(rework.get(themeId)?.hours ?? 0) }
         : null,
       // "undated" (per-live pay of a project with no report) sorts first.
-      byMonth: [...t.months.entries()].sort(([a], [b]) => (a === UNDATED ? -1 : b === UNDATED ? 1 : a.localeCompare(b))).map(([month, m]) => ({ month, cost: Math.round(m.cost), hours: round1(m.hours) })),
+      byMonth: [...t.months.entries()]
+        .sort(([a], [b]) => (a === UNDATED ? -1 : b === UNDATED ? 1 : a.localeCompare(b)))
+        .map(([month, m]) => ({ month, cost: Math.round(m.cost), hours: round1(m.hours) })),
       people: [...t.people.entries()]
         .map(([memberId, w]) => ({
           memberId,

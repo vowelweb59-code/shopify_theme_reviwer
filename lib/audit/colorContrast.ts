@@ -10,7 +10,10 @@ export function parseColorToRgb(value: string): [number, number, number] | null 
   if (hexMatch) {
     let hex = hexMatch[1];
     if (hex.length === 3 || hex.length === 4) {
-      hex = hex.split("").map((c) => c + c).join("");
+      hex = hex
+        .split("")
+        .map((c) => c + c)
+        .join("");
     }
     return [Number.parseInt(hex.slice(0, 2), 16), Number.parseInt(hex.slice(2, 4), 16), Number.parseInt(hex.slice(4, 6), 16)];
   }

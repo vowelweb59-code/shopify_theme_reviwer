@@ -104,9 +104,7 @@ export function buildEnhancementSheetTabs(points: SheetEnhancementPoint[]): Shee
     const categoryPoints = byCategory.get(category);
     if (!categoryPoints || categoryPoints.length === 0) continue;
     // Most-adopted first within a tab, native (no %) points last.
-    const sorted = categoryPoints
-      .slice()
-      .sort((a, b) => (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name));
+    const sorted = categoryPoints.slice().sort((a, b) => (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name));
     const rows: string[][] = [[...ENHANCEMENT_TAB_COLUMNS], ...sorted.map(buildRow)];
     tabs.push({ title: category, rows });
   }
@@ -182,9 +180,7 @@ function buildFutureUpdatesRow(p: SheetFutureUpdatesPoint): string[] {
  * theme is missing right next to it.
  */
 export function buildFutureUpdatesTab(points: SheetFutureUpdatesPoint[]): SheetTab {
-  const sorted = points
-    .slice()
-    .sort((a, b) => (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name));
+  const sorted = points.slice().sort((a, b) => (b.themeCount ?? -1) - (a.themeCount ?? -1) || a.name.localeCompare(b.name));
   const rows: string[][] = [[...FUTURE_UPDATES_TAB_COLUMNS], ...sorted.map(buildFutureUpdatesRow)];
   return { title: "Future Updates", rows };
 }

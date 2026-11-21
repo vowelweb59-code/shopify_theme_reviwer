@@ -87,13 +87,21 @@ export async function POST(request: Request) {
   let themeId: unknown = body.themeId;
   if (newThemeName) {
     const escaped = newThemeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const found = await Theme.findOne({ name: new RegExp(`^${escaped}$`, "i") }).select("_id").lean();
+    const found = await Theme.findOne({ name: new RegExp(`^${escaped}$`, "i") })
+      .select("_id")
+      .lean();
     themeId = found?._id ?? (await Theme.create({ name: newThemeName }))._id;
   } else if (!(await Theme.exists({ _id: body.themeId }))) {
     return NextResponse.json({ error: "Theme not found." }, { status: 404 });
   }
   // Ignore ids of members deleted between the page load and this request.
-  const existing = new Set((await TeamMember.find({ _id: { $in: members.map((m) => m.memberId) } }).select("_id").lean()).map((m) => String(m._id)));
+  const existing = new Set(
+    (
+      await TeamMember.find({ _id: { $in: members.map((m) => m.memberId) } })
+        .select("_id")
+        .lean()
+    ).map((m) => String(m._id))
+  );
 
   const project = await Project.create({ ...fields.value, type: type.value, themeId, members: members.filter((m) => existing.has(m.memberId)) });
   return NextResponse.json({ project }, { status: 201 });

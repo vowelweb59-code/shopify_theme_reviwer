@@ -28,11 +28,7 @@ export async function PATCH(request: Request) {
   }
 
   await loadReadinessConfig(); // ensures the singleton exists before we update it
-  const config = await ReadinessConfigModel.findOneAndUpdate(
-    {},
-    { $set: { blockerSeverities, minimumCoveragePercent } },
-    { returnDocument: "after" }
-  );
+  const config = await ReadinessConfigModel.findOneAndUpdate({}, { $set: { blockerSeverities, minimumCoveragePercent } }, { returnDocument: "after" });
 
   return NextResponse.json({ config });
 }

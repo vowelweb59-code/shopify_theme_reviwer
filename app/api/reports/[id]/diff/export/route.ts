@@ -26,10 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "format must be 'csv'." }, { status: 400 });
   }
 
-  const [currentRun, baselineRun] = await Promise.all([
-    AuditRun.findById(id).populate("themeId", "name").lean(),
-    AuditRun.findById(baselineId).lean(),
-  ]);
+  const [currentRun, baselineRun] = await Promise.all([AuditRun.findById(id).populate("themeId", "name").lean(), AuditRun.findById(baselineId).lean()]);
   if (!currentRun) return NextResponse.json({ error: "Audit run not found." }, { status: 404 });
   if (!baselineRun) return NextResponse.json({ error: "Baseline audit run not found." }, { status: 404 });
   if (String(currentRun.themeId._id ?? currentRun.themeId) !== String(baselineRun.themeId)) {
@@ -44,9 +41,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const csv = buildDiffCsv(diff.findings);
 
   const themeName =
-    currentRun.themeId && typeof currentRun.themeId === "object" && "name" in currentRun.themeId
-      ? String(currentRun.themeId.name)
-      : "Unknown theme";
+    currentRun.themeId && typeof currentRun.themeId === "object" && "name" in currentRun.themeId ? String(currentRun.themeId.name) : "Unknown theme";
   const filenameBase = `${themeName.replace(/[^a-z0-9-]+/gi, "-")}-diff-${baselineId}-vs-${id}`;
 
   return new Response(csv, {

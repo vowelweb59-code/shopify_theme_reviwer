@@ -14,7 +14,8 @@ const when = (d: Date | null | undefined) => (d ? new Date(d).toISOString().repl
 async function main() {
   const mongoose = await connectToDatabase();
   console.log(`Read-only against ${mongoose.connection.host} / ${mongoose.connection.name}\n`);
-  const connections = await ChatConnection.find().lean<{ email?: string; status: string; lastSyncAt?: Date | null; lastMessageAt?: Date | null; lastError?: string | null }[]>();
+  const connections =
+    await ChatConnection.find().lean<{ email?: string; status: string; lastSyncAt?: Date | null; lastMessageAt?: Date | null; lastError?: string | null }[]>();
   if (connections.length === 0) console.log("No Google Chat connection is saved.");
   for (const c of connections) {
     console.log(`Connection ${c.email ?? "?"}: status ${c.status}`);
@@ -22,9 +23,14 @@ async function main() {
     console.log(`  newest message seen: ${when(c.lastMessageAt)}`);
     console.log(`  last error:         ${c.lastError ?? "none"}`);
   }
-  const newest = await ChatReport.find().sort({ postedAt: -1, date: -1 }).limit(8).select("sender date postedAt themeName status").lean<{ sender: string; date: Date; postedAt?: Date | null; themeName: string; status: string }[]>();
+  const newest = await ChatReport.find()
+    .sort({ postedAt: -1, date: -1 })
+    .limit(8)
+    .select("sender date postedAt themeName status")
+    .lean<{ sender: string; date: Date; postedAt?: Date | null; themeName: string; status: string }[]>();
   console.log("\nNewest stored reports:");
-  for (const r of newest) console.log(`  posted ${when(r.postedAt)}  report day ${new Date(r.date).toISOString().slice(0, 10)}  ${r.sender || "?"}  "${r.themeName}"  ${r.status}`);
+  for (const r of newest)
+    console.log(`  posted ${when(r.postedAt)}  report day ${new Date(r.date).toISOString().slice(0, 10)}  ${r.sender || "?"}  "${r.themeName}"  ${r.status}`);
   console.log(`\nNow: ${when(new Date())}`);
 }
 

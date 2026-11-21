@@ -17,7 +17,15 @@ import { featureParts, parseAppCards, parseAppDeepDetail, parseAppDetail, parseC
 // robots.txt allows all of this (it disallows only /internal, /services, search `q=` and login URLs).
 
 const ORIGIN = "https://apps.shopify.com";
-const TOP_LEVEL = ["finding-products", "marketing-and-conversion", "orders-and-shipping", "sales-channels", "selling-products", "store-design", "store-management"];
+const TOP_LEVEL = [
+  "finding-products",
+  "marketing-and-conversion",
+  "orders-and-shipping",
+  "sales-channels",
+  "selling-products",
+  "store-design",
+  "store-management",
+];
 /** Categories watched from the start; more can be watched from the tab. */
 const WATCHED_BY_DEFAULT = ["store-management-support-faq"];
 const PAUSE_MS = 1_200;
@@ -32,12 +40,45 @@ const WATCHED_FRESH_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Phase = "tree" | "listings" | "details";
 type Mode = "full" | "details" | "category";
-type CrawlState = { running: Promise<void> | null; mode: Mode | null; scope: string | null; phase: Phase | null; total: number; done: number; current: string | null; appsSeen: number; errors: string[]; finishedAt: Date | null };
+type CrawlState = {
+  running: Promise<void> | null;
+  mode: Mode | null;
+  scope: string | null;
+  phase: Phase | null;
+  total: number;
+  done: number;
+  current: string | null;
+  appsSeen: number;
+  errors: string[];
+  finishedAt: Date | null;
+};
 const g = globalThis as typeof globalThis & { _shopifyAppsCrawl?: CrawlState };
-const crawl = (g._shopifyAppsCrawl ??= { running: null, mode: null, scope: null, phase: null, total: 0, done: 0, current: null, appsSeen: 0, errors: [], finishedAt: null });
+const crawl = (g._shopifyAppsCrawl ??= {
+  running: null,
+  mode: null,
+  scope: null,
+  phase: null,
+  total: 0,
+  done: 0,
+  current: null,
+  appsSeen: 0,
+  errors: [],
+  finishedAt: null,
+});
 
 export function shopifyAppsCrawlProgress() {
-  return { running: crawl.running !== null, mode: crawl.mode, scope: crawl.scope, phase: crawl.phase, total: crawl.total, done: crawl.done, current: crawl.current, appsSeen: crawl.appsSeen, errors: crawl.errors, finishedAt: crawl.finishedAt };
+  return {
+    running: crawl.running !== null,
+    mode: crawl.mode,
+    scope: crawl.scope,
+    phase: crawl.phase,
+    total: crawl.total,
+    done: crawl.done,
+    current: crawl.current,
+    appsSeen: crawl.appsSeen,
+    errors: crawl.errors,
+    finishedAt: crawl.finishedAt,
+  };
 }
 
 const titleCase = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -95,7 +136,10 @@ async function crawlTree(): Promise<{ leaves: string[]; complete: boolean }> {
     slugs.map((slug) => ({
       updateOne: {
         filter: { slug },
-        update: { $set: { leaf: isLeaf(slug) }, $setOnInsert: { label: labels.get(slug) ?? titleCase(slug.split("-").slice(-2).join("-")), priority: WATCHED_BY_DEFAULT.includes(slug) } },
+        update: {
+          $set: { leaf: isLeaf(slug) },
+          $setOnInsert: { label: labels.get(slug) ?? titleCase(slug.split("-").slice(-2).join("-")), priority: WATCHED_BY_DEFAULT.includes(slug) },
+        },
         upsert: true,
       },
     })) as never
@@ -132,7 +176,15 @@ async function saveCards(cards: AppCard[], now: Date): Promise<void> {
       updateOne: {
         filter: { handle: c.handle },
         update: {
-          $set: { name: c.name, tagline: c.tagline, rating: c.rating, reviewCount: c.reviewCount, pricingLabel: c.pricingLabel, builtForShopify: c.builtForShopify, lastSeenAt: now },
+          $set: {
+            name: c.name,
+            tagline: c.tagline,
+            rating: c.rating,
+            reviewCount: c.reviewCount,
+            pricingLabel: c.pricingLabel,
+            builtForShopify: c.builtForShopify,
+            lastSeenAt: now,
+          },
           $setOnInsert: { firstSeenAt: now },
         },
         upsert: true,
@@ -197,7 +249,11 @@ async function detailQueue(limit: number, only?: string[], force = false): Promi
   const scope = only ? { handle: { $in: only } } : {};
   const watched = (await ShopifyAppCategory.find({ priority: true }).select("slug").lean<{ slug: string }[]>()).map((c) => c.slug);
   const first = watched.length
-    ? await ShopifyApp.find({ $and: [scope, { categories: { $in: watched } }, needsDetail(cut(WATCHED_FRESH_MS))] }).sort({ reviewCount: -1 }).limit(limit).select("handle").lean<{ handle: string }[]>()
+    ? await ShopifyApp.find({ $and: [scope, { categories: { $in: watched } }, needsDetail(cut(WATCHED_FRESH_MS))] })
+        .sort({ reviewCount: -1 })
+        .limit(limit)
+        .select("handle")
+        .lean<{ handle: string }[]>()
     : [];
   const handles = first.map((a) => a.handle);
   if (handles.length < limit) {
@@ -257,7 +313,17 @@ async function crawlDetails({ limit, only, force }: { limit: number; only?: stri
         );
         const catalog = deep.features.flatMap((f) => {
           const parts = featureParts(f.handle);
-          return parts ? [{ updateOne: { filter: { handle: f.handle }, update: { $set: { label: f.label, group: parts.group, categoryKey: parts.category } }, upsert: true } }] : [];
+          return parts
+            ? [
+                {
+                  updateOne: {
+                    filter: { handle: f.handle },
+                    update: { $set: { label: f.label, group: parts.group, categoryKey: parts.category } },
+                    upsert: true,
+                  },
+                },
+              ]
+            : [];
         });
         if (catalog.length > 0) await ShopifyAppFeature.bulkWrite(catalog as never);
       }

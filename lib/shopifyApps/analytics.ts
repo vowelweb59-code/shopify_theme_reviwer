@@ -213,7 +213,13 @@ export function computeAnalytics(apps: AppRow[], categories: CategoryRow[], now:
       headroom: headroom[i] ?? 0.5,
     };
     c.components = components;
-    c.gap = Math.round(100 * (WEIGHTS.demand * components.demand + WEIGHTS.weakness * components.weakness + WEIGHTS.openness * components.openness + WEIGHTS.headroom * components.headroom));
+    c.gap = Math.round(
+      100 *
+        (WEIGHTS.demand * components.demand +
+          WEIGHTS.weakness * components.weakness +
+          WEIGHTS.openness * components.openness +
+          WEIGHTS.headroom * components.headroom)
+    );
     const reasons: string[] = [];
     if (components.demand >= 0.7) reasons.push(`High demand: ${c.reviews.toLocaleString()} reviews, more than ${pct(components.demand)} of categories`);
     if (components.headroom >= 0.7) reasons.push(`Each app shares a lot of demand (${Math.round(c.reviewsPerApp).toLocaleString()} reviews per app)`);

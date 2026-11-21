@@ -6,7 +6,11 @@ export type MutationResult<T> = { ok: true; data: T } | { ok: false; error: stri
 export async function mutate<T = unknown>(method: "POST" | "PUT" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<MutationResult<T>> {
   let res: Response;
   try {
-    res = await fetch(`/api/service${path}`, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(`/api/service${path}`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   } catch {
     return { ok: false, error: "Could not reach the server. Check your connection and try again." };
   }

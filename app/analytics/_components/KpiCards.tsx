@@ -54,7 +54,15 @@ export function KpiCardSkeleton() {
 }
 
 /** The three headline cards: Try Theme clicks, installs, and installs per Try Theme click. */
-export function KpiCards({ current, comparison, installsEstimated = false }: { current: KpiSet; comparison: KpiComparison | null; installsEstimated?: boolean }) {
+export function KpiCards({
+  current,
+  comparison,
+  installsEstimated = false,
+}: {
+  current: KpiSet;
+  comparison: KpiComparison | null;
+  installsEstimated?: boolean;
+}) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <KpiCard label="Try Theme" value={formatCount(current.tryTheme)} detail="clicks" change={comparison?.tryTheme} emphasis />
@@ -65,7 +73,14 @@ export function KpiCards({ current, comparison, installsEstimated = false }: { c
         change={comparison?.installs}
         emphasis
       />
-      <KpiCard label="Install Rate" value={formatPercent(current.installRate, 2)} detail="installs ÷ Try Theme clicks" change={comparison?.installRate} changeUnit="points" emphasis />
+      <KpiCard
+        label="Install Rate"
+        value={formatPercent(current.installRate, 2)}
+        detail="installs ÷ Try Theme clicks"
+        change={comparison?.installRate}
+        changeUnit="points"
+        emphasis
+      />
     </div>
   );
 }

@@ -9,7 +9,11 @@ import { mutate } from "@/lib/service/ui/client";
 
 const input = "rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm";
 const btn = "rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-60";
-const split = (v: string) => v.split(",").map((a) => a.trim()).filter(Boolean);
+const split = (v: string) =>
+  v
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);
 
 function useSave() {
   const router = useRouter();
@@ -34,8 +38,16 @@ function useSave() {
 function Outcome({ saved, error }: { saved: boolean; error: string | null }) {
   return (
     <>
-      {saved && <span role="status" className="text-sm text-status-pass-text">Saved</span>}
-      {error && <p role="alert" className="basis-full text-sm text-status-fail-text">{error}</p>}
+      {saved && (
+        <span role="status" className="text-sm text-status-pass-text">
+          Saved
+        </span>
+      )}
+      {error && (
+        <p role="alert" className="basis-full text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
     </>
   );
 }
@@ -54,9 +66,21 @@ export function PeopleEditor({ projectId, details }: { projectId: string; detail
         void save(`/projects/${projectId}/people`, { businessAnalysts: split(ba), executives: split(ex), businessDevelopers: split(bd) });
       }}
     >
-      <datalist id="ba-names">{BA_MEMBERS.filter((b) => !b.left).map((b) => <option key={b.name} value={b.name} />)}</datalist>
-      <datalist id="bd-names">{BD_MEMBERS.map((b) => <option key={b.name} value={b.name} />)}</datalist>
-      <datalist id="team-names">{details.suggestions.map((n) => <option key={n} value={n} />)}</datalist>
+      <datalist id="ba-names">
+        {BA_MEMBERS.filter((b) => !b.left).map((b) => (
+          <option key={b.name} value={b.name} />
+        ))}
+      </datalist>
+      <datalist id="bd-names">
+        {BD_MEMBERS.map((b) => (
+          <option key={b.name} value={b.name} />
+        ))}
+      </datalist>
+      <datalist id="team-names">
+        {details.suggestions.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Business analyst (BA)</span>
         <input list="ba-names" value={ba} onChange={(e) => setBa(e.target.value)} className={`${input} w-64`} placeholder="Name" />
@@ -69,7 +93,9 @@ export function PeopleEditor({ projectId, details }: { projectId: string; detail
         <span className="mb-1 block text-zinc-500">Executives (comma separated)</span>
         <input list="team-names" value={ex} onChange={(e) => setEx(e.target.value)} className={`${input} w-96 max-w-full`} placeholder="Name, Name" />
       </label>
-      <button disabled={busy} className={btn}>{busy ? "Saving…" : "Save people"}</button>
+      <button disabled={busy} className={btn}>
+        {busy ? "Saving…" : "Save people"}
+      </button>
       <Outcome saved={saved} error={error} />
     </form>
   );
@@ -90,7 +116,14 @@ export function ReviewEditor({ projectId, details }: { projectId: string; detail
     >
       <label className="text-sm">
         <span className="mb-1 block text-zinc-500">Client review</span>
-        <input value={rating} onChange={(e) => setRating(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" placeholder="1 to 5, e.g. 4.7" aria-label="Client rating" className={`${input} w-36`} />
+        <input
+          value={rating}
+          onChange={(e) => setRating(e.target.value.replace(/[^\d.]/g, ""))}
+          inputMode="decimal"
+          placeholder="1 to 5, e.g. 4.7"
+          aria-label="Client rating"
+          className={`${input} w-36`}
+        />
       </label>
       {rating && (
         <label className="text-sm">
@@ -98,7 +131,9 @@ export function ReviewEditor({ projectId, details }: { projectId: string; detail
           <input value={comment} onChange={(e) => setComment(e.target.value)} maxLength={2000} className={`${input} w-96 max-w-full`} />
         </label>
       )}
-      <button disabled={busy} className={btn}>{busy ? "Saving…" : "Save review"}</button>
+      <button disabled={busy} className={btn}>
+        {busy ? "Saving…" : "Save review"}
+      </button>
       <Outcome saved={saved} error={error} />
     </form>
   );
@@ -113,10 +148,16 @@ export function ProfileEditor({ projectId, details }: { projectId: string; detai
         <span className="mb-1 block text-zinc-500">Upwork profile</span>
         <select value={profileId} onChange={(e) => setProfileId(e.target.value)} className={input}>
           <option value="">Not set</option>
-          {details.profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {details.profiles.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
-      <button disabled={busy} onClick={() => void save(`/projects/${projectId}/upwork-profile`, { profileId: profileId || null })} className={btn}>{busy ? "Saving…" : "Save profile"}</button>
+      <button disabled={busy} onClick={() => void save(`/projects/${projectId}/upwork-profile`, { profileId: profileId || null })} className={btn}>
+        {busy ? "Saving…" : "Save profile"}
+      </button>
       <Outcome saved={saved} error={error} />
     </div>
   );
@@ -138,10 +179,13 @@ export function KeywordsEditor({ projectId, details }: { projectId: string; deta
         <span className="mb-1 block text-zinc-500">Written in Chat as (comma separated)</span>
         <input value={words} onChange={(e) => setWords(e.target.value)} className={`${input} w-96 max-w-full`} placeholder="e.g. Stacy King" />
       </label>
-      <button disabled={busy} className={btn}>{busy ? "Saving…" : "Save words"}</button>
+      <button disabled={busy} className={btn}>
+        {busy ? "Saving…" : "Save words"}
+      </button>
       <Outcome saved={saved} error={error} />
       <p className="basis-full text-xs text-zinc-500">
-        For a client with several projects: a report goes to the project whose word is written first. Nothing matching waits on the Review page, or is shared across active projects if the client is set to do that.
+        For a client with several projects: a report goes to the project whose word is written first. Nothing matching waits on the Review page, or is shared
+        across active projects if the client is set to do that.
       </p>
     </form>
   );
@@ -156,7 +200,9 @@ export function InHouseEditor({ projectId, details }: { projectId: string; detai
         <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} />
         In-house project (our own work, not paid client work)
       </label>
-      <button disabled={busy || on === details.inHouse} onClick={() => void save(`/projects/${projectId}/in-house`, { inHouse: on })} className={btn}>{busy ? "Saving…" : "Save"}</button>
+      <button disabled={busy || on === details.inHouse} onClick={() => void save(`/projects/${projectId}/in-house`, { inHouse: on })} className={btn}>
+        {busy ? "Saving…" : "Save"}
+      </button>
       <Outcome saved={saved} error={error} />
     </div>
   );

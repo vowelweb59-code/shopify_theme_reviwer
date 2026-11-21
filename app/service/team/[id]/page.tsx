@@ -11,7 +11,13 @@ const weekday = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString
 const shortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const stepLink = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
 
-export default async function ServicePersonPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; view?: string }> }) {
+export default async function ServicePersonPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ week?: string; view?: string }>;
+}) {
   const { id } = await params;
   const { week, view } = await searchParams;
   const d = await load(() => teamDetail(id, week && /^\d{4}-\d{2}-\d{2}$/.test(week) ? week : null));
@@ -23,21 +29,31 @@ export default async function ServicePersonPage({ params, searchParams }: { para
   return (
     <div className="space-y-4">
       <div>
-        <Link href={`/service/team?g=week&d=${d.week.start}`} className="text-sm text-primary hover:underline">← Team</Link>
+        <Link href={`/service/team?g=week&d=${d.week.start}`} className="text-sm text-primary hover:underline">
+          ← Team
+        </Link>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
             {d.person.name} <span className="text-base font-normal text-zinc-500">· {weekLabel(d.week)}</span>
           </h2>
           {!settings && (
             <nav aria-label="Week" className="flex gap-2 text-sm">
-              <Link href={href(shiftWeek(d.week.start, -1))} className={stepLink}>← Previous</Link>
-              <Link href={`/service/team/${id}`} className={stepLink}>This week</Link>
-              <Link href={href(shiftWeek(d.week.start, 1))} className={stepLink}>Next →</Link>
+              <Link href={href(shiftWeek(d.week.start, -1))} className={stepLink}>
+                ← Previous
+              </Link>
+              <Link href={`/service/team/${id}`} className={stepLink}>
+                This week
+              </Link>
+              <Link href={href(shiftWeek(d.week.start, 1))} className={stepLink}>
+                Next →
+              </Link>
             </nav>
           )}
         </div>
         {d.person.user && <p className="text-sm text-zinc-500">Linked person: {d.person.user.displayName}</p>}
-        {(d.profile.designation || d.profile.team) && <p className="text-sm text-zinc-500">{[d.profile.designation, d.profile.team].filter(Boolean).join(" · ")}</p>}
+        {(d.profile.designation || d.profile.team) && (
+          <p className="text-sm text-zinc-500">{[d.profile.designation, d.profile.team].filter(Boolean).join(" · ")}</p>
+        )}
         <p className="mt-1 text-xs text-zinc-500">Reported and tracked hours, not Upwork-verified.</p>
       </div>
 
@@ -48,7 +64,12 @@ export default async function ServicePersonPage({ params, searchParams }: { para
         ].map((t) => {
           const on = (t.id === "settings") === settings;
           return (
-            <Link key={t.id} href={t.href} aria-current={on ? "page" : undefined} className={`-mb-px border-b-2 px-3 py-2 text-sm ${on ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"}`}>
+            <Link
+              key={t.id}
+              href={t.href}
+              aria-current={on ? "page" : undefined}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm ${on ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"}`}
+            >
               {t.label}
             </Link>
           );
@@ -56,18 +77,28 @@ export default async function ServicePersonPage({ params, searchParams }: { para
       </nav>
 
       {settings ? (
-        <ProfileCard key={`${d.profile.designation}|${d.profile.team}|${d.profile.salary.monthly}|${d.profile.salary.currency}`} id={d.person.id} profile={d.profile} />
+        <ProfileCard
+          key={`${d.profile.designation}|${d.profile.team}|${d.profile.salary.monthly}|${d.profile.salary.currency}`}
+          id={d.person.id}
+          profile={d.profile}
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Kpi label="Hours this week" value={fmtMinutes(d.minutes)} note={fmtDelta(d.minutes, d.previousWeekMinutes)} />
-            <Kpi label="Active days" value={`${d.activeDays} of ${d.workingDays}`} note={d.activeDays ? `${fmtMinutes(d.avgPerActiveDay)} per active day` : undefined} />
+            <Kpi
+              label="Active days"
+              value={`${d.activeDays} of ${d.workingDays}`}
+              note={d.activeDays ? `${fmtMinutes(d.avgPerActiveDay)} per active day` : undefined}
+            />
             <Kpi label="Timer / manual" value={`${fmtMinutes(d.timerMinutes)} / ${fmtMinutes(d.manualMinutes)}`} />
             <Kpi label="Entries to check" value={String(d.flagged)} tone={d.flagged ? WARN : undefined} />
           </div>
 
           <section aria-labelledby="days" className={SECTION}>
-            <h3 id="days" className="font-medium">Day by day</h3>
+            <h3 id="days" className="font-medium">
+              Day by day
+            </h3>
             <ul className="mt-3 grid grid-cols-7 gap-2 text-center text-xs">
               {d.byDay.map((x) => (
                 <li key={x.date} className="space-y-1">
@@ -82,7 +113,9 @@ export default async function ServicePersonPage({ params, searchParams }: { para
           </section>
 
           <section aria-labelledby="projects" className={SECTION}>
-            <h3 id="projects" className="font-medium">Projects this week</h3>
+            <h3 id="projects" className="font-medium">
+              Projects this week
+            </h3>
             {d.byProject.length === 0 ? (
               <p className="mt-2 text-sm text-zinc-500">Nothing logged this week.</p>
             ) : (
@@ -110,7 +143,9 @@ export default async function ServicePersonPage({ params, searchParams }: { para
           </section>
 
           <section aria-labelledby="trend" className={SECTION}>
-            <h3 id="trend" className="font-medium">Last {d.weeks.length} weeks</h3>
+            <h3 id="trend" className="font-medium">
+              Last {d.weeks.length} weeks
+            </h3>
             <ul className="mt-3 space-y-1.5 text-sm">
               {d.weeks.map((w) => (
                 <li key={w.start} className="flex items-center gap-3">
@@ -125,7 +160,9 @@ export default async function ServicePersonPage({ params, searchParams }: { para
           </section>
 
           <section aria-labelledby="recent" className={SECTION}>
-            <h3 id="recent" className="font-medium">Reports this week</h3>
+            <h3 id="recent" className="font-medium">
+              Reports this week
+            </h3>
             {d.recent.length === 0 ? (
               <p className="mt-2 text-sm text-zinc-500">None.</p>
             ) : (

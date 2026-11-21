@@ -145,10 +145,7 @@ export type CatalogRankResult = { presetSlug: string; rank: number; page: number
  * wouldn't on the real site; a smaller filtered catalog also means fewer
  * pages to walk, not more.
  */
-export async function findThemeStoreRankings(
-  targets: Map<string, Set<string>>,
-  filter?: CatalogFilter
-): Promise<Map<string, CatalogRankResult[]>> {
+export async function findThemeStoreRankings(targets: Map<string, Set<string>>, filter?: CatalogFilter): Promise<Map<string, CatalogRankResult[]>> {
   const results = new Map<string, CatalogRankResult[]>([...targets.keys()].map((s) => [s, []]));
   const remaining = new Map<string, Set<string>>([...targets].map(([slug, presets]) => [slug, new Set(presets)]));
   for (const [slug, presets] of [...remaining]) {

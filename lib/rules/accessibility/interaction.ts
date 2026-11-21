@@ -18,7 +18,8 @@ const ACCESSIBILITY_BEST_PRACTICES_URL = "https://shopify.dev/docs/storefronts/t
 
 // The revealed element must look like a submenu/dropdown panel — plain
 // `.menu__link:hover { opacity: .8 }` link styling is not a reveal.
-const SUBMENU_TARGET_RE = /(sub-?menu|dropdown|mega|flyout|child|children|nested|level-?\d|menu__list|menu-list|list-menu|menu-drawer__submenu|header__submenu)/i;
+const SUBMENU_TARGET_RE =
+  /(sub-?menu|dropdown|mega|flyout|child|children|nested|level-?\d|menu__list|menu-list|list-menu|menu-drawer__submenu|header__submenu)/i;
 // A selector state a keyboard user can also reach: focus inside the item, a
 // native <details open>, or a class/ARIA state that scripts toggle on focus
 // or Enter as well as hover.
@@ -92,7 +93,9 @@ function scriptSources(files: ParsedFile[]): { file: ParsedFile; text: string; l
   for (const f of files) {
     if (f.fileType === "js") out.push({ file: f, text: f.rawText, lineOffset: 0 });
     else if (f.fileType === "liquid") {
-      for (const m of f.rawText.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>|\{%-?\s*javascript\s*-?%\}([\s\S]*?)\{%-?\s*endjavascript\s*-?%\}/gi)) {
+      for (const m of f.rawText.matchAll(
+        /<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>|\{%-?\s*javascript\s*-?%\}([\s\S]*?)\{%-?\s*endjavascript\s*-?%\}/gi
+      )) {
         const body = m[1] ?? m[2] ?? "";
         const start = m.index + m[0].indexOf(body);
         out.push({ file: f, text: body, lineOffset: f.rawText.slice(0, start).split("\n").length - 1 });
@@ -113,7 +116,7 @@ const hoverOnlyMenuRule: Rule = {
   defaultSeverity: "high",
   title: "Dropdown submenus must open for keyboard users, not only on hover",
   description:
-    "A submenu that is revealed only by :hover (in CSS) or a mouseenter/mouseover listener (in JavaScript), with no matching :focus-within, [open], aria-expanded or open-class state and no focus/keydown handler, cannot be reached with a keyboard. A Theme Store rejection reason: \"Navigation submenus only reveal upon hover, rendering hidden menu items unreachable for keyboard users.\"",
+    'A submenu that is revealed only by :hover (in CSS) or a mouseenter/mouseover listener (in JavaScript), with no matching :focus-within, [open], aria-expanded or open-class state and no focus/keydown handler, cannot be reached with a keyboard. A Theme Store rejection reason: "Navigation submenus only reveal upon hover, rendering hidden menu items unreachable for keyboard users."',
   sourceReference: "Shopify Theme Store requirements — Accessibility",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   // CSS: a :hover rule whose target looks like a submenu panel and makes it
@@ -143,7 +146,8 @@ const hoverOnlyMenuRule: Rule = {
         category: "Accessibility",
         severity: "high",
         finding: `This menu script opens on "${hover[1]}" but listens for no focus or key events, so keyboard users likely can't open the submenus it controls.`,
-        recommendation: "Also open the submenu on focusin (or on Enter/Space on its toggle button, updating aria-expanded), and close it on focusout and Escape.",
+        recommendation:
+          "Also open the submenu on focusin (or on Enter/Space on its toggle button, updating aria-expanded), and close it on focusout and Escape.",
       });
     }
     return findings;
@@ -230,7 +234,7 @@ const hiddenFocusableRule: Rule = {
   defaultSeverity: "medium",
   title: "Hidden or duplicated content must not leave links in the tab order",
   description:
-    "Links, buttons and fields inside an aria-hidden=\"true\" container (a marquee's duplicate track, an off-screen carousel copy, a decorative clone) stay keyboard-focusable: keyboard users land on invisible tab stops with no visible focus. A Theme Store rejection reason: \"navigating past the text section requires multiple tab presses through off-screen product links.\"",
+    'Links, buttons and fields inside an aria-hidden="true" container (a marquee\'s duplicate track, an off-screen carousel copy, a decorative clone) stay keyboard-focusable: keyboard users land on invisible tab stops with no visible focus. A Theme Store rejection reason: "navigating past the text section requires multiple tab presses through off-screen product links."',
   sourceReference: "Accessibility best practices for Shopify themes",
   sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
   // Markup: nesting-aware scan of each Liquid file for a focusable
@@ -262,8 +266,9 @@ const hiddenFocusableRule: Rule = {
         lineNumber: lineOffset + lineInText(text, clone.index ?? 0),
         category: "Accessibility",
         severity: "medium",
-        finding: "This script clones markup and marks the copy aria-hidden, but never sets inert or tabindex — any links in the copy stay in the tab order as invisible tab stops.",
-        recommendation: "Set clone.inert = true (or tabindex=\"-1\" on every focusable element inside the clone) when inserting the duplicate.",
+        finding:
+          "This script clones markup and marks the copy aria-hidden, but never sets inert or tabindex — any links in the copy stay in the tab order as invisible tab stops.",
+        recommendation: 'Set clone.inert = true (or tabindex="-1" on every focusable element inside the clone) when inserting the duplicate.',
       });
     }
     return findings;
@@ -283,7 +288,7 @@ const focusResetRule: Rule = {
   defaultSeverity: "medium",
   title: "Re-rendering the cart must keep keyboard focus where it was",
   description:
-    "When a cart update replaces the cart or drawer markup (innerHTML/outerHTML/replaceWith), the focused quantity input or button is destroyed and focus falls back to the page or the drawer's first element. The script must remember the focused control (document.activeElement) and focus its replacement afterwards. A Theme Store rejection reason: \"updating quantity in the cart drawer kicks focus back to the top close button.\"",
+    'When a cart update replaces the cart or drawer markup (innerHTML/outerHTML/replaceWith), the focused quantity input or button is destroyed and focus falls back to the page or the drawer\'s first element. The script must remember the focused control (document.activeElement) and focus its replacement afterwards. A Theme Store rejection reason: "updating quantity in the cart drawer kicks focus back to the top close button."',
   sourceReference: "Shopify Theme Store requirements — Accessibility",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   // Per script: sends a cart change/update/add request and replaces DOM with

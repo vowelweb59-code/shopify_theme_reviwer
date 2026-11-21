@@ -7,7 +7,10 @@ const ids = (html: string, type: "home" | "collection" | "product" = "home") =>
   demoRealismFindings(extractDemoContent(html, BASE), type, BASE).map((f) => f.ruleId);
 
 const img = (n: number, alt = "A real photo") => `<img src="/cdn/shop/files/photo-${n}.jpg" alt="${alt}">`;
-const copy = "Handmade linen shirts cut and sewn in Portugal from European flax, washed for softness and made to last. Free returns within thirty days, and every order ships in recycled packaging from our studio in Porto. Read the story behind the collection, meet the people who make each piece, and find the fit that suits you. ".repeat(2);
+const copy =
+  "Handmade linen shirts cut and sewn in Portugal from European flax, washed for softness and made to last. Free returns within thirty days, and every order ships in recycled packaging from our studio in Porto. Read the story behind the collection, meet the people who make each piece, and find the fit that suits you. ".repeat(
+    2
+  );
 const realHome = `<h1>Summer linen</h1><p>${copy}</p>${[1, 2, 3, 4, 5].map((n) => img(n)).join("")}`;
 
 describe("extractDemoContent", () => {
@@ -32,7 +35,11 @@ describe("demoRealismFindings", () => {
     expect(ids(realHome)).toEqual([]);
   });
   it("flags lorem ipsum as high and Shopify's default brand copy", () => {
-    const f = demoRealismFindings(extractDemoContent(`<p>Lorem ipsum dolor sit amet</p><p>Share information about your brand</p>${realHome}`, BASE), "home", BASE);
+    const f = demoRealismFindings(
+      extractDemoContent(`<p>Lorem ipsum dolor sit amet</p><p>Share information about your brand</p>${realHome}`, BASE),
+      "home",
+      BASE
+    );
     expect(f.find((x) => x.ruleId === "LIVE-DEMO-TEXT-001")?.severity).toBe("high");
   });
   it("does not mistake 'Add to cart' for a placeholder prompt", () => {
@@ -99,7 +106,14 @@ describe("product data, prices and thin homepage", () => {
     expect(out).toContain("LIVE-DEMO-PRODUCT-005");
   });
   it("accepts a described, priced product", () => {
-    const html = ld({ "@type": "Product", name: "Shirt", description: "A relaxed linen shirt cut in Portugal from European flax, washed for softness.", offers: [{ price: "59.00" }], image: ["a", "b", "c"] }) + [1, 2, 3].map((n) => img(n)).join("");
+    const html =
+      ld({
+        "@type": "Product",
+        name: "Shirt",
+        description: "A relaxed linen shirt cut in Portugal from European flax, washed for softness.",
+        offers: [{ price: "59.00" }],
+        image: ["a", "b", "c"],
+      }) + [1, 2, 3].map((n) => img(n)).join("");
     expect(ids(html, "product")).toEqual([]);
   });
   it("flags a page where every price is the same", () => {
@@ -115,10 +129,17 @@ describe("product data, prices and thin homepage", () => {
 });
 
 describe("imageProbeFindings", () => {
-  const probe = (name: string, status: number, width: number | null) => ({ src: `https://cdn.example.com/files/${name}`, status, width, height: width ? Math.round(width * 0.66) : null });
+  const probe = (name: string, status: number, width: number | null) => ({
+    src: `https://cdn.example.com/files/${name}`,
+    status,
+    width,
+    height: width ? Math.round(width * 0.66) : null,
+  });
   it("flags missing images and soft images, but only two or more small ones", () => {
     expect(imageProbeFindings([probe("gone.jpg", 404, null), probe("ok.jpg", 200, 2000)], "home", BASE).map((f) => f.ruleId)).toEqual(["LIVE-DEMO-IMG-004"]);
-    expect(imageProbeFindings([probe("a.jpg", 200, 300), probe("b.jpg", 200, 500), probe("c.jpg", 200, 2000)], "home", BASE).map((f) => f.ruleId)).toEqual(["LIVE-DEMO-IMG-005"]);
+    expect(imageProbeFindings([probe("a.jpg", 200, 300), probe("b.jpg", 200, 500), probe("c.jpg", 200, 2000)], "home", BASE).map((f) => f.ruleId)).toEqual([
+      "LIVE-DEMO-IMG-005",
+    ]);
     expect(imageProbeFindings([probe("a.jpg", 200, 300), probe("c.jpg", 200, 2000)], "home", BASE)).toEqual([]);
     expect(imageProbeFindings([probe("x.jpg", 403, null)], "home", BASE)).toEqual([]);
   });
@@ -126,7 +147,9 @@ describe("imageProbeFindings", () => {
 
 describe("originalImageUrl", () => {
   it("drops Shopify's resize query and old size suffix", () => {
-    expect(originalImageUrl("https://cdn.example.com/cdn/shop/files/hero_600x.jpg?v=12&width=600&height=400")).toBe("https://cdn.example.com/cdn/shop/files/hero.jpg?v=12");
+    expect(originalImageUrl("https://cdn.example.com/cdn/shop/files/hero_600x.jpg?v=12&width=600&height=400")).toBe(
+      "https://cdn.example.com/cdn/shop/files/hero.jpg?v=12"
+    );
   });
 });
 
@@ -146,6 +169,11 @@ describe("presetOverlapFindings", () => {
   });
   it("says nothing when a side has fewer than 5 photos", () => {
     const few = home(["1", "2"]);
-    expect(presetOverlapFindings([{ label: "A", url: "u", content: few }, { label: "B", url: "v", content: few }])).toEqual([]);
+    expect(
+      presetOverlapFindings([
+        { label: "A", url: "u", content: few },
+        { label: "B", url: "v", content: few },
+      ])
+    ).toEqual([]);
   });
 });

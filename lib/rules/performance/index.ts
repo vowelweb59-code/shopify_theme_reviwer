@@ -41,7 +41,7 @@ const renderBlockingScriptRule: Rule = {
   defaultSeverity: "high",
   title: "External scripts in <head> should not block rendering",
   description:
-    "An external <script src=\"...\"> placed in <head> without async, defer, or type=\"module\" blocks HTML parsing until it downloads and executes, delaying first render.",
+    'An external <script src="..."> placed in <head> without async, defer, or type="module" blocks HTML parsing until it downloads and executes, delaying first render.',
   sourceReference: "web.dev: Eliminate render-blocking resources",
   sourceUrl: RENDER_BLOCKING_RESOURCES_URL,
   check({ files }) {

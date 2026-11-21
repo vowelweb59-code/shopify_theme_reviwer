@@ -9,7 +9,9 @@ import { TeamMember } from "@/models/team-member";
  * preset reports) and the month of its last report. Also returns the ids of the per-live people, whose hours are not priced.
  */
 export async function loadPerLive(): Promise<{ payments: Payment[]; perLiveIds: Set<string> }> {
-  const people = await TeamMember.find({ payModel: "per_live" }).select("perLiveTheme perLivePreset").lean<{ _id: unknown; perLiveTheme?: number | null; perLivePreset?: number | null }[]>();
+  const people = await TeamMember.find({ payModel: "per_live" })
+    .select("perLiveTheme perLivePreset")
+    .lean<{ _id: unknown; perLiveTheme?: number | null; perLivePreset?: number | null }[]>();
   const perLiveIds = new Set(people.map((p) => String(p._id)));
   if (people.length === 0) return { payments: [], perLiveIds };
 

@@ -1,7 +1,10 @@
 /** Style-variant ("preset") names a theme ships in config/settings_data.json: the keys of its top-level `presets` object. */
 export function presetNamesFromSettingsData(rawText: string): string[] {
   // Shopify's settings_data.json usually starts with a /* ... */ comment block, which JSON.parse rejects.
-  const text = rawText.replace(/^﻿/, "").replace(/^\s*\/\*[\s\S]*?\*\//, "").trim();
+  const text = rawText
+    .replace(/^﻿/, "")
+    .replace(/^\s*\/\*[\s\S]*?\*\//, "")
+    .trim();
   let data: unknown;
   try {
     data = JSON.parse(text);

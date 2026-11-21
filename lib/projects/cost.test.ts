@@ -78,7 +78,9 @@ describe("computeThemeCosts", () => {
     ).get("t1");
     expect(t?.rework).toEqual({ from: "2026-10-15", cost: 300, hours: 3 });
     expect(t?.cost.build).toBe(900);
-    expect(computeThemeCosts([{ themeId: "t2", memberId: "dev", line: "build", hours: 1, month: "2026-10", day: "2026-10-20" }], people).get("t2")?.rework).toBeNull();
+    expect(
+      computeThemeCosts([{ themeId: "t2", memberId: "dev", line: "build", hours: 1, month: "2026-10", day: "2026-10-20" }], people).get("t2")?.rework
+    ).toBeNull();
   });
 
   it("adds per-live payments and does not price a per-live person's hours", () => {

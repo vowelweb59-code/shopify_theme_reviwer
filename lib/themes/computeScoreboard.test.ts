@@ -51,7 +51,12 @@ describe("computeScoreboard", () => {
   it("computes a category score as passed/total, and null when the category has no checks", () => {
     const cards = computeScoreboard({
       ...baseArgs,
-      categories: categories([item("Accessibility", "PASS"), item("Accessibility", "PASS"), item("Accessibility", "FAIL"), item("Accessibility", "NOT_TESTED")]),
+      categories: categories([
+        item("Accessibility", "PASS"),
+        item("Accessibility", "PASS"),
+        item("Accessibility", "FAIL"),
+        item("Accessibility", "NOT_TESTED"),
+      ]),
     });
     const accessibility = cards.find((c) => c.id === "accessibility")!;
     expect(accessibility.score).toBe(50); // 2 of 4 passed
@@ -97,7 +102,13 @@ describe("computeScoreboard", () => {
     expect(card({ presetLabels: [], findings: [] }).score).toBeNull();
     expect(card({ presetLabels: ["A", "B"], findings: [] }).score).toBe(100);
     // A: high + medium = 65; B untouched = 100 -> 83 (82.5 rounds up)
-    const mixed = card({ presetLabels: ["A", "B"], findings: [{ severity: "high", presetLabel: "A" }, { severity: "medium", presetLabel: "A" }] });
+    const mixed = card({
+      presetLabels: ["A", "B"],
+      findings: [
+        { severity: "high", presetLabel: "A" },
+        { severity: "medium", presetLabel: "A" },
+      ],
+    });
     expect(mixed.score).toBe(83);
     expect(mixed.detail).toContain("2 findings");
     expect(card({ presetLabels: ["A"], findings: Array.from({ length: 6 }, () => ({ severity: "high", presetLabel: "A" })) }).score).toBe(0);

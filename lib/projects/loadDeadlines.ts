@@ -21,11 +21,19 @@ import { Theme } from "@/models/theme";
 export async function loadDeadlines() {
   await connectToDatabase();
   const [projects, themes, latest] = await Promise.all([
-    Project.find({ type: { $ne: "theme_update" } }).select("themeId name portal type status deadline designDays developmentDays").lean(),
+    Project.find({ type: { $ne: "theme_update" } })
+      .select("themeId name portal type status deadline designDays developmentDays")
+      .lean(),
     Theme.find().select("name").lean(),
     ChatReport.aggregate<{ _id: { kind: string; key: unknown }; date: Date; first: Date }>([
       { $match: { status: "ok", kind: { $in: ["theme", "preset"] } } },
-      { $group: { _id: { kind: "$kind", key: { $cond: [{ $eq: ["$kind", "theme"] }, "$themeId", "$projectId"] } }, date: { $max: "$date" }, first: { $min: "$date" } } },
+      {
+        $group: {
+          _id: { kind: "$kind", key: { $cond: [{ $eq: ["$kind", "theme"] }, "$themeId", "$projectId"] } },
+          date: { $max: "$date" },
+          first: { $min: "$date" },
+        },
+      },
     ]),
   ]);
   const themeName = new Map(themes.map((t) => [String(t._id), t.name as string]));

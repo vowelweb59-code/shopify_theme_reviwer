@@ -47,7 +47,11 @@ export function DeadlineCard({ projectId, projectType }: { projectId: string; pr
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/projects/${projectId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deadline: value }) });
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: value }),
+      });
       if (!res.ok) setError(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "Couldn't save the deadline.");
       else load();
     } catch {
@@ -94,7 +98,11 @@ export function DeadlineCard({ projectId, projectType }: { projectId: string; pr
                 {row.budgetDays !== null && <span className="font-normal text-zinc-500"> of {row.budgetDays} d</span>}
               </div>
               <div className="text-xs text-zinc-500">
-                {row.state === "rejected" ? "rejected: no longer being worked on" : row.budgetDays !== null ? `average of ${row.budgetSample} finished project${row.budgetSample === 1 ? "" : "s"}` : "no finished project has hours yet, so no average"}
+                {row.state === "rejected"
+                  ? "rejected: no longer being worked on"
+                  : row.budgetDays !== null
+                    ? `average of ${row.budgetSample} finished project${row.budgetSample === 1 ? "" : "s"}`
+                    : "no finished project has hours yet, so no average"}
               </div>
             </div>
             <div>

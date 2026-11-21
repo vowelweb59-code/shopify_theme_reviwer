@@ -206,9 +206,7 @@ export const ENHANCEMENT_DETECTORS: EnhancementDetector[] = [
     // "multi-language storefront", not the presence of the `t:` filter,
     // which every Shopify theme uses regardless of translation coverage.
     predicate(files) {
-      const extraLocales = files.filter(
-        (f) => /^locales\/[a-z]{2}(-[a-z]{2})?\.json$/i.test(f.path) && !/^locales\/en\.default\.json$/i.test(f.path)
-      );
+      const extraLocales = files.filter((f) => /^locales\/[a-z]{2}(-[a-z]{2})?\.json$/i.test(f.path) && !/^locales\/en\.default\.json$/i.test(f.path));
       return extraLocales.length > 0 ? extraLocales.slice(0, 3) : null;
     },
   },

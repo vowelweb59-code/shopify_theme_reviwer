@@ -139,8 +139,7 @@ export function extractVersionFromSettingsSchema(themeRootDir: string): { versio
   if (!Array.isArray(parsed)) return null;
 
   const themeInfo = parsed.find(
-    (entry): entry is { theme_version?: unknown } =>
-      typeof entry === "object" && entry !== null && (entry as { name?: unknown }).name === "theme_info"
+    (entry): entry is { theme_version?: unknown } => typeof entry === "object" && entry !== null && (entry as { name?: unknown }).name === "theme_info"
   );
   if (!themeInfo || typeof themeInfo.theme_version !== "string") return null;
 

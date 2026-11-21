@@ -82,7 +82,10 @@ export async function POST(request: Request) {
         }
       }
       if (!tabs.some((t) => !t.error)) {
-        return NextResponse.json({ error: "No tab matched a theme name. Name each tab after its theme (e.g. “Adorn”), or pick the theme first.", tabs }, { status: 400 });
+        return NextResponse.json(
+          { error: "No tab matched a theme name. Name each tab after its theme (e.g. “Adorn”), or pick the theme first.", tabs },
+          { status: 400 }
+        );
       }
     }
     startDetection();

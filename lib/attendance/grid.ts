@@ -20,8 +20,22 @@ export type PersonInput = {
 };
 export type DayStatus = "reported" | "leave" | "half-leave" | "leave-but-reported" | "missing" | "saturday" | "sunday" | "pending" | "inactive";
 export type Cell = { day: string; status: DayStatus; reportedIn: Source[]; leave: Leave | null };
-export type Flag = { key: string; name: string; day: string; kind: "missing" | "leave-but-reported"; expectedIn: Source[]; reportedIn: Source[]; leave: Leave | null };
-export type PersonRow = { key: string; name: string; sources: Source[]; cells: Cell[]; counts: { reported: number; leave: number; missing: number; conflicts: number } };
+export type Flag = {
+  key: string;
+  name: string;
+  day: string;
+  kind: "missing" | "leave-but-reported";
+  expectedIn: Source[];
+  reportedIn: Source[];
+  leave: Leave | null;
+};
+export type PersonRow = {
+  key: string;
+  name: string;
+  sources: Source[];
+  cells: Cell[];
+  counts: { reported: number; leave: number; missing: number; conflicts: number };
+};
 
 export const INACTIVE_AFTER_DAYS = 30;
 const DAY_MS = 86_400_000;
@@ -43,7 +57,10 @@ export function daysBetween(from: string, to: string): string[] {
   return out;
 }
 
-export function buildGrid({ days, today, people, leaves }: { days: string[]; today: string; people: PersonInput[]; leaves: Map<string, Map<string, Leave>> }): { rows: PersonRow[]; flags: Flag[] } {
+export function buildGrid({ days, today, people, leaves }: { days: string[]; today: string; people: PersonInput[]; leaves: Map<string, Map<string, Leave>> }): {
+  rows: PersonRow[];
+  flags: Flag[];
+} {
   const rows: PersonRow[] = [];
   const flags: Flag[] = [];
   for (const person of people) {

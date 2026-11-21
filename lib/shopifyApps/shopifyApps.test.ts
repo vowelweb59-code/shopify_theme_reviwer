@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 import { computeAnalytics, percentileRanks, type AppRow } from "./analytics";
 import { stageOfCategory, stagesOfApp } from "./lifecycle";
 import { topicsOfApp } from "./topics";
-import { featureBelongsTo, featureParts, parseAppCards, parseAppDeepDetail, parseAppDetail, parseCategoryLabel, parseCategoryLinks, pricingModel } from "./parseApps";
+import {
+  featureBelongsTo,
+  featureParts,
+  parseAppCards,
+  parseAppDeepDetail,
+  parseAppDetail,
+  parseCategoryLabel,
+  parseCategoryLinks,
+  pricingModel,
+} from "./parseApps";
 
 const cardHtml = (handle: string, name: string, rating: string | null, reviews: number, pricing: string, bfs = false) =>
   `<div class="tw-w-full" data-controller="app-card" data-app-card-handle-value="${handle}" data-app-card-name-value="${name}">
@@ -12,20 +21,39 @@ const cardHtml = (handle: string, name: string, rating: string | null, reviews: 
 
 describe("parseAppCards", () => {
   it("reads rating, reviews, pricing label, tagline and badge; dedupes", () => {
-    const html = cardHtml("a-app", "A &amp; App", "4.9", 7673, "Free plan available", true) + cardHtml("a-app", "A App", "4.9", 7673, "x") + cardHtml("new-app", "New", null, 0, "Free");
+    const html =
+      cardHtml("a-app", "A &amp; App", "4.9", 7673, "Free plan available", true) +
+      cardHtml("a-app", "A App", "4.9", 7673, "x") +
+      cardHtml("new-app", "New", null, 0, "Free");
     expect(parseAppCards(html)).toEqual([
-      { handle: "a-app", name: "A & App", rating: 4.9, reviewCount: 7673, pricingLabel: "Free plan available", tagline: "Does a thing & more", builtForShopify: true },
+      {
+        handle: "a-app",
+        name: "A & App",
+        rating: 4.9,
+        reviewCount: 7673,
+        pricingLabel: "Free plan available",
+        tagline: "Does a thing & more",
+        builtForShopify: true,
+      },
       { handle: "new-app", name: "New", rating: null, reviewCount: 0, pricingLabel: "Free", tagline: "Does a thing & more", builtForShopify: false },
     ]);
   });
   it("maps the pricing label to a model", () => {
-    expect(["Free", "Free plan available", "Free trial available", "Free to install", "Gratis", null].map(pricingModel)).toEqual(["free", "freemium", "trial", "paid", "unknown", "unknown"]);
+    expect(["Free", "Free plan available", "Free trial available", "Free to install", "Gratis", null].map(pricingModel)).toEqual([
+      "free",
+      "freemium",
+      "trial",
+      "paid",
+      "unknown",
+      "unknown",
+    ]);
   });
 });
 
 describe("parseAppDetail / category pages", () => {
   it("reads developer, launch date and the star split", () => {
-    const html = `<dt class="x">Developer</dt><dd><a class="l" href="/partners/x"> CWILL INC </a></dd><p>Launched </p><p class="y"> October 7, 2022 &#183 <a>x</a></p>` +
+    const html =
+      `<dt class="x">Developer</dt><dd><a class="l" href="/partners/x"> CWILL INC </a></dd><p>Launched </p><p class="y"> October 7, 2022 &#183 <a>x</a></p>` +
       [5, 4, 3, 2, 1].map((s, i) => `<span class="tw-hidden"> ${[97, 2, 1, 0, 0][i]}% of ratings are ${s} stars </span>`).join("");
     expect(parseAppDetail(html)).toEqual({ developer: "CWILL INC", launchedAt: "2022-10-07", ratingShares: [0, 0, 1, 2, 97] });
   });
@@ -33,7 +61,11 @@ describe("parseAppDetail / category pages", () => {
     expect(parseAppDetail("<p>nothing</p>")).toEqual({ developer: null, launchedAt: null, ratingShares: null });
   });
   it("finds category links and the label", () => {
-    expect(parseCategoryLinks(`<a href="https://apps.shopify.com/categories/store-design?x=1">a</a><a href="https://apps.shopify.com/categories/store-design-content/all">b</a>`).sort()).toEqual(["store-design", "store-design-content"]);
+    expect(
+      parseCategoryLinks(
+        `<a href="https://apps.shopify.com/categories/store-design?x=1">a</a><a href="https://apps.shopify.com/categories/store-design-content/all">b</a>`
+      ).sort()
+    ).toEqual(["store-design", "store-design-content"]);
     expect(parseCategoryLabel("<h1 class='a'>\n Email marketing apps </h1>")).toBe("Email marketing");
   });
 });
@@ -50,7 +82,10 @@ describe("lifecycle", () => {
     expect(stageOfCategory("store-designer-tools")).toBe("scale");
   });
   it("lists an app's stages in lifecycle order, once each", () => {
-    expect(stagesOfApp(["orders-and-shipping-orders", "finding-products-sourcing-options-wholesale", "orders-and-shipping-inventory"])).toEqual(["source", "fulfil"]);
+    expect(stagesOfApp(["orders-and-shipping-orders", "finding-products-sourcing-options-wholesale", "orders-and-shipping-inventory"])).toEqual([
+      "source",
+      "fulfil",
+    ]);
   });
 });
 
@@ -61,13 +96,26 @@ describe("percentileRanks", () => {
 });
 
 const app = (handle: string, categories: string[], reviewCount: number, rating: number | null, extra: Partial<AppRow> = {}): AppRow => ({
-  handle, name: handle, rating, reviewCount, pricingLabel: "Free plan available", builtForShopify: false, categories, developer: null, launchedAt: null, ratingShares: null, ...extra,
+  handle,
+  name: handle,
+  rating,
+  reviewCount,
+  pricingLabel: "Free plan available",
+  builtForShopify: false,
+  categories,
+  developer: null,
+  launchedAt: null,
+  ratingShares: null,
+  ...extra,
 });
 
 describe("computeAnalytics", () => {
   // "open": lots of demand spread over weak apps. "locked": little demand, one strong badge-holding incumbent.
   const open = Array.from({ length: 6 }, (_, i) => app(`o${i}`, ["orders-and-shipping-orders"], 500, 4.0, { launchedAt: "2025-06-01" }));
-  const locked = [app("l0", ["store-design-content"], 900, 4.9, { builtForShopify: true }), ...Array.from({ length: 5 }, (_, i) => app(`l${i + 1}`, ["store-design-content"], 3, 5))];
+  const locked = [
+    app("l0", ["store-design-content"], 900, 4.9, { builtForShopify: true }),
+    ...Array.from({ length: 5 }, (_, i) => app(`l${i + 1}`, ["store-design-content"], 3, 5)),
+  ];
   const result = computeAnalytics([...open, ...locked], [{ slug: "orders-and-shipping-orders", label: "Orders" }], new Date("2026-01-01"));
 
   it("scores the open category above the locked one, with reasons", () => {
@@ -97,9 +145,18 @@ describe("topics and finer levels", () => {
   });
   const sms = (i: number, cat: string) => app(`s${i}`, [cat], 100, 4.5, { name: "SMS Pro", tagline: "text messages" });
   const mail = (i: number, cat: string) => app(`m${i}`, [cat], 100, 4.5, { name: "Mailer", tagline: "newsletter email" });
-  const rows = [...[1, 2, 3, 4, 5].map((i) => sms(i, "marketing-and-conversion-marketing-email-marketing")), ...[1, 2, 3, 4, 5].map((i) => mail(i, "marketing-and-conversion-marketing-email-marketing")), sms(9, "orders-and-shipping-orders")];
+  const rows = [
+    ...[1, 2, 3, 4, 5].map((i) => sms(i, "marketing-and-conversion-marketing-email-marketing")),
+    ...[1, 2, 3, 4, 5].map((i) => mail(i, "marketing-and-conversion-marketing-email-marketing")),
+    sms(9, "orders-and-shipping-orders"),
+  ];
   it("splits a category into niches, dropping ones with fewer than 5 apps", () => {
-    const niches = computeAnalytics(rows, [{ slug: "marketing-and-conversion-marketing-email-marketing", label: "Email marketing" }], new Date(), "niche").categories;
+    const niches = computeAnalytics(
+      rows,
+      [{ slug: "marketing-and-conversion-marketing-email-marketing", label: "Email marketing" }],
+      new Date(),
+      "niche"
+    ).categories;
     expect(niches.map((c) => c.label).sort()).toEqual(["Email marketing › Email", "Email marketing › SMS & WhatsApp"]);
     expect(niches[0].stage).toBe("retain");
   });

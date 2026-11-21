@@ -2,7 +2,12 @@
 
 /** Lowercase, strip accents and punctuation, collapse spaces: "Patrick O'Donnell" and "patrick  o donnell" match. */
 export const normalizeName = (s: string): string =>
-  s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  s
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 
 export function editDistance(a: string, b: string): number {
   let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -22,31 +27,31 @@ export const istDate = (d: Date): string => new Date(d.getTime() + IST_OFFSET_MS
 
 export interface Duration {
   minutes?: number;
-  flag?: 'INVALID_DURATION';
+  flag?: "INVALID_DURATION";
 }
 
-const H = '(?:h|hs|hr|hrs|hour|hours)';
-const M = '(?:m|min|mins|minute|minutes)';
+const H = "(?:h|hs|hr|hrs|hour|hours)";
+const M = "(?:m|min|mins|minute|minutes)";
 
 /**
  * Durations as people actually write them: "08:30 hrs", "2:10:hr", "00:40 min", "40:min", "8 hours 30 minutes",
  * "5 hrs 10 mins", "7 hours". "2.30" is HH.MM (2h30m, owner-confirmed); a one-digit or 60+ fraction ("7.5", "2.75") is decimal hours.
  */
 export function parseDuration(raw: string): Duration {
-  const s = raw.trim().toLowerCase().replace(/[()]/g, '').replace(/\s+/g, ' ');
+  const s = raw.trim().toLowerCase().replace(/[()]/g, "").replace(/\s+/g, " ");
   let m: RegExpMatchArray | null;
   if ((m = s.match(new RegExp(String.raw`^(\d{1,2})\s*${H}\.?\s*(?:and\s*)?(\d{1,2})\s*${M}\.?$`))))
-    return +m[2] < 60 ? { minutes: +m[1] * 60 + +m[2] } : { flag: 'INVALID_DURATION' };
+    return +m[2] < 60 ? { minutes: +m[1] * 60 + +m[2] } : { flag: "INVALID_DURATION" };
   if ((m = s.match(new RegExp(String.raw`^(\d{1,3})\s*:?\s*${M}\.?$`)))) return { minutes: +m[1] };
-  const num = s.replace(new RegExp(String.raw`\s*:?\s*(?:${H}|${M})\.?$`), '').trim();
-  if ((m = num.match(/^(\d{1,2}):(\d{2})$/))) return +m[2] < 60 ? { minutes: +m[1] * 60 + +m[2] } : { flag: 'INVALID_DURATION' };
+  const num = s.replace(new RegExp(String.raw`\s*:?\s*(?:${H}|${M})\.?$`), "").trim();
+  if ((m = num.match(/^(\d{1,2}):(\d{2})$/))) return +m[2] < 60 ? { minutes: +m[1] * 60 + +m[2] } : { flag: "INVALID_DURATION" };
   // The team writes HH.MM ("2.30" = 2h30m, "07.00" = 7h). Minutes of 60 or more cannot be HH.MM, so those are decimal hours.
   if ((m = num.match(/^(\d{1,2})\.(\d{1,2})$/))) {
     if (m[2].length === 2 && +m[2] < 60) return { minutes: +m[1] * 60 + +m[2] };
     return { minutes: Math.round(parseFloat(num) * 60) };
   }
   if ((m = num.match(/^(\d{1,2})$/))) return { minutes: +m[1] * 60 };
-  return { flag: 'INVALID_DURATION' };
+  return { flag: "INVALID_DURATION" };
 }
 
 /** DD/MM/YYYY or DD/MM/YY (also - or .) to an ISO calendar date; impossible dates (31/02) return null. */

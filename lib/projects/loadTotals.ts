@@ -11,8 +11,12 @@ type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null; desig
  * A Theme Update project has no design or development days; its hours are its hours log, so it gets no entry here.
  */
 export async function loadProjectTotals(projects: ProjectLike[]): Promise<Map<string, Totals>> {
-  const reports = await ChatReport.find({ status: "ok", memberId: { $ne: null }, kind: { $in: ["theme", "preset"] } }).select("themeId projectId kind minutes memberId").lean();
-  const members = await TeamMember.find({ _id: { $in: [...new Set(reports.map((r) => String(r.memberId)))] } }).select("designation").lean();
+  const reports = await ChatReport.find({ status: "ok", memberId: { $ne: null }, kind: { $in: ["theme", "preset"] } })
+    .select("themeId projectId kind minutes memberId")
+    .lean();
+  const members = await TeamMember.find({ _id: { $in: [...new Set(reports.map((r) => String(r.memberId)))] } })
+    .select("designation")
+    .lean();
   const designation = new Map(members.map((m) => [String(m._id), m.designation as string]));
 
   const byTheme = new Map<string, { minutes: number; designation: string | null }[]>();
@@ -24,7 +28,9 @@ export async function loadProjectTotals(projects: ProjectLike[]): Promise<Map<st
   }
 
   // The average design share, from every theme project that has both numbers entered by hand; it splits a project that has only a total.
-  const complete = await Project.find({ type: { $in: ["theme_development", null] }, designDays: { $ne: null }, developmentDays: { $ne: null } }).select("designDays developmentDays").lean();
+  const complete = await Project.find({ type: { $in: ["theme_development", null] }, designDays: { $ne: null }, developmentDays: { $ne: null } })
+    .select("designDays developmentDays")
+    .lean();
   const share = designShare(complete.map((p) => ({ designDays: p.designDays as number, developmentDays: p.developmentDays as number })));
 
   const out = new Map<string, Totals>();

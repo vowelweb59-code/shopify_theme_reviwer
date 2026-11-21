@@ -108,7 +108,13 @@ export async function runDemoStoreCheck({ manual = false }: { manual?: boolean }
   const { stores: previous } = await readStoreCheckStates();
   const results: { store: string; result: LiveThemeResult }[] = [];
   for (const store of DEMO_STORES) {
-    results.push({ store, result: await checkStore(store, previous.find((p) => p.store === store)) });
+    results.push({
+      store,
+      result: await checkStore(
+        store,
+        previous.find((p) => p.store === store)
+      ),
+    });
   }
   await checkPendingThemeStoreListings({ force: manual });
   // A theme now on an ops store is Under Review, one now on the Theme Store is Live (lib/projects/reviewStatus.ts).

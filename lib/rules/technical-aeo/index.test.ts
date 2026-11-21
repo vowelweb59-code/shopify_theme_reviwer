@@ -28,8 +28,7 @@ describe("AEO-PRODUCT-SCHEMA-001", () => {
     const theme = buildTestTheme({
       "layout/theme.liquid": "<html></html>",
       "templates/product.json": '{"sections": {}}',
-      "sections/main-product.liquid":
-        '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"Product"}</script>',
+      "sections/main-product.liquid": '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"Product"}</script>',
     });
     cleanup = theme.cleanup;
     expect(findingsFor("AEO-PRODUCT-SCHEMA-001", theme)).toHaveLength(0);
@@ -66,8 +65,7 @@ describe("AEO-ORG-SCHEMA-001", () => {
 
   it("does not flag when an Organization JSON-LD block is present", () => {
     const theme = buildTestTheme({
-      "layout/theme.liquid":
-        '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"Organization","name":"Acme"}</script>',
+      "layout/theme.liquid": '<script type="application/ld+json">{"@context":"https://schema.org/","@type":"Organization","name":"Acme"}</script>',
     });
     cleanup = theme.cleanup;
     expect(findingsFor("AEO-ORG-SCHEMA-001", theme)).toHaveLength(0);

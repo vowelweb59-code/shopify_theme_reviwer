@@ -167,14 +167,17 @@ function TrendBadge({ gain }: { gain: number | null }) {
   );
 }
 
-
 // A switch time is only known to within the window between two checks
 // (lib/demoStore/liveWindow.ts). Within the hourly-check slack it shows as
 // one time; wider (a failed check, or a record from before hourly checking)
 // it shows as "between … and …", or "by …" when the earlier bound is unknown.
 function SwitchTime({ low, high }: { low: number | null; high: number }) {
   if (low !== null && high - low <= PRECISE_ENOUGH_MS) {
-    return <span title={`Between ${formatDateTime(new Date(low).toISOString())} and ${formatDateTime(new Date(high).toISOString())}`}>{formatDateTime(new Date(high).toISOString())}</span>;
+    return (
+      <span title={`Between ${formatDateTime(new Date(low).toISOString())} and ${formatDateTime(new Date(high).toISOString())}`}>
+        {formatDateTime(new Date(high).toISOString())}
+      </span>
+    );
   }
   if (low !== null) {
     return (
@@ -186,9 +189,7 @@ function SwitchTime({ low, high }: { low: number | null; high: number }) {
     );
   }
   return (
-    <span title="No earlier check to narrow this down: the change happened at or before this time.">
-      by {formatDateTime(new Date(high).toISOString())}
-    </span>
+    <span title="No earlier check to narrow this down: the change happened at or before this time.">by {formatDateTime(new Date(high).toISOString())}</span>
   );
 }
 
@@ -302,13 +303,7 @@ function DemoStoreView() {
           {!r.endedAt && (
             <>
               <span className="rounded-full bg-status-pass-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pass-text">Current</span>
-              <a
-                href={storeUrl}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="View on the Shopify demo store"
-                className="text-primary/50 hover:text-primary"
-              >
+              <a href={storeUrl} target="_blank" rel="noreferrer" aria-label="View on the Shopify demo store" className="text-primary/50 hover:text-primary">
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>
             </>
@@ -419,7 +414,13 @@ function DemoStoreView() {
               {r.name}
             </Link>
             {r.url && (
-              <a href={r.url} target="_blank" rel="noreferrer" aria-label={`${r.name} on the Shopify Theme Store`} className="text-primary/50 hover:text-primary">
+              <a
+                href={r.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${r.name} on the Shopify Theme Store`}
+                className="text-primary/50 hover:text-primary"
+              >
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>
             )}
@@ -533,189 +534,189 @@ function DemoStoreView() {
       </div>
 
       {view === "history" && (
-      <div role="tabpanel" id="view-panel-history" aria-labelledby="view-tab-history" className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="max-w-2xl text-sm text-zinc-500">
-            Which theme has been live on each Shopify ops demo store, and for how long. Checked automatically every hour by reading the storefront&apos;s publicly embedded theme info — only the
-            currently published theme is visible this way, not the store&apos;s full theme library, and not the moment a theme was published. So
-            each switch is pinned between two checks, accurate to about an hour. Once a day the check also looks for each of these themes on the
-            public Shopify Theme Store, so if one goes live there later it gets flagged below.
-          </p>
-        </div>
-        <Button variant="secondary" onClick={handleCheckNow} loading={checking}>
-          Check Now
-        </Button>
-      </div>
-
-      {loading && <p className="text-sm text-zinc-500">Loading…</p>}
-
-      {!loading && data && (
-        <div className="flex flex-col gap-4">
-          <div role="tablist" aria-label="Demo stores" className="flex flex-wrap gap-1 border-b border-border-subtle">
-            {data.stores.map((st) => (
-              <button
-                key={st.store}
-                type="button"
-                role="tab"
-                id={`store-tab-${st.store}`}
-                aria-selected={st.store === shownStore?.store}
-                aria-controls="store-panel"
-                onClick={() => setActiveStore(st.store)}
-                className={`-mb-px border-b-2 px-3 py-2 text-sm ${st.store === shownStore?.store ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
-              >
-                {st.store.replace(/\.myshopify\.com$/, "")}
-              </button>
-            ))}
+        <div role="tabpanel" id="view-panel-history" aria-labelledby="view-tab-history" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="max-w-2xl text-sm text-zinc-500">
+                Which theme has been live on each Shopify ops demo store, and for how long. Checked automatically every hour by reading the storefront&apos;s
+                publicly embedded theme info — only the currently published theme is visible this way, not the store&apos;s full theme library, and not the
+                moment a theme was published. So each switch is pinned between two checks, accurate to about an hour. Once a day the check also looks for each
+                of these themes on the public Shopify Theme Store, so if one goes live there later it gets flagged below.
+              </p>
+            </div>
+            <Button variant="secondary" onClick={handleCheckNow} loading={checking}>
+              Check Now
+            </Button>
           </div>
 
-          {shownStore && (
-            <section role="tabpanel" id="store-panel" aria-labelledby={`store-tab-${shownStore.store}`} className="flex flex-col gap-3">
-              <p className="text-xs text-zinc-500">
-                <a href={shownStore.url} target="_blank" rel="noreferrer" className="font-medium underline hover:no-underline">
-                  {shownStore.store}
-                </a>
-                {" · "}
-                Last checked: {shownStore.lastCheckedAt ? formatDateTime(shownStore.lastCheckedAt) : "never"}
-                {" · "}
-                Next automatic check: {data.nextCheckAt ? formatDateTime(data.nextCheckAt) : "—"}
-                {shownStore.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {shownStore.lastError}</span>}
-              </p>
+          {loading && <p className="text-sm text-zinc-500">Loading…</p>}
 
-              {shownStore.records.length === 0 ? (
-                <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record this store's currently live theme." />
-              ) : (
-                <ResponsiveTable
-                  key={shownStore.store}
-                  columns={columnsFor(shownStore.url)}
-                  rows={shownStore.records}
-                  rowKey={(r) => r._id}
-                  theadClassName="bg-primary-tint text-primary-tint-text"
-                  pageSize={5}
-                />
+          {!loading && data && (
+            <div className="flex flex-col gap-4">
+              <div role="tablist" aria-label="Demo stores" className="flex flex-wrap gap-1 border-b border-border-subtle">
+                {data.stores.map((st) => (
+                  <button
+                    key={st.store}
+                    type="button"
+                    role="tab"
+                    id={`store-tab-${st.store}`}
+                    aria-selected={st.store === shownStore?.store}
+                    aria-controls="store-panel"
+                    onClick={() => setActiveStore(st.store)}
+                    className={`-mb-px border-b-2 px-3 py-2 text-sm ${st.store === shownStore?.store ? "border-primary font-medium text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}
+                  >
+                    {st.store.replace(/\.myshopify\.com$/, "")}
+                  </button>
+                ))}
+              </div>
+
+              {shownStore && (
+                <section role="tabpanel" id="store-panel" aria-labelledby={`store-tab-${shownStore.store}`} className="flex flex-col gap-3">
+                  <p className="text-xs text-zinc-500">
+                    <a href={shownStore.url} target="_blank" rel="noreferrer" className="font-medium underline hover:no-underline">
+                      {shownStore.store}
+                    </a>
+                    {" · "}
+                    Last checked: {shownStore.lastCheckedAt ? formatDateTime(shownStore.lastCheckedAt) : "never"}
+                    {" · "}
+                    Next automatic check: {data.nextCheckAt ? formatDateTime(data.nextCheckAt) : "—"}
+                    {shownStore.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {shownStore.lastError}</span>}
+                  </p>
+
+                  {shownStore.records.length === 0 ? (
+                    <EmptyState icon={Store} title="No checks yet" description="Click Check Now to record this store's currently live theme." />
+                  ) : (
+                    <ResponsiveTable
+                      key={shownStore.store}
+                      columns={columnsFor(shownStore.url)}
+                      rows={shownStore.records}
+                      rowKey={(r) => r._id}
+                      theadClassName="bg-primary-tint text-primary-tint-text"
+                      pageSize={5}
+                    />
+                  )}
+                </section>
               )}
-            </section>
+            </div>
           )}
         </div>
       )}
-      </div>
-      )}
 
       {view === "ranking" && (
-      <div role="tabpanel" id="view-panel-ranking" aria-labelledby="view-tab-ranking" className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="max-w-2xl text-sm text-zinc-500">
-            Where each theme in the{" "}
-            <Link href="/themes" className="underline hover:no-underline">
-              Themes
-            </Link>{" "}
-            tab sits in the public{" "}
-            <a href="https://themes.shopify.com/themes" target="_blank" rel="noreferrer" className="underline hover:no-underline">
-              themes.shopify.com/themes
-            </a>{" "}
-            catalog, once it&apos;s listed there — including each of its named style presets separately, since a preset gets its own ranked card
-            too (they can land on completely different pages from the theme&apos;s own default listing). The badge next to a rank or review count
-            shows how much it moved since the last check. Checked automatically once a day at a randomized time, separate from the hourly demo store poll;
-            a full crawl can mean walking dozens of pages, so it&apos;s not tied to that same daily check.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            Sort
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                const value = e.target.value as "relevance" | "newest";
-                setSortBy(value);
-                runFilteredCheck(value, industry);
-              }}
-              className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
-            >
-              <option value="relevance">Relevance</option>
-              <option value="newest">Newest</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            Collection
-            <select
-              value={industry}
-              onChange={(e) => {
-                const value = e.target.value;
-                setIndustry(value);
-                runFilteredCheck(sortBy, value);
-              }}
-              className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
-            >
-              <option value="">All collections</option>
-              {INDUSTRIES.map((i) => (
-                <option key={i.slug} value={i.slug}>
-                  {i.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>
-            Check Ranking
-          </Button>
-        </div>
-      </div>
+        <div role="tabpanel" id="view-panel-ranking" aria-labelledby="view-tab-ranking" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="max-w-2xl text-sm text-zinc-500">
+                Where each theme in the{" "}
+                <Link href="/themes" className="underline hover:no-underline">
+                  Themes
+                </Link>{" "}
+                tab sits in the public{" "}
+                <a href="https://themes.shopify.com/themes" target="_blank" rel="noreferrer" className="underline hover:no-underline">
+                  themes.shopify.com/themes
+                </a>{" "}
+                catalog, once it&apos;s listed there — including each of its named style presets separately, since a preset gets its own ranked card too (they
+                can land on completely different pages from the theme&apos;s own default listing). The badge next to a rank or review count shows how much it
+                moved since the last check. Checked automatically once a day at a randomized time, separate from the hourly demo store poll; a full crawl can
+                mean walking dozens of pages, so it&apos;s not tied to that same daily check.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                Sort
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    const value = e.target.value as "relevance" | "newest";
+                    setSortBy(value);
+                    runFilteredCheck(value, industry);
+                  }}
+                  className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="newest">Newest</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                Collection
+                <select
+                  value={industry}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setIndustry(value);
+                    runFilteredCheck(sortBy, value);
+                  }}
+                  className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+                >
+                  <option value="">All collections</option>
+                  {INDUSTRIES.map((i) => (
+                    <option key={i.slug} value={i.slug}>
+                      {i.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button variant="secondary" onClick={handleCheckRanking} loading={checkingRanking}>
+                Check Ranking
+              </Button>
+            </div>
+          </div>
 
-      {isFiltered ? (
-        <div className="flex flex-col gap-4">
-          <p className="text-xs text-zinc-500">
-            Showing rank within {industry ? INDUSTRIES.find((i) => i.slug === industry)?.label : "all collections"}, sorted by{" "}
-            {sortBy === "newest" ? "newest" : "relevance"} — only listings that actually appear in this view are shown; tracked here on, and
-            re-crawled automatically once a day going forward.
-            {filteredData?.filter.lastCheckedAt && <> Last checked: {formatDateTime(filteredData.filter.lastCheckedAt)}.</>}
-            {filteredData?.filter.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {filteredData.filter.lastError}</span>}
-          </p>
+          {isFiltered ? (
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-zinc-500">
+                Showing rank within {industry ? INDUSTRIES.find((i) => i.slug === industry)?.label : "all collections"}, sorted by{" "}
+                {sortBy === "newest" ? "newest" : "relevance"} — only listings that actually appear in this view are shown; tracked here on, and re-crawled
+                automatically once a day going forward.
+                {filteredData?.filter.lastCheckedAt && <> Last checked: {formatDateTime(filteredData.filter.lastCheckedAt)}.</>}
+                {filteredData?.filter.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {filteredData.filter.lastError}</span>}
+              </p>
 
-          {filteredLoading && <p className="text-sm text-zinc-500">Crawling this view…</p>}
+              {filteredLoading && <p className="text-sm text-zinc-500">Crawling this view…</p>}
 
-          {!filteredLoading && filteredData && (
+              {!filteredLoading && filteredData && (
+                <>
+                  {filteredData.rows.length === 0 ? (
+                    <EmptyState icon={Store} title="No matches" description="None of the tracked themes or presets appear in this filtered view." />
+                  ) : (
+                    <ResponsiveTable
+                      columns={filteredColumns}
+                      rows={filteredData.rows}
+                      rowKey={(r) => `${r.themeId}-${r.presetSlug}`}
+                      theadClassName="bg-primary-tint text-primary-tint-text"
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          ) : (
             <>
-              {filteredData.rows.length === 0 ? (
-                <EmptyState icon={Store} title="No matches" description="None of the tracked themes or presets appear in this filtered view." />
-              ) : (
-                <ResponsiveTable
-                  columns={filteredColumns}
-                  rows={filteredData.rows}
-                  rowKey={(r) => `${r.themeId}-${r.presetSlug}`}
-                  theadClassName="bg-primary-tint text-primary-tint-text"
-                />
+              {rankingLoading && <p className="text-sm text-zinc-500">Loading…</p>}
+
+              {!rankingLoading && rankingData && (
+                <div className="flex flex-col gap-4">
+                  <p className="text-xs text-zinc-500">
+                    Last checked: {rankingData.lastCheckedAt ? formatDateTime(rankingData.lastCheckedAt) : "never"}
+                    {" · "}
+                    Next automatic check: {rankingData.nextCheckAt ? formatDateTime(rankingData.nextCheckAt) : "—"}
+                    {rankingData.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {rankingData.lastError}</span>}
+                  </p>
+
+                  {rankingData.themes.length === 0 ? (
+                    <EmptyState icon={Store} title="No themes yet" description="Add a theme in the Themes tab first." />
+                  ) : (
+                    <ResponsiveTable
+                      columns={rankingColumns}
+                      rows={flattenRankRows(rankingData.themes)}
+                      rowKey={(r) => r.id}
+                      theadClassName="bg-primary-tint text-primary-tint-text"
+                    />
+                  )}
+                </div>
               )}
             </>
           )}
         </div>
-      ) : (
-        <>
-          {rankingLoading && <p className="text-sm text-zinc-500">Loading…</p>}
-
-          {!rankingLoading && rankingData && (
-            <div className="flex flex-col gap-4">
-              <p className="text-xs text-zinc-500">
-                Last checked: {rankingData.lastCheckedAt ? formatDateTime(rankingData.lastCheckedAt) : "never"}
-                {" · "}
-                Next automatic check: {rankingData.nextCheckAt ? formatDateTime(rankingData.nextCheckAt) : "—"}
-                {rankingData.lastError && <span className="ml-2 text-status-fail-text">Last check failed: {rankingData.lastError}</span>}
-              </p>
-
-              {rankingData.themes.length === 0 ? (
-                <EmptyState icon={Store} title="No themes yet" description="Add a theme in the Themes tab first." />
-              ) : (
-                <ResponsiveTable
-                  columns={rankingColumns}
-                  rows={flattenRankRows(rankingData.themes)}
-                  rowKey={(r) => r.id}
-                  theadClassName="bg-primary-tint text-primary-tint-text"
-                />
-              )}
-            </div>
-          )}
-        </>
-      )}
-      </div>
       )}
 
       {view === "categories" && (

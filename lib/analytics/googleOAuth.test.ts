@@ -92,7 +92,9 @@ describe("exchangeGa4Code", () => {
 
   it("rejects an unverifiable identity", async () => {
     await expect(exchangeGa4Code("code", fakeClient({ tokens: goodTokens, payload: null }))).rejects.toMatchObject({ code: "invalid_identity" });
-    await expect(exchangeGa4Code("code", fakeClient({ tokens: { ...goodTokens, id_token: undefined }, payload: {} }))).rejects.toMatchObject({ code: "invalid_identity" });
+    await expect(exchangeGa4Code("code", fakeClient({ tokens: { ...goodTokens, id_token: undefined }, payload: {} }))).rejects.toMatchObject({
+      code: "invalid_identity",
+    });
   });
 
   it("turns a rejected code into a safe message without Google's raw body", async () => {

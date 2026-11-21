@@ -32,12 +32,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ the
   // Google's PageSpeed Insights can't log in, so a store with a saved password would be measured as its password page.
   const protectedHost = hostOf(preset.url);
   if (protectedHost && (await savedPasswordHosts(themeId)).includes(protectedHost)) {
-    return NextResponse.json({ error: "This demo store is password-protected and Google's PageSpeed Insights cannot log in, so its speed can't be measured. Remove the store password to measure it." }, { status: 400 });
+    return NextResponse.json(
+      {
+        error:
+          "This demo store is password-protected and Google's PageSpeed Insights cannot log in, so its speed can't be measured. Remove the store password to measure it.",
+      },
+      { status: 400 }
+    );
   }
 
   const versionIds = (await ThemeVersion.find({ themeId }).select("_id").lean()).map((v) => v._id);
   const run = versionIds.length
-    ? await AuditRun.findOne({ themeVersionId: { $in: versionIds }, status: "complete" }).sort({ startedAt: -1 }).select("_id pageSpeed")
+    ? await AuditRun.findOne({ themeVersionId: { $in: versionIds }, status: "complete" })
+        .sort({ startedAt: -1 })
+        .select("_id pageSpeed")
     : null;
   if (!run) return NextResponse.json({ error: "Run an audit first; the scores are stored on the latest completed audit." }, { status: 409 });
 

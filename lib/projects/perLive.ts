@@ -24,7 +24,14 @@ export function perLivePayments(projects: LiveProject[], people: PerLivePerson[]
       if (!project.people.has(person.id)) continue;
       const amount = project.kind === "theme" ? person.perLiveTheme : person.perLivePreset;
       if (!amount || amount <= 0) continue;
-      out.push({ projectId: project.id, themeId: project.themeId, memberId: person.id, line: project.kind === "theme" ? "build" : "presets", amount, month: project.month });
+      out.push({
+        projectId: project.id,
+        themeId: project.themeId,
+        memberId: person.id,
+        line: project.kind === "theme" ? "build" : "presets",
+        amount,
+        month: project.month,
+      });
     }
   }
   return out;

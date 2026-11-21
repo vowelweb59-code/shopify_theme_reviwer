@@ -27,7 +27,7 @@ describe("SHOPIFY-SECTIONS-CUSTOM-LIQUID-001", () => {
     expect(findings).toHaveLength(0);
   });
 
-  it("passes with enabled_on templates [\"*\"]", () => {
+  it('passes with enabled_on templates ["*"]', () => {
     const findings = findingsFor("SHOPIFY-SECTIONS-CUSTOM-LIQUID-001", {
       "sections/custom-liquid.liquid": schema({
         name: "Custom Liquid",
@@ -131,7 +131,7 @@ describe("SHOPIFY-SWATCH-STABLE-001", () => {
   it("flags a swatch drawn only from value.variant.featured_image", () => {
     const findings = findingsFor("SHOPIFY-SWATCH-STABLE-001", {
       "snippets/product-swatches.liquid":
-        "{% for value in option.values %}\n  <label style=\"background-image: url({{ value.variant.featured_image | image_url: width: 60 }})\">{{ value }}</label>\n{% endfor %}",
+        '{% for value in option.values %}\n  <label style="background-image: url({{ value.variant.featured_image | image_url: width: 60 }})">{{ value }}</label>\n{% endfor %}',
     });
     expect(findings).toHaveLength(1);
     expect(findings[0].lineNumber).toBe(2);
@@ -140,7 +140,7 @@ describe("SHOPIFY-SWATCH-STABLE-001", () => {
   it("flags the same through an assigned alias", () => {
     const findings = findingsFor("SHOPIFY-SWATCH-STABLE-001", {
       "snippets/product-swatches.liquid":
-        "{% for option_value in option.values %}\n{% assign v = option_value.variant %}\n<img src=\"{{ v.featured_image | image_url: width: 60 }}\">\n{% endfor %}",
+        '{% for option_value in option.values %}\n{% assign v = option_value.variant %}\n<img src="{{ v.featured_image | image_url: width: 60 }}">\n{% endfor %}',
     });
     expect(findings).toHaveLength(1);
     expect(findings[0].lineNumber).toBe(3);
@@ -149,8 +149,7 @@ describe("SHOPIFY-SWATCH-STABLE-001", () => {
   it("does not flag swatches drawn from value.swatch or with a first-available fallback", () => {
     const findings = findingsFor("SHOPIFY-SWATCH-STABLE-001", {
       "snippets/a.liquid": "{% for value in option.values %}{{ value.swatch.image | image_url: width: 50 }}{{ value.variant.featured_image }}{% endfor %}",
-      "snippets/b.liquid":
-        "{% assign v = value.variant | default: product.selected_or_first_available_variant %}{{ value.variant.featured_image }}",
+      "snippets/b.liquid": "{% assign v = value.variant | default: product.selected_or_first_available_variant %}{{ value.variant.featured_image }}",
       "snippets/c.liquid": "{{ product.selected_variant.featured_image }}",
     });
     expect(findings).toHaveLength(0);

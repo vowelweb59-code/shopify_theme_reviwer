@@ -50,10 +50,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const coverageByCategory = computeCoverageByCategory(requirements);
   const readiness = auditRun.status === "complete" ? computeReadiness(findings, coverage.percentage, readinessConfig) : null;
 
-  const themeName =
-    auditRun.themeId && typeof auditRun.themeId === "object" && "name" in auditRun.themeId
-      ? String(auditRun.themeId.name)
-      : "Unknown theme";
+  const themeName = auditRun.themeId && typeof auditRun.themeId === "object" && "name" in auditRun.themeId ? String(auditRun.themeId.name) : "Unknown theme";
   const filenameBase = `${themeName.replace(/[^a-z0-9-]+/gi, "-")}-audit-${id}`;
 
   function respond(body: string | Buffer) {

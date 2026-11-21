@@ -16,13 +16,17 @@ import { ServiceUpworkProfile } from "@/models/service-upwork";
 //   npx tsx --env-file=.env.production.local scripts/add-service-project.ts "Janell Saverin" --profile Burhan [--ba Harsha] [--bd Pranit] [--rate 15] [--limit-hours 10] [--name "<Project name>"] [--apply]
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");
-const flag = (name: string) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : undefined; };
+const flag = (name: string) => {
+  const i = argv.indexOf(`--${name}`);
+  return i >= 0 ? argv[i + 1] : undefined;
+};
 const client = argv.find((a, i) => !a.startsWith("--") && (i === 0 || !argv[i - 1].startsWith("--")));
 const profileName = flag("profile");
 const key = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 async function main() {
-  if (!client) throw new Error('Usage: add-service-project.ts "<Client>" --profile <Upwork profile> [--ba N] [--bd N] [--rate USD] [--limit-hours H] [--apply]');
+  if (!client)
+    throw new Error('Usage: add-service-project.ts "<Client>" --profile <Upwork profile> [--ba N] [--bd N] [--rate USD] [--limit-hours H] [--apply]');
   await connectToDatabase();
   const existing = await ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const found = existing.find((c) => [c.name, ...c.aliases].some((n) => key(n) === key(client)));
@@ -33,9 +37,16 @@ async function main() {
   const name = flag("name") ?? `${client}${profile ? ` – ${profile.name}` : ""}`;
   const clientId = found?._id ?? randomUUID();
   const open = found ? await ServiceProject.find({ clientId }).select("name status").lean<Array<{ name: string; status: string }>>() : [];
-  const waiting = await ServiceTimeEntry.find({ clientId: null, clientRaw: new RegExp(`^(?:(?:R|App|DM)\\s*\\|\\s*)?${client.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") }).select("minutes").lean<Array<{ minutes: number }>>();
+  const waiting = await ServiceTimeEntry.find({
+    clientId: null,
+    clientRaw: new RegExp(`^(?:(?:R|App|DM)\\s*\\|\\s*)?${client.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i"),
+  })
+    .select("minutes")
+    .lean<Array<{ minutes: number }>>();
 
-  console.log(`${apply ? "APPLYING" : "Dry run"}: client "${client}" ${found ? "exists" : "will be created"}; project "${name}" will be created (Active, Hourly, Timer).`);
+  console.log(
+    `${apply ? "APPLYING" : "Dry run"}: client "${client}" ${found ? "exists" : "will be created"}; project "${name}" will be created (Active, Hourly, Timer).`
+  );
   if (open.length) console.log(`  The client already has: ${open.map((p) => `${p.name} (${p.status})`).join(", ")}`);
   console.log(`  Waiting entries to attach: ${waiting.length} (${(waiting.reduce((n, e) => n + e.minutes, 0) / 60).toFixed(1)} h)`);
   if (!apply) return console.log("Nothing written. Add --apply to create it.");
@@ -50,14 +61,34 @@ async function main() {
   const now = new Date();
   const id = randomUUID();
   await ServiceProject.create({
-    _id: id, name, clientId, status: "ACTIVE", startDate: now, upworkProfileId: profile?._id ?? null, people,
+    _id: id,
+    name,
+    clientId,
+    status: "ACTIVE",
+    startDate: now,
+    upworkProfileId: profile?._id ?? null,
+    people,
     history: [{ fromStatus: null, toStatus: "ACTIVE", reason: "Added by hand: hours were reported with no project", at: now }],
-    contract: { type: "HOURLY", trackingMode: "TIMER", startDate: now, hourlyRateCents: rate ? Math.round(Number(rate) * 100) : null, weeklyLimitMinutes: limit ? Math.round(Number(limit) * 60) : null },
+    contract: {
+      type: "HOURLY",
+      trackingMode: "TIMER",
+      startDate: now,
+      hourlyRateCents: rate ? Math.round(Number(rate) * 100) : null,
+      weeklyLimitMinutes: limit ? Math.round(Number(limit) * 60) : null,
+    },
   });
   await recordServiceAudit("project.create", { projectId: id, name, via: "scripts/add-service-project.ts" });
   const moved = await rematchClients();
   await runFollowUps();
-  console.log(`Done: project ${id} created; ${moved} entries re-matched to clients. Set the BA, BD, rate and weekly hours in the project's Settings if not given.`);
+  console.log(
+    `Done: project ${id} created; ${moved} entries re-matched to clients. Set the BA, BD, rate and weekly hours in the project's Settings if not given.`
+  );
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e);
+    process.exit(1);
+  }
+);

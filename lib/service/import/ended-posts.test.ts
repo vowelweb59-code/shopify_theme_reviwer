@@ -3,7 +3,14 @@ import { planClosures, type HeldProject } from "./ended-posts";
 
 const d = (s: string) => new Date(`${s}T00:00:00Z`);
 const held = (o: Partial<HeldProject> & { id: string; name: string }): HeldProject => ({ clientNames: [o.name], profileId: "p1", siblings: 0, ...o });
-const ended = (client: string, posted: string, profileId: string | null = "p1", rating: number | null = 5) => ({ client, rating, profileId, profileText: profileId, posted: d(posted), ref: `chat:${client}${posted}` });
+const ended = (client: string, posted: string, profileId: string | null = "p1", rating: number | null = 5) => ({
+  client,
+  rating,
+  profileId,
+  profileText: profileId,
+  posted: d(posted),
+  ref: `chat:${client}${posted}`,
+});
 
 describe("planClosures", () => {
   it("closes a held project whose contract ended", () => {
@@ -25,7 +32,11 @@ describe("planClosures", () => {
     expect(r.skipped[0].why).toMatch(/names no profile/);
   });
   it("skips a contract that was accepted again after it ended", () => {
-    const r = planClosures([held({ id: "a", name: "Tim Fitz" })], [ended("Tim Fitz", "2026-03-01")], [{ client: "Tim Fitz", profileId: "p1", posted: d("2026-05-01") }]);
+    const r = planClosures(
+      [held({ id: "a", name: "Tim Fitz" })],
+      [ended("Tim Fitz", "2026-03-01")],
+      [{ client: "Tim Fitz", profileId: "p1", posted: d("2026-05-01") }]
+    );
     expect(r.close).toHaveLength(0);
     expect(r.skipped[0].why).toMatch(/restarted/);
   });

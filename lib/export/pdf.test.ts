@@ -35,7 +35,7 @@ describe("buildReportHtml", () => {
 
   it("omits the summary block entirely when no summary is given", () => {
     const html = buildReportHtml({ themeName: "Adorn", auditRunId: "run1", startedAt: "2026-08-14", findings: [] });
-    expect(html).not.toContain("class=\"summary\"");
+    expect(html).not.toContain('class="summary"');
   });
 
   it("adds print setup, a Print button and auto-print only for the PDF (print) version", () => {

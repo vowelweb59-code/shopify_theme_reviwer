@@ -141,7 +141,11 @@ function rowAfter(html: string, label: string): string | null {
 
 /** The items of an HTML list. The store leaves some <li> unclosed, so items are cut at each opening tag rather than matched as pairs. */
 function listItems(html: string): string[] {
-  return html.split(/<li(?:\s[^>]*)?>/).slice(1).map((part) => stripTags(part.replace(/<\/?li>/g, " "))).filter(Boolean);
+  return html
+    .split(/<li(?:\s[^>]*)?>/)
+    .slice(1)
+    .map((part) => stripTags(part.replace(/<\/?li>/g, " ")))
+    .filter(Boolean);
 }
 
 /** Features, plans, languages, works-with and the short description from an app's own page. */
@@ -179,7 +183,12 @@ export function parseAppDeepDetail(html: string): AppDeepDetail {
   }
 
   const languagesRow = rowAfter(html, "Languages");
-  const languages = languagesRow ? stripTags(languagesRow).split(/,\s*(?:and\s+)?|\s+and\s+/).map((s) => s.trim()).filter(Boolean) : [];
+  const languages = languagesRow
+    ? stripTags(languagesRow)
+        .split(/,\s*(?:and\s+)?|\s+and\s+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
   const worksRow = rowAfter(html, "Works with");
   const worksWith = worksRow ? listItems(worksRow.split("</ul>")[0]) : [];
 

@@ -8,7 +8,10 @@ import { demoStoreUrl } from "@/lib/demoStore/stores";
 export async function GET() {
   await connectToDatabase();
   await backfillDemoStoreField();
-  const [records, { stores, nextCheckAt }] = await Promise.all([DemoStoreThemeRecord.find().sort({ startedAt: -1 }).lean<{ store: string }[]>(), readStoreCheckStates()]);
+  const [records, { stores, nextCheckAt }] = await Promise.all([
+    DemoStoreThemeRecord.find().sort({ startedAt: -1 }).lean<{ store: string }[]>(),
+    readStoreCheckStates(),
+  ]);
 
   return NextResponse.json({
     nextCheckAt,

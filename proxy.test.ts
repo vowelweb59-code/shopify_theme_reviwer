@@ -38,7 +38,9 @@ describe("isCrossSiteMutation", () => {
   });
 
   it("allows the app's own pages, ignoring http vs https behind the TLS proxy", () => {
-    expect(isCrossSiteMutation(req("POST", "/api/themes", { "sec-fetch-site": "same-origin", origin: "https://shopify-theme-reviwer.onrender.com" }))).toBe(false);
+    expect(isCrossSiteMutation(req("POST", "/api/themes", { "sec-fetch-site": "same-origin", origin: "https://shopify-theme-reviwer.onrender.com" }))).toBe(
+      false
+    );
   });
 
   it("allows non-browser clients (no Origin, no Sec-Fetch-Site)", () => {
@@ -51,7 +53,9 @@ describe("isCrossSiteMutation", () => {
   });
 
   it("honours the proxied host", () => {
-    expect(isCrossSiteMutation(req("POST", "/api/themes", { host: "10.0.0.5:10000", "x-forwarded-host": "app.example.com", origin: "https://app.example.com" }))).toBe(false);
+    expect(
+      isCrossSiteMutation(req("POST", "/api/themes", { host: "10.0.0.5:10000", "x-forwarded-host": "app.example.com", origin: "https://app.example.com" }))
+    ).toBe(false);
   });
 });
 

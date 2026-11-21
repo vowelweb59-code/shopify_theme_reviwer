@@ -85,9 +85,7 @@ export function SeverityBadge({ severity }: { severity: string }) {
   const Icon = SEVERITY_ICON[severity] ?? MinusCircle;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-        SEVERITY_STYLES[severity] ?? SEVERITY_STYLES.low
-      }`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium capitalize ${SEVERITY_STYLES[severity] ?? SEVERITY_STYLES.low}`}
     >
       <Icon className="h-3 w-3" aria-hidden />
       {severity}
@@ -102,9 +100,7 @@ const STATUS_STYLES: Record<FindingStatus, string> = {
 };
 
 export function FindingStatusBadge({ status }: { status: FindingStatus }) {
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[status]}`}>{status}</span>
-  );
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[status]}`}>{status}</span>;
 }
 
 export function SummaryBar({ summary }: { summary: FindingSummary }) {
@@ -209,9 +205,7 @@ export function DiagnosticsNote({ diagnostics }: { diagnostics: AuditDiagnostics
     notes.push(`${diagnostics.filesSkipped} unsupported file(s) in the ZIP were skipped`);
   }
   if (diagnostics.unresolvedDynamicReferences > 0) {
-    notes.push(
-      `${diagnostics.unresolvedDynamicReferences} section/snippet render target(s) use a dynamic (non-literal) name and could not be checked`
-    );
+    notes.push(`${diagnostics.unresolvedDynamicReferences} section/snippet render target(s) use a dynamic (non-literal) name and could not be checked`);
   }
   if (diagnostics.parserWarnings > 0) {
     notes.push(`${diagnostics.parserWarnings} file(s) had parser warnings`);
@@ -221,11 +215,7 @@ export function DiagnosticsNote({ diagnostics }: { diagnostics: AuditDiagnostics
   }
   if (notes.length === 0) return null;
 
-  return (
-    <p className="text-xs text-zinc-500">
-      Analysis limitations: {notes.join("; ")}.
-    </p>
-  );
+  return <p className="text-xs text-zinc-500">Analysis limitations: {notes.join("; ")}.</p>;
 }
 
 const TIMING_STAGE_LABEL: Record<string, string> = {
@@ -247,9 +237,7 @@ export function TimingNote({ timingMs }: { timingMs: Record<string, number> }) {
 
   return (
     <details className="text-xs text-zinc-500">
-      <summary className="cursor-pointer select-none">
-        Audit duration: {((timingMs.total ?? 0) / 1000).toFixed(1)}s
-      </summary>
+      <summary className="cursor-pointer select-none">Audit duration: {((timingMs.total ?? 0) / 1000).toFixed(1)}s</summary>
       <ul className="mt-1 ml-4 list-disc">
         {stages.map((key) => (
           <li key={key}>
@@ -334,19 +322,17 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
           </tbody>
         </table>
         <p className="mt-1.5 text-xs text-zinc-500">
-          Only the baseline preset (the first one supplied) gets the full home/collection/product ×
-          mobile/desktop matrix; every other preset shows the homepage/mobile scorecard only.
+          Only the baseline preset (the first one supplied) gets the full home/collection/product × mobile/desktop matrix; every other preset shows the
+          homepage/mobile scorecard only.
         </p>
       </div>
 
       {submissionBarFindings.length > 0 && (
         <div className="mt-4 border-t border-black/[.08] pt-3 dark:border-white/[.145]">
-          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">
-            Shopify submission bar ({submissionBarFindings.length})
-          </h4>
+          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">Shopify submission bar ({submissionBarFindings.length})</h4>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Shopify&apos;s own literal Theme Store thresholds — accessibility ≥90 average, performance ≥60 per
-            page — checked against the baseline preset&apos;s home, collection, and product pages.
+            Shopify&apos;s own literal Theme Store thresholds — accessibility ≥90 average, performance ≥60 per page — checked against the baseline preset&apos;s
+            home, collection, and product pages.
           </p>
           <ul className="mt-2 flex flex-col gap-2">
             {submissionBarFindings.map((f, i) => (
@@ -361,12 +347,9 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
 
       {opportunities.length > 0 && (
         <div className="mt-4 border-t border-black/[.08] pt-3 dark:border-white/[.145]">
-          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">
-            Suggested fixes ({opportunities.length})
-          </h4>
+          <h4 className="font-medium text-zinc-950 dark:text-zinc-50">Suggested fixes ({opportunities.length})</h4>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Lighthouse&apos;s own opportunities and diagnostics, most impactful first — the same &quot;what to
-            fix&quot; list PageSpeed Insights/GTmetrix show.
+            Lighthouse&apos;s own opportunities and diagnostics, most impactful first — the same &quot;what to fix&quot; list PageSpeed Insights/GTmetrix show.
           </p>
           <ul className="mt-2 flex flex-col gap-3">
             {opportunities.map((f, i) => (
@@ -374,14 +357,17 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
                 <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[f.severity]}`} aria-hidden />
                 <div>
                   <p className="text-zinc-800 dark:text-zinc-200">
-                    {multiplePresets && f.presetLabel && (
-                      <span className="font-medium text-zinc-500">[{f.presetLabel}] </span>
-                    )}
+                    {multiplePresets && f.presetLabel && <span className="font-medium text-zinc-500">[{f.presetLabel}] </span>}
                     {f.finding}
                   </p>
                   {f.recommendation && <p className="mt-0.5 text-zinc-500">{f.recommendation}</p>}
                   {f.sourceUrl && (
-                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="mt-0.5 inline-block underline text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50">
+                    <a
+                      href={f.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-0.5 inline-block underline text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50"
+                    >
                       Learn more
                     </a>
                   )}
@@ -391,7 +377,6 @@ export function PageSpeedPanel({ metrics, findings }: { metrics: PageSpeedMetric
           </ul>
         </div>
       )}
-
     </div>
   );
 }
@@ -413,11 +398,7 @@ export function EngineVersionsNote({ versions }: { versions: EngineVersions }) {
   ].filter(([, v]) => v) as [string, string][];
   if (parts.length === 0) return null;
 
-  return (
-    <p className="text-xs text-zinc-500">
-      Versions: {parts.map(([label, v]) => `${label} ${v}`).join(" · ")}
-    </p>
-  );
+  return <p className="text-xs text-zinc-500">Versions: {parts.map(([label, v]) => `${label} ${v}`).join(" · ")}</p>;
 }
 
 const CATEGORIES = ["Theme Store Compliance", "Accessibility", "Technical SEO", "Technical AEO", "Performance", "Bug", "Internal Standard"] as const;
@@ -497,10 +478,7 @@ export function FindingsTable({
       if (severityFilter && f.severity !== severityFilter) return false;
       if (statusFilter && (f.status ?? "open") !== statusFilter) return false;
       if (q) {
-        const haystack = [f.finding, f.recommendation, f.filePath, f.ruleId, f.requirementId, f.sourceReference]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
+        const haystack = [f.finding, f.recommendation, f.filePath, f.ruleId, f.requirementId, f.sourceReference].filter(Boolean).join(" ").toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
@@ -526,11 +504,7 @@ export function FindingsTable({
   }
 
   if (findings.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500">
-        No findings — every implemented rule passed against this theme.
-      </p>
-    );
+    return <p className="text-sm text-zinc-500">No findings — every implemented rule passed against this theme.</p>;
   }
 
   return (
@@ -655,9 +629,7 @@ export function FindingsTable({
                         </a>
                       ) : (
                         <>
-                          {getPageLabel(f.filePath) && (
-                            <div className="font-medium text-zinc-700 dark:text-zinc-300">{getPageLabel(f.filePath)}</div>
-                          )}
+                          {getPageLabel(f.filePath) && <div className="font-medium text-zinc-700 dark:text-zinc-300">{getPageLabel(f.filePath)}</div>}
                           <div className="font-mono text-zinc-500">
                             {f.filePath}
                             {f.lineNumber ? `:${f.lineNumber}` : ""}
@@ -688,9 +660,7 @@ export function FindingsTable({
                         <span className="text-zinc-500">{f.ruleId}</span>
                       )}
                       {f.requirementId && <div className="mt-0.5 text-zinc-400">{f.requirementId}</div>}
-                      {f.requirementId && requirementsById?.[f.requirementId] && (
-                        <RequirementTraceability info={requirementsById[f.requirementId]} />
-                      )}
+                      {f.requirementId && requirementsById?.[f.requirementId] && <RequirementTraceability info={requirementsById[f.requirementId]} />}
                     </td>
                     <td className="px-4 py-3">
                       {onStatusChange && f._id ? (
@@ -734,9 +704,7 @@ export function FindingsTable({
                               </div>
                             </div>
                           )}
-                          {status === "ignored" && f.ignoredReason && (
-                            <div className="text-xs text-zinc-500">Reason: {f.ignoredReason}</div>
-                          )}
+                          {status === "ignored" && f.ignoredReason && <div className="text-xs text-zinc-500">Reason: {f.ignoredReason}</div>}
                         </div>
                       ) : (
                         <FindingStatusBadge status={status} />

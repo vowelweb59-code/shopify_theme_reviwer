@@ -43,7 +43,10 @@ async function addPostersToTeams(adds: { projectId: unknown; memberId: string }[
   if (unique.size === 0) return;
   await Project.bulkWrite(
     [...unique.values()].map((a) => ({
-      updateOne: { filter: { _id: a.projectId, "members.memberId": { $ne: a.memberId } }, update: { $push: { members: { memberId: a.memberId, role: null } } } },
+      updateOne: {
+        filter: { _id: a.projectId, "members.memberId": { $ne: a.memberId } },
+        update: { $push: { members: { memberId: a.memberId, role: null } } },
+      },
     })) as never,
     { ordered: false }
   );
@@ -92,7 +95,9 @@ async function replaceEditedReports(candidates: Candidate[]): Promise<number> {
 
 /** Stable per report, so the same one imported twice is stored once. */
 function reportKey(who: string, text: string): string {
-  return createHash("sha1").update(`${who}\n${text.replace(/\s+/g, " ").trim().toLowerCase()}`).digest("hex");
+  return createHash("sha1")
+    .update(`${who}\n${text.replace(/\s+/g, " ").trim().toLowerCase()}`)
+    .digest("hex");
 }
 
 // Everything classification needs, loaded once per run.
@@ -115,7 +120,9 @@ async function loadContext(): Promise<Context> {
     TeamMember.find().select("name aliases updatesAndPresetsOnly designation inactive").lean(),
     Project.find({ type: "theme_update" }).select("themeId members").lean(),
     // Projects saved before types existed have no type and are Theme Design & Development.
-    Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $ne: "live" } }).select("themeId type").lean(),
+    Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $ne: "live" } })
+      .select("themeId type")
+      .lean(),
   ]);
   const building = new Set(buildProjects.filter((p) => p.type !== "preset_development").map((p) => String(p.themeId)));
   const presetDev = new Set(buildProjects.filter((p) => p.type === "preset_development").map((p) => String(p.themeId)));
@@ -134,7 +141,9 @@ async function loadContext(): Promise<Context> {
     themeRefs: themes.map((t) => ({
       id: String(t._id),
       name: t.name as string,
-      presets: [...new Set([...(t.themeStorePresets ?? []).map((p: { name: string }) => p.name), ...(t.demoStorePresets ?? []).map((p: { label: string }) => p.label)])],
+      presets: [
+        ...new Set([...(t.themeStorePresets ?? []).map((p: { name: string }) => p.name), ...(t.demoStorePresets ?? []).map((p: { label: string }) => p.label)]),
+      ],
       building: building.has(String(t._id)),
     })),
     memberRefs: members.map((m) => ({ id: String(m._id), name: m.name as string, aliases: (m.aliases ?? []) as string[] })),
@@ -156,7 +165,15 @@ type Built = {
 };
 
 /** Classifies one report text: who, which theme, theme / preset / update, and whether it can be logged. Null when the text isn't a usable report. */
-function buildReport(text: string, memberId: string | null, sender: string, key: string, ctx: Context, postedOn?: string, postedAt?: string): Built | { error: string } {
+function buildReport(
+  text: string,
+  memberId: string | null,
+  sender: string,
+  key: string,
+  ctx: Context,
+  postedOn?: string,
+  postedAt?: string
+): Built | { error: string } {
   const parsed = parseReport(text, postedOn);
   if (!parsed.ok) return { error: parsed.error };
 
@@ -195,7 +212,12 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
   const presetUpdate = theme.ok && theme.kind === "preset" && !ctx.presetDev.has(theme.themeId) && !ctx.themeRefs.find((t) => t.id === theme.themeId)?.building;
   if (theme.ok && (theme.kind === "update" || presetUpdate)) {
     const projects = ctx.updateByTheme.get(theme.themeId) ?? [];
-    if (projects.length !== 1) reasons.push(projects.length === 0 ? `${theme.themeName} has no Theme Update project to log the hours on.` : `${theme.themeName} has more than one Theme Update project.`);
+    if (projects.length !== 1)
+      reasons.push(
+        projects.length === 0
+          ? `${theme.themeName} has no Theme Update project to log the hours on.`
+          : `${theme.themeName} has more than one Theme Update project.`
+      );
     else if (memberId) {
       updateProject = projects[0];
       if (!projects[0].memberIds.has(memberId) && !ctx.managers.has(memberId)) addToTeam = { projectId: projects[0]._id, memberId };
@@ -228,7 +250,17 @@ function buildReport(text: string, memberId: string | null, sender: string, key:
       reason: reasons.join(" ") || null,
       rawText: text,
     },
-    entry: updateProject && memberId ? { projectId: updateProject._id, memberId, date, hours: Math.round((parsed.value.minutes / 60) * 100) / 100, note: parsed.value.memo, chatReportKey: key } : null,
+    entry:
+      updateProject && memberId
+        ? {
+            projectId: updateProject._id,
+            memberId,
+            date,
+            hours: Math.round((parsed.value.minutes / 60) * 100) / 100,
+            note: parsed.value.memo,
+            chatReportKey: key,
+          }
+        : null,
     reasons,
   };
 }
@@ -254,10 +286,25 @@ export async function importReports(inputs: ImportInput[]): Promise<ImportSummar
     // A message listing several themes is stored per theme, unless it was already stored whole (an earlier import): then it is left as it is.
     return splitReports(input.text).flatMap((chunk) => {
       const wholeKey = reportKey(memberId ?? sender, chunk);
-      return splitThemes(chunk).map((text) => ({ text, memberId, sender, postedOn: input.postedOn, postedAt: input.postedAt, messageId: input.messageId, key: reportKey(memberId ?? sender, text), wholeKey }));
+      return splitThemes(chunk).map((text) => ({
+        text,
+        memberId,
+        sender,
+        postedOn: input.postedOn,
+        postedAt: input.postedAt,
+        messageId: input.messageId,
+        key: reportKey(memberId ?? sender, text),
+        wholeKey,
+      }));
     });
   });
-  const stored = new Set((await ChatReport.find({ key: { $in: candidates.flatMap((c) => [c.key, c.wholeKey]) } }).select("key").lean()).map((r) => r.key as string));
+  const stored = new Set(
+    (
+      await ChatReport.find({ key: { $in: candidates.flatMap((c) => [c.key, c.wholeKey]) } })
+        .select("key")
+        .lean()
+    ).map((r) => r.key as string)
+  );
 
   // Edited messages: the reports their old text made are replaced by what the current text makes.
   const replaced = await replaceEditedReports(candidates);
@@ -314,7 +361,14 @@ export async function reprocessFlaggedReports(options: { dryRun?: boolean } = {}
   for (const report of flagged) {
     // The poster may have been matched since (a renamed team member).
     const memberId = report.memberId ? String(report.memberId) : report.sender ? resolveMember(report.sender, ctx.memberRefs) : null;
-    const built = buildReport(report.rawText, memberId, report.sender ?? "", report.key, ctx, report.date ? new Date(report.date).toISOString().slice(0, 10) : undefined);
+    const built = buildReport(
+      report.rawText,
+      memberId,
+      report.sender ?? "",
+      report.key,
+      ctx,
+      report.date ? new Date(report.date).toISOString().slice(0, 10) : undefined
+    );
     if ("error" in built) {
       summary.stillNeedsReview.push({ text: report.rawText, reason: built.error });
       continue;
@@ -332,7 +386,10 @@ export async function reprocessFlaggedReports(options: { dryRun?: boolean } = {}
         date: report.date ? new Date(report.date).toISOString().slice(0, 10) : "",
         hours: Math.round((report.minutes / 60) * 10) / 10,
         line: d.themeName,
-        to: built.doc.status === "ignored" ? "ignored (not theme work, not counted)" : `${theme} | ${d.kind ?? "?"}${d.preset ? " | " + d.preset : ""}${built.entry ? " (hours logged on its Update project)" : ""}`,
+        to:
+          built.doc.status === "ignored"
+            ? "ignored (not theme work, not counted)"
+            : `${theme} | ${d.kind ?? "?"}${d.preset ? " | " + d.preset : ""}${built.entry ? " (hours logged on its Update project)" : ""}`,
       });
     }
     if (built.reasons.length === 0) summary.fixed += report.status === "needs_review" ? 1 : 0;

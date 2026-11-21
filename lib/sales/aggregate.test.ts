@@ -22,7 +22,16 @@ describe("buildSummary", () => {
     sale({}),
     sale({ shopDomain: "b.myshopify.com", preset: "Precious" }),
     sale({ month: "2026-06", shopDomain: "c.myshopify.com", preset: "Ace", category: "clothing", country: "IN" }),
-    sale({ month: "2026-06", chargeType: "refund", amount: -200, share: -170, shopDomain: "c.myshopify.com", preset: "Ace", category: "clothing", country: "IN" }),
+    sale({
+      month: "2026-06",
+      chargeType: "refund",
+      amount: -200,
+      share: -170,
+      shopDomain: "c.myshopify.com",
+      preset: "Ace",
+      category: "clothing",
+      country: "IN",
+    }),
   ];
   const ga = [
     { themeId: "adorn", month: "2026-07", tryTheme: 120, installs: 40 },

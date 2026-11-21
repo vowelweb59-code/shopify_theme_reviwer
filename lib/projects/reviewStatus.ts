@@ -11,7 +11,11 @@ export const BEFORE_REVIEW: readonly string[] = ["planning", "under_designing", 
 /** Statuses a theme can still be in before it is Live. */
 export const BEFORE_LIVE: readonly string[] = [...BEFORE_REVIEW, "under_review", "error_given"];
 
-const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const key = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 /** A demo store's theme name ("Apollo", "Apollo 1.0.0", "Apollo - Gaming") names this theme: the whole name, or it as the first words. */
 export function storeNameMatchesTheme(storeName: string | null | undefined, themeName: string): boolean {

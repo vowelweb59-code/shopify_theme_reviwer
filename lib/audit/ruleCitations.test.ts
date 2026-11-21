@@ -14,7 +14,11 @@ describe("rule citations", () => {
   });
 
   it("keeps a finding's own citation (e.g. a PageSpeed audit link)", () => {
-    const own = { ruleId: cited.ruleId, sourceReference: "Google Lighthouse / PageSpeed Insights", sourceUrl: "https://developer.chrome.com/docs/lighthouse/x" };
+    const own = {
+      ruleId: cited.ruleId,
+      sourceReference: "Google Lighthouse / PageSpeed Insights",
+      sourceUrl: "https://developer.chrome.com/docs/lighthouse/x",
+    };
     expect(withoutRuleCitation(own)).toEqual(own);
     expect(withRuleCitations([own])[0]).toEqual(own);
   });

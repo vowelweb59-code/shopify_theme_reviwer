@@ -59,14 +59,27 @@ export function SalesContent() {
   }
 
   const hasSales = (data?.themesWithSales.length ?? 0) > 0;
-  const importTab = { id: "import", label: "Import", content: <ImportTab onImported={() => { refresh(); setPollKick((n) => n + 1); }} /> };
+  const importTab = {
+    id: "import",
+    label: "Import",
+    content: (
+      <ImportTab
+        onImported={() => {
+          refresh();
+          setPollKick((n) => n + 1);
+        }}
+      />
+    ),
+  };
 
   return (
     <div className="flex flex-col gap-6">
       {hasSales && (
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label htmlFor="sales-filter-theme" className="mb-1 block text-xs font-medium text-zinc-500">Theme</label>
+            <label htmlFor="sales-filter-theme" className="mb-1 block text-xs font-medium text-zinc-500">
+              Theme
+            </label>
             <select id="sales-filter-theme" value={themeId} onChange={(e) => setThemeId(e.target.value)} className={SELECT}>
               <option value="">All themes</option>
               {data?.themesWithSales.map((t) => (
@@ -77,7 +90,9 @@ export function SalesContent() {
             </select>
           </div>
           <div>
-            <label htmlFor="sales-from" className="mb-1 block text-xs font-medium text-zinc-500">From</label>
+            <label htmlFor="sales-from" className="mb-1 block text-xs font-medium text-zinc-500">
+              From
+            </label>
             <select id="sales-from" value={from} onChange={(e) => setFrom(e.target.value)} className={SELECT}>
               <option value="">First month</option>
               {months.map((m) => (
@@ -88,7 +103,9 @@ export function SalesContent() {
             </select>
           </div>
           <div>
-            <label htmlFor="sales-to" className="mb-1 block text-xs font-medium text-zinc-500">To</label>
+            <label htmlFor="sales-to" className="mb-1 block text-xs font-medium text-zinc-500">
+              To
+            </label>
             <select id="sales-to" value={to} onChange={(e) => setTo(e.target.value)} className={SELECT}>
               <option value="">Latest month</option>
               {months.map((m) => (
@@ -106,14 +123,20 @@ export function SalesContent() {
 
       {data && hasSales && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <Kpi label="Net sales" value={formatCount(data.totals.netSales)} detail={data.totals.refunds ? `${data.totals.sales} sold, ${data.totals.refunds} refunded` : undefined} />
+          <Kpi
+            label="Net sales"
+            value={formatCount(data.totals.netSales)}
+            detail={data.totals.refunds ? `${data.totals.sales} sold, ${data.totals.refunds} refunded` : undefined}
+          />
           <Kpi label="Revenue" value={formatMoney(data.totals.gross)} />
           <Kpi label="Your share" value={formatMoney(data.totals.net)} />
           <Kpi label="Try Theme" value={formatCount(data.totals.tryTheme)} detail="GA4" />
           <Kpi label="Installs" value={formatCount(data.totals.installs)} detail="GA4" />
           <Kpi
             label="Installs / sales"
-            value={formatRate(data.totals.netSales > 0 && data.totals.installs != null ? Math.round((data.totals.installs / data.totals.netSales) * 1000) / 10 : null)}
+            value={formatRate(
+              data.totals.netSales > 0 && data.totals.installs != null ? Math.round((data.totals.installs / data.totals.netSales) * 1000) / 10 : null
+            )}
           />
         </div>
       )}
@@ -131,14 +154,27 @@ export function SalesContent() {
               id: "categories",
               label: "Categories",
               content: (
-                <CategoriesTab data={data} themeId={themeId} crawl={status?.categories ?? null} onChanged={refresh} onStartCrawl={() => startJob("/api/sales/categories/refresh")} />
+                <CategoriesTab
+                  data={data}
+                  themeId={themeId}
+                  crawl={status?.categories ?? null}
+                  onChanged={refresh}
+                  onStartCrawl={() => startJob("/api/sales/categories/refresh")}
+                />
               ),
             },
             { id: "countries", label: "Countries", content: <CountriesTab data={data} /> },
             {
               id: "stores",
               label: "Stores",
-              content: <StoresTab themeId={themeId} detection={status?.detection ?? null} onChanged={refresh} onRecheck={() => startJob("/api/sales/detect", { all: true })} />,
+              content: (
+                <StoresTab
+                  themeId={themeId}
+                  detection={status?.detection ?? null}
+                  onChanged={refresh}
+                  onRecheck={() => startJob("/api/sales/detect", { all: true })}
+                />
+              ),
             },
             importTab,
           ]}

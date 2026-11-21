@@ -72,7 +72,10 @@ export function resetLoginRateLimit(): void {
 export function clientIp(headers: Headers, env: Record<string, string | undefined> = process.env): string {
   const hops = Number(env.TRUSTED_PROXY_HOPS);
   if (Number.isInteger(hops) && hops > 0) {
-    const entries = (headers.get("x-forwarded-for") ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+    const entries = (headers.get("x-forwarded-for") ?? "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
     const pick = entries[entries.length - hops];
     if (pick) return pick;
   }

@@ -109,10 +109,7 @@ async function main() {
   const liveCheckRequirementIds = extractLiveCheckRequirementIds();
   let liveCheckRequirementsMarked = 0;
   for (const requirementId of liveCheckRequirementIds) {
-    const result = await Requirement.updateOne(
-      { requirementId, ruleStatus: { $ne: "implemented" } },
-      { $set: { ruleStatus: "implemented" } }
-    );
+    const result = await Requirement.updateOne({ requirementId, ruleStatus: { $ne: "implemented" } }, { $set: { ruleStatus: "implemented" } });
     if (result.modifiedCount > 0) liveCheckRequirementsMarked++;
   }
 

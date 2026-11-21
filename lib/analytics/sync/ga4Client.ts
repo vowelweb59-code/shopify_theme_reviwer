@@ -10,7 +10,9 @@ import { GOOGLE_API_TIMEOUT_MS } from "@/lib/google/timeouts";
 // reschedules the whole job) — see runSync.ts. Server-side only.
 
 // getMetadata is optional so a test double needs only runReport; the sync skips exact install counting without it.
-export type DataApi = { properties: Pick<analyticsdata_v1beta.Resource$Properties, "runReport"> & Partial<Pick<analyticsdata_v1beta.Resource$Properties, "getMetadata">> };
+export type DataApi = {
+  properties: Pick<analyticsdata_v1beta.Resource$Properties, "runReport"> & Partial<Pick<analyticsdata_v1beta.Resource$Properties, "getMetadata">>;
+};
 export type ReportRequest = analyticsdata_v1beta.Schema$RunReportRequest;
 export type ReportRow = { dimensions: string[]; metrics: number[] };
 
@@ -56,7 +58,8 @@ export function classifyDataApiError(err: unknown): Ga4DataError {
 
   if (status === 429 || /RESOURCE_EXHAUSTED/.test(message)) {
     if (/per day/i.test(message)) return new Ga4DataError("quota_daily", "GA4's daily API quota for this property is used up; the sync will resume tomorrow.");
-    if (/per hour/i.test(message)) return new Ga4DataError("quota_hourly", "GA4's hourly API quota for this property is used up; the sync will resume within the hour.");
+    if (/per hour/i.test(message))
+      return new Ga4DataError("quota_hourly", "GA4's hourly API quota for this property is used up; the sync will resume within the hour.");
     return new Ga4DataError("rate_limited", "GA4 is rate-limiting requests; the sync will retry shortly.");
   }
   if (status === 401) return new Ga4DataError("auth_revoked", "Google rejected this account's access. Reconnect it.");

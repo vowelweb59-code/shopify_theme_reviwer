@@ -18,8 +18,7 @@ import path from "node:path";
 
 const OUT_DIR = ".scratch/release-notes";
 const SLUG_FILE = ".scratch/theme-slugs.json";
-const UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 const CONCURRENCY = 8;
 
 async function get(url, accept = "text/html") {

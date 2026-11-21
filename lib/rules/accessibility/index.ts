@@ -76,7 +76,7 @@ const missingAltRule: Rule = {
   category: "Accessibility",
   defaultSeverity: "high",
   title: "Images must have an alt attribute",
-  description: "All <img> elements must have an alt attribute. Decorative images should use an empty alt (\"\") rather than omitting the attribute.",
+  description: 'All <img> elements must have an alt attribute. Decorative images should use an empty alt ("") rather than omitting the attribute.',
   sourceReference: "Accessibility best practices for Shopify themes",
   sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
   check({ files }) {
@@ -187,8 +187,7 @@ const colorContrastRule: Rule = {
   category: "Accessibility",
   defaultSeverity: "high",
   title: "Text color contrast must meet WCAG AA",
-  description:
-    "Text color contrast ratio must be at least 4.5:1 for main body content, and 3:1 for larger text and non-text elements.",
+  description: "Text color contrast ratio must be at least 4.5:1 for main body content, and 3:1 for larger text and non-text elements.",
   sourceReference: "Shopify Theme Store requirements — Accessibility",
   sourceUrl: THEME_STORE_REQUIREMENTS_URL,
   // Limited to declarations resolvable to concrete sRGB values (hex/rgb) on
@@ -229,11 +228,17 @@ const colorContrastRule: Rule = {
 };
 
 function stripFocusPseudo(selector: string): string {
-  return selector.replace(/:focus-visible\b/gi, "").replace(/:focus\b/gi, "").trim();
+  return selector
+    .replace(/:focus-visible\b/gi, "")
+    .replace(/:focus\b/gi, "")
+    .trim();
 }
 
 function selectorParts(selector: string): string[] {
-  return selector.split(",").map((s) => s.trim()).filter(Boolean);
+  return selector
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // postcss's rule.selector preserves the source's original line breaks for
@@ -307,7 +312,12 @@ const outlineRemovalRule: Rule = {
       for (const rule of rules) {
         const removal = rule.declarations.find((d) => d.prop === "outline" && /\bnone\b|^0(\s|$)/.test(d.value.trim()));
         if (!removal) continue;
-        if (selectorParts(rule.selector).map(stripFocusPseudo).some((base) => focusBases.has(base))) continue;
+        if (
+          selectorParts(rule.selector)
+            .map(stripFocusPseudo)
+            .some((base) => focusBases.has(base))
+        )
+          continue;
         const displaySelector = formatSelectorForDisplay(rule.selector);
         findings.push({
           filePath,
@@ -378,7 +388,7 @@ const ariaHiddenFocusableRule: Rule = {
   defaultSeverity: "medium",
   title: "aria-hidden must not be applied to a focusable element",
   description:
-    "An element with aria-hidden=\"true\" must not remain focusable — pair it with tabindex=\"-1\", or remove aria-hidden if the element should stay in the accessibility tree.",
+    'An element with aria-hidden="true" must not remain focusable — pair it with tabindex="-1", or remove aria-hidden if the element should stay in the accessibility tree.',
   sourceReference: "Accessibility best practices for Shopify themes",
   sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
   check({ files }) {
@@ -450,9 +460,7 @@ const skipLinkRule: Rule = {
   sourceReference: "Accessibility best practices for Shopify themes",
   sourceUrl: ACCESSIBILITY_BEST_PRACTICES_URL,
   check({ files }) {
-    const hasSkipLink = files.some((f) =>
-      f.links.some((link) => link.href?.startsWith("#") && link.text && SKIP_LINK_TEXT_RE.test(link.text))
-    );
+    const hasSkipLink = files.some((f) => f.links.some((link) => link.href?.startsWith("#") && link.text && SKIP_LINK_TEXT_RE.test(link.text)));
     if (hasSkipLink) return [];
     const layoutFile = files.find((f) => f.path.startsWith("layout/") && f.fileType === "liquid");
     if (!layoutFile) return [];
@@ -462,8 +470,7 @@ const skipLinkRule: Rule = {
         category: "Accessibility" as const,
         severity: "low" as const,
         finding: "No 'skip to content' link was found anywhere in the theme.",
-        recommendation:
-          'Add a visually-hidden-until-focused <a href="#MainContent">Skip to content</a> as the first focusable element in the layout.',
+        recommendation: 'Add a visually-hidden-until-focused <a href="#MainContent">Skip to content</a> as the first focusable element in the layout.',
       },
     ];
   },

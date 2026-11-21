@@ -77,7 +77,11 @@ describe("the session cookie", () => {
       seen.push({ url: String(url), cookie: new Headers(init.headers).get("cookie") });
       return String(url).startsWith("https://demo.example.com") ? redirect("https://other.example.org/x") : page(HOME);
     });
-    await fetchPublicText("https://demo.example.com/", { timeoutMs: 1000, resolve: publicDns, session: { host: "demo.example.com", cookie: "storefront_digest=abc" } });
+    await fetchPublicText("https://demo.example.com/", {
+      timeoutMs: 1000,
+      resolve: publicDns,
+      session: { host: "demo.example.com", cookie: "storefront_digest=abc" },
+    });
     expect(seen[0]).toEqual({ url: "https://demo.example.com/", cookie: "storefront_digest=abc" });
     expect(seen[1]).toEqual({ url: "https://other.example.org/x", cookie: null });
   });

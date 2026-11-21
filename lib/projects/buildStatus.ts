@@ -15,6 +15,10 @@ const MANAGER_RE = /manager/i;
 export function detectBuildStatus(current: string | null, designations: (string | null | undefined)[]): ProjectStatus | null {
   if (current !== "planning" && current !== "under_designing" && current !== "under_development") return null;
   const people = designations.filter((d) => !MANAGER_RE.test(d ?? ""));
-  const next: ProjectStatus | null = people.some((d) => DEVELOPER_RE.test(d ?? "")) ? "under_development" : people.some((d) => DESIGNER_RE.test(d ?? "")) ? "under_designing" : null;
+  const next: ProjectStatus | null = people.some((d) => DEVELOPER_RE.test(d ?? ""))
+    ? "under_development"
+    : people.some((d) => DESIGNER_RE.test(d ?? ""))
+      ? "under_designing"
+      : null;
   return next && next !== current ? next : null;
 }

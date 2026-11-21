@@ -17,7 +17,10 @@ const apply = process.argv.includes("--apply");
 const from = process.argv.find((a) => a.startsWith("--from="))?.slice(7) ?? "0000-00";
 
 async function totals() {
-  const rows = await ServiceTimeEntry.aggregate<{ _id: string; n: number; minutes: number }>([{ $group: { _id: "$state", n: { $sum: 1 }, minutes: { $sum: "$minutes" } } }, { $sort: { _id: 1 } }]);
+  const rows = await ServiceTimeEntry.aggregate<{ _id: string; n: number; minutes: number }>([
+    { $group: { _id: "$state", n: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
+    { $sort: { _id: 1 } },
+  ]);
   const placed = await ServiceTimeEntry.countDocuments({ projectId: { $ne: null } });
   return { byState: Object.fromEntries(rows.map((r) => [r._id, `${r.n} entries / ${(r.minutes / 60).toFixed(1)} h`])), placedOnProject: placed };
 }
@@ -27,18 +30,37 @@ async function main() {
   console.log(`${apply ? "APPLYING to" : "Dry run against"} ${mongoose.connection.host} / ${mongoose.connection.name}\n`);
   const space = await ServiceChatSpace.findOne({ type: "TIMER_STATUS" }).lean<{ _id: string; externalId: string; name: string } | null>();
   if (!space) throw new Error("No TIMER STATUS space stored yet.");
-  const months = (await ServiceChatMessage.aggregate<{ _id: string }>([
-    { $match: { spaceId: space._id } },
-    { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$postedAt", timezone: "+05:30" } } } },
-    { $sort: { _id: 1 } },
-  ])).map((m) => m._id).filter((m) => m >= from);
+  const months = (
+    await ServiceChatMessage.aggregate<{ _id: string }>([
+      { $match: { spaceId: space._id } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$postedAt", timezone: "+05:30" } } } },
+      { $sort: { _id: 1 } },
+    ])
+  )
+    .map((m) => m._id)
+    .filter((m) => m >= from);
   console.log("Before:", await totals());
   const clients = await loadClientRegistry();
   const dmProjects = await loadDmProjects();
   for (const month of months) {
     const { from: start, to } = istMonthWindow(month);
-    const stored = await ServiceChatMessage.find({ spaceId: space._id, postedAt: { $gte: start, $lt: to } }).sort({ postedAt: 1 }).lean<Array<{ externalId: string; senderExternalId: string; senderName: string; postedAt: Date; text: string }>>();
-    const spaces: SpaceInput[] = [{ externalId: space.externalId, name: space.name, type: "TIMER_STATUS", messages: stored.map((m) => ({ externalId: m.externalId, senderExternalId: m.senderExternalId, senderName: m.senderName, postedAt: m.postedAt.toISOString(), text: m.text })) }];
+    const stored = await ServiceChatMessage.find({ spaceId: space._id, postedAt: { $gte: start, $lt: to } })
+      .sort({ postedAt: 1 })
+      .lean<Array<{ externalId: string; senderExternalId: string; senderName: string; postedAt: Date; text: string }>>();
+    const spaces: SpaceInput[] = [
+      {
+        externalId: space.externalId,
+        name: space.name,
+        type: "TIMER_STATUS",
+        messages: stored.map((m) => ({
+          externalId: m.externalId,
+          senderExternalId: m.senderExternalId,
+          senderName: m.senderName,
+          postedAt: m.postedAt.toISOString(),
+          text: m.text,
+        })),
+      },
+    ];
     const plan = filterPlanToDigitalMarketing(planImport({ month, spaces, clients }), dmProjects);
     if (!apply) {
       console.log(`  ${month}: ${stored.length} messages -> ${plan.entries.length} planned entries`);

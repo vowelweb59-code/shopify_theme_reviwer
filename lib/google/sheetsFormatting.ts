@@ -124,9 +124,7 @@ export function buildSheetFormattingRequests(sheetId: number, dataRowCount: numb
     ...Object.entries(SEVERITY_COLORS).map(([severity, colors]) => ({
       addConditionalFormatRule: {
         rule: {
-          ranges: [
-            { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: SEVERITY_COLUMN_INDEX, endColumnIndex: SEVERITY_COLUMN_INDEX + 1 },
-          ],
+          ranges: [{ sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: SEVERITY_COLUMN_INDEX, endColumnIndex: SEVERITY_COLUMN_INDEX + 1 }],
           booleanRule: {
             condition: { type: "TEXT_EQ", values: [{ userEnteredValue: severity }] },
             format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },
@@ -138,9 +136,7 @@ export function buildSheetFormattingRequests(sheetId: number, dataRowCount: numb
     ...Object.entries(STATUS_COLORS).map(([status, colors]) => ({
       addConditionalFormatRule: {
         rule: {
-          ranges: [
-            { sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: STATUS_COLUMN_INDEX, endColumnIndex: STATUS_COLUMN_INDEX + 1 },
-          ],
+          ranges: [{ sheetId, startRowIndex: 1, endRowIndex, startColumnIndex: STATUS_COLUMN_INDEX, endColumnIndex: STATUS_COLUMN_INDEX + 1 }],
           booleanRule: {
             condition: { type: "TEXT_EQ", values: [{ userEnteredValue: status }] },
             format: { backgroundColor: colors.background, textFormat: { foregroundColor: colors.text, bold: true } },

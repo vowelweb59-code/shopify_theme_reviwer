@@ -58,8 +58,7 @@ export const FIXTURE_THEMES: Record<string, Record<string, string>> = {
   // last is ever used, silently dropping the other. SCHEMA-DUPLICATE-ID-001.
   duplicateIdsTheme: {
     ...BASE_LAYOUT,
-    "sections/hero.liquid":
-      '{% schema %}{"name": "Hero", "settings": [{"type": "text", "id": "heading"}, {"type": "text", "id": "heading"}]}{% endschema %}',
+    "sections/hero.liquid": '{% schema %}{"name": "Hero", "settings": [{"type": "text", "id": "heading"}, {"type": "text", "id": "heading"}]}{% endschema %}',
   },
 
   // Three separate problems, each isolated to its own template so the

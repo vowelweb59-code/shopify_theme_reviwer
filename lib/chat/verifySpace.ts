@@ -53,7 +53,12 @@ export async function verifySpace(): Promise<VerifyResult> {
     .filter((r) => !storedTexts.has(norm(r.text)))
     .map((r) => {
       const parsed = parseReport(r.text, r.date);
-      return { date: r.date, who: r.who, reason: parsed.ok ? "Readable, but not stored yet" : `Can't be imported: ${parsed.error}`, text: r.text.replace(/\s+/g, " ").slice(0, 200) };
+      return {
+        date: r.date,
+        who: r.who,
+        reason: parsed.ok ? "Readable, but not stored yet" : `Can't be imported: ${parsed.error}`,
+        text: r.text.replace(/\s+/g, " ").slice(0, 200),
+      };
     });
 
   return {
@@ -67,6 +72,8 @@ export async function verifySpace(): Promise<VerifyResult> {
     missing,
     // Split children (key "...#Preset") share their original's text and are not extra.
     storedNotInSpace: stored.filter((r) => !r.key.includes("#") && !spaceTexts.has(norm(r.rawText))).length,
-    otherSamples: others.slice(0, 15).map((m) => ({ date: m.createTime.slice(0, 10), who: m.senderName || m.senderId, text: m.text.replace(/\s+/g, " ").slice(0, 140) })),
+    otherSamples: others
+      .slice(0, 15)
+      .map((m) => ({ date: m.createTime.slice(0, 10), who: m.senderName || m.senderId, text: m.text.replace(/\s+/g, " ").slice(0, 140) })),
   };
 }

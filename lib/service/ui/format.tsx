@@ -24,8 +24,10 @@ export function fmtDelta(now: number, before: number): string {
 const DAY_MS = 86_400_000;
 export type Week = { start: string; end: string };
 export const shiftWeek = (start: string, weeks: number) => new Date(Date.parse(start) + weeks * 7 * DAY_MS).toISOString().slice(0, 10);
-export const fmtDay = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-export const fmtLongDay = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+export const fmtDay = (iso: string) =>
+  new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+export const fmtLongDay = (iso: string) =>
+  new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 export const weekLabel = (w: Week) => `${fmtDay(w.start)} – ${fmtDay(w.end)}`;
 
 /** Completed against the weekly limit. The numbers always sit beside it, so the bar is never the only signal. */

@@ -7,7 +7,11 @@ import { isServiceChatConfigured, serviceChatAuthUrl } from "@/lib/service/chat/
 // so the browser follows Google's redirects.
 export async function GET(request: Request) {
   if (!isServiceChatConfigured()) {
-    return NextResponse.redirect(serviceChatReturnUrl(request.url, { error: "Google Chat isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL)." }));
+    return NextResponse.redirect(
+      serviceChatReturnUrl(request.url, {
+        error: "Google Chat isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL).",
+      })
+    );
   }
   const state = createOAuthState();
   const response = NextResponse.redirect(serviceChatAuthUrl(state));

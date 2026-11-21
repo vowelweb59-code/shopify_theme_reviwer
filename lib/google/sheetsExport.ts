@@ -56,12 +56,7 @@ type TabSheetInfo = { sheetId: number; rangeTitle: string };
  * audit-checklist tabs (a "Resolved" boolean column) alongside a "Future
  * Updates" tab (no boolean column at all) in one export.
  */
-async function writeTabValuesAndFormatting(
-  sheets: sheets_v4.Sheets,
-  spreadsheetId: string,
-  tabs: SheetTab[],
-  sheetInfoByTitle: Map<string, TabSheetInfo>
-) {
+async function writeTabValuesAndFormatting(sheets: sheets_v4.Sheets, spreadsheetId: string, tabs: SheetTab[], sheetInfoByTitle: Map<string, TabSheetInfo>) {
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
     requestBody: {
@@ -236,7 +231,10 @@ export async function updateGoogleSheet(
   const sheetInfoByTitle = new Map(
     (addData.replies ?? [])
       .map((r, i) => ({ properties: r.addSheet?.properties, tab: tabs[i] }))
-      .filter((entry): entry is { properties: sheets_v4.Schema$SheetProperties; tab: SheetTab } => entry.properties?.title != null && entry.properties?.sheetId != null)
+      .filter(
+        (entry): entry is { properties: sheets_v4.Schema$SheetProperties; tab: SheetTab } =>
+          entry.properties?.title != null && entry.properties?.sheetId != null
+      )
       .map(({ properties, tab }) => [sanitizeTabTitle(tab.title), { sheetId: properties.sheetId!, rangeTitle: properties.title! }] as const)
   );
 

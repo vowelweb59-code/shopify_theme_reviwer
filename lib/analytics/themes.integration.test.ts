@@ -151,7 +151,9 @@ describe.skipIf(!uri)("GA4 themes (MongoDB)", () => {
     const result = await disconnectTheme(theme.id);
     expect(result).toMatchObject({ connectionStatus: "unmapped", ga4PropertyId: null, account: null });
     // The freed property can now be mapped to another theme.
-    await expect(createTheme({ name: "Noble", googleConnectionId: accountA, ga4PropertyId: "111111111" }, resolver())).resolves.toMatchObject({ ga4PropertyId: "111111111" });
+    await expect(createTheme({ name: "Noble", googleConnectionId: accountA, ga4PropertyId: "111111111" }, resolver())).resolves.toMatchObject({
+      ga4PropertyId: "111111111",
+    });
   });
 
   it("discovers properties, flagging the ones already mapped", async () => {
@@ -165,7 +167,8 @@ describe.skipIf(!uri)("GA4 themes (MongoDB)", () => {
 
   it("lets themes share a property only with non-overlapping page filters", async () => {
     const adorn = await createTheme({ name: "Adorn", googleConnectionId: accountA, ga4PropertyId: "111111111" }, resolver());
-    const mapFlaunt = (pagePathPrefix?: string) => createTheme({ name: "Flaunt", googleConnectionId: accountA, ga4PropertyId: "111111111", pagePathPrefix }, resolver());
+    const mapFlaunt = (pagePathPrefix?: string) =>
+      createTheme({ name: "Flaunt", googleConnectionId: accountA, ga4PropertyId: "111111111", pagePathPrefix }, resolver());
 
     // Adorn has no filter yet, so its property can't be shared.
     await expect(mapFlaunt("/themes/flaunt/")).rejects.toMatchObject({ status: 409, message: expect.stringContaining("page path filter") });

@@ -24,7 +24,7 @@ function availabilityProblem(schema: Record<string, unknown>): string | null {
   if (enabledOn && typeof enabledOn === "object") {
     const templates = enabledOn.templates;
     if (!Array.isArray(templates) || templates.length === 0) {
-      return "has \"enabled_on\" without templates, so it can only be added to section groups";
+      return 'has "enabled_on" without templates, so it can only be added to section groups';
     }
     if (!templates.includes("*")) return `is limited to these templates by "enabled_on": ${templates.join(", ")}`;
   }
@@ -67,7 +67,7 @@ const customLiquidSectionRule: Rule = {
         category: "Theme Store Compliance",
         severity: "blocker",
         finding: `This section has a liquid setting but ${problem} — the Custom Liquid section must be available on all templates that support sections.`,
-        recommendation: "Give the section a preset and remove its templates/enabled_on/disabled_on template restriction (or use \"templates\": [\"*\"]).",
+        recommendation: 'Give the section a preset and remove its templates/enabled_on/disabled_on template restriction (or use "templates": ["*"]).',
       }));
     }
 

@@ -52,7 +52,11 @@ function performanceScoreCard(id: string, label: string, pageSpeed: PageSpeedMet
   return { id, label, score, detail: `Averaged across ${relevant.length} ${noun}${relevant.length === 1 ? "" : "s"} measured` };
 }
 
-function featuresScoreCard(enhancementDetections: EnhancementDetectionRecord[] | undefined, themeStoreLabels?: Set<string>, liveFeatureIds?: Set<string>): ScoreCard {
+function featuresScoreCard(
+  enhancementDetections: EnhancementDetectionRecord[] | undefined,
+  themeStoreLabels?: Set<string>,
+  liveFeatureIds?: Set<string>
+): ScoreCard {
   const detections = new Map((enhancementDetections ?? []).map((d) => [d.pointId, d.detected]));
   const statuses = AVAILABLE_FEATURES.map((f) => featureStatus(f, detections, themeStoreLabels, liveFeatureIds));
   const checked = statuses.filter((s) => s !== "not_checked").length;

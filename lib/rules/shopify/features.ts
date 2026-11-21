@@ -84,7 +84,7 @@ const CHECKS: PresenceCheck[] = [
     description: "Theme should include a newsletter signup so merchants can collect customer emails.",
     severity: "medium",
     patterns: [/\{%-?\s*form\s+['"]customer['"][\s\S]{0,400}newsletter/i, /newsletter[\s\S]{0,400}\{%-?\s*form\s+['"]customer['"]/i],
-    findingWhenMissing: "No customer form referencing \"newsletter\" was found anywhere in the theme.",
+    findingWhenMissing: 'No customer form referencing "newsletter" was found anywhere in the theme.',
     recommendation: "Add a {% form 'customer' %} with a hidden contact[tags] value of \"newsletter\".",
   },
   {
@@ -114,7 +114,7 @@ const CHECKS: PresenceCheck[] = [
     description: "Product pages should show complementary product recommendations (intent=complementary).",
     severity: "low",
     patterns: [/\bcomplementary\b/i],
-    findingWhenMissing: "No reference to \"complementary\" products was found anywhere in the theme.",
+    findingWhenMissing: 'No reference to "complementary" products was found anywhere in the theme.',
     recommendation: "Fetch routes.product_recommendations_url with intent=complementary to render complementary products.",
   },
   {
@@ -214,7 +214,7 @@ const CHECKS: PresenceCheck[] = [
     description: "Header navigation should support nested dropdown menus by iterating a link's own .links.",
     severity: "low",
     patterns: [/\bfor\s+\w+\s+in\s+\w+\.links\b/],
-    findingWhenMissing: "No loop over a link's own .links (e.g. \"for child_link in link.links\") was found anywhere in the theme.",
+    findingWhenMissing: 'No loop over a link\'s own .links (e.g. "for child_link in link.links") was found anywhere in the theme.',
     recommendation: "Recurse into link.links when rendering the main menu to support multi-level dropdowns.",
   },
   {

@@ -55,11 +55,7 @@ function findLine(rawText: string, toLine: (offset: number) => number, ...needle
   return 1;
 }
 
-function extractTemplateSectionReferences(
-  json: Record<string, unknown>,
-  rawText: string,
-  toLine: (offset: number) => number
-): ParsedSectionReference[] {
+function extractTemplateSectionReferences(json: Record<string, unknown>, rawText: string, toLine: (offset: number) => number): ParsedSectionReference[] {
   const sections = json.sections;
   if (!sections || typeof sections !== "object") return [];
 

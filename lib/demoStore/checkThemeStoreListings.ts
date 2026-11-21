@@ -43,9 +43,6 @@ export async function checkPendingThemeStoreListings({ force = false, now = new 
 
   for (const [shopifyThemeId, themeName] of latestNameByThemeId) {
     const result = await fetchThemeStoreFeatureLabels(themeName);
-    await DemoStoreThemeRecord.updateMany(
-      { shopifyThemeId },
-      { themeStoreListed: result.ok, themeStoreSlug: result.slug, themeStoreCheckedAt: now }
-    );
+    await DemoStoreThemeRecord.updateMany({ shopifyThemeId }, { themeStoreListed: result.ok, themeStoreSlug: result.slug, themeStoreCheckedAt: now });
   }
 }

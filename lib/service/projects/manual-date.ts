@@ -23,7 +23,16 @@ export async function lastReportDate(projectId: string, clientId: string | null,
     $or: [{ projectId }, { "allocations.projectId": projectId }, ...(clientId ? [{ projectId: null, clientId, allocations: { $size: 0 } }] : [])],
   })
     .select("projectId clientId minutes entryDate allocations senderExternalId")
-    .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }>; senderExternalId: string }>>();
+    .lean<
+      Array<{
+        projectId: string | null;
+        clientId: string | null;
+        minutes: number;
+        entryDate: Date;
+        allocations: Array<{ projectId: string; minutes: number }>;
+        senderExternalId: string;
+      }>
+    >();
   const att = await loadAttribution();
   let last: Date | null = null;
   for (const e of expandAllocations(rows)) {
@@ -34,7 +43,11 @@ export async function lastReportDate(projectId: string, clientId: string | null,
 }
 
 /** When a move to `to` should be dated: the last report for COMPLETED / ON_HOLD, otherwise now. */
-export async function dateForManualMove(to: string, project: { _id: string; clientId: string | null; history: Array<{ at: Date }> }, now = new Date()): Promise<Date> {
+export async function dateForManualMove(
+  to: string,
+  project: { _id: string; clientId: string | null; history: Array<{ at: Date }> },
+  now = new Date()
+): Promise<Date> {
   if (!(DATED_BY_LAST_REPORT as readonly string[]).includes(to)) return now;
   const latestHistoryAt = project.history.length ? new Date(Math.max(...project.history.map((h) => +new Date(h.at)))) : null;
   return closingDate({ lastReport: await lastReportDate(project._id, project.clientId, now), now, latestHistoryAt });

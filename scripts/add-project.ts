@@ -45,13 +45,18 @@ async function main() {
     console.log(`${isUpdate ? "A Theme Update project" : `A project named "${projectName}"`} already exists on this theme. Nothing to do.`);
     return;
   }
-  console.log(`${apply ? "Creating" : "Would create"} project "${projectName}": ${isUpdate ? "Theme Update" : "Theme Design & Development"}, portal ${portal}, status ${projectStatus ?? "none"}.`);
+  console.log(
+    `${apply ? "Creating" : "Would create"} project "${projectName}": ${isUpdate ? "Theme Update" : "Theme Design & Development"}, portal ${portal}, status ${projectStatus ?? "none"}.`
+  );
   if (!apply) {
     console.log("\nDry run: nothing written. Pass --apply to create.");
     return;
   }
   await Project.create({ themeId: theme._id, name: projectName, type, status: projectStatus, portal });
-  await AdminAudit.create({ action: "projects.add", detail: { themeId: String(theme._id), themeName: theme.name, project: projectName, type, portal, status: projectStatus } });
+  await AdminAudit.create({
+    action: "projects.add",
+    detail: { themeId: String(theme._id), themeName: theme.name, project: projectName, type, portal, status: projectStatus },
+  });
   console.log("\nCreated.");
 }
 

@@ -65,12 +65,7 @@ export function sheetPresetName(value: string | null | undefined, presetNames: s
   return presetNames.find((n) => n.toLowerCase() === value.trim().toLowerCase()) ?? null;
 }
 
-export function classifyStorefront(
-  html: string,
-  finalUrl: string,
-  themeName: string,
-  presetNames: string[]
-): StoreCheck {
+export function classifyStorefront(html: string, finalUrl: string, themeName: string, presetNames: string[]): StoreCheck {
   const match = /Shopify\.theme\s*=\s*(\{[^;]*\});/.exec(html);
   let parsed: { name?: string; schema_name?: string } = {};
   if (match) {
@@ -85,7 +80,14 @@ export function classifyStorefront(
   const isPassword = /\/password(\/|$|\?)/.test(new URL(finalUrl).pathname) || /<form[^>]+action=["']\/password["']/i.test(html);
 
   if (!match) {
-    return { status: "error", liveUrl: finalUrl, liveThemeName: null, liveSchemaName: null, presetFromName: null, error: "No Shopify theme data on the page (not a Shopify store any more?)." };
+    return {
+      status: "error",
+      liveUrl: finalUrl,
+      liveThemeName: null,
+      liveSchemaName: null,
+      presetFromName: null,
+      error: "No Shopify theme data on the page (not a Shopify store any more?).",
+    };
   }
   const sameTheme = (liveSchemaName ?? "").trim().toLowerCase() === themeName.trim().toLowerCase();
   if (!sameTheme) {

@@ -14,17 +14,14 @@ export type CssRuleSource = {
   declarations: { prop: string; value: string; line: number }[];
 };
 
-const EMBEDDED_CSS_RE =
-  /\{%-?\s*(stylesheet|style)\s*-?%\}([\s\S]*?)\{%-?\s*end(?:stylesheet|style)\s*-?%\}|<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+const EMBEDDED_CSS_RE = /\{%-?\s*(stylesheet|style)\s*-?%\}([\s\S]*?)\{%-?\s*end(?:stylesheet|style)\s*-?%\}|<style\b[^>]*>([\s\S]*?)<\/style>/gi;
 
 // Liquid inside CSS (`#shopify-section-{{ section.id }} .x`, `{% if %}`
 // around whole rules) isn't valid CSS. Output tags become a placeholder
 // identifier so selectors keep their shape; logic tags are blanked. Both
 // keep their newlines so postcss line numbers still map onto the file.
 function neutralizeLiquid(css: string): string {
-  return css
-    .replace(/\{\{[\s\S]*?\}\}/g, (m) => "liquid" + m.replace(/[^\n]/g, ""))
-    .replace(/\{%[\s\S]*?%\}/g, (m) => m.replace(/[^\n]/g, " "));
+  return css.replace(/\{\{[\s\S]*?\}\}/g, (m) => "liquid" + m.replace(/[^\n]/g, "")).replace(/\{%[\s\S]*?%\}/g, (m) => m.replace(/[^\n]/g, " "));
 }
 
 // Native CSS nesting (`.menu { &:hover .submenu {} }`, which Horizon uses

@@ -47,7 +47,13 @@ describe("computeUpdatePriority", () => {
     // should carry through undiluted once weights are renormalized to the
     // single available component.
     const daysOnly = computeUpdatePriority(
-      { themeStoreVersionReleasedAt: new Date("2025-01-01T00:00:00Z"), featuresScore: null, desktopPerformanceScore: null, mobilePerformanceScore: null, opportunitiesScore: null },
+      {
+        themeStoreVersionReleasedAt: new Date("2025-01-01T00:00:00Z"),
+        featuresScore: null,
+        desktopPerformanceScore: null,
+        mobilePerformanceScore: null,
+        opportunitiesScore: null,
+      },
       NOW
     );
     expect(daysOnly.score).toBe(100);

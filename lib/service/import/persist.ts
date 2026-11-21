@@ -52,17 +52,25 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
   for (const s of spaces) {
     const row = await ServiceChatSpace.findOneAndUpdate(
       { externalId: s.externalId },
-      { $set: { name: s.name }, $setOnInsert: { _id: randomUUID(), type: s.type, clientId: s.type === "CLIENT_PROJECT" ? s.clientId ?? null : null } },
+      { $set: { name: s.name }, $setOnInsert: { _id: randomUUID(), type: s.type, clientId: s.type === "CLIENT_PROJECT" ? (s.clientId ?? null) : null } },
       { upsert: true, returnDocument: "after" }
     ).lean<{ _id: string }>();
     spaceId.set(s.externalId, row!._id);
   }
 
   // Senders: remember each one; match unmatched ones to a ServiceUser by exact name. A hand-made link is never overwritten.
-  const users = (await ServiceUser.find().select("displayName active").lean<Array<{ _id: string; displayName: string; active: boolean }>>()).map((u) => ({ id: u._id, displayName: u.displayName, active: u.active }));
+  const users = (await ServiceUser.find().select("displayName active").lean<Array<{ _id: string; displayName: string; active: boolean }>>()).map((u) => ({
+    id: u._id,
+    displayName: u.displayName,
+    active: u.active,
+  }));
   const senderUser = new Map<string, string | null>();
   const known = new Map(
-    (await ServiceChatSender.find({ externalId: { $in: [...new Set(plan.messages.map((m) => m.senderExternalId))] } }).lean<Array<{ externalId: string; displayName: string; userId: string | null }>>()).map((r) => [r.externalId, r])
+    (
+      await ServiceChatSender.find({ externalId: { $in: [...new Set(plan.messages.map((m) => m.senderExternalId))] } }).lean<
+        Array<{ externalId: string; displayName: string; userId: string | null }>
+      >()
+    ).map((r) => [r.externalId, r])
   );
   for (const m of plan.messages) {
     if (senderUser.has(m.senderExternalId)) continue;
@@ -82,23 +90,51 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
     senderUser.set(m.senderExternalId, matched);
   }
 
-  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({ id: p._id, name: p.name, aliases: p.aliases }));
+  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({
+    id: p._id,
+    name: p.name,
+    aliases: p.aliases,
+  }));
 
   // Messages
   const key = (space: string, id: string) => `${space} ${id}`;
   const messageId = new Map<string, string>();
-  const stored = new Map<string, { _id: string; senderExternalId: string; senderName: string; postedAt: Date; text: string; kind: string; parserVersion: string; userId: string | null }>();
+  const stored = new Map<
+    string,
+    { _id: string; senderExternalId: string; senderName: string; postedAt: Date; text: string; kind: string; parserVersion: string; userId: string | null }
+  >();
   const sids = [...spaceId.values()];
   const extIds = plan.messages.map((m) => m.externalId);
   for (let i = 0; i < extIds.length; i += CHUNK) {
-    for (const r of await ServiceChatMessage.find({ spaceId: { $in: sids }, externalId: { $in: extIds.slice(i, i + CHUNK) } }).lean<Array<{ _id: string; spaceId: string; externalId: string; senderExternalId: string; senderName: string; postedAt: Date; text: string; kind: string; parserVersion: string; userId: string | null }>>()) {
+    for (const r of await ServiceChatMessage.find({ spaceId: { $in: sids }, externalId: { $in: extIds.slice(i, i + CHUNK) } }).lean<
+      Array<{
+        _id: string;
+        spaceId: string;
+        externalId: string;
+        senderExternalId: string;
+        senderName: string;
+        postedAt: Date;
+        text: string;
+        kind: string;
+        parserVersion: string;
+        userId: string | null;
+      }>
+    >()) {
       stored.set(`${r.spaceId} ${r.externalId}`, r);
     }
   }
   const messageOps: Parameters<typeof ServiceChatMessage.bulkWrite>[0] = [];
   for (const m of plan.messages) {
     const sid = spaceId.get(m.spaceExternalId)!;
-    const data = { senderExternalId: m.senderExternalId, senderName: m.senderName, postedAt: new Date(m.postedAt), text: m.text, kind: m.kind, parserVersion: PARSER_VERSION, userId: senderUser.get(m.senderExternalId) ?? null };
+    const data = {
+      senderExternalId: m.senderExternalId,
+      senderName: m.senderName,
+      postedAt: new Date(m.postedAt),
+      text: m.text,
+      kind: m.kind,
+      parserVersion: PARSER_VERSION,
+      userId: senderUser.get(m.senderExternalId) ?? null,
+    };
     const s = stored.get(`${sid} ${m.externalId}`);
     if (!s) {
       const id = randomUUID();
@@ -106,7 +142,14 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
       messageId.set(key(m.spaceExternalId, m.externalId), id);
     } else {
       messageId.set(key(m.spaceExternalId, m.externalId), s._id);
-      const same = s.senderExternalId === data.senderExternalId && s.senderName === data.senderName && s.text === data.text && s.kind === data.kind && s.parserVersion === data.parserVersion && s.userId === data.userId && new Date(s.postedAt).getTime() === data.postedAt.getTime();
+      const same =
+        s.senderExternalId === data.senderExternalId &&
+        s.senderName === data.senderName &&
+        s.text === data.text &&
+        s.kind === data.kind &&
+        s.parserVersion === data.parserVersion &&
+        s.userId === data.userId &&
+        new Date(s.postedAt).getTime() === data.postedAt.getTime();
       if (!same) messageOps.push({ updateOne: { filter: { _id: s._id }, update: { $set: data } } });
     }
     out.messages++;
@@ -115,14 +158,28 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
 
   // Entries
   const fields = (e: PlannedEntry) => ({
-    userId: senderUser.get(e.senderExternalId) ?? null, senderExternalId: e.senderExternalId, clientId: e.clientId, clientRaw: e.clientRaw, profile: e.profile, profileId: matchProfile(e.profile, profiles),
-    entryDate: new Date(`${e.entryDate}T00:00:00Z`), minutes: e.minutes, state: e.state, flags: e.flags, notes: e.notes, memo: e.memo,
-    reportedOnTimerMinutes: e.reportedOnTimerMinutes, reconciliation: e.reconciliation, isLate: e.isLate, parserVersion: PARSER_VERSION,
-    startMessageId: e.startMessageExternalId ? messageId.get(key(e.spaceExternalId, e.startMessageExternalId)) ?? null : null,
+    userId: senderUser.get(e.senderExternalId) ?? null,
+    senderExternalId: e.senderExternalId,
+    clientId: e.clientId,
+    clientRaw: e.clientRaw,
+    profile: e.profile,
+    profileId: matchProfile(e.profile, profiles),
+    entryDate: new Date(`${e.entryDate}T00:00:00Z`),
+    minutes: e.minutes,
+    state: e.state,
+    flags: e.flags,
+    notes: e.notes,
+    memo: e.memo,
+    reportedOnTimerMinutes: e.reportedOnTimerMinutes,
+    reconciliation: e.reconciliation,
+    isLate: e.isLate,
+    parserVersion: PARSER_VERSION,
+    startMessageId: e.startMessageExternalId ? (messageId.get(key(e.spaceExternalId, e.startMessageExternalId)) ?? null) : null,
   });
   const msgIds = [...messageId.values()];
   const storedEntries: StoredEntry[] = [];
-  for (let i = 0; i < msgIds.length; i += CHUNK) storedEntries.push(...(await ServiceTimeEntry.find({ sourceMessageId: { $in: msgIds.slice(i, i + CHUNK) } }).lean<StoredEntry[]>()));
+  for (let i = 0; i < msgIds.length; i += CHUNK)
+    storedEntries.push(...(await ServiceTimeEntry.find({ sourceMessageId: { $in: msgIds.slice(i, i + CHUNK) } }).lean<StoredEntry[]>()));
   const byKey = new Map(storedEntries.map((r) => [`${r.sourceMessageId}|${r.source}|${r.ordinal}`, r]));
   const planned = new Set<string>();
   const entryOps: Parameters<typeof ServiceTimeEntry.bulkWrite>[0] = [];
@@ -132,7 +189,11 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
     planned.add(k);
     const existing = byKey.get(k);
     if (!existing) {
-      entryOps.push({ insertOne: { document: { _id: randomUUID(), sourceMessageId, source: e.source, ordinal: e.ordinal, projectId: e.projectId ?? null, allocations: [], ...fields(e) } } });
+      entryOps.push({
+        insertOne: {
+          document: { _id: randomUUID(), sourceMessageId, source: e.source, ordinal: e.ordinal, projectId: e.projectId ?? null, allocations: [], ...fields(e) },
+        },
+      });
       out.entriesCreated++;
     } else if (humanDecided(existing)) {
       out.entriesKeptAsReviewed++;

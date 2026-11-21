@@ -26,8 +26,16 @@ import type { ImportPlan, PlannedEntry } from "./plan";
  * client are dropped, so a client later created with that name is not affected. Hajara Hussain / Summur used to be on this list: she is a client now.
  */
 export const NOT_DM_CLIENTS: readonly RegExp[] = [
-  /sandra ro(?:se|use)/i, /sandra\s*\|\s*zajal/i, /yahya sh/i, /stellar vloeren/i, /jay hwang/i, /siddhant doshi|dreamzhub/i,
-  /lily \(noma/i, /^s robert\b/i, /carl martin/i, /kutaisi airport/i,
+  /sandra ro(?:se|use)/i,
+  /sandra\s*\|\s*zajal/i,
+  /yahya sh/i,
+  /stellar vloeren/i,
+  /jay hwang/i,
+  /siddhant doshi|dreamzhub/i,
+  /lily \(noma/i,
+  /^s robert\b/i,
+  /carl martin/i,
+  /kutaisi airport/i,
 ];
 export const isNotDmClient = (raw: string | null | undefined) => !!raw && NOT_DM_CLIENTS.some((re) => re.test(raw));
 
@@ -82,7 +90,10 @@ function guessClientAmongTeam(e: Pick<PlannedEntry, "clientRaw" | "senderName">,
 }
 
 /** `null` = drop; `{ projectId: null }` = keep, placement left to the normal rules; otherwise keep and write the project. `clientId` is set only when the client was identified here. */
-export function projectForOutsider(e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">, byClient: ReadonlyMap<string, readonly DmProject[]>): { projectId: string | null; clientId?: string } | null {
+export function projectForOutsider(
+  e: Pick<PlannedEntry, "clientId" | "clientRaw" | "senderName">,
+  byClient: ReadonlyMap<string, readonly DmProject[]>
+): { projectId: string | null; clientId?: string } | null {
   let clientId = e.clientId;
   let guessed = false;
   if (!clientId) {

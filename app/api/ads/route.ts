@@ -11,9 +11,11 @@ export async function GET() {
   const base = { configured: isAdsConfigured(), developerToken: hasDeveloperToken() };
   const connection = await loadAdsConnection();
   if (!connection) return NextResponse.json({ ...base, connected: false });
-  if (connection.status !== "active") return NextResponse.json({ ...base, connected: false, email: connection.email, error: connection.lastError ?? "Google access was removed. Reconnect." });
+  if (connection.status !== "active")
+    return NextResponse.json({ ...base, connected: false, email: connection.email, error: connection.lastError ?? "Google access was removed. Reconnect." });
   const status = { ...base, connected: true, email: connection.email };
-  if (!base.developerToken) return NextResponse.json({ ...status, accounts: [], error: "Add GOOGLE_ADS_DEVELOPER_TOKEN on the server to read your Google Ads accounts." });
+  if (!base.developerToken)
+    return NextResponse.json({ ...status, accounts: [], error: "Add GOOGLE_ADS_DEVELOPER_TOKEN on the server to read your Google Ads accounts." });
   try {
     return NextResponse.json({ ...status, accounts: await listAdsAccounts(await adsAccessToken(connection)) });
   } catch (err) {

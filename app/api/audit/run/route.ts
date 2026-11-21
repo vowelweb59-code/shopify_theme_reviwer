@@ -53,8 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A theme ZIP file is required." }, { status: 400 });
   }
 
-  const theme =
-    (await Theme.findOne({ name: themeName })) ?? (await Theme.create({ name: themeName }));
+  const theme = (await Theme.findOne({ name: themeName })) ?? (await Theme.create({ name: themeName }));
   if (theme.sourceFileName !== file.name) {
     theme.sourceFileName = file.name;
     await theme.save();

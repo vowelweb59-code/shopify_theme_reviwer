@@ -3,8 +3,7 @@ import { senderNames } from "../api/hours";
 import { dmMatch } from "../dm-members";
 import { loadAllTimeEntries } from "../hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
-import type { AppClient } from "./compare";
-import { profileKey, type ProjectHours, type RevProject, type SheetRow } from "./by-project";
+import { profileKey, type AppClient, type ProjectHours, type RevProject, type SheetRow } from "./by-project";
 import { normName } from "./match";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
@@ -17,9 +16,20 @@ export const loadRevenueInput = () => memo("service:revenue-input", 30_000, load
 async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients: AppClient[]; projects: RevProject[]; hours: ProjectHours[] }> {
   // Every project of the app (owner, 2026-11-21: the count must match the Projects tab), with the profile that tells which project a sheet row is for.
   const [takenDocs, clientDocs, projects, profileDocs, att] = await Promise.all([
-    ServiceRevenueTaken.find().select("month clientName profile amountCents").lean<Array<{ month: string; clientName: string; profile: string | null; amountCents: number }>>(),
+    ServiceRevenueTaken.find()
+      .select("month clientName profile amountCents")
+      .lean<Array<{ month: string; clientName: string; profile: string | null; amountCents: number }>>(),
     ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
-    ServiceProject.find().select("name clientId status contract upworkProfileId").lean<Array<{ _id: string; name: string; clientId: string | null; status: string; upworkProfileId: string | null; contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null }>>(),
+    ServiceProject.find().select("name clientId status contract upworkProfileId").lean<
+      Array<{
+        _id: string;
+        name: string;
+        clientId: string | null;
+        status: string;
+        upworkProfileId: string | null;
+        contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null;
+      }>
+    >(),
     ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     loadAttribution(),
   ]);
@@ -38,15 +48,24 @@ async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients:
   }
   // Two client records with the same name are one client here (otherwise a sheet name would match two and be skipped).
   const canonical = new Map<string, string>();
-  const idOf = (c: { _id: string; name: string }) => { const k = normName(c.name); if (!canonical.has(k)) canonical.set(k, c._id); return canonical.get(k)!; };
+  const idOf = (c: { _id: string; name: string }) => {
+    const k = normName(c.name);
+    if (!canonical.has(k)) canonical.set(k, c._id);
+    return canonical.get(k)!;
+  };
   const canonicalOf = new Map(clientDocs.map((c) => [c._id, idOf(c)]));
   const hours: ProjectHours[] = [...sums].map(([k, minutes]) => {
     const [projectId, month] = k.split("|");
     return { projectId: projectId!, month: month!, minutes };
   });
   const revProjects: RevProject[] = projects.map((p) => ({
-    id: p._id, name: p.name, status: p.status, clientId: p.clientId ? canonicalOf.get(p.clientId) ?? p.clientId : null,
-    profileKeys: p.upworkProfileId ? profileKeys.get(p.upworkProfileId) ?? [] : [], type: p.contract?.type ?? null, rateCents: p.contract?.hourlyRateCents ?? null,
+    id: p._id,
+    name: p.name,
+    status: p.status,
+    clientId: p.clientId ? (canonicalOf.get(p.clientId) ?? p.clientId) : null,
+    profileKeys: p.upworkProfileId ? (profileKeys.get(p.upworkProfileId) ?? []) : [],
+    type: p.contract?.type ?? null,
+    rateCents: p.contract?.hourlyRateCents ?? null,
   }));
   const clients: AppClient[] = [];
   for (const c of clientDocs) {
@@ -55,5 +74,10 @@ async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients:
     if (have) have.aliases = [...have.aliases, ...c.aliases];
     else clients.push({ id, name: c.name, aliases: [...c.aliases] });
   }
-  return { taken: takenDocs.map((t) => ({ month: t.month, clientName: t.clientName, profile: t.profile ?? null, amountCents: t.amountCents })), clients, projects: revProjects, hours };
+  return {
+    taken: takenDocs.map((t) => ({ month: t.month, clientName: t.clientName, profile: t.profile ?? null, amountCents: t.amountCents })),
+    clients,
+    projects: revProjects,
+    hours,
+  };
 }

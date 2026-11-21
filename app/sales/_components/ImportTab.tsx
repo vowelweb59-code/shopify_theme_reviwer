@@ -31,9 +31,17 @@ function lastMonth(): string {
 function MonthField({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">Only sales from</label>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
+        Only sales from
+      </label>
       <div className="flex items-center gap-2">
-        <input id={id} type="month" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm" />
+        <input
+          id={id}
+          type="month"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm"
+        />
         {value && (
           <button type="button" onClick={() => onChange("")} className="text-xs text-zinc-500 underline hover:text-primary">
             All months
@@ -41,7 +49,9 @@ function MonthField({ id, value, onChange }: { id: string; value: string; onChan
         )}
       </div>
       <p className="mt-1 text-xs text-zinc-500">
-        {value ? "Rows from other months are left out, so the whole sheet can be uploaded each month. Dates are read in UTC, as in the sheet." : "Every month in the sheet is imported."}
+        {value
+          ? "Rows from other months are left out, so the whole sheet can be uploaded each month. Dates are read in UTC, as in the sheet."
+          : "Every month in the sheet is imported."}
       </p>
     </div>
   );
@@ -111,7 +121,9 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
       />
       <form onSubmit={upload} className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface p-5">
         <div>
-          <label htmlFor="sales-theme" className="mb-1.5 block text-sm font-medium">Import for</label>
+          <label htmlFor="sales-theme" className="mb-1.5 block text-sm font-medium">
+            Import for
+          </label>
           <select
             id="sales-theme"
             value={themeId}
@@ -135,7 +147,9 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
           </p>
         </div>
         <div>
-          <label htmlFor="sales-file" className="mb-1.5 block text-sm font-medium">Sales workbook</label>
+          <label htmlFor="sales-file" className="mb-1.5 block text-sm font-medium">
+            Sales workbook
+          </label>
           <input
             ref={fileInput}
             id="sales-file"
@@ -146,7 +160,11 @@ export function ImportTab({ onImported }: { onImported: () => void }) {
           />
         </div>
         <MonthField id="sales-month" value={month} onChange={setMonth} />
-        {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-status-fail-text">
+            {error}
+          </p>
+        )}
         {results && <ImportResults results={results} />}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" loading={pending}>
@@ -208,7 +226,9 @@ function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImporte
       />
       <form onSubmit={submit} className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface p-5">
         <div>
-          <label htmlFor="paste-theme" className="mb-1.5 block text-sm font-medium">Main theme name</label>
+          <label htmlFor="paste-theme" className="mb-1.5 block text-sm font-medium">
+            Main theme name
+          </label>
           <input
             id="paste-theme"
             list="paste-theme-names"
@@ -225,20 +245,30 @@ function PasteForm({ themeNames, onImported }: { themeNames: string[]; onImporte
           </datalist>
         </div>
         <div>
-          <label htmlFor="paste-rows" className="mb-1.5 block text-sm font-medium">Sales data</label>
+          <label htmlFor="paste-rows" className="mb-1.5 block text-sm font-medium">
+            Sales data
+          </label>
           <textarea
             id="paste-rows"
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={10}
             spellCheck={false}
-            placeholder={"Date\tShop Name\tShop Domain\tPreset\tCountry\tCharge Type\tSale\tFee\tShare\n2026-09-29 10:12:00 UTC\tMy Store\tmystore.myshopify.com\tPrecious\tUS\tTheme sale\t270\t40.5\t221.67"}
+            placeholder={
+              "Date\tShop Name\tShop Domain\tPreset\tCountry\tCharge Type\tSale\tFee\tShare\n2026-09-29 10:12:00 UTC\tMy Store\tmystore.myshopify.com\tPrecious\tUS\tTheme sale\t270\t40.5\t221.67"
+            }
             className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 font-mono text-xs"
           />
-          <p className="mt-1 text-xs text-zinc-500">Without the header row, shop names and the sheet&apos;s preset columns aren&apos;t read. The preset still comes from the live store check.</p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Without the header row, shop names and the sheet&apos;s preset columns aren&apos;t read. The preset still comes from the live store check.
+          </p>
         </div>
         <MonthField id="paste-month" value={month} onChange={setMonth} />
-        {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-status-fail-text">
+            {error}
+          </p>
+        )}
         {results && <ImportResults results={results} />}
         <div>
           <Button type="submit" loading={pending}>
@@ -277,7 +307,11 @@ function ImportResults({ results }: { results: TabResult[] }) {
           </p>
         </div>
       ))}
-      {newStores > 0 && <p className="text-xs text-zinc-500">Checking {newStores} new store{newStores === 1 ? "" : "s"} for their preset in the background.</p>}
+      {newStores > 0 && (
+        <p className="text-xs text-zinc-500">
+          Checking {newStores} new store{newStores === 1 ? "" : "s"} for their preset in the background.
+        </p>
+      )}
     </div>
   );
 }

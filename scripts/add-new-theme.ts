@@ -36,23 +36,38 @@ async function main() {
   const mongoose = await connectToDatabase();
   console.log(`${apply ? "APPLYING to" : "Dry run against"} ${mongoose.connection.host} / ${mongoose.connection.name}\n`);
 
-  let theme = await Theme.findOne({ name: new RegExp(`^${themeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") }).select("_id name").lean<{ _id: unknown; name: string }>();
-  console.log(theme ? `Theme "${theme.name}" exists.` : `${apply ? "Creating" : "Would create"} theme "${themeName}" (not live, so it shows under "Under development").`);
+  let theme = await Theme.findOne({ name: new RegExp(`^${themeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") })
+    .select("_id name")
+    .lean<{ _id: unknown; name: string }>();
+  console.log(
+    theme ? `Theme "${theme.name}" exists.` : `${apply ? "Creating" : "Would create"} theme "${themeName}" (not live, so it shows under "Under development").`
+  );
   if (!theme && apply) {
     const created = await Theme.create({ name: themeName, themeStoreLive: false });
     theme = { _id: created._id, name: created.name };
   }
 
   const projectExists = theme ? await Project.exists({ themeId: theme._id, name: theme.name }) : false;
-  console.log(projectExists ? `Project "${theme?.name}" exists.` : `${apply ? "Creating" : "Would create"} project "${themeName}": Theme Design & Development, portal ${portal}, status ${status}.`);
+  console.log(
+    projectExists
+      ? `Project "${theme?.name}" exists.`
+      : `${apply ? "Creating" : "Would create"} project "${themeName}": Theme Design & Development, portal ${portal}, status ${status}.`
+  );
   if (!projectExists && apply && theme) {
     await Project.create({ themeId: theme._id, name: theme.name, type: "theme_development", status, portal });
-    await AdminAudit.create({ action: "projects.add", detail: { themeId: String(theme._id), themeName: theme.name, project: theme.name, type: "theme_development", portal, status } });
+    await AdminAudit.create({
+      action: "projects.add",
+      detail: { themeId: String(theme._id), themeName: theme.name, project: theme.name, type: "theme_development", portal, status },
+    });
   }
 
   // The reports that name this theme and are waiting for it.
   const re = new RegExp(`theme\\s*name\\s*[:\\-–—]*\\s*${themeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-  const waiting = (await ChatReport.find({ status: "needs_review", locked: { $ne: true } }).select("sender date minutes rawText").lean<{ sender: string; date: Date; minutes: number; rawText: string }[]>()).filter((r) => re.test(r.rawText));
+  const waiting = (
+    await ChatReport.find({ status: "needs_review", locked: { $ne: true } })
+      .select("sender date minutes rawText")
+      .lean<{ sender: string; date: Date; minutes: number; rawText: string }[]>()
+  ).filter((r) => re.test(r.rawText));
   const hours = waiting.reduce((n, r) => n + r.minutes, 0) / 60;
   console.log(`\n${waiting.length} flagged report(s) name "${themeName}" (${hours.toFixed(1)} h, ${(hours / 8.5).toFixed(1)} days):`);
   for (const r of waiting) console.log(`  ${new Date(r.date).toISOString().slice(0, 10)}  ${r.sender || "?"}  ${(r.minutes / 60).toFixed(1)} h`);

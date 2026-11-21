@@ -69,8 +69,7 @@ function findingsFor(ruleId: string, theme: ReturnType<typeof buildTestTheme>): 
 describe("PERF-DUPLICATE-ASSET-001", () => {
   it("flags the same script src loaded twice in one file", () => {
     const theme = buildTestTheme({
-      "layout/theme.liquid":
-        '<html><head><script src="theme.js"></script><script src="theme.js"></script></head></html>',
+      "layout/theme.liquid": '<html><head><script src="theme.js"></script><script src="theme.js"></script></head></html>',
     });
     cleanup = theme.cleanup;
     const findings = findingsFor("PERF-DUPLICATE-ASSET-001", theme);
@@ -80,8 +79,7 @@ describe("PERF-DUPLICATE-ASSET-001", () => {
 
   it("flags the same stylesheet href loaded twice in one file", () => {
     const theme = buildTestTheme({
-      "layout/theme.liquid":
-        '<html><head><link rel="stylesheet" href="theme.css"><link rel="stylesheet" href="theme.css"></head></html>',
+      "layout/theme.liquid": '<html><head><link rel="stylesheet" href="theme.css"><link rel="stylesheet" href="theme.css"></head></html>',
     });
     cleanup = theme.cleanup;
     const findings = findingsFor("PERF-DUPLICATE-ASSET-001", theme);
@@ -101,8 +99,7 @@ describe("PERF-DUPLICATE-ASSET-001", () => {
 describe("REF-SETTINGS-SCOPED-MISSING-001", () => {
   it("flags section.settings.x with no matching id in the section's own schema", () => {
     const theme = buildTestTheme({
-      "sections/hero.liquid":
-        '<div>{{ section.settings.heading }}</div>{% schema %}{"name": "Hero", "settings": []}{% endschema %}',
+      "sections/hero.liquid": '<div>{{ section.settings.heading }}</div>{% schema %}{"name": "Hero", "settings": []}{% endschema %}',
     });
     cleanup = theme.cleanup;
     const findings = findingsFor("REF-SETTINGS-SCOPED-MISSING-001", theme);
@@ -121,8 +118,7 @@ describe("REF-SETTINGS-SCOPED-MISSING-001", () => {
 
   it("flags block.settings.x with no matching id in any block type's own settings", () => {
     const theme = buildTestTheme({
-      "sections/hero.liquid":
-        '<div>{{ block.settings.title }}</div>{% schema %}{"name": "Hero", "blocks": [{"type": "item", "settings": []}]}{% endschema %}',
+      "sections/hero.liquid": '<div>{{ block.settings.title }}</div>{% schema %}{"name": "Hero", "blocks": [{"type": "item", "settings": []}]}{% endschema %}',
     });
     cleanup = theme.cleanup;
     const findings = findingsFor("REF-SETTINGS-SCOPED-MISSING-001", theme);

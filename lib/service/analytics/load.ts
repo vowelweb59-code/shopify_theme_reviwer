@@ -25,24 +25,53 @@ export async function loadAnalytics(rangeRaw?: string | null) {
   const fromDate = range.weeks ? new Date(Date.parse(`${monday}T00:00:00Z`) - (range.weeks - 1) * 7 * 86_400_000).toISOString().slice(0, 10) : null;
 
   const [rows, profiles, clients, dm] = await Promise.all([
-    ServiceProject.find().select("name status clientId reviewRating contract upworkProfileId people").lean<Array<{ _id: string; name: string; status: string; clientId: string | null; reviewRating: number | null; upworkProfileId: string | null; people: Array<{ role: string; name: string }>; contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null } | null }>>(),
+    ServiceProject.find().select("name status clientId reviewRating contract upworkProfileId people").lean<
+      Array<{
+        _id: string;
+        name: string;
+        status: string;
+        clientId: string | null;
+        reviewRating: number | null;
+        upworkProfileId: string | null;
+        people: Array<{ role: string; name: string }>;
+        contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null } | null;
+      }>
+    >(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     ServiceClient.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     entriesForDm(),
   ]);
   const profileName = new Map(profiles.map((p) => [p._id, p.name]));
   const projects: AProject[] = rows.map((p) => ({
-    id: p._id, name: p.name, status: p.status, reviewRating: p.reviewRating ?? null, fixed: p.contract?.type === "FIXED", hourlyRateCents: p.contract?.hourlyRateCents ?? null,
-    weeklyLimitMinutes: p.contract?.weeklyLimitMinutes ?? null, clientId: p.clientId, profile: p.upworkProfileId ? profileName.get(p.upworkProfileId) ?? null : null, people: p.people ?? [],
+    id: p._id,
+    name: p.name,
+    status: p.status,
+    reviewRating: p.reviewRating ?? null,
+    fixed: p.contract?.type === "FIXED",
+    hourlyRateCents: p.contract?.hourlyRateCents ?? null,
+    weeklyLimitMinutes: p.contract?.weeklyLimitMinutes ?? null,
+    clientId: p.clientId,
+    profile: p.upworkProfileId ? (profileName.get(p.upworkProfileId) ?? null) : null,
+    people: p.people ?? [],
   }));
   const capacityByMember = Object.fromEntries(Object.entries(DM_AVAILABILITY).map(([k, f]) => [k, Math.round(WEEKLY_CAPACITY_MINUTES * f)]));
   const data = computeAnalytics({
-    projects, clientNames: Object.fromEntries(clients.map((c) => [c._id, c.name])), entries: dm.entries, today, fromDate,
-    capacityMinutes: WEEKLY_CAPACITY_MINUTES, capacityByMember, dailyRules: DM_DAILY_AVAILABILITY,
+    projects,
+    clientNames: Object.fromEntries(clients.map((c) => [c._id, c.name])),
+    entries: dm.entries,
+    today,
+    fromDate,
+    capacityMinutes: WEEKLY_CAPACITY_MINUTES,
+    capacityByMember,
+    dailyRules: DM_DAILY_AVAILABILITY,
   });
   const memberName = (key: string) => dm.nameOf.get(key) ?? key;
   // Leaderboards list only people who are still here: not left, and a report in the last 2 months.
-  const twoMonthsAgo = (() => { const d = new Date(`${today}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 2); return d.toISOString().slice(0, 10); })();
+  const twoMonthsAgo = (() => {
+    const d = new Date(`${today}T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() - 2);
+    return d.toISOString().slice(0, 10);
+  })();
   const isActive = (key: string) => !dmHasLeft(key) && (data.lastReportByMember[key] ?? "") >= twoMonthsAgo;
   return { range, today, fromDate, data, memberName, memberSlug: slugOf, left: (key: string) => dmHasLeft(key), isActive };
 }

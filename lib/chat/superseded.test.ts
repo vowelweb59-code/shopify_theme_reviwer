@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import { supersededReports, type StoredForMessage } from "./superseded";
 
 const message = { id: "spaces/s/messages/m1", sender: "Musaddique Afsar", postedAt: "2026-11-13T13:41:52.123Z", keys: new Set(["new-key"]) };
-const old = (over: Partial<StoredForMessage>): StoredForMessage => ({ _id: "a", key: "old-key", messageId: null, sender: "Musaddique Afsar", postedAt: new Date("2026-11-13T13:41:52.123Z"), ...over });
+const old = (over: Partial<StoredForMessage>): StoredForMessage => ({
+  _id: "a",
+  key: "old-key",
+  messageId: null,
+  sender: "Musaddique Afsar",
+  postedAt: new Date("2026-11-13T13:41:52.123Z"),
+  ...over,
+});
 
 describe("supersededReports", () => {
   it("replaces a report of the same message whose text is no longer there", () => {

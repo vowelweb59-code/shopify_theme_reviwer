@@ -18,7 +18,8 @@ export function periodHref(base: string, tab: TabId | null, p: { g: string; anch
 
 export const dashHref = (tab: TabId, p: { g: string; anchor?: string; from?: string; to?: string }, extra = "") => periodHref("/service", tab, p, extra);
 
-const pill = (on: boolean) => `rounded-md border px-2.5 py-1 text-sm ${on ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border-subtle hover:bg-surface-muted"}`;
+const pill = (on: boolean) =>
+  `rounded-md border px-2.5 py-1 text-sm ${on ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border-subtle hover:bg-surface-muted"}`;
 const step = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";
 
 /** Day / Week / Month / Last 7 / Last 30 / Custom, with arrows to step. All links and a form: no JavaScript needed. */
@@ -31,16 +32,33 @@ export function PeriodBar({ base = "/service", tab, period, extra = "" }: { base
       <div className="flex flex-wrap items-center gap-2">
         <nav aria-label="Period" className="flex flex-wrap gap-1.5">
           {GRANULARITIES.map((x) => (
-            <Link key={x.g} href={href({ g: x.g, ...(x.g === "custom" ? { from: period.from, to: period.to } : { anchor: period.anchor }) })} aria-current={period.g === x.g ? "true" : undefined} className={pill(period.g === x.g)}>
+            <Link
+              key={x.g}
+              href={href({ g: x.g, ...(x.g === "custom" ? { from: period.from, to: period.to } : { anchor: period.anchor }) })}
+              aria-current={period.g === x.g ? "true" : undefined}
+              className={pill(period.g === x.g)}
+            >
               {x.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-1.5 text-sm">
-          {prev && <Link href={href({ g: period.g, anchor: prev })} aria-label="Previous period" className={step}>←</Link>}
+          {prev && (
+            <Link href={href({ g: period.g, anchor: prev })} aria-label="Previous period" className={step}>
+              ←
+            </Link>
+          )}
           <span className="px-1 font-medium">{period.label}</span>
-          {next && <Link href={href({ g: period.g, anchor: next })} aria-label="Next period" className={step}>→</Link>}
-          {["day", "week", "month"].includes(period.g) && <Link href={href({ g: period.g, anchor: todayIST() })} className={step}>Today</Link>}
+          {next && (
+            <Link href={href({ g: period.g, anchor: next })} aria-label="Next period" className={step}>
+              →
+            </Link>
+          )}
+          {["day", "week", "month"].includes(period.g) && (
+            <Link href={href({ g: period.g, anchor: todayIST() })} className={step}>
+              Today
+            </Link>
+          )}
         </div>
       </div>
       {period.g === "custom" && (

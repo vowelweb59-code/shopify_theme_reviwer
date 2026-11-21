@@ -57,7 +57,14 @@ export type ReviewList = {
 
 export type SenderList = {
   users: Array<{ id: string; displayName: string }>;
-  senders: Array<{ id: string; displayName: string; user: { id: string; displayName: string } | null; matchedBy: "NAME" | "MANUAL" | null; entries: number; minutes: number }>;
+  senders: Array<{
+    id: string;
+    displayName: string;
+    user: { id: string; displayName: string } | null;
+    matchedBy: "NAME" | "MANUAL" | null;
+    entries: number;
+    minutes: number;
+  }>;
 };
 
 export type ProfileList = {
@@ -93,7 +100,10 @@ type EntryDoc = {
 
 /** Live projects (a contract that has not ended), as the review pickers need them. */
 async function liveProjects(): Promise<ReviewProject[]> {
-  const rows = await ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" } }).select("name clientId").sort({ name: 1 }).lean<Array<{ _id: string; name: string; clientId: string | null }>>();
+  const rows = await ServiceProject.find({ contract: { $ne: null }, "contract.status": { $ne: "ENDED" } })
+    .select("name clientId")
+    .sort({ name: 1 })
+    .lean<Array<{ _id: string; name: string; clientId: string | null }>>();
   return rows.map((p) => ({ id: p._id, projectName: p.name, clientId: p.clientId }));
 }
 
@@ -119,7 +129,11 @@ export async function listReview(opts: { flag?: string | null; view?: string | n
     ServiceClient.find().select("name").sort({ name: 1 }).lean<Array<{ _id: string; name: string }>>(),
   ]);
   const messages = new Map(
-    (await ServiceChatMessage.find({ _id: { $in: rows.map((r) => r.sourceMessageId) } }).select("senderName postedAt text").lean<Array<{ _id: string; senderName: string; postedAt: Date; text: string }>>()).map((m) => [m._id, m])
+    (
+      await ServiceChatMessage.find({ _id: { $in: rows.map((r) => r.sourceMessageId) } })
+        .select("senderName postedAt text")
+        .lean<Array<{ _id: string; senderName: string; postedAt: Date; text: string }>>()
+    ).map((m) => [m._id, m])
   );
   const clientName = new Map(clientRows.map((c) => [c._id, c.name]));
   return {
@@ -127,14 +141,29 @@ export async function listReview(opts: { flag?: string | null; view?: string | n
     entries: rows.map((e) => {
       const m = messages.get(e.sourceMessageId);
       return {
-        id: e._id, clientId: e.clientId, projectId: e.projectId, clientRaw: e.clientRaw, suggestedClient: e.clientId ? null : suggestClientName(e.clientRaw ?? ""),
-        entryDate: day(e.entryDate)!, source: e.source, minutes: e.minutes, state: e.state, flags: e.flags, notes: e.notes, memo: e.memo, isLate: e.isLate, profile: e.profile,
-        reportedOnTimerMinutes: e.reportedOnTimerMinutes, reconciliation: e.reconciliation,
-        sender: m?.senderName ?? "Unknown sender", postedAt: m ? new Date(m.postedAt).toISOString() : "",
+        id: e._id,
+        clientId: e.clientId,
+        projectId: e.projectId,
+        clientRaw: e.clientRaw,
+        suggestedClient: e.clientId ? null : suggestClientName(e.clientRaw ?? ""),
+        entryDate: day(e.entryDate)!,
+        source: e.source,
+        minutes: e.minutes,
+        state: e.state,
+        flags: e.flags,
+        notes: e.notes,
+        memo: e.memo,
+        isLate: e.isLate,
+        profile: e.profile,
+        reportedOnTimerMinutes: e.reportedOnTimerMinutes,
+        reconciliation: e.reconciliation,
+        sender: m?.senderName ?? "Unknown sender",
+        postedAt: m ? new Date(m.postedAt).toISOString() : "",
         client: e.clientId ? { id: e.clientId, name: clientName.get(e.clientId) ?? "Unknown client" } : null,
         // Evidence for the reviewer: the original Chat text.
         messageText: (m?.text ?? "").slice(0, 1500),
-        openTimer: e.flags.includes("OPEN_INTERVAL"), orphanOff: e.flags.includes("ORPHAN_OFF"),
+        openTimer: e.flags.includes("OPEN_INTERVAL"),
+        orphanOff: e.flags.includes("ORPHAN_OFF"),
       };
     }),
     clients: clientRows.map((c) => ({ id: c._id, name: c.name })),
@@ -165,7 +194,8 @@ export async function approveEntry(entryId: string, body: Record<string, unknown
   const minutes = "minutes" in body ? int(body.minutes, "minutes", { max: MAX_PLAUSIBLE_MINUTES }) : null;
   const clientId = "clientId" in body ? str(body.clientId, "clientId", { optional: true }) : null;
   const projectId = "projectId" in body ? str(body.projectId, "projectId", { optional: true }) : null;
-  if (e.flags.includes("OPEN_INTERVAL") || e.flags.includes("ORPHAN_OFF")) throw badRequest("Resolve the timer first: give the missing time, or reject the entry.");
+  if (e.flags.includes("OPEN_INTERVAL") || e.flags.includes("ORPHAN_OFF"))
+    throw badRequest("Resolve the timer first: give the missing time, or reject the entry.");
   if (!(e.clientId ?? clientId)) throw badRequest("Choose the client before approving.");
   if (clientId && !(await ServiceClient.exists({ _id: clientId }))) throw badRequest("Unknown client.");
   if (projectId && !(await ServiceProject.exists({ _id: projectId, contract: { $ne: null } }))) throw badRequest("Unknown project.");
@@ -192,7 +222,8 @@ export async function rejectEntry(entryId: string, body: Record<string, unknown>
 const instant = (v: unknown, field: string): Date | null => {
   if (v === undefined || v === null) return null;
   // Offsets are required: reports are IST.
-  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) || Number.isNaN(Date.parse(v))) throw badRequest(`${field} must be a date and time with an offset.`);
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) || Number.isNaN(Date.parse(v)))
+    throw badRequest(`${field} must be a date and time with an offset.`);
   return new Date(v);
 };
 
@@ -244,18 +275,27 @@ export async function assignProject(entryId: string, body: Record<string, unknow
 /** Chat senders and the person each is attributed to. Unmatched senders keep their hours under their own name. */
 export async function listSenders(): Promise<SenderList> {
   const [senders, users, totals] = await Promise.all([
-    ServiceChatSender.find().select("externalId displayName userId matchedBy").sort({ displayName: 1 }).lean<Array<{ _id: string; externalId: string; displayName: string; userId: string | null; matchedBy: "NAME" | "MANUAL" | null }>>(),
+    ServiceChatSender.find()
+      .select("externalId displayName userId matchedBy")
+      .sort({ displayName: 1 })
+      .lean<Array<{ _id: string; externalId: string; displayName: string; userId: string | null; matchedBy: "NAME" | "MANUAL" | null }>>(),
     ServiceUser.find({ active: true }).select("displayName").sort({ displayName: 1 }).lean<Array<{ _id: string; displayName: string }>>(),
-    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([{ $match: { state: { $ne: "REJECTED" } } }, { $group: { _id: "$senderExternalId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } }]),
+    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([
+      { $match: { state: { $ne: "REJECTED" } } },
+      { $group: { _id: "$senderExternalId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
+    ]),
   ]);
   const byExternal = new Map(totals.map((t) => [t._id, t]));
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
   return {
     users: users.map((u) => ({ id: u._id, displayName: u.displayName })),
     senders: senders.map((s) => ({
-      id: s._id, displayName: s.displayName, matchedBy: s.matchedBy,
+      id: s._id,
+      displayName: s.displayName,
+      matchedBy: s.matchedBy,
       user: s.userId ? { id: s.userId, displayName: userName.get(s.userId) ?? "Inactive user" } : null,
-      entries: byExternal.get(s.externalId)?.entries ?? 0, minutes: byExternal.get(s.externalId)?.minutes ?? 0,
+      entries: byExternal.get(s.externalId)?.entries ?? 0,
+      minutes: byExternal.get(s.externalId)?.minutes ?? 0,
     })),
   };
 }
@@ -279,7 +319,11 @@ export async function linkSender(senderId: string, body: Record<string, unknown>
 
 /** Points every entry at the profile its written name now resolves to. One update per distinct written name. */
 async function rematchProfiles() {
-  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({ id: p._id, name: p.name, aliases: p.aliases }));
+  const profiles = (await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((p) => ({
+    id: p._id,
+    name: p.name,
+    aliases: p.aliases,
+  }));
   const written = (await ServiceTimeEntry.distinct("profile", { profile: { $ne: null } })) as string[];
   for (const w of written) {
     const profileId = matchProfile(w, profiles);
@@ -291,17 +335,26 @@ export async function listProfiles(): Promise<ProfileList> {
   const [accounts, profiles, perProfile, loose] = await Promise.all([
     ServiceUpworkAccount.find().select("name").sort({ name: 1 }).lean<Array<{ _id: string; name: string }>>(),
     ServiceUpworkProfile.find().sort({ name: 1 }).lean<Array<{ _id: string; name: string; aliases: string[]; accountId: string | null }>>(),
-    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([{ $match: { profileId: { $ne: null }, state: { $ne: "REJECTED" } } }, { $group: { _id: "$profileId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } }]),
-    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([{ $match: { profileId: null, profile: { $ne: null }, state: { $ne: "REJECTED" } } }, { $group: { _id: "$profile", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } }]),
+    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([
+      { $match: { profileId: { $ne: null }, state: { $ne: "REJECTED" } } },
+      { $group: { _id: "$profileId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
+    ]),
+    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([
+      { $match: { profileId: null, profile: { $ne: null }, state: { $ne: "REJECTED" } } },
+      { $group: { _id: "$profile", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
+    ]),
   ]);
   const totals = new Map(perProfile.map((t) => [t._id, t]));
   const login = new Map(accounts.map((a) => [a._id, a.name]));
   return {
     accounts: accounts.map((a) => ({ id: a._id, login: a.name })),
     profiles: profiles.map((p) => ({
-      id: p._id, name: p.name, aliases: p.aliases,
+      id: p._id,
+      name: p.name,
+      aliases: p.aliases,
       account: p.accountId && login.has(p.accountId) ? { id: p.accountId, login: login.get(p.accountId)! } : null,
-      entries: totals.get(p._id)?.entries ?? 0, minutes: totals.get(p._id)?.minutes ?? 0,
+      entries: totals.get(p._id)?.entries ?? 0,
+      minutes: totals.get(p._id)?.minutes ?? 0,
     })),
     // Written names that match no profile yet: add the name as an alias, or create the profile.
     unmatched: loose.map((l) => ({ name: l._id, entries: l.entries, minutes: l.minutes })).sort((a, b) => b.entries - a.entries),
@@ -367,7 +420,10 @@ const clientAliases = (v: unknown) => strList(v, "aliases", { max: 30, each: 120
 export async function listClients(): Promise<ClientList> {
   const [clients, perClient, loose] = await Promise.all([
     ServiceClient.find().sort({ name: 1 }).lean<Array<{ _id: string; name: string; aliases: string[]; inHouse: boolean; splitUnclear: boolean }>>(),
-    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([{ $match: { clientId: { $ne: null }, state: { $ne: "REJECTED" } } }, { $group: { _id: "$clientId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } }]),
+    ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([
+      { $match: { clientId: { $ne: null }, state: { $ne: "REJECTED" } } },
+      { $group: { _id: "$clientId", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
+    ]),
     ServiceTimeEntry.aggregate<{ _id: string; entries: number; minutes: number }>([
       { $match: { clientId: null, clientRaw: { $ne: null }, state: { $ne: "REJECTED" } } },
       { $group: { _id: "$clientRaw", entries: { $sum: 1 }, minutes: { $sum: "$minutes" } } },
@@ -377,7 +433,15 @@ export async function listClients(): Promise<ClientList> {
   ]);
   const totals = new Map(perClient.map((t) => [t._id, t]));
   return {
-    clients: clients.map((c) => ({ id: c._id, name: c.name, aliases: c.aliases, inHouse: c.inHouse, splitUnclear: c.splitUnclear, entries: totals.get(c._id)?.entries ?? 0, minutes: totals.get(c._id)?.minutes ?? 0 })),
+    clients: clients.map((c) => ({
+      id: c._id,
+      name: c.name,
+      aliases: c.aliases,
+      inHouse: c.inHouse,
+      splitUnclear: c.splitUnclear,
+      entries: totals.get(c._id)?.entries ?? 0,
+      minutes: totals.get(c._id)?.minutes ?? 0,
+    })),
     unmatched: loose.map((l) => ({ raw: l._id, suggested: suggestClientName(l._id), entries: l.entries, minutes: l.minutes })),
   };
 }
@@ -430,7 +494,17 @@ export async function updateClient(clientId: string, body: Record<string, unknow
   const splitUnclear = body.splitUnclear === undefined ? undefined : bool(body.splitUnclear, "splitUnclear");
   if (name === undefined && aliases === undefined && inHouse === undefined && splitUnclear === undefined) throw badRequest("Nothing to change.");
   await assertFree([...(name ? [name] : []), ...(aliases ?? [])], clientId);
-  await ServiceClient.updateOne({ _id: clientId }, { $set: { ...(name ? { name } : {}), ...(aliases ? { aliases } : {}), ...(inHouse !== undefined ? { inHouse } : {}), ...(splitUnclear !== undefined ? { splitUnclear } : {}) } });
+  await ServiceClient.updateOne(
+    { _id: clientId },
+    {
+      $set: {
+        ...(name ? { name } : {}),
+        ...(aliases ? { aliases } : {}),
+        ...(inHouse !== undefined ? { inHouse } : {}),
+        ...(splitUnclear !== undefined ? { splitUnclear } : {}),
+      },
+    }
+  );
   if (splitUnclear) await autoAssignProjects(clientId);
   const fixed = await afterClientChange();
   await recordServiceAudit("client.update", { clientId, renamed: !!name, aliasesChanged: !!aliases, inHouse, entriesFixed: fixed });

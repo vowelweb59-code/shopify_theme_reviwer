@@ -20,11 +20,17 @@ export function MissedReports() {
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Missed reports</h2>
           <p className="mt-1 max-w-3xl text-sm text-zinc-500">
-            For each working day, the hours a person reported or a red ✕ where they sent nothing. A working day is a Monday to Saturday on which at least one person reported, so a day nobody reported (a holiday) isn&apos;t counted, and today is
-            counted from tomorrow. Counting starts at a person&apos;s first report, and stops after their last once they have been quiet for 14 days. Leave isn&apos;t recorded, so check a ✕ against it.
+            For each working day, the hours a person reported or a red ✕ where they sent nothing. A working day is a Monday to Saturday on which at least one
+            person reported, so a day nobody reported (a holiday) isn&apos;t counted, and today is counted from tomorrow. Counting starts at a person&apos;s
+            first report, and stops after their last once they have been quiet for 14 days. Leave isn&apos;t recorded, so check a ✕ against it.
           </p>
         </div>
-        <select value={data?.month ?? month} onChange={(e) => setMonth(e.target.value)} aria-label="Month" className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm">
+        <select
+          value={data?.month ?? month}
+          onChange={(e) => setMonth(e.target.value)}
+          aria-label="Month"
+          className="rounded-md border border-border-subtle bg-transparent px-2 py-1.5 text-sm"
+        >
           {(data?.months ?? []).map((m) => (
             <option key={m} value={m}>
               {monthLabel(m)}
@@ -61,12 +67,22 @@ export function MissedReports() {
               <tbody>
                 {data.rows.map((r) => (
                   <tr key={r.name} className="border-t border-border-subtle">
-                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-1.5 font-medium text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">{r.name}</td>
-                    <td className={`px-2 py-1.5 text-right tabular-nums ${r.missed > 0 ? "font-semibold text-status-fail-text" : "text-zinc-500"}`}>{r.missed}</td>
+                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-1.5 font-medium text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+                      {r.name}
+                    </td>
+                    <td className={`px-2 py-1.5 text-right tabular-nums ${r.missed > 0 ? "font-semibold text-status-fail-text" : "text-zinc-500"}`}>
+                      {r.missed}
+                    </td>
                     <td className="px-2 py-1.5 text-right tabular-nums text-zinc-500">{r.reported}</td>
                     {r.cells.map((c, i) => (
                       <td key={data.days[i]} className="px-2 py-1.5 text-center tabular-nums">
-                        {c.status === "reported" ? <span className="text-zinc-700 dark:text-zinc-300">{hours(c.minutes)}</span> : c.status === "missed" ? <span className="font-semibold text-status-fail-text">✕</span> : <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                        {c.status === "reported" ? (
+                          <span className="text-zinc-700 dark:text-zinc-300">{hours(c.minutes)}</span>
+                        ) : c.status === "missed" ? (
+                          <span className="font-semibold text-status-fail-text">✕</span>
+                        ) : (
+                          <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                        )}
                       </td>
                     ))}
                   </tr>

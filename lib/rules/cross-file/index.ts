@@ -77,8 +77,7 @@ const missingTemplateSectionRule: Rule = {
   category: "Bug",
   defaultSeverity: "high",
   title: "JSON templates must reference an existing section type",
-  description:
-    "Each entry in a JSON template's \"sections\" object declares a \"type\" — that type must resolve to sections/type.liquid.",
+  description: 'Each entry in a JSON template\'s "sections" object declares a "type" — that type must resolve to sections/type.liquid.',
   check({ files, index }) {
     const findings = [];
     for (const f of files) {
@@ -298,9 +297,7 @@ const sectionsScopeRule: Rule = {
   // section group in the theme.
   check({ files, index }) {
     const findings = [];
-    const groupFiles = files.filter(
-      (f) => f.fileType === "json" && f.path.startsWith("sections/") && /(header|footer)/i.test(f.path)
-    );
+    const groupFiles = files.filter((f) => f.fileType === "json" && f.path.startsWith("sections/") && /(header|footer)/i.test(f.path));
     for (const group of groupFiles) {
       if (!group.jsonInfo) continue;
       for (const ref of group.jsonInfo.sectionReferences) {
@@ -483,8 +480,7 @@ function composedSchemaRule(config: {
       for (const f of files) {
         if (f.fileType !== "json" || !f.path.startsWith("templates/") || templateBaseName(f.path) !== config.templateBase) continue;
         const composed = composeTemplate(f, index);
-        const composedCount =
-          countJsonLdType(composed.files, config.jsonLdType) + countStructuredDataFilterUsage(composed.files, config.objectName);
+        const composedCount = countJsonLdType(composed.files, config.jsonLdType) + countStructuredDataFilterUsage(composed.files, config.objectName);
 
         if (composedCount === 0) {
           findings.push({

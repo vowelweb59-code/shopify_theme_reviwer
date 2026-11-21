@@ -63,7 +63,8 @@ export function CostCard({ projectId }: { projectId: string }) {
           </div>
           {cost.unpricedHours > 0 && (
             <p className="text-xs text-status-warning-text">
-              * {cost.unpricedHours} h belong to people with no salary entered, so they are counted in the hours but not priced; the real cost is higher. Add the salaries on the{" "}
+              * {cost.unpricedHours} h belong to people with no salary entered, so they are counted in the hours but not priced; the real cost is higher. Add
+              the salaries on the{" "}
               <Link href="/team" className="underline">
                 Team
               </Link>{" "}
@@ -86,7 +87,10 @@ export function CostCard({ projectId }: { projectId: string }) {
                       {p.name} <span className="text-xs text-zinc-500">{p.designation}</span>
                     </td>
                     <td className="py-2 pr-3 tabular-nums">{p.hours}</td>
-                    <td className="py-2 tabular-nums">{p.cost === null ? <span className="text-status-warning-text">no salary</span> : INR.format(p.cost)}{p.perLive > 0 && <span className="block text-xs text-zinc-500">commission (project is Live)</span>}</td>
+                    <td className="py-2 tabular-nums">
+                      {p.cost === null ? <span className="text-status-warning-text">no salary</span> : INR.format(p.cost)}
+                      {p.perLive > 0 && <span className="block text-xs text-zinc-500">commission (project is Live)</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>

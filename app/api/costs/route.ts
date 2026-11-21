@@ -20,26 +20,67 @@ import { TimeEntry } from "@/models/time-entry";
 export async function GET() {
   await connectToDatabase();
   const [members, themes, reports, manual, projects] = await Promise.all([
-    TeamMember.find().select("name designation monthlySalary inactive").lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null; inactive?: boolean }[]>(),
+    TeamMember.find()
+      .select("name designation monthlySalary inactive")
+      .lean<{ _id: unknown; name: string; designation: string; monthlySalary?: number | null; inactive?: boolean }[]>(),
     Theme.find().select("name themeStoreLive").lean<{ _id: unknown; name: string; themeStoreLive?: boolean | null }[]>(),
     ChatReport.find({ status: "ok", memberId: { $ne: null }, themeId: { $ne: null }, kind: { $in: ["theme", "preset", "update"] } })
       .select("themeId memberId kind minutes date")
       .lean<{ themeId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
-    TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
-    Project.find().select("themeId type status rejectedOn rounds designDays developmentDays designDaysBy developmentDaysBy designDaysSplit developmentDaysSplit").lean<{ _id: unknown; themeId: unknown; type?: string | null; status: string | null; rejectedOn?: Date | null; rounds?: { status: string; rejectedOn?: Date | null }[]; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; designDaysSplit?: { memberId: unknown; share: number }[]; developmentDaysSplit?: { memberId: unknown; share: number }[] }[]>(),
+    TimeEntry.find({ chatReportKey: { $not: { $type: "string" } } })
+      .select("projectId memberId hours date")
+      .lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
+    Project.find()
+      .select("themeId type status rejectedOn rounds designDays developmentDays designDaysBy developmentDaysBy designDaysSplit developmentDaysSplit")
+      .lean<
+        {
+          _id: unknown;
+          themeId: unknown;
+          type?: string | null;
+          status: string | null;
+          rejectedOn?: Date | null;
+          rounds?: { status: string; rejectedOn?: Date | null }[];
+          designDays?: number | null;
+          developmentDays?: number | null;
+          designDaysBy?: unknown;
+          developmentDaysBy?: unknown;
+          designDaysSplit?: { memberId: unknown; share: number }[];
+          developmentDaysSplit?: { memberId: unknown; share: number }[];
+        }[]
+      >(),
   ]);
 
   const { payments, perLiveIds } = await loadPerLive();
-  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) }]));
+  const people = new Map<string, Person>(
+    members.map((m) => [
+      String(m._id),
+      { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) },
+    ])
+  );
   const themeOfProject = new Map(projects.map((p) => [String(p._id), String(p.themeId)]));
 
   const inputs: HoursInput[] = [];
   for (const r of reports) {
-    inputs.push({ themeId: String(r.themeId), memberId: String(r.memberId), line: r.kind === "theme" ? "build" : r.kind === "preset" ? "presets" : "updates", hours: r.minutes / 60, month: r.date.toISOString().slice(0, 7), day: r.date.toISOString().slice(0, 10) });
+    inputs.push({
+      themeId: String(r.themeId),
+      memberId: String(r.memberId),
+      line: r.kind === "theme" ? "build" : r.kind === "preset" ? "presets" : "updates",
+      hours: r.minutes / 60,
+      month: r.date.toISOString().slice(0, 7),
+      day: r.date.toISOString().slice(0, 10),
+    });
   }
   for (const e of manual) {
     const themeId = themeOfProject.get(String(e.projectId));
-    if (themeId) inputs.push({ themeId, memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7), day: e.date.toISOString().slice(0, 10) });
+    if (themeId)
+      inputs.push({
+        themeId,
+        memberId: String(e.memberId),
+        line: "updates",
+        hours: e.hours,
+        month: e.date.toISOString().slice(0, 7),
+        day: e.date.toISOString().slice(0, 10),
+      });
   }
   // Days entered by hand that one person worked (manual sheet): priced as undated build hours.
   inputs.push(...fixedDayInputs(projects, (p) => String(p.themeId)));
@@ -54,7 +95,12 @@ export async function GET() {
     for (const d of dates) if (!firstRejection.has(theme) || d < (firstRejection.get(theme) as string)) firstRejection.set(theme, d);
   }
   // Per-live commission, keyed by the theme its project belongs to.
-  const costs = computeThemeCosts(inputs, people, firstRejection, payments.map((p) => ({ themeId: p.themeId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month })));
+  const costs = computeThemeCosts(
+    inputs,
+    people,
+    firstRejection,
+    payments.map((p) => ({ themeId: p.themeId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month }))
+  );
 
   const rejections = new Map<string, number>();
   const fixedDays = new Map<string, number>();
@@ -73,7 +119,14 @@ export async function GET() {
         themeId: id,
         name: t.name,
         live: t.themeStoreLive !== false,
-        ...(costs.get(id) ?? { cost: { build: 0, presets: 0, updates: 0, total: 0 }, hours: { build: 0, presets: 0, updates: 0, total: 0 }, unpricedHours: 0, people: [], byMonth: [], rework: null }),
+        ...(costs.get(id) ?? {
+          cost: { build: 0, presets: 0, updates: 0, total: 0 },
+          hours: { build: 0, presets: 0, updates: 0, total: 0 },
+          unpricedHours: 0,
+          people: [],
+          byMonth: [],
+          rework: null,
+        }),
         rejections: rejections.get(id) ?? 0,
         fixedDays: Math.round((fixedDays.get(id) ?? 0) * 100) / 100,
       };

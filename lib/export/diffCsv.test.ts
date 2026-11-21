@@ -21,17 +21,12 @@ describe("buildDiffCsv", () => {
     const diff = computeFindingsDiff([finding()], [finding()]);
     const csv = buildDiffCsv(diff.findings);
     const lines = csv.split("\r\n");
-    expect(lines[0]).toBe(
-      "Diff Status,Severity,Category,Rule ID,Requirement ID,Page,File,Previous Line,Current Line,Previous Finding,Current Finding,Source"
-    );
+    expect(lines[0]).toBe("Diff Status,Severity,Category,Rule ID,Requirement ID,Page,File,Previous Line,Current Line,Previous Finding,Current Finding,Source");
     expect(lines[1]).toContain("still_present,high,Accessibility,A11Y-IMG-ALT-001");
   });
 
   it("shows previous and current finding text separately for a changed row", () => {
-    const diff = computeFindingsDiff(
-      [finding({ finding: "Old message." })],
-      [finding({ finding: "New message entirely." })]
-    );
+    const diff = computeFindingsDiff([finding({ finding: "Old message." })], [finding({ finding: "New message entirely." })]);
     const csv = buildDiffCsv(diff.findings);
     expect(csv).toContain("Old message.");
     expect(csv).toContain("New message entirely.");

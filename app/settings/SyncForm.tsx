@@ -29,7 +29,9 @@ export function SyncForm({ connected }: { connected: boolean }) {
     setBusy(null);
     if (!r.ok) return setError(r.error);
     const s = r.data.saved;
-    setMessage(`${r.data.month}: ${r.data.fetched} messages read. ${s.entriesCreated} new, ${s.entriesUpdated} updated, ${s.entriesKeptAsReviewed} kept as reviewed, ${s.entriesRemoved} removed.`);
+    setMessage(
+      `${r.data.month}: ${r.data.fetched} messages read. ${s.entriesCreated} new, ${s.entriesUpdated} updated, ${s.entriesKeptAsReviewed} kept as reviewed, ${s.entriesRemoved} removed.`
+    );
     router.refresh();
   }
 
@@ -50,13 +52,29 @@ export function SyncForm({ connected }: { connected: boolean }) {
         <span className="mb-1 block text-zinc-500">Month</span>
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} required className={INPUT} />
       </label>
-      <button disabled={!connected || busy !== null || !month} className={BUTTON}>{busy === "sync" ? "Importing…" : "Import month"}</button>
-      <button type="button" onClick={reread} disabled={busy !== null} className={BUTTON} title="No Google call: re-applies client matching and project placement to stored entries">
+      <button disabled={!connected || busy !== null || !month} className={BUTTON}>
+        {busy === "sync" ? "Importing…" : "Import month"}
+      </button>
+      <button
+        type="button"
+        onClick={reread}
+        disabled={busy !== null}
+        className={BUTTON}
+        title="No Google call: re-applies client matching and project placement to stored entries"
+      >
         {busy === "reread" ? "Applying…" : "Re-apply rules"}
       </button>
       {!connected && <p className="basis-full text-sm text-zinc-500">Connect Google Chat to import. Re-applying the rules works without a connection.</p>}
-      {error && <p role="alert" className="basis-full text-sm text-status-fail-text">{error}</p>}
-      {message && <p role="status" className="basis-full text-sm">{message}</p>}
+      {error && (
+        <p role="alert" className="basis-full text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p role="status" className="basis-full text-sm">
+          {message}
+        </p>
+      )}
     </form>
   );
 }

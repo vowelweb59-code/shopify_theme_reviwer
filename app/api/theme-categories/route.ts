@@ -18,7 +18,9 @@ export async function GET() {
     Theme.find().select("name").sort({ name: 1 }).lean<{ _id: unknown; name: string }[]>(),
     listPresetCategories(),
     ThemeStoreTheme.find().select("name designer industries").lean<{ name: string; designer: string | null; industries: string[] }[]>(),
-    Project.find({ type: { $ne: "theme_update" }, portal: { $ne: null } }).select("themeId portal").lean<{ themeId: unknown; portal: string }[]>(),
+    Project.find({ type: { $ne: "theme_update" }, portal: { $ne: null } })
+      .select("themeId portal")
+      .lean<{ themeId: unknown; portal: string }[]>(),
   ]);
 
   // The first row per theme is the main theme's own preset.
@@ -27,7 +29,8 @@ export async function GET() {
   const store = new Map(storeThemes.map((s) => [s.name.trim().toLowerCase(), s]));
   // How many themes each publisher has on the Theme Store (the whole catalog).
   const publisherThemes = new Map<string, number>();
-  for (const s of storeThemes) if (s.designer) publisherThemes.set(s.designer.trim().toLowerCase(), (publisherThemes.get(s.designer.trim().toLowerCase()) ?? 0) + 1);
+  for (const s of storeThemes)
+    if (s.designer) publisherThemes.set(s.designer.trim().toLowerCase(), (publisherThemes.get(s.designer.trim().toLowerCase()) ?? 0) + 1);
   const portal = new Map<string, string>();
   for (const p of projects) if (!portal.has(String(p.themeId))) portal.set(String(p.themeId), p.portal);
 

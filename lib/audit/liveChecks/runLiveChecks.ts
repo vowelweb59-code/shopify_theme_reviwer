@@ -63,7 +63,8 @@ async function runChecksForPreset(label: string, demoStoreUrl: string, session?:
     try {
       const collectionFacts = await fetchPageFacts(collectionLink, session);
       for (const id of collectionFacts.liveFeatures ?? []) liveFeatures.add(id);
-      if (collectionFacts.content) findings.push(...demoRealismFindings(collectionFacts.content, "collection", collectionFacts.url).map((f) => ({ ...f, presetLabel: label })));
+      if (collectionFacts.content)
+        findings.push(...demoRealismFindings(collectionFacts.content, "collection", collectionFacts.url).map((f) => ({ ...f, presetLabel: label })));
     } catch {
       // A collection page that won't load is not a realism finding; skip it.
     }
@@ -81,10 +82,7 @@ async function runChecksForPreset(label: string, demoStoreUrl: string, session?:
  * the rest still succeeded) from running. No browser is used anywhere in
  * this module — see fetchPageFacts.ts for what that trades off.
  */
-export async function runLiveChecksForPresets(
-  presets: PresetLink[],
-  onItemComplete?: () => void
-): Promise<MultiPresetLiveCheckResult> {
+export async function runLiveChecksForPresets(presets: PresetLink[], onItemComplete?: () => void): Promise<MultiPresetLiveCheckResult> {
   const findings: ExecutedFinding[] = [];
   const errors: PresetLiveCheckError[] = [];
   const presetFacts: PresetFacts[] = [];

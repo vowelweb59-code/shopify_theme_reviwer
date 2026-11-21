@@ -33,7 +33,9 @@ export function ProfileCard({ id, profile }: { id: string; profile: Profile }) {
 
   return (
     <section aria-labelledby="profile" className="rounded-lg border border-border-subtle bg-surface p-4">
-      <h3 id="profile" className="mb-3 font-medium">Profile</h3>
+      <h3 id="profile" className="mb-3 font-medium">
+        Profile
+      </h3>
       <form
         className="flex flex-wrap items-end gap-3"
         onSubmit={(e) => {
@@ -43,13 +45,21 @@ export function ProfileCard({ id, profile }: { id: string; profile: Profile }) {
       >
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Designation</span>
-          <input value={designation} onChange={(e) => setDesignation(e.target.value)} maxLength={100} className={`${INPUT} w-56`} placeholder="e.g. Senior Developer" />
+          <input
+            value={designation}
+            onChange={(e) => setDesignation(e.target.value)}
+            maxLength={100}
+            className={`${INPUT} w-56`}
+            placeholder="e.g. Senior Developer"
+          />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Team</span>
           <input value={team} onChange={(e) => setTeam(e.target.value)} maxLength={100} className={`${INPUT} w-48`} placeholder="e.g. Front End" />
         </label>
-        <button disabled={busy !== null} className={btn}>{busy === "profile" ? "Saving…" : "Save profile"}</button>
+        <button disabled={busy !== null} className={btn}>
+          {busy === "profile" ? "Saving…" : "Save profile"}
+        </button>
       </form>
 
       <form
@@ -63,7 +73,13 @@ export function ProfileCard({ id, profile }: { id: string; profile: Profile }) {
       >
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Monthly salary</span>
-          <input inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))} className={`${INPUT} w-40`} placeholder="0" />
+          <input
+            inputMode="decimal"
+            value={salary}
+            onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
+            className={`${INPUT} w-40`}
+            placeholder="0"
+          />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-zinc-500">Currency</span>
@@ -72,11 +88,21 @@ export function ProfileCard({ id, profile }: { id: string; profile: Profile }) {
             <option value="USD">USD</option>
           </select>
         </label>
-        <button disabled={busy !== null} className={btn}>{busy === "salary" ? "Saving…" : "Save salary"}</button>
+        <button disabled={busy !== null} className={btn}>
+          {busy === "salary" ? "Saving…" : "Save salary"}
+        </button>
         <p className="basis-full text-xs text-zinc-500">Visible to everyone signed in to this app. It is never written to the audit log.</p>
       </form>
-      {saved && <p role="status" className="mt-2 text-sm text-status-pass-text">{saved}</p>}
-      {error && <p role="alert" className="mt-2 text-sm text-status-fail-text">{error}</p>}
+      {saved && (
+        <p role="status" className="mt-2 text-sm text-status-pass-text">
+          {saved}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

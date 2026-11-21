@@ -27,16 +27,29 @@ export function AssignRow({ entry: e, projects }: { entry: ReviewEntry; projects
     <li className={`flex flex-wrap items-center gap-3 ${SECTION}`}>
       <div className="min-w-48 flex-1">
         <span className="font-medium">{e.client?.name}</span>
-        <span className="text-zinc-500"> · {e.sender} · {e.entryDate}</span>
+        <span className="text-zinc-500">
+          {" "}
+          · {e.sender} · {e.entryDate}
+        </span>
         {e.memo && <div className="text-sm text-zinc-500">{e.memo}</div>}
       </div>
       <div className="font-semibold">{fmtMinutes(e.minutes)}</div>
       <select aria-label="Project" value={projectId} onChange={(ev) => setProjectId(ev.target.value)} className={INPUT}>
         <option value="">Choose a project…</option>
-        {projects.map((p) => <option key={p.id} value={p.id}>{p.projectName}</option>)}
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.projectName}
+          </option>
+        ))}
       </select>
-      <button disabled={busy || !projectId} onClick={() => void assign()} className={BTN}>Assign</button>
-      {error && <p role="alert" className="basis-full text-sm text-status-fail-text">{error}</p>}
+      <button disabled={busy || !projectId} onClick={() => void assign()} className={BTN}>
+        Assign
+      </button>
+      {error && (
+        <p role="alert" className="basis-full text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
     </li>
   );
 }

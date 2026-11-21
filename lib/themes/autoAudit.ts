@@ -182,7 +182,10 @@ async function ensureUpdateProject(theme: ThemeRow, auditRunId: string): Promise
   }
   const top = [...bestByRule.values()].sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99)).slice(0, 5);
   const description = top.length
-    ? `Created automatically from the latest audit. Top issues:\n${top.map((f) => `- [${f.severity}] ${f.recommendation || f.finding}`).join("\n")}`.slice(0, MAX_DESCRIPTION)
+    ? `Created automatically from the latest audit. Top issues:\n${top.map((f) => `- [${f.severity}] ${f.recommendation || f.finding}`).join("\n")}`.slice(
+        0,
+        MAX_DESCRIPTION
+      )
     : "Created automatically from the latest audit (no open issues were found).";
   await Project.create({ themeId: theme._id, name: `${theme.name} update`, type: "theme_update", description });
 }

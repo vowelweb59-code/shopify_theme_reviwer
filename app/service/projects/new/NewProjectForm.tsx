@@ -62,10 +62,17 @@ export function NewProjectForm() {
         <textarea name="description" rows={3} maxLength={5000} className={input} />
       </label>
       <div className="flex items-center gap-3">
-        <button disabled={busy} className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60">
+        <button
+          disabled={busy}
+          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+        >
           {busy ? "Creating…" : "Create project"}
         </button>
-        {error && <p role="alert" className="text-sm text-status-fail-text">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-status-fail-text">
+            {error}
+          </p>
+        )}
       </div>
     </form>
   );

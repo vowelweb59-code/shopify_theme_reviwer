@@ -19,7 +19,10 @@ export function isTracked(m: { name: string; designation: string }): boolean {
 }
 
 export async function listTrackedMembers(): Promise<TrackedMember[]> {
-  const members = await TeamMember.find({ inactive: { $ne: true } }).select("name designation").sort({ name: 1 }).lean<TrackedMember[]>();
+  const members = await TeamMember.find({ inactive: { $ne: true } })
+    .select("name designation")
+    .sort({ name: 1 })
+    .lean<TrackedMember[]>();
   return members.filter(isTracked);
 }
 
@@ -39,8 +42,13 @@ export async function missedReportsForMonth(month: string): Promise<MissedGrid> 
 
   const [members, monthReports, spans] = await Promise.all([
     listTrackedMembers(),
-    ChatReport.find({ date: { $gte: start, $lt: end } }).select("memberId date minutes").lean<{ memberId: unknown; date: Date; minutes: number }[]>(),
-    ChatReport.aggregate<{ _id: unknown; first: Date; last: Date }>([{ $match: { memberId: { $ne: null } } }, { $group: { _id: "$memberId", first: { $min: "$date" }, last: { $max: "$date" } } }]),
+    ChatReport.find({ date: { $gte: start, $lt: end } })
+      .select("memberId date minutes")
+      .lean<{ memberId: unknown; date: Date; minutes: number }[]>(),
+    ChatReport.aggregate<{ _id: unknown; first: Date; last: Date }>([
+      { $match: { memberId: { $ne: null } } },
+      { $group: { _id: "$memberId", first: { $min: "$date" }, last: { $max: "$date" } } },
+    ]),
   ]);
 
   // A working day is a Monday-to-Saturday on which somebody reported (a holiday has no reports at all); today is still open.
@@ -48,7 +56,8 @@ export async function missedReportsForMonth(month: string): Promise<MissedGrid> 
   const days = [...reportedDays].filter((d) => d < today && new Date(d).getUTCDay() !== 0).sort();
 
   const minutesBy = new Map<string, number>();
-  for (const r of monthReports) if (r.memberId) minutesBy.set(`${r.memberId}|${dayKey(r.date)}`, (minutesBy.get(`${r.memberId}|${dayKey(r.date)}`) ?? 0) + r.minutes);
+  for (const r of monthReports)
+    if (r.memberId) minutesBy.set(`${r.memberId}|${dayKey(r.date)}`, (minutesBy.get(`${r.memberId}|${dayKey(r.date)}`) ?? 0) + r.minutes);
   const span = new Map(spans.map((s) => [String(s._id), { first: dayKey(s.first), last: dayKey(s.last) }]));
 
   const rows = members.map((m) => {
@@ -62,7 +71,13 @@ export async function missedReportsForMonth(month: string): Promise<MissedGrid> 
       if (!own || d < own.first || (inactive && d > own.last)) return { status: "none" };
       return { status: "missed" };
     });
-    return { name: m.name, designation: m.designation, cells, reported: cells.filter((c) => c.status === "reported").length, missed: cells.filter((c) => c.status === "missed").length };
+    return {
+      name: m.name,
+      designation: m.designation,
+      cells,
+      reported: cells.filter((c) => c.status === "reported").length,
+      missed: cells.filter((c) => c.status === "missed").length,
+    };
   });
 
   // The ones who missed most first, so a pattern stands out.

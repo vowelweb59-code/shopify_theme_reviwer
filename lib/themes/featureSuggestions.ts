@@ -1,4 +1,11 @@
-import { AVAILABLE_FEATURES, featureSources, featureStatus, type AvailableFeature, type FeatureSources, type FeatureStatus } from "@/lib/audit/availableFeatures";
+import {
+  AVAILABLE_FEATURES,
+  featureSources,
+  featureStatus,
+  type AvailableFeature,
+  type FeatureSources,
+  type FeatureStatus,
+} from "@/lib/audit/availableFeatures";
 
 export type ThemeFeatureInput = {
   name: string;

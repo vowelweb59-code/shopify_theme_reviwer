@@ -32,23 +32,42 @@ export type InstallGroup = {
   error: string | null;
 };
 
-type ThemeLean = { name: string; pagePathPrefix?: string | null; themeId?: { toString(): string } | null; googleConnectionId: { toString(): string }; ga4PropertyId: string; ga4PropertyTimeZone: string | null };
+type ThemeLean = {
+  name: string;
+  pagePathPrefix?: string | null;
+  themeId?: { toString(): string } | null;
+  googleConnectionId: { toString(): string };
+  ga4PropertyId: string;
+  ga4PropertyTimeZone: string | null;
+};
 type Only = { name: string; aliases: string[] };
 
 const message = (err: unknown) => (err instanceof Ga4ConnectionError ? err.message : classifyDataApiError(err).message);
 
-async function readGroup(connectionId: string, propertyId: string, themes: string[], timeZone: string | null, spec: DateRangeSpec, only: Only | null): Promise<InstallGroup> {
+async function readGroup(
+  connectionId: string,
+  propertyId: string,
+  themes: string[],
+  timeZone: string | null,
+  spec: DateRangeSpec,
+  only: Only | null
+): Promise<InstallGroup> {
   const range = resolvePeriod(spec, timeZone, false).current;
   const group: InstallGroup = { propertyId, themes, range, dimensions: [], rows: [], total: 0, filteredTo: null, unnamed: 0, error: null };
   try {
     const auth = await getAuthorizedClient(connectionId);
-    const metadata = await analyticsdata({ version: "v1beta", auth, timeout: GOOGLE_API_TIMEOUT_MS }).properties.getMetadata({ name: `properties/${propertyId}/metadata` });
+    const metadata = await analyticsdata({ version: "v1beta", auth, timeout: GOOGLE_API_TIMEOUT_MS }).properties.getMetadata({
+      name: `properties/${propertyId}/metadata`,
+    });
     const all = (metadata.data.dimensions ?? []).map((d) => ({ apiName: d.apiName ?? "", uiName: d.uiName ?? "" }));
     group.dimensions = pickInstallDimensions(all);
     // The parameter that names the theme is always shown, and is what a one-theme view narrows by.
     const themeParameter = pickThemeDimension(all);
     if (themeParameter && !group.dimensions.some((d) => d.apiName === themeParameter)) {
-      group.dimensions = [{ apiName: themeParameter, label: all.find((d) => d.apiName === themeParameter)?.uiName || themeParameter.replace("customEvent:", "") }, ...group.dimensions].slice(0, MAX_INSTALL_DIMENSIONS);
+      group.dimensions = [
+        { apiName: themeParameter, label: all.find((d) => d.apiName === themeParameter)?.uiName || themeParameter.replace("customEvent:", "") },
+        ...group.dimensions,
+      ].slice(0, MAX_INSTALL_DIMENSIONS);
     }
     const report = await runFullReport(createDataApi(auth), propertyId, {
       dateRanges: [{ startDate: range.start, endDate: range.end }],
@@ -82,11 +101,17 @@ export async function fetchInstallEvents(themeSlug: string, spec: DateRangeSpec)
   const byProperty = new Map<string, { connectionId: string; propertyId: string; timeZone: string | null; names: string[] }>();
   for (const t of themes) {
     const key = `${t.googleConnectionId.toString()}:${t.ga4PropertyId}`;
-    const entry = byProperty.get(key) ?? { connectionId: t.googleConnectionId.toString(), propertyId: t.ga4PropertyId, timeZone: t.ga4PropertyTimeZone, names: [] };
+    const entry = byProperty.get(key) ?? {
+      connectionId: t.googleConnectionId.toString(),
+      propertyId: t.ga4PropertyId,
+      timeZone: t.ga4PropertyTimeZone,
+      names: [],
+    };
     entry.names.push(t.name);
     byProperty.set(key, entry);
   }
   // One theme asked for: narrow a shared property's installs to it by the names its install events use (the theme and its presets).
-  const only: Only | null = themeSlug !== "all" && themes[0]?.pagePathPrefix ? { name: themes[0].name, aliases: themeAliases(await themeNames(themes[0])) } : null;
+  const only: Only | null =
+    themeSlug !== "all" && themes[0]?.pagePathPrefix ? { name: themes[0].name, aliases: themeAliases(await themeNames(themes[0])) } : null;
   return Promise.all([...byProperty.values()].map((p) => readGroup(p.connectionId, p.propertyId, p.names, p.timeZone, spec, only)));
 }

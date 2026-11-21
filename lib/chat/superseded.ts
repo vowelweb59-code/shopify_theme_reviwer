@@ -4,7 +4,12 @@
 // same posting time.
 
 export type StoredForMessage = { _id: unknown; key: string; messageId?: string | null; sender: string; postedAt?: Date | null; locked?: boolean };
-export type MessageRead = { id: string; sender: string; postedAt?: string; /** The keys of every report the message's current text makes. */ keys: Set<string> };
+export type MessageRead = {
+  id: string;
+  sender: string;
+  postedAt?: string;
+  /** The keys of every report the message's current text makes. */ keys: Set<string>;
+};
 
 /** The stored reports of this message that its current text no longer makes. Reports classified by hand (locked) are never replaced. */
 export function supersededReports(existing: StoredForMessage[], message: MessageRead): StoredForMessage[] {

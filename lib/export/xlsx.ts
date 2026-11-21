@@ -103,7 +103,11 @@ export async function buildReportXlsx(opts: {
     "Internal Standard": "Internal Standards",
   };
   for (const [category, sheetName] of Object.entries(categorySheets)) {
-    addFindingsSheet(workbook, sheetName, opts.findings.filter((f) => f.category === category));
+    addFindingsSheet(
+      workbook,
+      sheetName,
+      opts.findings.filter((f) => f.category === category)
+    );
   }
 
   const coverageSheet = workbook.addWorksheet("Rule Coverage");
@@ -117,7 +121,14 @@ export async function buildReportXlsx(opts: {
   ];
   coverageSheet.getRow(1).font = { bold: true };
   for (const [category, c] of Object.entries(opts.coverageByCategory)) {
-    coverageSheet.addRow({ category, total: c.total, implemented: c.implemented, partial: c.partial, notImplemented: c.notImplemented, percentage: Number(c.percentage.toFixed(1)) });
+    coverageSheet.addRow({
+      category,
+      total: c.total,
+      implemented: c.implemented,
+      partial: c.partial,
+      notImplemented: c.notImplemented,
+      percentage: Number(c.percentage.toFixed(1)),
+    });
   }
 
   if (opts.diagnostics) {

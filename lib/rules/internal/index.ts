@@ -26,7 +26,7 @@ const headingMatchesSectionNameRule: Rule = {
   defaultSeverity: "low",
   title: "Section heading placeholder should match the section's customizer name",
   description:
-    "Team convention: for a section with a \"heading\" setting, that setting's default (placeholder) text should match the section's own \"name\" as shown in the theme editor's section list.",
+    'Team convention: for a section with a "heading" setting, that setting\'s default (placeholder) text should match the section\'s own "name" as shown in the theme editor\'s section list.',
   // Team-specific convention, not a Shopify requirement — no requirementId,
   // per phase-3's rule that internal standards must stand on their own.
   check({ files, index }) {
@@ -73,7 +73,10 @@ const headingMatchesSectionNameRule: Rule = {
 // recency/popularity (the actual repetitive case this rule targets) even
 // though their literal text differs completely.
 const MERCHANDISING_AXES: { axis: string; keywords: string[] }[] = [
-  { axis: "recency/popularity", keywords: ["new", "arrival", "latest", "trending", "hot", "popular", "bestseller", "best seller", "top seller", "just in", "fresh"] },
+  {
+    axis: "recency/popularity",
+    keywords: ["new", "arrival", "latest", "trending", "hot", "popular", "bestseller", "best seller", "top seller", "just in", "fresh"],
+  },
   { axis: "brand", keywords: ["brand", "designer", "label"] },
   { axis: "demographic", keywords: ["men", "women", "kids", "kid", "baby", "teen", "unisex", "boys", "girls", "age"] },
   { axis: "price/value", keywords: ["sale", "clearance", "deal", "discount", "budget", "offer"] },
@@ -159,7 +162,8 @@ const repetitiveSectionAxisRule: Rule = {
             category: "Internal Standard" as const,
             severity: "low" as const,
             finding: `Sections "${keys.join('", "')}" (type "${type}") all appear to organize products by ${axis} — likely the same underlying browsing job with a different skin. Verify manually: this only recognizes a small set of known merchandising axes from heading/collection text, not full content understanding.`,
-            recommendation: "Consider consolidating these sections, or differentiate one to serve a genuinely different customer job (e.g. browse by brand, by occasion, or a personalized finder).",
+            recommendation:
+              "Consider consolidating these sections, or differentiate one to serve a genuinely different customer job (e.g. browse by brand, by occasion, or a personalized finder).",
           });
         }
       }

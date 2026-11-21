@@ -40,9 +40,26 @@ export function ThemeCategoriesTab() {
       render: (r) => <span className={r.category ? "font-medium" : "italic text-zinc-500"}>{industryLabel(r.category)}</span>,
       sortValue: (r) => industryLabel(r.category),
     },
-    { key: "count", header: "Themes", render: (r) => <span className="tabular-nums">{r.themes.length}</span>, sortValue: (r) => r.themes.length, className: "text-right" },
-    { key: "names", header: "Which themes", render: (r) => (r.themes.length ? <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> : <span className="text-zinc-400">—</span>) },
-    { key: "storeCount", header: "On the Theme Store", render: (r) => <span className="tabular-nums">{r.storeThemes.length.toLocaleString()}</span>, sortValue: (r) => r.storeThemes.length, className: "text-right" },
+    {
+      key: "count",
+      header: "Themes",
+      render: (r) => <span className="tabular-nums">{r.themes.length}</span>,
+      sortValue: (r) => r.themes.length,
+      className: "text-right",
+    },
+    {
+      key: "names",
+      header: "Which themes",
+      render: (r) =>
+        r.themes.length ? <span className="text-zinc-600 dark:text-zinc-400">{r.themes.join(", ")}</span> : <span className="text-zinc-400">—</span>,
+    },
+    {
+      key: "storeCount",
+      header: "On the Theme Store",
+      render: (r) => <span className="tabular-nums">{r.storeThemes.length.toLocaleString()}</span>,
+      sortValue: (r) => r.storeThemes.length,
+      className: "text-right",
+    },
     {
       key: "storeNames",
       header: "Theme Store themes",
@@ -73,13 +90,18 @@ export function ThemeCategoriesTab() {
         ) : (
           <>
             <p className="max-w-2xl text-sm text-zinc-500">
-              Each main theme with its publisher and the one Theme Store category its main preset belongs to — the one chosen by hand on the Sales page&apos;s Categories tab, or where the
-              store lists the theme&apos;s default preset. Presets aren&apos;t listed here.
+              Each main theme with its publisher and the one Theme Store category its main preset belongs to — the one chosen by hand on the Sales page&apos;s
+              Categories tab, or where the store lists the theme&apos;s default preset. Presets aren&apos;t listed here.
             </p>
 
             <section className="flex flex-col gap-3">
               <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">Themes per category</h3>
-              <ResponsiveTable columns={categoryColumns} rows={categories} rowKey={(r) => r.category ?? "none"} theadClassName="bg-primary-tint text-primary-tint-text" />
+              <ResponsiveTable
+                columns={categoryColumns}
+                rows={categories}
+                rowKey={(r) => r.category ?? "none"}
+                theadClassName="bg-primary-tint text-primary-tint-text"
+              />
             </section>
           </>
         )}

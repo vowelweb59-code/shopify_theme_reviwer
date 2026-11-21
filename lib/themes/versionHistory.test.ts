@@ -44,6 +44,10 @@ describe("parseVersionHistory", () => {
   it("does not mistake headings inside a note's body for versions, and returns [] for a page with none", () => {
     expect(parseVersionHistory("<h3>Added</h3><p>x</p><h3>Changed</h3>")).toEqual([]);
     expect(parseVersionHistory("")).toEqual([]);
-    expect(parseVersionHistory(entry("1.0.0", "May 13, 2026", "S", `<div class="tw-release-note-body"><h3>Version history</h3><ul><li>x</li></ul></div>`)).map((v) => v.version)).toEqual(["1.0.0"]);
+    expect(
+      parseVersionHistory(entry("1.0.0", "May 13, 2026", "S", `<div class="tw-release-note-body"><h3>Version history</h3><ul><li>x</li></ul></div>`)).map(
+        (v) => v.version
+      )
+    ).toEqual(["1.0.0"]);
   });
 });

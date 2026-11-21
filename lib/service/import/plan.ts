@@ -3,15 +3,15 @@
 // Rules: docs/design/data-import.md. Sender owns the hours; everything is IST. HOURS COME FROM THE REPORTS ONLY (owner, 2026-11-21: "consider the
 // report only, not the TIMER ON / TIMER OFF messages"): a report's hours are its OFF Timer line plus its ON Timer figure. The "<client> - TIMER
 // ON" / "TIMER OFF" messages are still read and stored (they are Chat messages) but make no entry and count nothing.
-import { classifyMessage, type MessageKind } from './classify';
-import { extractClient, findClientByFirstWord, findClientInText } from './client-field';
-import type { KnownClient } from './client-match';
-import { istDate, normalizeName } from './text';
-import { isLateReport } from './week';
+import { classifyMessage, type MessageKind } from "./classify";
+import { extractClient, findClientByFirstWord, findClientInText } from "./client-field";
+import type { KnownClient } from "./client-match";
+import { istDate, normalizeName } from "./text";
+import { isLateReport } from "./week";
 
-export const PARSER_VERSION = 'import-v2';
+export const PARSER_VERSION = "import-v2";
 /** Note on an entry the importer set aside by rule (open timers). Re-derived on every import, unlike a person's rejection. */
-export const AUTO_IGNORED = 'AUTO_IGNORED';
+export const AUTO_IGNORED = "AUTO_IGNORED";
 
 export interface RawChatMessage {
   externalId: string;
@@ -25,7 +25,7 @@ export interface RawChatMessage {
 export interface SpaceInput {
   externalId: string;
   name: string;
-  type: 'TIMER_STATUS' | 'CLIENT_PROJECT';
+  type: "TIMER_STATUS" | "CLIENT_PROJECT";
   clientId?: string | null;
   messages: RawChatMessage[];
 }
@@ -54,7 +54,7 @@ export interface PlannedEntry {
   messageExternalId: string;
   startMessageExternalId: string | null;
   ordinal: number;
-  source: 'TIMER_CALCULATED' | 'MANUAL_REPORT';
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
   senderExternalId: string;
   senderName: string;
   clientId: string | null;
@@ -62,7 +62,7 @@ export interface PlannedEntry {
   profile: string | null;
   entryDate: string;
   minutes: number;
-  state: 'PARSED' | 'NEEDS_REVIEW' | 'REJECTED';
+  state: "PARSED" | "NEEDS_REVIEW" | "REJECTED";
   flags: string[];
   notes: string[];
   memo: string | null;
@@ -108,53 +108,53 @@ function applyQueueRules(e: PlannedEntry, now: Date) {
   };
   const ignore = (why: string) => {
     e.notes.push(why, AUTO_IGNORED);
-    e.state = 'REJECTED';
+    e.state = "REJECTED";
   };
-  if (e.state === 'REJECTED') return;
-  toNote('MISSING_DATE');
-  toNote('INVALID_DATE');
-  toNote('INVALID_ON_TIMER');
-  toNote('SUSPICIOUS_DURATION'); // owner: an unusually long or short duration is accepted as reported
+  if (e.state === "REJECTED") return;
+  toNote("MISSING_DATE");
+  toNote("INVALID_DATE");
+  toNote("INVALID_ON_TIMER");
+  toNote("SUSPICIOUS_DURATION"); // owner: an unusually long or short duration is accepted as reported
   // A timer that ran past midnight for more than 16 hours was left running (owner: discard); a shorter one is a late shift.
-  if (e.flags.includes('CROSSES_MIDNIGHT')) {
-    if (e.minutes > 16 * 60) return ignore('TIMER_LEFT_RUNNING');
-    toNote('CROSSES_MIDNIGHT');
+  if (e.flags.includes("CROSSES_MIDNIGHT")) {
+    if (e.minutes > 16 * 60) return ignore("TIMER_LEFT_RUNNING");
+    toNote("CROSSES_MIDNIGHT");
   }
-  if (e.minutes === 0 && (e.flags.includes('MISSING_DURATION') || e.flags.includes('INVALID_DURATION'))) return ignore('NO_HOURS_WRITTEN');
+  if (e.minutes === 0 && (e.flags.includes("MISSING_DURATION") || e.flags.includes("INVALID_DURATION"))) return ignore("NO_HOURS_WRITTEN");
   const ageDays = (now.getTime() - Date.parse(e.entryDate)) / DAY_MS;
   // Owner rule: a timer switched off with no ON has no hours to count, whatever its age: set aside like an ON with no OFF.
-  if (e.flags.includes('ORPHAN_OFF')) return ignore('OFF_WITHOUT_ON');
+  if (e.flags.includes("ORPHAN_OFF")) return ignore("OFF_WITHOUT_ON");
   // Owner rule: a stranded ON or OFF figure with no hours to count (a report giving only an ON figure, a timer stopped within the
   // minute) is set aside.
-  if (e.minutes === 0) return ignore('NOTHING_TO_COUNT');
+  if (e.minutes === 0) return ignore("NOTHING_TO_COUNT");
   if (ageDays > OLD_DAYS && e.flags.length) {
-    if (e.flags.includes('SUSPICIOUS_DURATION') || e.flags.includes('CROSSES_MIDNIGHT')) return ignore('OLD_TIMER_IMPOSSIBLE_LENGTH');
+    if (e.flags.includes("SUSPICIOUS_DURATION") || e.flags.includes("CROSSES_MIDNIGHT")) return ignore("OLD_TIMER_IMPOSSIBLE_LENGTH");
     for (const f of [...e.flags]) toNote(f);
-    e.notes.push('OLD_ACCEPTED_AS_REPORTED');
+    e.notes.push("OLD_ACCEPTED_AS_REPORTED");
   }
 }
 
-const mid =(space: string, id: string) => `${space}\u0000${id}`;
+const mid = (space: string, id: string) => `${space}\u0000${id}`;
 
-function clientFlags(raw: string, known: readonly KnownClient[], flags: string[], notes: string[], alsoRead = '') {
+function clientFlags(raw: string, known: readonly KnownClient[], flags: string[], notes: string[], alsoRead = "") {
   let f = extractClient(raw, known);
   // Owner rule: no client in the client field, but a known client is named in the line: that is the client
-  if (f.match.status === 'UNKNOWN') {
+  if (f.match.status === "UNKNOWN") {
     const byLine = findClientInText(`${raw} ${alsoRead}`, known);
     const byFirst = byLine ? null : findClientByFirstWord(raw, known);
     const found = byLine ?? byFirst;
-    if (byFirst) notes.push('CLIENT_BY_FIRST_NAME');
+    if (byFirst) notes.push("CLIENT_BY_FIRST_NAME");
     if (found) {
-      f = { ...f, match: { status: 'EXACT', client: found } };
-      notes.push('CLIENT_FOUND_IN_MESSAGE');
-      const i = flags.indexOf('MISSING_CLIENT');
+      f = { ...f, match: { status: "EXACT", client: found } };
+      notes.push("CLIENT_FOUND_IN_MESSAGE");
+      const i = flags.indexOf("MISSING_CLIENT");
       if (i >= 0) flags.splice(i, 1);
     }
   }
-  if (f.match.status === 'UNKNOWN') flags.push('UNKNOWN_CLIENT');
-  else if (f.match.status === 'AMBIGUOUS') flags.push('AMBIGUOUS_CLIENT');
-  else if (f.match.status === 'CORRECTED') notes.push('CLIENT_NAME_CORRECTED');
-  const clientId = f.match.status === 'EXACT' || f.match.status === 'CORRECTED' ? f.match.client.id : null;
+  if (f.match.status === "UNKNOWN") flags.push("UNKNOWN_CLIENT");
+  else if (f.match.status === "AMBIGUOUS") flags.push("AMBIGUOUS_CLIENT");
+  else if (f.match.status === "CORRECTED") notes.push("CLIENT_NAME_CORRECTED");
+  const clientId = f.match.status === "EXACT" || f.match.status === "CORRECTED" ? f.match.client.id : null;
   return { clientId, profile: f.profile };
 }
 
@@ -172,8 +172,13 @@ export function planImport(input: PlanInput): ImportPlan {
       const id = mid(space.externalId, m.externalId);
       const c = classifyMessage({ id, senderId: m.senderExternalId, createTime: m.postedAt, text: m.text });
       const pm: PlannedMessage = {
-        spaceExternalId: space.externalId, externalId: m.externalId, senderExternalId: m.senderExternalId,
-        senderName: m.senderName, postedAt, text: m.text, kind: c.kind,
+        spaceExternalId: space.externalId,
+        externalId: m.externalId,
+        senderExternalId: m.senderExternalId,
+        senderName: m.senderName,
+        postedAt,
+        text: m.text,
+        kind: c.kind,
       };
       messages.push(pm);
       meta.set(id, pm);
@@ -186,17 +191,32 @@ export function planImport(input: PlanInput): ImportPlan {
         const gap = r.date ? Math.abs(Date.parse(r.date) - Date.parse(posted)) : 0;
         const date = r.date && gap <= IMPOSSIBLE_GAP_DAYS * DAY_MS ? r.date : posted;
         if (r.date && gap > IMPOSSIBLE_GAP_DAYS * DAY_MS) notes.push(`DATE_CORRECTED_FROM_${r.date}`);
-        else if (r.date && gap > 3 * DAY_MS) flags.push('DATE_FAR_FROM_POST');
+        else if (r.date && gap > 3 * DAY_MS) flags.push("DATE_FAR_FROM_POST");
         // A message with one report may name its client anywhere ("Project: CrawlHunt – …", or only in the memo): read all of it.
         // With several reports in one message, only that report's own memo, so one report's client never lands on another.
-        const { clientId, profile } = clientFlags(r.client ?? '', input.clients, flags, notes, c.reports.length === 1 ? m.text : (r.memo ?? ''));
+        const { clientId, profile } = clientFlags(r.client ?? "", input.clients, flags, notes, c.reports.length === 1 ? m.text : (r.memo ?? ""));
         const e: PlannedEntry = {
-          spaceExternalId: space.externalId, messageExternalId: m.externalId, startMessageExternalId: null, ordinal,
-          source: 'MANUAL_REPORT', senderExternalId: m.senderExternalId, senderName: m.senderName, clientId,
-          clientRaw: r.client ?? '', profile, entryDate: date, minutes: r.minutes ?? 0, state: 'PARSED', flags, notes,
-          memo: r.memo, reportedOnTimerMinutes: r.reportedOnTimerMinutes, reconciliation: null, isLate: isLateReport(date, postedAt),
+          spaceExternalId: space.externalId,
+          messageExternalId: m.externalId,
+          startMessageExternalId: null,
+          ordinal,
+          source: "MANUAL_REPORT",
+          senderExternalId: m.senderExternalId,
+          senderName: m.senderName,
+          clientId,
+          clientRaw: r.client ?? "",
+          profile,
+          entryDate: date,
+          minutes: r.minutes ?? 0,
+          state: "PARSED",
+          flags,
+          notes,
+          memo: r.memo,
+          reportedOnTimerMinutes: r.reportedOnTimerMinutes,
+          reconciliation: null,
+          isLate: isLateReport(date, postedAt),
         };
-        manual.push({ e, key: `${m.senderExternalId}|${clientId ?? normalizeName(r.client ?? '')}|${date}` });
+        manual.push({ e, key: `${m.senderExternalId}|${clientId ?? normalizeName(r.client ?? "")}|${date}` });
       });
     }
   }
@@ -212,48 +232,49 @@ export function planImport(input: PlanInput): ImportPlan {
     for (const e of group) {
       const dup = kept.find((k) => k.minutes === e.minutes && (k.messageExternalId !== e.messageExternalId || k.spaceExternalId !== e.spaceExternalId));
       if (dup) {
-        e.notes.push('DUPLICATE_POST');
-        e.state = 'REJECTED';
+        e.notes.push("DUPLICATE_POST");
+        e.state = "REJECTED";
         continue;
       }
       // the same memo again with other hours is a corrected resend: the newer report replaces the older one
-      const memo = normalizeName(e.memo ?? '');
-      const older = memo.length >= 12 ? kept.find((k) => normalizeName(k.memo ?? '') === memo && k.messageExternalId !== e.messageExternalId) : undefined;
+      const memo = normalizeName(e.memo ?? "");
+      const older = memo.length >= 12 ? kept.find((k) => normalizeName(k.memo ?? "") === memo && k.messageExternalId !== e.messageExternalId) : undefined;
       if (older) {
-        older.notes.push('DUPLICATE_POST', 'SUPERSEDED_BY_RESEND');
-        older.state = 'REJECTED';
+        older.notes.push("DUPLICATE_POST", "SUPERSEDED_BY_RESEND");
+        older.state = "REJECTED";
         kept.splice(kept.indexOf(older), 1);
       }
       kept.push(e);
     }
-    if (kept.length > 1) for (const e of kept) e.notes.push('MULTIPLE_REPORTS_SAME_DAY');
+    if (kept.length > 1) for (const e of kept) e.notes.push("MULTIPLE_REPORTS_SAME_DAY");
   }
 
   // ---- 4. a report's hours = its OFF Timer line (`minutes`) + its ON Timer figure. The ON figure is what the person reports of the timed
   //         work; the timer messages are not compared with it (owner, 2026-11-21: Rupali 16 Nov, Yuri Parreno: counting both the report and
   //         the TIMER ON / OFF messages gave hours the reports do not show). Duplicate and superseded reports stay rejected. ----
   for (const { e } of manual) {
-    if (e.state === 'REJECTED' || !e.reportedOnTimerMinutes) continue;
+    if (e.state === "REJECTED" || !e.reportedOnTimerMinutes) continue;
     e.minutes += e.reportedOnTimerMinutes;
-    e.notes.push('ON_TIMER_COUNTED');
+    e.notes.push("ON_TIMER_COUNTED");
   }
 
   const entries = manual.map((x) => x.e);
   for (const e of entries) {
     // Owner rule: a timer switched on and never off (or switched on twice) is ignored: it has no hours to count.
-    if (e.flags.includes('OPEN_INTERVAL') || e.flags.includes('DUPLICATE_ON')) {
+    if (e.flags.includes("OPEN_INTERVAL") || e.flags.includes("DUPLICATE_ON")) {
       e.notes.push(AUTO_IGNORED);
-      e.state = 'REJECTED';
+      e.state = "REJECTED";
     }
     applyQueueRules(e, now);
-    if (e.state !== 'REJECTED') e.state = e.flags.length ? 'NEEDS_REVIEW' : 'PARSED';
+    if (e.state !== "REJECTED") e.state = e.flags.length ? "NEEDS_REVIEW" : "PARSED";
   }
   entries.sort((a, b) => a.entryDate.localeCompare(b.entryDate) || a.senderName.localeCompare(b.senderName));
 
-  const count = <T>(xs: T[], f: (x: T) => string[]) =>
-    xs.flatMap(f).reduce<Record<string, number>>((o, k) => ((o[k] = (o[k] ?? 0) + 1), o), {});
+  const count = <T>(xs: T[], f: (x: T) => string[]) => xs.flatMap(f).reduce<Record<string, number>>((o, k) => ((o[k] = (o[k] ?? 0) + 1), o), {});
   return {
-    month: input.month, messages, entries,
+    month: input.month,
+    messages,
+    entries,
     summary: {
       messages: messages.length,
       byKind: count(messages, (m) => [m.kind]),

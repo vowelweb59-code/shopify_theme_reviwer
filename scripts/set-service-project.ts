@@ -11,13 +11,24 @@ import { ServiceProject } from "@/models/service-project";
 // Options: --fixed <USD> (fixed price), --rate <USD> (hourly rate), --limit-hours <H> (weekly hours), --ba <name>, --bd <name>.
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");
-const flag = (name: string) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : undefined; };
+const flag = (name: string) => {
+  const i = argv.indexOf(`--${name}`);
+  return i >= 0 ? argv[i + 1] : undefined;
+};
 const name = argv.find((a, i) => !a.startsWith("--") && (i === 0 || !argv[i - 1].startsWith("--")));
 
 async function main() {
   if (!name) throw new Error('Usage: set-service-project.ts "<Project name>" [--fixed USD] [--rate USD] [--limit-hours H] [--ba N] [--bd N] [--apply]');
   await connectToDatabase();
-  const found = await ServiceProject.find({ name }).select("name status contract people").lean<Array<{ _id: string; name: string; status: string; contract: Record<string, unknown> | null; people: Array<{ role: string; name: string; senderId: string | null }> }>>();
+  const found = await ServiceProject.find({ name }).select("name status contract people").lean<
+    Array<{
+      _id: string;
+      name: string;
+      status: string;
+      contract: Record<string, unknown> | null;
+      people: Array<{ role: string; name: string; senderId: string | null }>;
+    }>
+  >();
   if (found.length !== 1) throw new Error(`${found.length} projects are named "${name}"; need exactly one.`);
   const p = found[0];
 
@@ -31,7 +42,10 @@ async function main() {
   if (flag("limit-hours")) set["contract.weeklyLimitMinutes"] = Math.round(Number(flag("limit-hours")) * 60);
   if (Object.keys(set).length && !p.contract) throw new Error("This project has no contract yet; set one in the app first.");
   let people = p.people;
-  for (const [flagName, role] of [["ba", "BUSINESS_ANALYST"], ["bd", "BUSINESS_DEVELOPER"]] as const) {
+  for (const [flagName, role] of [
+    ["ba", "BUSINESS_ANALYST"],
+    ["bd", "BUSINESS_DEVELOPER"],
+  ] as const) {
     const v = flag(flagName);
     if (v) people = [...people.filter((x) => x.role !== role), { role, name: v, senderId: null }];
   }
@@ -47,4 +61,10 @@ async function main() {
   console.log("Done.");
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e);
+    process.exit(1);
+  }
+);

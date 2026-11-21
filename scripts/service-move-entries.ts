@@ -10,7 +10,10 @@ import { ServiceTimeEntry } from "@/models/service-time-entry";
 //   npx tsx --env-file=.env.production.local scripts/service-move-entries.ts --from "<Project>" --to "<Project>" --since YYYY-MM-DD [--apply]
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");
-const flag = (n: string) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : undefined; };
+const flag = (n: string) => {
+  const i = argv.indexOf(`--${n}`);
+  return i >= 0 ? argv[i + 1] : undefined;
+};
 
 async function one(name: string) {
   const f = await ServiceProject.find({ name }).select("name clientId").lean<Array<{ _id: string; name: string; clientId: string | null }>>();
@@ -19,14 +22,27 @@ async function one(name: string) {
 }
 
 async function main() {
-  const from = flag("from"), to = flag("to"), since = flag("since");
-  if (!from || !to || !since || !/^\d{4}-\d{2}-\d{2}$/.test(since)) throw new Error('Usage: service-move-entries.ts --from "<Project>" --to "<Project>" --since YYYY-MM-DD [--apply]');
+  const from = flag("from"),
+    to = flag("to"),
+    since = flag("since");
+  if (!from || !to || !since || !/^\d{4}-\d{2}-\d{2}$/.test(since))
+    throw new Error('Usage: service-move-entries.ts --from "<Project>" --to "<Project>" --since YYYY-MM-DD [--apply]');
   await connectToDatabase();
-  const a = await one(from), b = await one(to);
+  const a = await one(from),
+    b = await one(to);
   if (a.clientId !== b.clientId) throw new Error("The two projects belong to different clients; refusing.");
-  const names = new Map((await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).map((s) => [s.externalId, s.displayName]));
-  const rows = await ServiceTimeEntry.find({ projectId: a._id, state: { $ne: "REJECTED" }, entryDate: { $gte: new Date(`${since}T00:00:00Z`) } }).select("minutes entryDate senderExternalId").lean<Array<{ _id: string; minutes: number; entryDate: Date; senderExternalId: string }>>();
-  console.log(`${apply ? "APPLYING" : "Dry run"}: ${rows.length} entries (${(rows.reduce((n, r) => n + r.minutes, 0) / 60).toFixed(1)} h) from "${a.name}" to "${b.name}"`);
+  const names = new Map(
+    (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>()).map((s) => [
+      s.externalId,
+      s.displayName,
+    ])
+  );
+  const rows = await ServiceTimeEntry.find({ projectId: a._id, state: { $ne: "REJECTED" }, entryDate: { $gte: new Date(`${since}T00:00:00Z`) } })
+    .select("minutes entryDate senderExternalId")
+    .lean<Array<{ _id: string; minutes: number; entryDate: Date; senderExternalId: string }>>();
+  console.log(
+    `${apply ? "APPLYING" : "Dry run"}: ${rows.length} entries (${(rows.reduce((n, r) => n + r.minutes, 0) / 60).toFixed(1)} h) from "${a.name}" to "${b.name}"`
+  );
   for (const r of rows) console.log(`  ${r.entryDate.toISOString().slice(0, 10)}  ${r.minutes} min  ${names.get(r.senderExternalId) ?? r.senderExternalId}`);
   if (!apply) return console.log("Nothing written. Add --apply to move them.");
   if (!rows.length) return;
@@ -35,4 +51,10 @@ async function main() {
   console.log("Done.");
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e);
+    process.exit(1);
+  }
+);

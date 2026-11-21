@@ -35,7 +35,10 @@ const contractSchema = new Schema(
     type: { type: String, enum: ["HOURLY", "FIXED"], default: "HOURLY" },
     weeklyLimitMinutes: { type: Number, default: null },
     // Dated steps when the client changed the scope (lib/service/hours/limit-history.ts); empty = the value above always applied.
-    weeklyLimitHistory: { type: [new Schema({ from: { type: String, default: null }, minutes: { type: Number, required: true } }, { _id: false })], default: [] },
+    weeklyLimitHistory: {
+      type: [new Schema({ from: { type: String, default: null }, minutes: { type: Number, required: true } }, { _id: false })],
+      default: [],
+    },
     hourlyRateCents: { type: Number, default: null },
     fixedPriceCents: { type: Number, default: null },
     trackingMode: { type: String, enum: ["TIMER", "MANUAL", null], default: null },

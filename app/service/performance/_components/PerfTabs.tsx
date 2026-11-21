@@ -13,7 +13,8 @@ const TABS = [
 export function PerfTabs() {
   const pathname = usePathname();
   // A member's page (/service/performance/<name>) belongs to Members.
-  const onMember = pathname.startsWith("/service/performance/") && pathname !== "/service/performance/members" && !pathname.startsWith("/service/performance/members/");
+  const onMember =
+    pathname.startsWith("/service/performance/") && pathname !== "/service/performance/members" && !pathname.startsWith("/service/performance/members/");
   return (
     <nav aria-label="Team performance" className="inline-flex gap-1 rounded-xl border border-border-subtle bg-surface-muted p-1">
       {TABS.map((t) => {

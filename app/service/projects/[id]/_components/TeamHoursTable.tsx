@@ -25,7 +25,21 @@ function Cell({ minutes, max, strong = false }: { minutes: number; max: number; 
   );
 }
 
-export function TeamHoursTable({ rows, months, periodText, unit, starred, compact = false }: { rows: TeamHoursRow[]; months: string[]; periodText: string; unit: "week" | "month"; starred: (name: string) => string; compact?: boolean }) {
+export function TeamHoursTable({
+  rows,
+  months,
+  periodText,
+  unit,
+  starred,
+  compact = false,
+}: {
+  rows: TeamHoursRow[];
+  months: string[];
+  periodText: string;
+  unit: "week" | "month";
+  starred: (name: string) => string;
+  compact?: boolean;
+}) {
   if (rows.length === 0) return <p className="text-sm text-zinc-500">No reports on this project yet.</p>;
   const shown = [...months].reverse().slice(0, MONTHS_SHOWN);
   const older = [...months].reverse().slice(MONTHS_SHOWN);
@@ -44,30 +58,46 @@ export function TeamHoursTable({ rows, months, periodText, unit, starred, compac
 
   return (
     <div className="space-y-3">
-      {!compact && <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          { label: "Total reported", value: fmtMinutes(grand) },
-          { label: `This ${unit} · ${periodText}`, value: fmtMinutes(sum((r) => r.week)) },
-          { label: "Last 30 days", value: fmtMinutes(sum((r) => r.last30)) },
-          { label: "People who worked", value: String(rows.length) },
-        ].map((x) => (
-          <div key={x.label} className="rounded-md border border-border-subtle bg-surface-muted/50 px-3 py-2">
-            <div className="text-xs text-zinc-500">{x.label}</div>
-            <div className="text-lg font-semibold tabular-nums">{x.value}</div>
-          </div>
-        ))}
-      </div>}
+      {!compact && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            { label: "Total reported", value: fmtMinutes(grand) },
+            { label: `This ${unit} · ${periodText}`, value: fmtMinutes(sum((r) => r.week)) },
+            { label: "Last 30 days", value: fmtMinutes(sum((r) => r.last30)) },
+            { label: "People who worked", value: String(rows.length) },
+          ].map((x) => (
+            <div key={x.label} className="rounded-md border border-border-subtle bg-surface-muted/50 px-3 py-2">
+              <div className="text-xs text-zinc-500">{x.label}</div>
+              <div className="text-lg font-semibold tabular-nums">{x.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-lg border border-border-subtle">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-surface-muted text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="sticky left-0 bg-surface-muted px-3 py-2 text-left font-medium">Person</th>
-              <th className={`${th} bg-primary-tint/40 text-primary-tint-text`} title={periodText}>This {unit}</th>
+              <th className={`${th} bg-primary-tint/40 text-primary-tint-text`} title={periodText}>
+                This {unit}
+              </th>
               <th className={th}>Last 30 days</th>
-              {shown.map((m) => <th key={m} className={th}>{monthName(m)}</th>)}
-              {hasOlder && <th className={th} title={`${older.length} earlier months`}>Earlier</th>}
-              {hasLater && <th className={th} title="Dated in a future month: a typing error in the report">Future date</th>}
+              {shown.map((m) => (
+                <th key={m} className={th}>
+                  {monthName(m)}
+                </th>
+              ))}
+              {hasOlder && (
+                <th className={th} title={`${older.length} earlier months`}>
+                  Earlier
+                </th>
+              )}
+              {hasLater && (
+                <th className={th} title="Dated in a future month: a typing error in the report">
+                  Future date
+                </th>
+              )}
               <th className={th}>Total</th>
             </tr>
           </thead>
@@ -75,14 +105,33 @@ export function TeamHoursTable({ rows, months, periodText, unit, starred, compac
             {rows.map((r) => (
               <tr key={r.name} className="hover:bg-surface-muted/40">
                 <td className="sticky left-0 bg-surface px-3 py-2 align-top">
-                  <div className="whitespace-nowrap font-medium">{starred(r.name)}{r.name}</div>
+                  <div className="whitespace-nowrap font-medium">
+                    {starred(r.name)}
+                    {r.name}
+                  </div>
                   <div className="text-xs text-zinc-500">last report {fmtLongDay(r.lastReport)}</div>
                 </td>
-                <td className={`${td} bg-primary-tint/20`}><Cell minutes={r.week} max={periodMax} strong /></td>
-                <td className={td}><Cell minutes={r.last30} max={last30Max} /></td>
-                {shown.map((m) => <td key={m} className={td}><Cell minutes={r.byMonth[m] ?? 0} max={monthMax} /></td>)}
-                {hasOlder && <td className={td}><Cell minutes={monthsTotal(r, older)} max={monthMax} /></td>}
-                {hasLater && <td className={td}><Cell minutes={r.later} max={monthMax} /></td>}
+                <td className={`${td} bg-primary-tint/20`}>
+                  <Cell minutes={r.week} max={periodMax} strong />
+                </td>
+                <td className={td}>
+                  <Cell minutes={r.last30} max={last30Max} />
+                </td>
+                {shown.map((m) => (
+                  <td key={m} className={td}>
+                    <Cell minutes={r.byMonth[m] ?? 0} max={monthMax} />
+                  </td>
+                ))}
+                {hasOlder && (
+                  <td className={td}>
+                    <Cell minutes={monthsTotal(r, older)} max={monthMax} />
+                  </td>
+                )}
+                {hasLater && (
+                  <td className={td}>
+                    <Cell minutes={r.later} max={monthMax} />
+                  </td>
+                )}
                 <td className={td}>
                   <div className="font-semibold">{fmtMinutes(r.total)}</div>
                   <div className="text-xs text-zinc-500">{grand ? Math.round((r.total / grand) * 100) : 0}%</div>
@@ -96,7 +145,11 @@ export function TeamHoursTable({ rows, months, periodText, unit, starred, compac
               <td className="sticky left-0 bg-surface-muted/60 px-3 py-2">All people</td>
               <td className={`${td} bg-primary-tint/20`}>{fmtMinutes(sum((r) => r.week))}</td>
               <td className={td}>{fmtMinutes(sum((r) => r.last30))}</td>
-              {shown.map((m) => <td key={m} className={td}>{fmtMinutes(sum((r) => r.byMonth[m] ?? 0))}</td>)}
+              {shown.map((m) => (
+                <td key={m} className={td}>
+                  {fmtMinutes(sum((r) => r.byMonth[m] ?? 0))}
+                </td>
+              ))}
               {hasOlder && <td className={td}>{fmtMinutes(sum((r) => monthsTotal(r, older)))}</td>}
               {hasLater && <td className={td}>{fmtMinutes(sum((r) => r.later))}</td>}
               <td className={td}>{fmtMinutes(grand)}</td>

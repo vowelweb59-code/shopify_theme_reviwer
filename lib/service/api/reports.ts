@@ -24,7 +24,8 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 /** A date range from query parameters: both ends required, from <= to, at most a year. */
 export function parseRange(from?: string | null, to?: string | null): Range {
-  if (!from || !to || !ISO.test(from) || !ISO.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to))) throw badRequest("from and to must be YYYY-MM-DD");
+  if (!from || !to || !ISO.test(from) || !ISO.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
+    throw badRequest("from and to must be YYYY-MM-DD");
   if (from > to) throw badRequest("from must not be after to");
   const days = daysBetween(from, to);
   if (days > MAX_RANGE_DAYS) throw badRequest(`the range can be at most ${MAX_RANGE_DAYS} days`);
@@ -89,21 +90,59 @@ export async function loadEntryRows(ctx: Context, from: string, to: string, send
   if (senderExternalId) match.senderExternalId = senderExternalId;
   const entries = await ServiceTimeEntry.aggregate<RawEntry>([
     { $match: match },
-    { $lookup: { from: "service_chat_messages", localField: "sourceMessageId", foreignField: "_id", as: "m", pipeline: [{ $project: { _id: 0, postedAt: 1 } }] } },
-    { $project: { senderExternalId: 1, entryDate: 1, minutes: 1, source: 1, state: 1, isLate: 1, projectId: 1, clientId: 1, memo: 1, allocations: 1, postedAt: { $ifNull: [{ $first: "$m.postedAt" }, "$createdAt"] } } },
+    {
+      $lookup: {
+        from: "service_chat_messages",
+        localField: "sourceMessageId",
+        foreignField: "_id",
+        as: "m",
+        pipeline: [{ $project: { _id: 0, postedAt: 1 } }],
+      },
+    },
+    {
+      $project: {
+        senderExternalId: 1,
+        entryDate: 1,
+        minutes: 1,
+        source: 1,
+        state: 1,
+        isLate: 1,
+        projectId: 1,
+        clientId: 1,
+        memo: 1,
+        allocations: 1,
+        postedAt: { $ifNull: [{ $first: "$m.postedAt" }, "$createdAt"] },
+      },
+    },
   ]);
   const clientIds = [...new Set(entries.map((e) => e.clientId).filter((x): x is string => !!x))];
-  const clients = new Map((await ServiceClient.find({ _id: { $in: clientIds } }).select("name inHouse").lean<Array<{ _id: string; name: string; inHouse: boolean }>>()).map((c) => [c._id, c]));
+  const clients = new Map(
+    (
+      await ServiceClient.find({ _id: { $in: clientIds } })
+        .select("name inHouse")
+        .lean<Array<{ _id: string; name: string; inHouse: boolean }>>()
+    ).map((c) => [c._id, c])
+  );
   const out: Row[] = [];
   let n = 0;
   for (const e of expandAllocations(entries)) {
     const pid = projectOf(e, ctx.owner);
     const c = e.clientId ? clients.get(e.clientId) : undefined;
     out.push({
-      id: e.allocations.length > 1 ? `${e._id}~${++n}` : e._id, senderKey: e.senderExternalId, entryDate: dayOf(e.entryDate), minutes: e.minutes, source: e.source,
-      flagged: e.state === "NEEDS_REVIEW", late: e.isLate, projectId: pid, departmentId: pid ? ctx.deptOf.get(pid) ?? null : null,
+      id: e.allocations.length > 1 ? `${e._id}~${++n}` : e._id,
+      senderKey: e.senderExternalId,
+      entryDate: dayOf(e.entryDate),
+      minutes: e.minutes,
+      source: e.source,
+      flagged: e.state === "NEEDS_REVIEW",
+      late: e.isLate,
+      projectId: pid,
+      departmentId: pid ? (ctx.deptOf.get(pid) ?? null) : null,
       project: (pid && ctx.names.get(pid)) || c?.name || "No project",
-      client: c?.name ?? null, inHouse: (c?.inHouse ?? false) || (pid !== null && ctx.inHouseProjects.has(pid)), memo: e.memo, postedAt: new Date(e.postedAt),
+      client: c?.name ?? null,
+      inHouse: (c?.inHouse ?? false) || (pid !== null && ctx.inHouseProjects.has(pid)),
+      memo: e.memo,
+      postedAt: new Date(e.postedAt),
     });
   }
   return out;
@@ -124,20 +163,32 @@ export function summarise(rows: Row[], previousMinutes: number, workingDays: num
   for (const r of rows) byProject.set(r.project, (byProject.get(r.project) ?? 0) + r.minutes);
   const timer = rows.filter((r) => r.source === "TIMER_CALCULATED").reduce((n, r) => n + r.minutes, 0);
   return {
-    minutes, timerMinutes: timer, manualMinutes: minutes - timer,
-    activeDays: days.size, workingDays, avgPerActiveDay: days.size ? Math.round(minutes / days.size) : 0,
-    previousWeekMinutes: previousMinutes, previousMinutes, entries: rows.length,
-    flagged: rows.filter((r) => r.flagged).length, late: rows.filter((r) => r.late).length,
+    minutes,
+    timerMinutes: timer,
+    manualMinutes: minutes - timer,
+    activeDays: days.size,
+    workingDays,
+    avgPerActiveDay: days.size ? Math.round(minutes / days.size) : 0,
+    previousWeekMinutes: previousMinutes,
+    previousMinutes,
+    entries: rows.length,
+    flagged: rows.filter((r) => r.flagged).length,
+    late: rows.filter((r) => r.late).length,
     clients: new Set(rows.map((r) => r.client).filter(Boolean)).size,
-    projects: [...byProject].map(([name, m]) => ({ name, minutes: m })).filter((p) => p.minutes > 0).sort((a, b) => b.minutes - a.minutes),
+    projects: [...byProject]
+      .map(([name, m]) => ({ name, minutes: m }))
+      .filter((p) => p.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes),
     lastReportAt: rows.reduce<Date | null>((m, r) => (!m || r.postedAt > m ? r.postedAt : m), null),
   };
 }
 
-
 async function sendersWithUsers() {
   const [senders, users] = await Promise.all([
-    ServiceChatSender.find().sort({ displayName: 1 }).select("externalId displayName userId").lean<Array<{ _id: string; externalId: string; displayName: string; userId: string | null }>>(),
+    ServiceChatSender.find()
+      .sort({ displayName: 1 })
+      .select("externalId displayName userId")
+      .lean<Array<{ _id: string; externalId: string; displayName: string; userId: string | null }>>(),
     ServiceUser.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
   ]);
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
@@ -178,13 +229,21 @@ export async function projectsReport(q: { from?: string | null; to?: string | nu
   const wanted = KINDS.find((k) => k === q.kind) ?? null;
   const ctx = await loadContext();
   // The lookback range covers the period itself, so one query serves both.
-  const [lookback, before] = await Promise.all([loadEntryRows(ctx, shiftDays(range.from, -ACTIVE_LOOKBACK_DAYS), range.to), loadEntryRows(ctx, prev.from, prev.to)]);
+  const [lookback, before] = await Promise.all([
+    loadEntryRows(ctx, shiftDays(range.from, -ACTIVE_LOOKBACK_DAYS), range.to),
+    loadEntryRows(ctx, prev.from, prev.to),
+  ]);
   const rows = lookback.filter((r) => r.entryDate >= range.from);
   const mine = ctx.liveProjects;
   const [rates, profiles, attention] = await Promise.all([
-    ServiceProject.find({ _id: { $in: mine.map((p) => p._id) } }).select("contract.hourlyRateCents upworkProfileId").lean<Array<{ _id: string; upworkProfileId: string | null; contract: { hourlyRateCents: number | null } | null }>>(),
+    ServiceProject.find({ _id: { $in: mine.map((p) => p._id) } })
+      .select("contract.hourlyRateCents upworkProfileId")
+      .lean<Array<{ _id: string; upworkProfileId: string | null; contract: { hourlyRateCents: number | null } | null }>>(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
-    ServiceProject.find({ status: { $in: ATTENTION } }).sort({ name: 1 }).select("name status").lean<Array<{ _id: string; name: string; status: string }>>(),
+    ServiceProject.find({ status: { $in: ATTENTION } })
+      .sort({ name: 1 })
+      .select("name status")
+      .lean<Array<{ _id: string; name: string; status: string }>>(),
   ]);
   const extra = new Map(rates.map((r) => [r._id, r]));
   const profileName = new Map(profiles.map((p) => [p._id, p.name]));
@@ -194,7 +253,8 @@ export async function projectsReport(q: { from?: string | null; to?: string | nu
   const week = isMondayToSunday(range.from, range.to);
   const working = workingDaysIn(range.from, range.to);
 
-  const kindOf = (type: string, profileId: string | null | undefined): Kind => (/^direct$/i.test(profileName.get(profileId ?? "") ?? "") ? "direct" : type === "FIXED" ? "fixed" : "timer");
+  const kindOf = (type: string, profileId: string | null | undefined): Kind =>
+    /^direct$/i.test(profileName.get(profileId ?? "") ?? "") ? "direct" : type === "FIXED" ? "fixed" : "timer";
   const everyKindRow = mine.map((p) => {
     const c = p.contract!;
     const own = byProject.get(p._id) ?? [];
@@ -202,10 +262,27 @@ export async function projectsReport(q: { from?: string | null; to?: string | nu
     const limit = week && c.type === "HOURLY" ? c.weeklyLimitMinutes : null;
     const rate = extra.get(p._id)?.contract?.hourlyRateCents ?? null;
     return {
-      kind: kindOf(c.type, extra.get(p._id)?.upworkProfileId), projectId: p._id, projectName: p.name, projectStatus: p.status, contractType: c.type as "HOURLY" | "FIXED", inHouse: p.inHouse,
-      minutes: s.minutes, timerMinutes: s.timerMinutes, manualMinutes: s.manualMinutes, activeDays: s.activeDays, entries: s.entries, flagged: s.flagged,
+      kind: kindOf(c.type, extra.get(p._id)?.upworkProfileId),
+      projectId: p._id,
+      projectName: p.name,
+      projectStatus: p.status,
+      contractType: c.type as "HOURLY" | "FIXED",
+      inHouse: p.inHouse,
+      minutes: s.minutes,
+      timerMinutes: s.timerMinutes,
+      manualMinutes: s.manualMinutes,
+      activeDays: s.activeDays,
+      entries: s.entries,
+      flagged: s.flagged,
       // Weekly limit figures only make sense for exactly one Monday-to-Sunday week.
-      weekly: week ? { limitMinutes: limit, remainingMinutes: limit === null ? null : Math.max(0, limit - s.minutes), overLimitMinutes: limit === null ? 0 : Math.max(0, s.minutes - limit), percentUsed: limit ? Math.round((s.minutes / limit) * 100) : null } : null,
+      weekly: week
+        ? {
+            limitMinutes: limit,
+            remainingMinutes: limit === null ? null : Math.max(0, limit - s.minutes),
+            overLimitMinutes: limit === null ? 0 : Math.max(0, s.minutes - limit),
+            percentUsed: limit ? Math.round((s.minutes / limit) * 100) : null,
+          }
+        : null,
       // Money from hours x rate; never for in-house work.
       amountCents: !p.inHouse && rate != null ? Math.round((s.minutes * rate) / 60) : null,
       // A closed project is listed only while it still has hours in the period.
@@ -219,7 +296,9 @@ export async function projectsReport(q: { from?: string | null; to?: string | nu
   const inKind = new Set(everyRow.map((r) => r.projectId));
   const list = (q.all ? everyRow : everyRow.filter((r) => r.active)).sort((a, b) => b.minutes - a.minutes || a.projectName.localeCompare(b.projectName));
   return {
-    range, previousRange: prev, weekMode: week,
+    range,
+    previousRange: prev,
+    weekMode: week,
     overview: {
       minutes: everyRow.reduce((n, r) => n + r.minutes, 0),
       previousMinutes: before.filter((r) => r.projectId && inKind.has(r.projectId)).reduce((n, r) => n + r.minutes, 0),
@@ -252,30 +331,38 @@ export async function teamsReport(q: { from?: string | null; to?: string | null 
   const minutes = shown.reduce((n, p) => n + p.minutes, 0);
 
   // Split by department: a person appears under every department whose projects they worked on, with only those hours.
-  const groups = ctx.departments.length === 0 ? [] : [
-    ...ctx.departments.map((d) => ({ id: d._id as string | null, name: d.name, manager: deptLabel(d), isDefault: d.isDefault })),
-    { id: null as string | null, name: "Not on a project", manager: null, isDefault: false },
-  ]
-    .map((g) => {
-      const members = withRows
-        .map((p) => {
-          const mine = p.rows.filter((r) => r.departmentId === g.id);
-          const { rows: _all, ...base } = p; // eslint-disable-line @typescript-eslint/no-unused-vars
-          return { ...base, ...summarise(mine, 0, workingDays) };
-        })
-        .filter((p) => p.minutes > 0)
-        .sort((a, b) => b.minutes - a.minutes);
-      return { ...g, minutes: members.reduce((n, m) => n + m.minutes, 0), people: members };
-    })
-    .filter((g) => g.minutes > 0 || g.id !== null)
-    .sort((a, b) => b.minutes - a.minutes);
+  const groups =
+    ctx.departments.length === 0
+      ? []
+      : [
+          ...ctx.departments.map((d) => ({ id: d._id as string | null, name: d.name, manager: deptLabel(d), isDefault: d.isDefault })),
+          { id: null as string | null, name: "Not on a project", manager: null, isDefault: false },
+        ]
+          .map((g) => {
+            const members = withRows
+              .map((p) => {
+                const mine = p.rows.filter((r) => r.departmentId === g.id);
+                const { rows: _all, ...base } = p; // eslint-disable-line @typescript-eslint/no-unused-vars
+                return { ...base, ...summarise(mine, 0, workingDays) };
+              })
+              .filter((p) => p.minutes > 0)
+              .sort((a, b) => b.minutes - a.minutes);
+            return { ...g, minutes: members.reduce((n, m) => n + m.minutes, 0), people: members };
+          })
+          .filter((g) => g.minutes > 0 || g.id !== null)
+          .sort((a, b) => b.minutes - a.minutes);
 
   return {
-    range, previousRange: prev, workingDays,
+    range,
+    previousRange: prev,
+    workingDays,
     overview: {
-      minutes, previousMinutes: shown.reduce((n, p) => n + p.previousMinutes, 0), people: active.length,
+      minutes,
+      previousMinutes: shown.reduce((n, p) => n + p.previousMinutes, 0),
+      people: active.length,
       avgPerPerson: active.length ? Math.round(minutes / active.length) : 0,
-      timerMinutes: shown.reduce((n, p) => n + p.timerMinutes, 0), manualMinutes: shown.reduce((n, p) => n + p.manualMinutes, 0),
+      timerMinutes: shown.reduce((n, p) => n + p.timerMinutes, 0),
+      manualMinutes: shown.reduce((n, p) => n + p.manualMinutes, 0),
       flagged: shown.reduce((n, p) => n + p.flagged, 0),
       topPerson: active[0] ? { name: active[0].name, minutes: active[0].minutes } : null,
     },
@@ -302,15 +389,32 @@ export async function departmentsReport(q: { from?: string | null; to?: string |
 
   const build = (id: string | null, name: string, manager: string | null, isDefault: boolean) => {
     const mine = rows.filter((r) => r.departmentId === id);
-    const s = summarise(mine, before.filter((r) => r.departmentId === id).reduce((n, r) => n + r.minutes, 0), working);
+    const s = summarise(
+      mine,
+      before.filter((r) => r.departmentId === id).reduce((n, r) => n + r.minutes, 0),
+      working
+    );
     const byPerson = new Map<string, number>();
     for (const r of mine) byPerson.set(r.senderKey, (byPerson.get(r.senderKey) ?? 0) + r.minutes);
-    const people = [...byPerson].map(([key, minutes]) => ({ name: nameOf.get(key) ?? key, minutes })).filter((p) => p.minutes > 0).sort((a, b) => b.minutes - a.minutes);
+    const people = [...byPerson]
+      .map(([key, minutes]) => ({ name: nameOf.get(key) ?? key, minutes }))
+      .filter((p) => p.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
     return {
-      id, name, manager, isDefault, minutes: s.minutes, previousMinutes: s.previousMinutes, timerMinutes: s.timerMinutes, manualMinutes: s.manualMinutes,
-      projectCount: new Set(mine.filter((r) => r.projectId).map((r) => r.projectId)).size, activePeople: people.length,
-      avgPerPerson: people.length ? Math.round(s.minutes / people.length) : 0, flagged: s.flagged,
-      projects: s.projects.slice(0, 5), people: people.slice(0, 8),
+      id,
+      name,
+      manager,
+      isDefault,
+      minutes: s.minutes,
+      previousMinutes: s.previousMinutes,
+      timerMinutes: s.timerMinutes,
+      manualMinutes: s.manualMinutes,
+      projectCount: new Set(mine.filter((r) => r.projectId).map((r) => r.projectId)).size,
+      activePeople: people.length,
+      avgPerPerson: people.length ? Math.round(s.minutes / people.length) : 0,
+      flagged: s.flagged,
+      projects: s.projects.slice(0, 5),
+      people: people.slice(0, 8),
     };
   };
   const list = ctx.departments.map((d) => build(d._id, d.name, d.managerName, d.isDefault));
@@ -320,10 +424,13 @@ export async function departmentsReport(q: { from?: string | null; to?: string |
   const total = out.reduce((n, d) => n + d.minutes, 0);
   const best = out[0];
   return {
-    range, previousRange: prev,
+    range,
+    previousRange: prev,
     overview: {
-      minutes: total, previousMinutes: out.reduce((n, d) => n + d.previousMinutes, 0),
-      departments: ctx.departments.length, departmentsWithHours: out.filter((d) => d.minutes > 0 && d.id !== null).length,
+      minutes: total,
+      previousMinutes: out.reduce((n, d) => n + d.previousMinutes, 0),
+      departments: ctx.departments.length,
+      departmentsWithHours: out.filter((d) => d.minutes > 0 && d.id !== null).length,
       noManagerSet: ctx.departments.filter((d) => !d.isDefault && !d.managerUserId).length,
       top: best && best.minutes > 0 ? { name: best.name, minutes: best.minutes } : null,
     },

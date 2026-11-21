@@ -23,14 +23,27 @@ import { ServiceUpworkProfile } from "@/models/service-upwork";
 export const NEW_PROJECT_SPACE = process.env.SERVICE_NEW_PROJECT_SPACE?.trim() || "spaces/AAAAVIeFrm4";
 const LOOKBACK_DAYS = 60;
 const OPEN = ["NOT_STARTED", "ACTIVE", "BLOCKED", "WAITING_FOR_CLIENT", "ON_HOLD", "PARTIAL_HOLD"];
-const key = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const key = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 
 /** An "Accepted the project of ..." post with the Chat message it came from (`ref` is what a created project remembers in `contractRef`). */
-export interface AcceptedPost { post: Extract<NewProjectPost, { kind: "accepted" }>; ref: string; posted: Date }
+export interface AcceptedPost {
+  post: Extract<NewProjectPost, { kind: "accepted" }>;
+  ref: string;
+  posted: Date;
+}
 
 /** The accepted-project posts of the last `lookbackDays` days, read live from the New Project Update space. */
 export async function loadAcceptedPosts(now: Date, lookbackDays: number): Promise<AcceptedPost[]> {
-  const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, { from: new Date(now.getTime() - lookbackDays * 86_400_000), to: new Date(now.getTime() + 60_000) });
+  const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, {
+    from: new Date(now.getTime() - lookbackDays * 86_400_000),
+    to: new Date(now.getTime() + 60_000),
+  });
   const out: AcceptedPost[] = [];
   for (const m of msgs) {
     const posted = new Date(m.postedAt);
@@ -40,12 +53,19 @@ export async function loadAcceptedPosts(now: Date, lookbackDays: number): Promis
   return out;
 }
 
-export interface NewProjectResult { created: string[]; completed: string[]; skipped: Array<{ text: string; why: string }>; }
+export interface NewProjectResult {
+  created: string[];
+  completed: string[];
+  skipped: Array<{ text: string; why: string }>;
+}
 
 export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {}): Promise<NewProjectResult> {
   const now = opts.now ?? new Date();
   const out: NewProjectResult = { created: [], completed: [], skipped: [] };
-  const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, { from: new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000), to: new Date(now.getTime() + 60_000) });
+  const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, {
+    from: new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000),
+    to: new Date(now.getTime() + 60_000),
+  });
   const clients = await ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const byName = new Map<string, string>();
   // The live site is Digital Marketing only and a post names only the BD and BA, so a post counts only when its client is one we
@@ -53,9 +73,12 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
   // Only the team's own reports count (owner, 2026-11-17: Thani Almheiri was made because a person outside the team had reported hours
   // for that name).
   const dmSenders = (await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>())
-    .filter((x) => dmMatch(x.displayName) !== null).map((x) => x.externalId);
+    .filter((x) => dmMatch(x.displayName) !== null)
+    .map((x) => x.externalId);
   const reported = new Set(
-    (await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null }, senderExternalId: { $in: dmSenders } }) as string[]).map((r) => key(suggestClientName(r) ?? r.split("|")[0])), // "DM | Client | Profile": the tag is not the client
+    ((await ServiceTimeEntry.distinct("clientRaw", { clientRaw: { $ne: null }, senderExternalId: { $in: dmSenders } })) as string[]).map((r) =>
+      key(suggestClientName(r) ?? r.split("|")[0])
+    ) // "DM | Client | Profile": the tag is not the client
   );
   for (const c of clients) for (const n of [c.name, ...c.aliases]) byName.set(key(n), c._id);
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
@@ -66,16 +89,29 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
   for (const m of msgs) {
     const posted = new Date(m.postedAt);
     const post = parseNewProjectPost(m.text, posted);
-    if (!post) { out.skipped.push({ text: m.text.slice(0, 120), why: "not a project post" }); continue; }
+    if (!post) {
+      out.skipped.push({ text: m.text.slice(0, 120), why: "not a project post" });
+      continue;
+    }
     const ref = `chat:${m.externalId}`;
     let clientId = byName.get(key(post.client)) ?? null;
 
     if (post.kind === "accepted") {
       if (await ServiceProject.exists({ contractRef: ref })) continue;
-      if (!known.has(key(post.client)) && !reported.has(key(post.client))) { out.skipped.push({ text: m.text.slice(0, 120), why: "not a Digital Marketing client (no team hours reported for it)" }); continue; }
+      if (!known.has(key(post.client)) && !reported.has(key(post.client))) {
+        out.skipped.push({ text: m.text.slice(0, 120), why: "not a Digital Marketing client (no team hours reported for it)" });
+        continue;
+      }
       // A client who already has an open project is not given a second one (owner, 2026-11-16: Pramesh Baskota showed twice).
-      const open = clientId ? await ServiceProject.findOne({ clientId, status: { $in: OPEN } }).select("name").lean<{ name: string } | null>() : null;
-      if (open) { out.skipped.push({ text: m.text.slice(0, 120), why: `client already has an open project (${open.name})` }); continue; }
+      const open = clientId
+        ? await ServiceProject.findOne({ clientId, status: { $in: OPEN } })
+            .select("name")
+            .lean<{ name: string } | null>()
+        : null;
+      if (open) {
+        out.skipped.push({ text: m.text.slice(0, 120), why: `client already has an open project (${open.name})` });
+        continue;
+      }
       if (!opts.dryRun) {
         if (!clientId) {
           clientId = randomUUID();
@@ -87,21 +123,38 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
           ...(baMatch(post.businessAnalyst) ? [{ role: "BUSINESS_ANALYST", name: baMatch(post.businessAnalyst)!.name }] : []),
         ];
         await ServiceProject.create({
-          _id: randomUUID(), name: post.client, clientId, contractRef: ref, status: "ACTIVE", startDate: post.startDate ?? posted,
-          upworkProfileId: (post.profile && profileByName.get(key(post.profile))) || null, people,
+          _id: randomUUID(),
+          name: post.client,
+          clientId,
+          contractRef: ref,
+          status: "ACTIVE",
+          startDate: post.startDate ?? posted,
+          upworkProfileId: (post.profile && profileByName.get(key(post.profile))) || null,
+          people,
           history: [{ fromStatus: null, toStatus: "ACTIVE", reason: "Created from New Project Update", at: now }],
           contract: { type: "HOURLY", hourlyRateCents: post.hourlyRateCents, trackingMode: "TIMER", startDate: post.startDate ?? posted },
         });
       }
       out.created.push(post.client);
     } else {
-      const projects = clientId ? await ServiceProject.find({ clientId, status: { $in: OPEN } }).select("name").lean<Array<{ _id: string; name: string }>>() : [];
+      const projects = clientId
+        ? await ServiceProject.find({ clientId, status: { $in: OPEN } })
+            .select("name")
+            .lean<Array<{ _id: string; name: string }>>()
+        : [];
       if (projects.length !== 1) {
-        if (!clientId || !(await ServiceProject.exists({ clientId, status: "COMPLETED" }))) out.skipped.push({ text: m.text.slice(0, 120), why: clientId ? `${projects.length} open projects` : "client not found" });
+        if (!clientId || !(await ServiceProject.exists({ clientId, status: "COMPLETED" })))
+          out.skipped.push({ text: m.text.slice(0, 120), why: clientId ? `${projects.length} open projects` : "client not found" });
         continue;
       }
       if (!opts.dryRun) {
-        await ServiceProject.updateOne({ _id: projects[0]._id }, { $set: { status: "COMPLETED", reviewRating: post.rating, reviewedAt: posted }, $push: { history: { toStatus: "COMPLETED", reason: "Contract ended (New Project Update)", at: now } } });
+        await ServiceProject.updateOne(
+          { _id: projects[0]._id },
+          {
+            $set: { status: "COMPLETED", reviewRating: post.rating, reviewedAt: posted },
+            $push: { history: { toStatus: "COMPLETED", reason: "Contract ended (New Project Update)", at: now } },
+          }
+        );
       }
       out.completed.push(projects[0].name);
     }

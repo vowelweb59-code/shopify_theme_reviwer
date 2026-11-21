@@ -28,7 +28,9 @@ export type PresetCategoryRow = {
 /** Recomputes suggestions from the stored crawl results; keeps manual choices. */
 export async function refreshSuggestions(): Promise<void> {
   await connectToDatabase();
-  const filters = await ThemeRankingFilter.find({ industry: { $ne: null } }).select("_id industry").lean<{ _id: unknown; industry: string }[]>();
+  const filters = await ThemeRankingFilter.find({ industry: { $ne: null } })
+    .select("_id industry")
+    .lean<{ _id: unknown; industry: string }[]>();
   const industryByFilter = new Map(filters.map((f) => [String(f._id), f.industry]));
   const ranks = await ThemeFilteredRank.find({ filterId: { $in: filters.map((f) => f._id) } })
     .select("filterId themeId presetName rank")
@@ -57,8 +59,12 @@ export async function listPresetCategories(themeIds?: string[]): Promise<PresetC
     .sort({ name: 1 })
     .lean<{ _id: unknown; name: string; themeStorePresets?: { name: string }[] }[]>();
   const [stored, filters] = await Promise.all([
-    PresetCategory.find({ themeId: { $in: themes.map((t) => t._id) } }).lean<{ themeId: unknown; presetName: string; suggested: string | null; manual: string | null }[]>(),
-    ThemeRankingFilter.find({ industry: { $ne: null } }).select("_id industry").lean<{ _id: unknown; industry: string }[]>(),
+    PresetCategory.find({ themeId: { $in: themes.map((t) => t._id) } }).lean<
+      { themeId: unknown; presetName: string; suggested: string | null; manual: string | null }[]
+    >(),
+    ThemeRankingFilter.find({ industry: { $ne: null } })
+      .select("_id industry")
+      .lean<{ _id: unknown; industry: string }[]>(),
   ]);
   const industryByFilter = new Map(filters.map((f) => [String(f._id), f.industry]));
   const ranks = await ThemeFilteredRank.find({ filterId: { $in: filters.map((f) => f._id) }, themeId: { $in: themes.map((t) => t._id) } })

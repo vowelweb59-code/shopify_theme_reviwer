@@ -23,12 +23,24 @@ async function main() {
   console.log(`${apply ? "APPLYING to" : "Dry run against"} ${mongoose.connection.host} / ${mongoose.connection.name}\n`);
   for (const [name, url] of Object.entries(REPOS)) {
     const theme = await Theme.findOne({ name }).select("gitRepoUrl").lean<{ gitRepoUrl?: string | null }>();
-    if (!theme) { console.log(`${name}: theme not found, skipped`); continue; }
-    if (theme.gitRepoUrl) { console.log(`${name}: already has ${theme.gitRepoUrl}, skipped`); continue; }
+    if (!theme) {
+      console.log(`${name}: theme not found, skipped`);
+      continue;
+    }
+    if (theme.gitRepoUrl) {
+      console.log(`${name}: already has ${theme.gitRepoUrl}, skipped`);
+      continue;
+    }
     console.log(`${name}: ${apply ? "saving" : "would save"} ${url}`);
     if (apply) await Theme.updateOne({ name }, { $set: { gitRepoUrl: url } });
   }
   if (!apply) console.log("\nDry run: nothing written. Pass --apply to save.");
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e);
+    process.exit(1);
+  }
+);

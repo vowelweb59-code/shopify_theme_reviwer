@@ -9,7 +9,22 @@ import { Breadcrumbs } from "@/app/_components/shell/Breadcrumbs";
 import { Button } from "@/app/_components/ui/Button";
 import { Card, CardHeader } from "@/app/_components/ui/Card";
 import { EmptyState, ErrorState } from "@/app/_components/ui/EmptyState";
-import { PORTALS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, REJECTION_STAGES, REJECTION_STAGE_LABELS, REJECTION_TYPES, REJECTION_TYPE_LABELS, typeHasStatus, type Portal, type ProjectStatus, type ProjectType, type RejectionStage, type RejectionType } from "@/lib/projects/constants";
+import {
+  PORTALS,
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABELS,
+  PROJECT_TYPE_LABELS,
+  REJECTION_STAGES,
+  REJECTION_STAGE_LABELS,
+  REJECTION_TYPES,
+  REJECTION_TYPE_LABELS,
+  typeHasStatus,
+  type Portal,
+  type ProjectStatus,
+  type ProjectType,
+  type RejectionStage,
+  type RejectionType,
+} from "@/lib/projects/constants";
 import { ProjectStatusPill } from "./ProjectStatusPill";
 import { TimeLog } from "./TimeLog";
 import { VersionTime } from "./VersionTime";
@@ -18,9 +33,43 @@ import { CostCard } from "./CostCard";
 
 type ProjectMember = { memberId: string; name: string; designation: string; role: string | null };
 type TeamEntry = { _id: string; name: string; designation: string; email: string | null };
-type RoundView = { status: ProjectStatus; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; rejectedOn: string | null; designDays: number | null; developmentDays: number | null; note: string; members: ProjectMember[] };
+type RoundView = {
+  status: ProjectStatus;
+  rejectionStage: RejectionStage | null;
+  rejectionType: RejectionType | null;
+  rejectedOn: string | null;
+  designDays: number | null;
+  developmentDays: number | null;
+  note: string;
+  members: ProjectMember[];
+};
 type Loaded = {
-  project: { _id: string; portal: Portal | null; name: string; description: string; type: ProjectType; status: ProjectStatus | null; rejectionStage: RejectionStage | null; rejectionType: RejectionType | null; rejectedOn: string | null; designDays: number | null; developmentDays: number | null; members: ProjectMember[]; rounds: RoundView[]; rejections: number; totals: { designDays: number | null; developmentDays: number | null; fixedDesignDays: number | null; fixedDevelopmentDays: number | null; estimated: boolean; spaceHours: number; fixedHours: number; totalHours: number } | null };
+  project: {
+    _id: string;
+    portal: Portal | null;
+    name: string;
+    description: string;
+    type: ProjectType;
+    status: ProjectStatus | null;
+    rejectionStage: RejectionStage | null;
+    rejectionType: RejectionType | null;
+    rejectedOn: string | null;
+    designDays: number | null;
+    developmentDays: number | null;
+    members: ProjectMember[];
+    rounds: RoundView[];
+    rejections: number;
+    totals: {
+      designDays: number | null;
+      developmentDays: number | null;
+      fixedDesignDays: number | null;
+      fixedDevelopmentDays: number | null;
+      estimated: boolean;
+      spaceHours: number;
+      fixedHours: number;
+      totalHours: number;
+    } | null;
+  };
   theme: { _id: string; name: string } | null;
   team: TeamEntry[];
 };
@@ -43,7 +92,20 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
   const [pickId, setPickId] = useState("");
-  const [days, setDays] = useState<{ memberId: string; name: string; designation: string; theme: number; preset: number; update: number; total: number; spaceHours: number; manualHours: number; totalHours: number }[]>([]);
+  const [days, setDays] = useState<
+    {
+      memberId: string;
+      name: string;
+      designation: string;
+      theme: number;
+      preset: number;
+      update: number;
+      total: number;
+      spaceHours: number;
+      manualHours: number;
+      totalHours: number;
+    }[]
+  >([]);
 
   function apply(loaded: Loaded) {
     setData(loaded);
@@ -90,8 +152,42 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     e.preventDefault();
     setSaving(true);
     const hasStatus = data ? typeHasStatus(data.project.type) : true;
-    if (await patch(hasStatus ? { name, portal, description, status, rejectionStage: status === "rejected" ? rejectionStage : "", rejectionType: status === "rejected" ? rejectionType : "", rejectedOn: status === "rejected" ? rejectedOn : "" } : { name, portal, description })) {
-      setData((d) => (d ? { ...d, project: { ...d.project, name, portal: portal || null, description, ...(hasStatus ? { status, rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null, rejectionType: status === "rejected" && rejectionType ? rejectionType : null, rejectedOn: status === "rejected" && rejectedOn ? rejectedOn : null } : {}) } } : d));
+    if (
+      await patch(
+        hasStatus
+          ? {
+              name,
+              portal,
+              description,
+              status,
+              rejectionStage: status === "rejected" ? rejectionStage : "",
+              rejectionType: status === "rejected" ? rejectionType : "",
+              rejectedOn: status === "rejected" ? rejectedOn : "",
+            }
+          : { name, portal, description }
+      )
+    ) {
+      setData((d) =>
+        d
+          ? {
+              ...d,
+              project: {
+                ...d.project,
+                name,
+                portal: portal || null,
+                description,
+                ...(hasStatus
+                  ? {
+                      status,
+                      rejectionStage: status === "rejected" && rejectionStage ? rejectionStage : null,
+                      rejectionType: status === "rejected" && rejectionType ? rejectionType : null,
+                      rejectedOn: status === "rejected" && rejectedOn ? rejectedOn : null,
+                    }
+                  : {}),
+              },
+            }
+          : d
+      );
       setMessage({ tone: "ok", text: "Saved." });
     }
     setSaving(false);
@@ -106,7 +202,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   async function resubmit() {
     if (!data) return;
-    const note = window.prompt("Why was it rejected? (optional, kept with this round)") ;
+    const note = window.prompt("Why was it rejected? (optional, kept with this round)");
     if (note === null) return;
     if (!(await patch({ startNewRound: true, rejectionNote: note }))) return;
     const res = await fetch(`/api/projects/${projectId}`);
@@ -115,7 +211,16 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
 
   async function saveRounds(rounds: RoundView[]) {
     if (!data) return;
-    const body = rounds.map((r) => ({ status: r.status, rejectionStage: r.rejectionStage, rejectionType: r.rejectionType, rejectedOn: r.rejectedOn, designDays: r.designDays, developmentDays: r.developmentDays, note: r.note, members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })) }));
+    const body = rounds.map((r) => ({
+      status: r.status,
+      rejectionStage: r.rejectionStage,
+      rejectionType: r.rejectionType,
+      rejectedOn: r.rejectedOn,
+      designDays: r.designDays,
+      developmentDays: r.developmentDays,
+      note: r.note,
+      members: r.members.map((m) => ({ memberId: m.memberId, role: m.role })),
+    }));
     if (await patch({ rounds: body })) {
       const rejections = rounds.filter((r) => r.status === "rejected").length + (data.project.status === "rejected" ? 1 : 0);
       setData({ ...data, project: { ...data.project, rounds, rejections } });
@@ -132,7 +237,15 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
   if (loadError) {
     return (
       <PageContainer>
-        <ErrorState title="Couldn't load this project" description={loadError} action={<Link href="/projects" className="text-sm text-primary underline">Back to projects</Link>} />
+        <ErrorState
+          title="Couldn't load this project"
+          description={loadError}
+          action={
+            <Link href="/projects" className="text-sm text-primary underline">
+              Back to projects
+            </Link>
+          }
+        />
       </PageContainer>
     );
   }
@@ -225,7 +338,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <div className="rounded-md border border-border-subtle px-3 py-2 text-sm">
               <p className="mb-1 font-medium text-zinc-900 dark:text-zinc-100">Time taken</p>
               <p className="text-zinc-600 dark:text-zinc-400">
-                Design {project.totals.designDays === null ? "—" : Math.round(project.totals.designDays)} d · Development {project.totals.developmentDays === null ? "—" : Math.round(project.totals.developmentDays)} d · Total {Math.round(project.totals.totalHours)} h
+                Design {project.totals.designDays === null ? "—" : Math.round(project.totals.designDays)} d · Development{" "}
+                {project.totals.developmentDays === null ? "—" : Math.round(project.totals.developmentDays)} d · Total {Math.round(project.totals.totalHours)} h
               </p>
               <p className="mt-1 text-xs text-zinc-500">
                 {project.totals.estimated
@@ -259,7 +373,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         )}
       </Card>
 
-      {hasStatus && (project.type === "theme_development" || project.type === "preset_development") && <DeadlineCard projectId={project._id} projectType={project.type} />}
+      {hasStatus && (project.type === "theme_development" || project.type === "preset_development") && (
+        <DeadlineCard projectId={project._id} projectType={project.type} />
+      )}
 
       <CostCard projectId={project._id} />
 
@@ -287,7 +403,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 {days.map((d) => (
                   <tr key={d.memberId}>
                     <td className="py-2 pr-4">
-                      <span className="font-medium text-zinc-900 dark:text-zinc-100">{d.name}</span> <span className="text-xs text-zinc-500">{d.designation}</span>
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">{d.name}</span>{" "}
+                      <span className="text-xs text-zinc-500">{d.designation}</span>
                     </td>
                     <td className="py-2 pr-4">{d.theme || "—"}</td>
                     {sum((d) => d.preset) > 0 && <td className="py-2 pr-4">{d.preset || "—"}</td>}
@@ -335,7 +452,8 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
                 onTypeSave={(rejectionType) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectionType } : r)))}
                 onDateSave={(rejectedOn) => saveRounds(project.rounds.map((r, j) => (j === i ? { ...r, rejectedOn } : r)))}
                 onDelete={() => {
-                  if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`)) saveRounds(project.rounds.filter((_, j) => j !== i));
+                  if (window.confirm(`Delete round ${i + 1}? Its rejection is no longer counted against its team.`))
+                    saveRounds(project.rounds.filter((_, j) => j !== i));
                 }}
               />
             ))}
@@ -348,10 +466,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
       {!hasStatus && <TimeLog projectId={project._id} members={project.members} />}
 
       <Card>
-        <CardHeader
-          title="Team"
-          description="Each member's role on this project defaults to their designation; edit it if they do something different here."
-        />
+        <CardHeader title="Team" description="Each member's role on this project defaults to their designation; edit it if they do something different here." />
         {team.length === 0 ? (
           <EmptyState
             title="No team members in the system yet"
@@ -445,7 +560,11 @@ function MemberRow({ member, onRoleSave, onRemove }: { member: ProjectMember; on
 // A design-stage rejection is left out of the developers' success rate.
 function StageSelect({ value, onChange }: { value: RejectionStage | ""; onChange: (stage: RejectionStage | "") => void }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as RejectionStage | "")} className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as RejectionStage | "")}
+      className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm"
+    >
       <option value="">Not recorded</option>
       {REJECTION_STAGES.map((s) => (
         <option key={s} value={s}>
@@ -459,7 +578,11 @@ function StageSelect({ value, onChange }: { value: RejectionStage | ""; onChange
 // Internal = rejected by our own review before submission; the success rate counts it at half for a Team Lead (lib/projects/rounds.ts).
 function TypeSelect({ value, onChange }: { value: RejectionType | ""; onChange: (type: RejectionType | "") => void }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as RejectionType | "")} className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as RejectionType | "")}
+      className="rounded-md border border-border-subtle bg-transparent px-2 py-1 text-sm"
+    >
       <option value="">Not recorded</option>
       {REJECTION_TYPES.map((t) => (
         <option key={t} value={t}>
@@ -534,9 +657,17 @@ function RoundRow({
       <div className="flex flex-wrap items-center gap-2">
         {round.members.length === 0 && <span className="text-xs text-zinc-500">No team recorded</span>}
         {round.members.map((m) => (
-          <span key={m.memberId} className="inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-300">
+          <span
+            key={m.memberId}
+            className="inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-300"
+          >
             {m.name} <span className="text-zinc-400">· {m.designation}</span>
-            <button type="button" aria-label={`Remove ${m.name} from round ${index + 1}`} onClick={() => onMembersSave(round.members.filter((x) => x.memberId !== m.memberId))} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+            <button
+              type="button"
+              aria-label={`Remove ${m.name} from round ${index + 1}`}
+              onClick={() => onMembersSave(round.members.filter((x) => x.memberId !== m.memberId))}
+              className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+            >
               <X className="h-3 w-3" aria-hidden />
             </button>
           </span>

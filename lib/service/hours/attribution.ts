@@ -3,7 +3,14 @@
 import { memo } from "@/lib/cache/memo";
 import { ServiceProject } from "@/models/service-project";
 
-export type AttributionProject = { _id: string; name: string; clientId: string | null; status: string; inHouse: boolean; contract: { weeklyLimitMinutes: number | null; type: string; status: string } | null };
+export type AttributionProject = {
+  _id: string;
+  name: string;
+  clientId: string | null;
+  status: string;
+  inHouse: boolean;
+  contract: { weeklyLimitMinutes: number | null; type: string; status: string } | null;
+};
 
 const CLOSED_STATUSES = new Set(["COMPLETED", "CANCELLED", "ARCHIVED"]);
 
@@ -39,15 +46,19 @@ async function loadAttributionUncached() {
 }
 
 export function projectOf(e: { projectId: string | null; clientId: string | null }, owner: Map<string, string>): string | null {
-  return e.projectId ?? (e.clientId ? owner.get(e.clientId) ?? null : null);
+  return e.projectId ?? (e.clientId ? (owner.get(e.clientId) ?? null) : null);
 }
 
 /**
  * An entry shared across several projects counts once per share: one copy per project, with that share of the minutes.
  * Every figure that adds up hours per project goes through this, so a shared entry is never counted twice or dropped.
  */
-export function expandAllocations<T extends { projectId: string | null; minutes: number; allocations?: ReadonlyArray<{ projectId: string; minutes: number }> }>(entries: readonly T[]): T[] {
-  return entries.flatMap((e) => (e.allocations && e.allocations.length > 0 ? e.allocations.map((a) => ({ ...e, projectId: a.projectId, minutes: a.minutes })) : [e]));
+export function expandAllocations<T extends { projectId: string | null; minutes: number; allocations?: ReadonlyArray<{ projectId: string; minutes: number }> }>(
+  entries: readonly T[]
+): T[] {
+  return entries.flatMap((e) =>
+    e.allocations && e.allocations.length > 0 ? e.allocations.map((a) => ({ ...e, projectId: a.projectId, minutes: a.minutes })) : [e]
+  );
 }
 
 /** Splits minutes into `parts` whole-minute shares that add up exactly (the remainder goes to the first shares). */

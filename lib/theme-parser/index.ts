@@ -54,9 +54,7 @@ export type ThemeParseTiming = { extraction: number; validation: number; parsing
  * different failure modes and costs (I/O-bound extraction vs. CPU-bound
  * parsing).
  */
-export async function parseThemeZip(
-  zipBuffer: Buffer
-): Promise<ThemeParseResult & { timing: ThemeParseTiming }> {
+export async function parseThemeZip(zipBuffer: Buffer): Promise<ThemeParseResult & { timing: ThemeParseTiming }> {
   const extractStart = Date.now();
   const { dir, cleanup } = await extractThemeZip(zipBuffer);
   const extraction = Date.now() - extractStart;

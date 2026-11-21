@@ -17,9 +17,7 @@ const MONTH_RE = /^\d{4}-\d{2}$/;
 /** GA4 Try Theme + install counts per theme per month (the Analytics "total" rows). */
 async function loadGaMonths(themes: { _id: unknown; name: string }[], from?: string | null, to?: string | null): Promise<GaMonth[]> {
   const themeIdByName = new Map(themes.map((t) => [t.name.trim().toLowerCase(), String(t._id)]));
-  const analyticsThemes = await AnalyticsTheme.find({})
-    .select("_id name themeId")
-    .lean<{ _id: unknown; name: string; themeId?: unknown }[]>();
+  const analyticsThemes = await AnalyticsTheme.find({}).select("_id name themeId").lean<{ _id: unknown; name: string; themeId?: unknown }[]>();
   // Linked by themeId when set, else by the same name ("Adorn" ↔ "Adorn").
   const themeFor = new Map<string, string>();
   for (const a of analyticsThemes) {
@@ -89,13 +87,16 @@ export async function getSalesSummary(query: SummaryQuery): Promise<SalesSummary
   const themeIdsWithSales = (await SaleRecord.distinct("themeId")).map(String);
   const scopeIds = query.themeId ? [query.themeId] : themeIdsWithSales;
   const [themes, sales, stores, categories] = await Promise.all([
-    Theme.find({ _id: { $in: themeIdsWithSales } }).select("name").sort({ name: 1 }).lean<{ _id: unknown; name: string }[]>(),
-    SaleRecord.find(saleFilter).select("themeId month chargeType amount share country shopDomain").lean<
-      { themeId: unknown; month: string; chargeType: string; amount: number; share: number; country: string; shopDomain: string }[]
-    >(),
-    SalesStore.find({ themeId: { $in: scopeIds } }).select("themeId shopDomain status detectedPreset manualPreset").lean<
-      { themeId: unknown; shopDomain: string; status: string; detectedPreset: string | null; manualPreset: string | null }[]
-    >(),
+    Theme.find({ _id: { $in: themeIdsWithSales } })
+      .select("name")
+      .sort({ name: 1 })
+      .lean<{ _id: unknown; name: string }[]>(),
+    SaleRecord.find(saleFilter)
+      .select("themeId month chargeType amount share country shopDomain")
+      .lean<{ themeId: unknown; month: string; chargeType: string; amount: number; share: number; country: string; shopDomain: string }[]>(),
+    SalesStore.find({ themeId: { $in: scopeIds } })
+      .select("themeId shopDomain status detectedPreset manualPreset")
+      .lean<{ themeId: unknown; shopDomain: string; status: string; detectedPreset: string | null; manualPreset: string | null }[]>(),
     listPresetCategories(),
   ]);
 

@@ -16,31 +16,41 @@ const INTERVAL_MS = intervalMs(process.env.SERVICE_CHAT_SYNC_MINUTES, 15);
 let lastBackfillDay = "";
 
 /** Called once from instrumentation.ts on server boot. */
-export const startServiceChatScheduler = createRepeatingJob("service-chat-sync", "service-chat", INTERVAL_MS, async () => {
-  await connectToDatabase();
-  const conn = await ServiceChatConnection.findOne({ key: "service-chat" }).select("status").lean<{ status: string } | null>();
-  if (conn?.status !== "active") return;
-  const now = new Date();
-  const day = istDay(now);
-  const months = [istMonth(now)];
-  if (lastBackfillDay !== day) months.unshift(istMonth(now, 1));
-  for (const m of months) {
-    const r = await syncServiceMonth(m, "auto");
-    if (r.saved.entriesCreated > 0) console.log(`[service-chat] ${m}: read ${r.fetched} messages, ${r.saved.entriesCreated} new entries`);
-  }
-  lastBackfillDay = day;
-  // New Project Update space: new clients/projects and ended contracts (owner, 2026-11-16). A failure here never stops the hours sync.
-  try {
-    const r = await syncNewProjects();
-    if (r.created.length || r.completed.length) console.log(`[service-chat] new projects: created ${r.created.join(", ") || "none"}; ended ${r.completed.join(", ") || "none"}`);
-  } catch (err) {
-    console.error("[service-chat] new project posts failed:", err instanceof Error ? err.message : err);
-  }
-  // A team member reported hours for a client the app does not have (owner, 2026-11-19): create its project and fill what both spaces say.
-  try {
-    const r = await autoCreateProjects();
-    if (r.created.length || r.enriched.length) console.log(`[service-chat] auto projects: created ${r.created.map((c) => c.name).join(", ") || "none"}; completed fields on ${r.enriched.join(", ") || "none"}`);
-  } catch (err) {
-    console.error("[service-chat] auto project creation failed:", err instanceof Error ? err.message : err);
-  }
-}, 60_000); // first run after boot is staggered so a wake from sleep is not one big burst
+export const startServiceChatScheduler = createRepeatingJob(
+  "service-chat-sync",
+  "service-chat",
+  INTERVAL_MS,
+  async () => {
+    await connectToDatabase();
+    const conn = await ServiceChatConnection.findOne({ key: "service-chat" }).select("status").lean<{ status: string } | null>();
+    if (conn?.status !== "active") return;
+    const now = new Date();
+    const day = istDay(now);
+    const months = [istMonth(now)];
+    if (lastBackfillDay !== day) months.unshift(istMonth(now, 1));
+    for (const m of months) {
+      const r = await syncServiceMonth(m, "auto");
+      if (r.saved.entriesCreated > 0) console.log(`[service-chat] ${m}: read ${r.fetched} messages, ${r.saved.entriesCreated} new entries`);
+    }
+    lastBackfillDay = day;
+    // New Project Update space: new clients/projects and ended contracts (owner, 2026-11-16). A failure here never stops the hours sync.
+    try {
+      const r = await syncNewProjects();
+      if (r.created.length || r.completed.length)
+        console.log(`[service-chat] new projects: created ${r.created.join(", ") || "none"}; ended ${r.completed.join(", ") || "none"}`);
+    } catch (err) {
+      console.error("[service-chat] new project posts failed:", err instanceof Error ? err.message : err);
+    }
+    // A team member reported hours for a client the app does not have (owner, 2026-11-19): create its project and fill what both spaces say.
+    try {
+      const r = await autoCreateProjects();
+      if (r.created.length || r.enriched.length)
+        console.log(
+          `[service-chat] auto projects: created ${r.created.map((c) => c.name).join(", ") || "none"}; completed fields on ${r.enriched.join(", ") || "none"}`
+        );
+    } catch (err) {
+      console.error("[service-chat] auto project creation failed:", err instanceof Error ? err.message : err);
+    }
+  },
+  60_000
+); // first run after boot is staggered so a wake from sleep is not one big burst

@@ -32,18 +32,34 @@ export function ProfileRow({ profile: p, accounts }: { profile: Profile; account
           className={`${INPUT} max-w-56`}
         >
           <option value="">Not set</option>
-          {accounts.map((a) => <option key={a.id} value={a.id}>{a.login}</option>)}
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.login}
+            </option>
+          ))}
         </select>
-        {error && <p role="alert" className="text-xs text-status-fail-text">{error}</p>}
+        {error && (
+          <p role="alert" className="text-xs text-status-fail-text">
+            {error}
+          </p>
+        )}
       </td>
-      <td className="py-2">{p.entries} · {fmtMinutes(p.minutes)}</td>
+      <td className="py-2">
+        {p.entries} · {fmtMinutes(p.minutes)}
+      </td>
     </tr>
   );
 }
 
 /** The unmatched written names; the profile list is passed once and shared by every row. */
 export function UnmatchedProfiles({ items, profiles }: { items: ProfileList["unmatched"]; profiles: Profile[] }) {
-  return <>{items.map((u) => <UnmatchedRow key={u.name} item={u} profiles={profiles} />)}</>;
+  return (
+    <>
+      {items.map((u) => (
+        <UnmatchedRow key={u.name} item={u} profiles={profiles} />
+      ))}
+    </>
+  );
 }
 
 function UnmatchedRow({ item, profiles }: { item: ProfileList["unmatched"][number]; profiles: Profile[] }) {
@@ -53,14 +69,32 @@ function UnmatchedRow({ item, profiles }: { item: ProfileList["unmatched"][numbe
   return (
     <li className="flex flex-wrap items-center gap-3 py-2">
       <span className="font-medium">{item.name}</span>
-      <span className="text-sm text-zinc-500">{item.entries} entries · {fmtMinutes(item.minutes)}</span>
+      <span className="text-sm text-zinc-500">
+        {item.entries} entries · {fmtMinutes(item.minutes)}
+      </span>
       <select aria-label={`Profile for ${item.name}`} value={target} onChange={(e) => setTarget(e.target.value)} className={INPUT}>
         <option value="">Same person as…</option>
-        {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        {profiles.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
       </select>
-      <button disabled={busy || !chosen} onClick={() => chosen && void save("PUT", `/review/profiles/${chosen.id}`, { aliases: [...chosen.aliases, item.name] })} className={BTN}>Add as alias</button>
-      <button disabled={busy} onClick={() => void save("POST", "/review/profiles", { name: item.name })} className={BTN}>New profile</button>
-      {error && <p role="alert" className="basis-full text-xs text-status-fail-text">{error}</p>}
+      <button
+        disabled={busy || !chosen}
+        onClick={() => chosen && void save("PUT", `/review/profiles/${chosen.id}`, { aliases: [...chosen.aliases, item.name] })}
+        className={BTN}
+      >
+        Add as alias
+      </button>
+      <button disabled={busy} onClick={() => void save("POST", "/review/profiles", { name: item.name })} className={BTN}>
+        New profile
+      </button>
+      {error && (
+        <p role="alert" className="basis-full text-xs text-status-fail-text">
+          {error}
+        </p>
+      )}
     </li>
   );
 }
@@ -85,11 +119,21 @@ export function NewProfile({ accounts }: { accounts: ProfileList["accounts"] }) 
         <span className="mb-1 block text-zinc-500">Upwork account (optional)</span>
         <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${INPUT} max-w-56`}>
           <option value="">Not set</option>
-          {accounts.map((a) => <option key={a.id} value={a.id}>{a.login}</option>)}
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.login}
+            </option>
+          ))}
         </select>
       </label>
-      <button disabled={busy || !name.trim()} className={BTN}>Add profile</button>
-      {error && <p role="alert" className="basis-full text-sm text-status-fail-text">{error}</p>}
+      <button disabled={busy || !name.trim()} className={BTN}>
+        Add profile
+      </button>
+      {error && (
+        <p role="alert" className="basis-full text-sm text-status-fail-text">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

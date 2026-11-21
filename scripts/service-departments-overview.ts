@@ -18,7 +18,9 @@ async function main() {
   for (const d of [...departments, { _id: "none", name: "(no department)", isDefault: false, managerName: null }]) {
     const mine = projects.filter((p) => (deptOf.get(p._id) ?? "none") === d._id);
     const withEntries = mine.filter((p) => (entries.get(p._id) ?? 0) > 0).length;
-    console.log(`${d.name}${d.isDefault ? " [default]" : ""}  manager: ${d.managerName ?? "-"}  ->  ${mine.length} projects (${withEntries} with hours entries)`);
+    console.log(
+      `${d.name}${d.isDefault ? " [default]" : ""}  manager: ${d.managerName ?? "-"}  ->  ${mine.length} projects (${withEntries} with hours entries)`
+    );
     for (const p of mine.slice(0, 6)) console.log(`     e.g. ${p.name}`);
   }
 }

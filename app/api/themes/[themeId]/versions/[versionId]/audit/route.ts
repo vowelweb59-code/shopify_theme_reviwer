@@ -24,10 +24,7 @@ import { ensureDemoPresets } from "@/lib/themes/ensurePresets";
  * audit itself is actually done. The client polls GET /api/audit/[id] for
  * status/progress instead (see currentStage/stageProgress on the model).
  */
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ themeId: string; versionId: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ themeId: string; versionId: string }> }) {
   await connectToDatabase();
   const { themeId, versionId } = await params;
   if (!isValidObjectId(themeId)) return invalidIdResponse("themeId");
@@ -58,10 +55,7 @@ export async function POST(
   const buffer = await localUploadSource(themeZip).getZipBuffer();
 
   const auditRun = await new Promise<AuditRunDoc & { _id: unknown }>((resolve) => {
-    executeAuditRun(
-      { theme, buffer, demoStorePresets, themeVersionId: themeVersion._id, themeZipId: themeZip._id },
-      { onStarted: resolve }
-    ).catch((err) => {
+    executeAuditRun({ theme, buffer, demoStorePresets, themeVersionId: themeVersion._id, themeZipId: themeZip._id }, { onStarted: resolve }).catch((err) => {
       // executeAuditRun itself never throws — it catches internally and
       // marks the run "failed" (visible to the polling client via status).
       // This only guards against a truly unexpected failure escaping that

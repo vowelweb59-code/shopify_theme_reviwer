@@ -61,11 +61,28 @@ export function CategoriesTab({
   }
 
   const columns: TableColumn<CategoryRow>[] = [
-    { key: "category", header: "Category", render: (r) => <span className={r.category ? "font-medium" : "italic text-zinc-500"}>{industryLabel(r.category)}</span>, sortValue: (r) => industryLabel(r.category) },
+    {
+      key: "category",
+      header: "Category",
+      render: (r) => <span className={r.category ? "font-medium" : "italic text-zinc-500"}>{industryLabel(r.category)}</span>,
+      sortValue: (r) => industryLabel(r.category),
+    },
     { key: "presets", header: "Presets", render: (r) => <span className="text-zinc-600 dark:text-zinc-400">{r.presets.join(", ")}</span> },
     { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-    { key: "share", header: "Share of sales", render: (r) => <span className="tabular-nums">{shareOf(r.netSales, total)}</span>, sortValue: (r) => r.netSales, className: "text-right" },
-    { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
+    {
+      key: "share",
+      header: "Share of sales",
+      render: (r) => <span className="tabular-nums">{shareOf(r.netSales, total)}</span>,
+      sortValue: (r) => r.netSales,
+      className: "text-right",
+    },
+    {
+      key: "gross",
+      header: "Revenue",
+      render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>,
+      sortValue: (r) => r.gross,
+      className: "text-right",
+    },
   ];
 
   return (
@@ -91,8 +108,12 @@ export function CategoriesTab({
             </Button>
           }
         />
-        {crawl?.running && crawl.current && <p className="text-xs text-zinc-500">Crawling {industryLabel(crawl.current)} — this takes a few minutes; the page updates when it finishes.</p>}
-        {crawl && !crawl.running && crawl.errors.length > 0 && <p className="text-xs text-status-warning-text">Some categories couldn&apos;t be checked: {crawl.errors.join("; ")}</p>}
+        {crawl?.running && crawl.current && (
+          <p className="text-xs text-zinc-500">Crawling {industryLabel(crawl.current)} — this takes a few minutes; the page updates when it finishes.</p>
+        )}
+        {crawl && !crawl.running && crawl.errors.length > 0 && (
+          <p className="text-xs text-status-warning-text">Some categories couldn&apos;t be checked: {crawl.errors.join("; ")}</p>
+        )}
         {error && <p className="text-sm text-status-fail-text">{error}</p>}
         <div className="overflow-x-auto rounded-lg border border-border-subtle">
           <table className="min-w-full text-sm">
@@ -113,10 +134,16 @@ export function CategoriesTab({
                       {withSales.size > 1 && <span className="ml-1 text-xs font-normal text-zinc-500">{p.themeName}</span>}
                     </td>
                     <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
-                      {p.listedIn.length === 0 ? <span className="italic text-zinc-500">Not found yet — refresh</span> : p.listedIn.map((l) => `${industryLabel(l.industry)} (#${l.rank})`).join(", ")}
+                      {p.listedIn.length === 0 ? (
+                        <span className="italic text-zinc-500">Not found yet — refresh</span>
+                      ) : (
+                        p.listedIn.map((l) => `${industryLabel(l.industry)} (#${l.rank})`).join(", ")
+                      )}
                     </td>
                     <td className="px-3 py-2">
-                      <label className="sr-only" htmlFor={`cat-${key}`}>Main category for {p.presetName}</label>
+                      <label className="sr-only" htmlFor={`cat-${key}`}>
+                        Main category for {p.presetName}
+                      </label>
                       <select
                         id={`cat-${key}`}
                         value={p.manual ?? ""}

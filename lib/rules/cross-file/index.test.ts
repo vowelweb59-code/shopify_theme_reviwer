@@ -141,8 +141,7 @@ describe("REF-SETTINGS-GLOBAL-MISSING-001", () => {
     const theme = buildTestTheme({
       ...BASE_LAYOUT,
       "config/settings_schema.json": "[]",
-      "layout/theme.liquid":
-        "{% for scheme in settings.color_schemes %}{{ scheme.settings.background }}{% endfor %}",
+      "layout/theme.liquid": "{% for scheme in settings.color_schemes %}{{ scheme.settings.background }}{% endfor %}",
     });
     cleanup = theme.cleanup;
     expect(findingsFor("REF-SETTINGS-GLOBAL-MISSING-001", theme)).toHaveLength(0);

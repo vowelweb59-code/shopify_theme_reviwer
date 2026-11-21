@@ -31,8 +31,8 @@ export function UnderDevelopmentSection({ rows, onChanged }: { rows: DevThemeRow
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Under development</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Themes that are not on the Shopify Theme Store yet. Check each one for Theme Store readiness by hand: upload its ZIP, give its demo
-          store URL(s) and run the check. A new theme added with “Add Theme” appears here until it goes live.
+          Themes that are not on the Shopify Theme Store yet. Check each one for Theme Store readiness by hand: upload its ZIP, give its demo store URL(s) and
+          run the check. A new theme added with “Add Theme” appears here until it goes live.
         </p>
       </div>
       {rows.length === 0 ? (
@@ -118,7 +118,10 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
         description={latestVersion ? `Latest uploaded version ${latestVersion.version}` : "No version uploaded yet"}
         action={
           <div className="flex gap-2">
-            <Link href={`/themes/${theme._id}`} className="inline-flex items-center rounded-md border border-border-subtle px-3 py-1.5 text-xs font-medium hover:bg-surface-muted">
+            <Link
+              href={`/themes/${theme._id}`}
+              className="inline-flex items-center rounded-md border border-border-subtle px-3 py-1.5 text-xs font-medium hover:bg-surface-muted"
+            >
               Full report
             </Link>
             <Button size="sm" variant="secondary" onClick={() => setOpen((v) => !v)}>
@@ -130,7 +133,8 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
       <div className="flex flex-col gap-3 text-sm">
         {health !== null && checkTotals ? (
           <p className="text-zinc-600 dark:text-zinc-300">
-            Last check: <span className={`font-semibold ${tone}`}>{health}% ready</span> · {checkTotals.passed} passed · {checkTotals.failed} failed · {checkTotals.warnings} warnings
+            Last check: <span className={`font-semibold ${tone}`}>{health}% ready</span> · {checkTotals.passed} passed · {checkTotals.failed} failed ·{" "}
+            {checkTotals.warnings} warnings
             {checkTotals.notTested > 0 ? ` · ${checkTotals.notTested} not tested` : ""}
           </p>
         ) : (
@@ -157,7 +161,10 @@ function DevThemeCard({ row, onChanged }: { row: DevThemeRow; onChanged: () => v
                     {stage === "checking_live" && progress && progress.total > 0 ? ` — ${progress.completed} of ${progress.total} checked` : ""}
                   </p>
                   <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-                    <div className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${percentForStage(stage, progress)}%` }} />
+                    <div
+                      className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                      style={{ width: `${percentForStage(stage, progress)}%` }}
+                    />
                   </div>
                 </div>
               </div>

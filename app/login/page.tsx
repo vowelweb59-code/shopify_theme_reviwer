@@ -15,10 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-muted px-4 py-12">
       {/* Soft brand-colored glow behind the card; purely decorative. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl"
-      />
+      <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
 
       <main className="relative w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">

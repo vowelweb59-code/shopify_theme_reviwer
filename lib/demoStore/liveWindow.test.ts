@@ -35,7 +35,12 @@ describe("liveWindow", () => {
   });
 
   it("shows a range when a failed check widened the window", () => {
-    const w = liveWindow({ startedAfter: "2026-09-20T00:00:00Z", startedAt: "2026-09-21T00:00:00Z", lastSeenAt: "2026-09-23T00:00:00Z", endedAt: "2026-09-23T01:00:00Z" });
+    const w = liveWindow({
+      startedAfter: "2026-09-20T00:00:00Z",
+      startedAt: "2026-09-21T00:00:00Z",
+      lastSeenAt: "2026-09-23T00:00:00Z",
+      endedAt: "2026-09-23T01:00:00Z",
+    });
     expect(describeDuration(w)).toMatchObject({ text: "2d 0h – 3d 1h", exact: false });
   });
 
@@ -47,7 +52,12 @@ describe("liveWindow", () => {
   });
 
   it("never goes negative", () => {
-    const w = liveWindow({ startedAt: "2026-09-25T06:00:00Z", lastSeenAt: "2026-09-25T05:00:00Z", startedAfter: "2026-09-25T05:00:00Z", endedAt: "2026-09-25T06:00:00Z" });
+    const w = liveWindow({
+      startedAt: "2026-09-25T06:00:00Z",
+      lastSeenAt: "2026-09-25T05:00:00Z",
+      startedAfter: "2026-09-25T05:00:00Z",
+      endedAt: "2026-09-25T06:00:00Z",
+    });
     expect(w.minMs).toBe(0);
     expect(w.estimateMs).toBeGreaterThanOrEqual(0);
   });

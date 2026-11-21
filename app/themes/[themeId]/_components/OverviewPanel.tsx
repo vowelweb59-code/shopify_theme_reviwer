@@ -245,9 +245,7 @@ function PresetsSection({
                     aria-expanded={isOpen}
                     className="flex w-full flex-wrap items-center justify-between gap-2 text-left text-sm"
                   >
-                    <span className="font-medium text-zinc-900 underline decoration-dotted hover:text-primary dark:text-zinc-100">
-                      {preset.label}
-                    </span>
+                    <span className="font-medium text-zinc-900 underline decoration-dotted hover:text-primary dark:text-zinc-100">{preset.label}</span>
                     <span className="text-zinc-500">{preset.url}</span>
                   </button>
                   {isOpen && (
@@ -293,9 +291,7 @@ function PresetsSection({
         <PresetLinksEditor presets={draft} onChange={setDraft} />
         <DemoStorePasswords themeId={themeId} presets={draft} />
         {autofetchWarning && (
-          <div className="rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">
-            {autofetchWarning}
-          </div>
+          <div className="rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">{autofetchWarning}</div>
         )}
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
         <div className="flex items-center gap-3">
@@ -412,7 +408,13 @@ function PageSpeedByPreset({
                   <Score value={scoreFor(p.url, "desktop")} />
                 </td>
                 <td className="py-2 text-right">
-                  <Button variant="secondary" size="sm" onClick={() => checkOne(p)} loading={busyUrl === p.url} disabled={!hasAudit || checkingAll || busyUrl !== null}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => checkOne(p)}
+                    loading={busyUrl === p.url}
+                    disabled={!hasAudit || checkingAll || busyUrl !== null}
+                  >
                     Check
                   </Button>
                 </td>
@@ -468,10 +470,15 @@ function GitSourceSection({
         setAuditing(false);
         return;
       }
-      setAuditMsg({ ok: true, message: "Audit started: it pulls the latest commit and audits the live demo stores. This takes several minutes; this page updates when it finishes." });
+      setAuditMsg({
+        ok: true,
+        message: "Audit started: it pulls the latest commit and audits the live demo stores. This takes several minutes; this page updates when it finishes.",
+      });
       for (let i = 0; i < 180; i++) {
         await new Promise((r) => setTimeout(r, 10_000));
-        const state = await fetch(`/api/themes/${themeId}/audit-from-git`).then((r) => r.json()).catch(() => null);
+        const state = await fetch(`/api/themes/${themeId}/audit-from-git`)
+          .then((r) => r.json())
+          .catch(() => null);
         if (state && state.running === false) break;
       }
       setAuditMsg({ ok: true, message: "The audit finished. Any error is shown above." });
@@ -495,9 +502,15 @@ function GitSourceSection({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setTest({ ok: false, message: data.error ?? "The test failed." });
-      else if (!data.ok) setTest({ ok: false, message: `${data.error}${data.tokenSent ? "" : " (No GIT_ACCESS_TOKEN is set on the server, so only public repositories can be read.)"}` });
+      else if (!data.ok)
+        setTest({
+          ok: false,
+          message: `${data.error}${data.tokenSent ? "" : " (No GIT_ACCESS_TOKEN is set on the server, so only public repositories can be read.)"}`,
+        });
       else {
-        const root = data.hasThemeRoot ? "Theme folders found at the repository root." : "But sections/, layout/ and config/ are not all at the repository root, so the audit will not find the theme files.";
+        const root = data.hasThemeRoot
+          ? "Theme folders found at the repository root."
+          : "But sections/, layout/ and config/ are not all at the repository root, so the audit will not find the theme files.";
         setTest({ ok: true, warn: !data.hasThemeRoot, message: `Connected. Branch ${data.branch}, latest commit ${data.commit}. ${root}` });
       }
     } catch {
@@ -541,11 +554,21 @@ function GitSourceSection({
         <div className="flex flex-wrap gap-3">
           <label className="flex min-w-64 flex-1 flex-col gap-1">
             <span className="text-zinc-700 dark:text-zinc-300">Repository URL</span>
-            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/your-org/theme.git" className="rounded-md border border-border-subtle bg-transparent px-3 py-2" />
+            <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://github.com/your-org/theme.git"
+              className="rounded-md border border-border-subtle bg-transparent px-3 py-2"
+            />
           </label>
           <label className="flex w-40 flex-col gap-1">
             <span className="text-zinc-700 dark:text-zinc-300">Branch</span>
-            <input value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="default" className="rounded-md border border-border-subtle bg-transparent px-3 py-2" />
+            <input
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+              placeholder="default"
+              className="rounded-md border border-border-subtle bg-transparent px-3 py-2"
+            />
           </label>
         </div>
         <p className="text-xs text-zinc-500">{autoAuditAt ? `Last automatic audit: ${formatDate(autoAuditAt)}.` : "Not audited automatically yet."}</p>
@@ -553,12 +576,18 @@ function GitSourceSection({
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
         {saved && <p className="text-xs text-status-pass-text">Saved.</p>}
         {test && (
-          <div className={`rounded-md border px-3 py-2 text-xs ${test.ok && !test.warn ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}>
+          <div
+            className={`rounded-md border px-3 py-2 text-xs ${test.ok && !test.warn ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}
+          >
             {test.message}
           </div>
         )}
         {auditMsg && (
-          <div className={`rounded-md border px-3 py-2 text-xs ${auditMsg.ok ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}>{auditMsg.message}</div>
+          <div
+            className={`rounded-md border px-3 py-2 text-xs ${auditMsg.ok ? "border-green-300 text-status-pass-text" : "border-red-300 bg-status-fail-bg text-status-fail-text"}`}
+          >
+            {auditMsg.message}
+          </div>
         )}
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={handleSave} loading={saving}>
@@ -617,8 +646,7 @@ function UploadVersionForm({ themeId, onUploaded }: { themeId: string; onUploade
           <span className="text-zinc-700 dark:text-zinc-300">Theme .zip</span>
           <input type="file" accept=".zip" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
           <span className="text-xs text-zinc-500">
-            The version is read from config/settings_schema.json or the ZIP&apos;s README — it isn&apos;t entered manually.
-            This does not run an audit.
+            The version is read from config/settings_schema.json or the ZIP&apos;s README — it isn&apos;t entered manually. This does not run an audit.
           </span>
         </label>
         {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text">{error}</div>}
@@ -770,14 +798,14 @@ function RunAuditForm({
             <p className="mt-0.5 text-xs text-zinc-500">
               {stageLabel}
               {stage === "checking_live" && stageProgress && stageProgress.total > 0 && (
-                <> — {stageProgress.completed} of {stageProgress.total} checked</>
+                <>
+                  {" "}
+                  — {stageProgress.completed} of {stageProgress.total} checked
+                </>
               )}
             </p>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
-                style={{ width: `${percent}%` }}
-              />
+              <div className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${percent}%` }} />
             </div>
           </div>
         </div>
@@ -827,9 +855,7 @@ function CoreWebVitalsTable({ metrics }: { metrics: PageSpeedMetric[] }) {
             <tr key={`${m.label}-${m.url}`} className="border-t border-border-subtle">
               <td className="px-3 py-1.5 font-medium text-zinc-900 dark:text-zinc-100">{m.label}</td>
               <td className="px-3 py-1.5 capitalize text-zinc-700 dark:text-zinc-300">{m.pageType}</td>
-              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">
-                {typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}
-              </td>
+              <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{typeof m.performanceScore === "number" ? `${m.performanceScore}/100` : "—"}</td>
               <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{formatMs(m.lcpMs)}</td>
               <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{typeof m.clsScore === "number" ? m.clsScore.toFixed(2) : "—"}</td>
               <td className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{formatMs(m.tbtMs)}</td>
@@ -859,16 +885,10 @@ function IssueRow({
   tone?: "conflict";
 }) {
   return (
-    <li
-      className={`rounded-md p-3 text-xs ${
-        tone === "conflict" ? "border border-status-warning-bg bg-status-warning-bg/60" : "bg-surface-muted"
-      }`}
-    >
+    <li className={`rounded-md p-3 text-xs ${tone === "conflict" ? "border border-status-warning-bg bg-status-warning-bg/60" : "bg-surface-muted"}`}>
       <div className="flex flex-wrap items-center gap-2">
         {tone === "conflict" && (
-          <span className="rounded-full bg-status-warning-icon px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
-            Worth a second look
-          </span>
+          <span className="rounded-full bg-status-warning-icon px-2 py-0.5 text-[10px] font-semibold uppercase text-white">Worth a second look</span>
         )}
         {severity && <SeverityBadge severity={severity} />}
         {title && <span className="font-medium text-zinc-900 dark:text-zinc-100">{title}</span>}
@@ -917,9 +937,7 @@ export function OverviewPanel({
   const [showRunAudit, setShowRunAudit] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [checkingThemeStore, setCheckingThemeStore] = useState(false);
-  const [reportData, setReportData] = useState<{ auditRunId: string; findings: ReportFinding[]; enhancementPoints: ReportEnhancementPoint[] } | null>(
-    null
-  );
+  const [reportData, setReportData] = useState<{ auditRunId: string; findings: ReportFinding[]; enhancementPoints: ReportEnhancementPoint[] } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const healthPercent = checkTotals && checkTotals.total > 0 ? Math.round((checkTotals.passed / checkTotals.total) * 100) : null;
@@ -991,9 +1009,7 @@ export function OverviewPanel({
       if (existing) existing.count += 1;
       else bestByRule.set(f.ruleId, { ...f, count: 1 });
     }
-    return [...bestByRule.values()]
-      .sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99))
-      .slice(0, 5);
+    return [...bestByRule.values()].sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99)).slice(0, 5);
   })();
 
   function renderExpanded(card: ScoreCard) {
@@ -1039,19 +1055,15 @@ export function OverviewPanel({
                 ) : themeStoreCheckedAt ? (
                   <>
                     Checked against{" "}
-                    <a
-                      href={`https://themes.shopify.com/themes/${themeStoreSlug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline hover:text-primary"
-                    >
+                    <a href={`https://themes.shopify.com/themes/${themeStoreSlug}`} target="_blank" rel="noreferrer" className="underline hover:text-primary">
                       themes.shopify.com/themes/{themeStoreSlug}
                     </a>{" "}
-                    on {formatDate(themeStoreCheckedAt)} — {uncheckedCount} of {AVAILABLE_FEATURES.length} features still can&apos;t be
-                    confirmed either way.
+                    on {formatDate(themeStoreCheckedAt)} — {uncheckedCount} of {AVAILABLE_FEATURES.length} features still can&apos;t be confirmed either way.
                   </>
                 ) : (
-                  <>Not yet checked — {uncheckedCount} of {AVAILABLE_FEATURES.length} features have no automated detector.</>
+                  <>
+                    Not yet checked — {uncheckedCount} of {AVAILABLE_FEATURES.length} features have no automated detector.
+                  </>
                 )}
               </div>
             </div>
@@ -1090,11 +1102,22 @@ export function OverviewPanel({
 
       if (card.id === "demo-realism") {
         const demo = reportData.findings.filter((f) => f.ruleId.startsWith("LIVE-DEMO-") && f.status !== "ignored" && f.status !== "resolved");
-        if (demo.length === 0) return <p className="text-sm text-zinc-500">No demo realism issues found on the pages checked (home, first product and first collection of each preset).</p>;
+        if (demo.length === 0)
+          return (
+            <p className="text-sm text-zinc-500">
+              No demo realism issues found on the pages checked (home, first product and first collection of each preset).
+            </p>
+          );
         return (
           <ul className="flex flex-col gap-2">
             {demo.map((f) => (
-              <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={`${f.presetLabel ?? ""} ${f.filePath}`.trim()} recommendation={f.recommendation} />
+              <IssueRow
+                key={f._id}
+                body={f.finding}
+                severity={f.severity}
+                filePath={`${f.presetLabel ?? ""} ${f.filePath}`.trim()}
+                recommendation={f.recommendation}
+              />
             ))}
           </ul>
         );
@@ -1111,13 +1134,7 @@ export function OverviewPanel({
           ) : (
             <ul className="flex flex-col gap-2">
               {relevant.map((f) => (
-                <IssueRow
-                  key={f._id}
-                  body={f.finding}
-                  severity={f.severity}
-                  filePath={f.presetLabel ?? f.filePath}
-                  recommendation={f.recommendation}
-                />
+                <IssueRow key={f._id} body={f.finding} severity={f.severity} filePath={f.presetLabel ?? f.filePath} recommendation={f.recommendation} />
               ))}
             </ul>
           )}
@@ -1159,16 +1176,17 @@ export function OverviewPanel({
         <div className="flex items-center gap-4">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{themeName}</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              {latestVersion ? <>Version {latestVersion.version}</> : "No version tracked yet"}
-            </p>
+            <p className="mt-1 text-sm text-zinc-500">{latestVersion ? <>Version {latestVersion.version}</> : "No version tracked yet"}</p>
           </div>
           {healthPercent !== null && (
             <div className="text-right">
               <div className={`text-2xl font-semibold ${healthTone(healthPercent)}`}>{healthPercent}%</div>
               <div className="text-xs text-zinc-500">Health</div>
               {checkTotals && (
-                <div className="mt-0.5 text-xs text-zinc-500" title="Health = checks passed ÷ all checks. Warnings, failures and checks not tested all count as not passed.">
+                <div
+                  className="mt-0.5 text-xs text-zinc-500"
+                  title="Health = checks passed ÷ all checks. Warnings, failures and checks not tested all count as not passed."
+                >
                   {checkTotals.passed} of {checkTotals.total} checks passed
                   {checkTotals.notTested > 0 && ` · ${checkTotals.notTested} not tested`}
                 </div>
@@ -1231,8 +1249,8 @@ export function OverviewPanel({
 
         {pageSpeedFallback && (
           <p className="mt-2 rounded-md border border-status-warning-bg bg-status-warning-bg px-3 py-2 text-xs text-status-warning-text">
-            Page speed data couldn&apos;t be measured for this run (every PageSpeed Insights request failed) — Desktop/Mobile Performance
-            below are the last real measurements, from the run on {formatDate(pageSpeedFallback.startedAt)}.
+            Page speed data couldn&apos;t be measured for this run (every PageSpeed Insights request failed) — Desktop/Mobile Performance below are the last
+            real measurements, from the run on {formatDate(pageSpeedFallback.startedAt)}.
           </p>
         )}
 

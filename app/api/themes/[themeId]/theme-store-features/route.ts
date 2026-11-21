@@ -36,9 +36,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ th
     // would silently wipe out already-crawled ranking data on every
     // re-check.
     type ExistingPreset = { rank: number | null; page: number | null; previousRank: number | null };
-    const existingPresetsBySlug = new Map<string, ExistingPreset>(
-      (theme.themeStorePresets ?? []).map((p: { slug: string } & ExistingPreset) => [p.slug, p])
-    );
+    const existingPresetsBySlug = new Map<string, ExistingPreset>((theme.themeStorePresets ?? []).map((p: { slug: string } & ExistingPreset) => [p.slug, p]));
     theme.themeStorePresets = result.presets.map((p) => {
       const existing = existingPresetsBySlug.get(p.slug);
       return { name: p.name, slug: p.slug, rank: existing?.rank ?? null, page: existing?.page ?? null, previousRank: existing?.previousRank ?? null };

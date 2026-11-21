@@ -5,7 +5,17 @@ import { ChatReport } from "@/models/chat-report";
 import { TeamMember } from "@/models/team-member";
 import { TimeEntry } from "@/models/time-entry";
 
-type ProjectLike = { _id: unknown; themeId: unknown; type?: string | null; designDays?: number | null; developmentDays?: number | null; designDaysBy?: unknown; developmentDaysBy?: unknown; designDaysSplit?: { memberId: unknown; share: number }[]; developmentDaysSplit?: { memberId: unknown; share: number }[] };
+type ProjectLike = {
+  _id: unknown;
+  themeId: unknown;
+  type?: string | null;
+  designDays?: number | null;
+  developmentDays?: number | null;
+  designDaysBy?: unknown;
+  developmentDaysBy?: unknown;
+  designDaysSplit?: { memberId: unknown; share: number }[];
+  developmentDaysSplit?: { memberId: unknown; share: number }[];
+};
 export type ProjectCost = { cost: number; hours: number; unpricedHours: number; lines: ThemeCost["cost"]; people: PersonCost[] };
 
 /**
@@ -36,27 +46,40 @@ export async function loadProjectCosts(projects: ProjectLike[]): Promise<Map<str
     ChatReport.find({ status: "ok", memberId: { $ne: null }, kind: { $in: ["theme", "preset", "update"] } })
       .select("themeId projectId memberId kind minutes date")
       .lean<{ themeId: unknown; projectId: unknown; memberId: unknown; kind: "theme" | "preset" | "update"; minutes: number; date: Date }[]>(),
-    TimeEntry.find({ projectId: { $in: updateIds }, chatReportKey: { $not: { $type: "string" } } }).select("projectId memberId hours date").lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
+    TimeEntry.find({ projectId: { $in: updateIds }, chatReportKey: { $not: { $type: "string" } } })
+      .select("projectId memberId hours date")
+      .lean<{ projectId: unknown; memberId: unknown; hours: number; date: Date }[]>(),
   ]);
   const { payments, perLiveIds } = await loadPerLive();
-  const people = new Map<string, Person>(members.map((m) => [String(m._id), { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) }]));
+  const people = new Map<string, Person>(
+    members.map((m) => [
+      String(m._id),
+      { name: m.name, designation: m.designation, monthlySalary: m.monthlySalary ?? null, perLive: perLiveIds.has(String(m._id)) },
+    ])
+  );
 
   const inputs: HoursInput[] = [];
   for (const r of reports) {
     const hours = r.minutes / 60;
     const month = r.date.toISOString().slice(0, 7);
     const memberId = String(r.memberId);
-    if (r.kind === "theme" && r.themeId) for (const id of devByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "build", hours, month });
+    if (r.kind === "theme" && r.themeId)
+      for (const id of devByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "build", hours, month });
     else if (r.kind === "preset" && r.projectId) inputs.push({ themeId: String(r.projectId), memberId, line: "presets", hours, month });
-    else if (r.kind === "update" && r.themeId) for (const id of updateByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "updates", hours, month });
+    else if (r.kind === "update" && r.themeId)
+      for (const id of updateByTheme.get(String(r.themeId)) ?? []) inputs.push({ themeId: id, memberId, line: "updates", hours, month });
   }
   inputs.push(...fixedDayInputs(projects, (p) => String(p._id)));
-  for (const e of manual) inputs.push({ themeId: String(e.projectId), memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7) });
+  for (const e of manual)
+    inputs.push({ themeId: String(e.projectId), memberId: String(e.memberId), line: "updates", hours: e.hours, month: e.date.toISOString().slice(0, 7) });
 
   const out = new Map<string, ProjectCost>();
   // computeThemeCosts groups by the key it is given: here the project id.
   const ids = new Set(projects.map((p) => String(p._id)));
-  const projectPayments = payments.filter((p) => ids.has(p.projectId)).map((p) => ({ themeId: p.projectId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month }));
-  for (const [projectId, c] of computeThemeCosts(inputs, people, new Map(), projectPayments)) out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours, lines: c.cost, people: c.people });
+  const projectPayments = payments
+    .filter((p) => ids.has(p.projectId))
+    .map((p) => ({ themeId: p.projectId, memberId: p.memberId, line: p.line, amount: p.amount, month: p.month }));
+  for (const [projectId, c] of computeThemeCosts(inputs, people, new Map(), projectPayments))
+    out.set(projectId, { cost: c.cost.total, hours: c.hours.total, unpricedHours: c.unpricedHours, lines: c.cost, people: c.people });
   return out;
 }

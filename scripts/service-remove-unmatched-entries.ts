@@ -20,20 +20,30 @@ async function main() {
   const re = new RegExp(pattern, "i");
   await connectToDatabase();
   const db = mongoose.connection.db!;
-  const all = await db.collection("service_time_entries").find({ clientId: null, clientRaw: { $ne: null } } as never).toArray();
+  const all = await db
+    .collection("service_time_entries")
+    .find({ clientId: null, clientRaw: { $ne: null } } as never)
+    .toArray();
   const entries = all.filter((e) => re.test(String(e.clientRaw)));
-  const senders = await db.collection("service_chat_senders").find({ externalId: { $in: [...new Set(entries.map((e) => e.senderExternalId as string))] } }).toArray();
+  const senders = await db
+    .collection("service_chat_senders")
+    .find({ externalId: { $in: [...new Set(entries.map((e) => e.senderExternalId as string))] } })
+    .toArray();
   const senderName = new Map(senders.map((s) => [s.externalId as string, s.displayName as string]));
   const names = new Map<string, { n: number; min: number }>();
   const people = new Map<string, number>();
   for (const e of entries) {
     const k = String(e.clientRaw).trim();
     const t = names.get(k) ?? { n: 0, min: 0 };
-    t.n++; t.min += e.minutes as number; names.set(k, t);
+    t.n++;
+    t.min += e.minutes as number;
+    names.set(k, t);
     const who = senderName.get(e.senderExternalId as string) ?? "Unknown";
     people.set(who, (people.get(who) ?? 0) + (e.minutes as number));
   }
-  console.log(`${apply ? "APPLYING" : "Dry run"}: entries with no client matching /${pattern}/i: ${entries.length} (${(entries.reduce((n, e) => n + (e.minutes as number), 0) / 60).toFixed(1)} h)`);
+  console.log(
+    `${apply ? "APPLYING" : "Dry run"}: entries with no client matching /${pattern}/i: ${entries.length} (${(entries.reduce((n, e) => n + (e.minutes as number), 0) / 60).toFixed(1)} h)`
+  );
   for (const [k, t] of names) console.log(`  "${k}": ${t.n} entries, ${(t.min / 60).toFixed(1)} h`);
   console.log(`  Posted by: ${[...people].map(([n, m]) => `${n}${dmMatch(n) ? " [DM]" : ""} ${(m / 60).toFixed(1)} h`).join(", ") || "nobody"}`);
   const dm = [...people.keys()].filter((n) => dmMatch(n) !== null);
@@ -42,8 +52,12 @@ async function main() {
   const ids = entries.map((e) => e._id);
   const sourceIds = new Set(entries.flatMap((e) => [e.sourceMessageId, e.startMessageId].filter(Boolean) as string[]));
   const stillNeeded = new Set(
-    (await db.collection("service_time_entries").find({ _id: { $nin: ids }, $or: [{ sourceMessageId: { $in: [...sourceIds] } }, { startMessageId: { $in: [...sourceIds] } }] } as never).toArray())
-      .flatMap((e) => [e.sourceMessageId, e.startMessageId].filter(Boolean) as string[]),
+    (
+      await db
+        .collection("service_time_entries")
+        .find({ _id: { $nin: ids }, $or: [{ sourceMessageId: { $in: [...sourceIds] } }, { startMessageId: { $in: [...sourceIds] } }] } as never)
+        .toArray()
+    ).flatMap((e) => [e.sourceMessageId, e.startMessageId].filter(Boolean) as string[])
   );
   const messageIds = [...sourceIds].filter((m) => !stillNeeded.has(m));
   console.log(`  Chat messages to remove: ${messageIds.length} (${stillNeeded.size} kept: other entries still use them)`);
@@ -55,4 +69,10 @@ async function main() {
   console.log("Done.");
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e instanceof Error ? e.message : e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  }
+);

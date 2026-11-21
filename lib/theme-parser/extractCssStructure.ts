@@ -2,15 +2,7 @@ import postcss from "postcss";
 import { looksLikeColorValue } from "./cssColorNames";
 import type { ParsedCssInfo, ParsedParseError } from "./types";
 
-const COLOR_PROPERTIES = new Set([
-  "color",
-  "background",
-  "background-color",
-  "border-color",
-  "outline-color",
-  "fill",
-  "stroke",
-]);
+const COLOR_PROPERTIES = new Set(["color", "background", "background-color", "border-color", "outline-color", "fill", "stroke"]);
 
 const ANIMATION_PROPERTIES = new Set(["animation", "animation-name", "transition", "transition-property"]);
 // A declaration that explicitly turns motion off doesn't need a

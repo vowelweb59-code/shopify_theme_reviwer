@@ -143,42 +143,37 @@ describe("extractOpportunityFindings", () => {
   });
 
   it("uses medium severity for a 0.5-0.89 scoring audit", () => {
-    const lhr = lhrWith(
-      { "unminified-css": { score: 0.7, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } },
-      [{ id: "unminified-css", group: "load-opportunities" }]
-    );
+    const lhr = lhrWith({ "unminified-css": { score: 0.7, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } }, [
+      { id: "unminified-css", group: "load-opportunities" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)[0].severity).toBe("medium");
   });
 
   it("skips a passing audit (score >= 0.9)", () => {
-    const lhr = lhrWith(
-      { "unminified-css": { score: 1, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } },
-      [{ id: "unminified-css", group: "load-opportunities" }]
-    );
+    const lhr = lhrWith({ "unminified-css": { score: 1, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } }, [
+      { id: "unminified-css", group: "load-opportunities" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)).toHaveLength(0);
   });
 
   it("skips an informative-only audit even if it has no score", () => {
-    const lhr = lhrWith(
-      { "network-requests": { score: null, scoreDisplayMode: "informative", title: "Network requests", description: "d" } },
-      [{ id: "network-requests", group: "diagnostics" }]
-    );
+    const lhr = lhrWith({ "network-requests": { score: null, scoreDisplayMode: "informative", title: "Network requests", description: "d" } }, [
+      { id: "network-requests", group: "diagnostics" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)).toHaveLength(0);
   });
 
   it("skips audits outside the load-opportunities/diagnostics groups (e.g. the 'metrics' group, already covered elsewhere)", () => {
-    const lhr = lhrWith(
-      { "largest-contentful-paint": { score: 0.2, scoreDisplayMode: "numeric", title: "LCP", description: "d" } },
-      [{ id: "largest-contentful-paint", group: "metrics" }]
-    );
+    const lhr = lhrWith({ "largest-contentful-paint": { score: 0.2, scoreDisplayMode: "numeric", title: "LCP", description: "d" } }, [
+      { id: "largest-contentful-paint", group: "metrics" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)).toHaveLength(0);
   });
 
   it("never produces a blocker-severity finding — this is advisory, not a hard rule", () => {
-    const lhr = lhrWith(
-      { "unminified-css": { score: 0, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } },
-      [{ id: "unminified-css", group: "load-opportunities" }]
-    );
+    const lhr = lhrWith({ "unminified-css": { score: 0, scoreDisplayMode: "numeric", title: "Minify CSS", description: "d" } }, [
+      { id: "unminified-css", group: "load-opportunities" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)[0].severity).not.toBe("blocker");
   });
 
@@ -214,10 +209,9 @@ describe("extractOpportunityFindings", () => {
   });
 
   it("skips an 'insights'-group audit with an unrecognized scoreDisplayMode (e.g. informative)", () => {
-    const lhr = lhrWith(
-      { "dom-size-insight": { score: 1, scoreDisplayMode: "informative", title: "Optimize DOM size", description: "d" } },
-      [{ id: "dom-size-insight", group: "insights" }]
-    );
+    const lhr = lhrWith({ "dom-size-insight": { score: 1, scoreDisplayMode: "informative", title: "Optimize DOM size", description: "d" } }, [
+      { id: "dom-size-insight", group: "insights" },
+    ]);
     expect(extractOpportunityFindings("d", "u", lhr)).toHaveLength(0);
   });
 });

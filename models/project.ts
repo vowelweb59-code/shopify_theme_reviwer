@@ -59,8 +59,24 @@ const projectSchema = new Schema(
     designDaysBy: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
     developmentDaysBy: { type: Schema.Types.ObjectId, ref: "TeamMember", default: null },
     // When several people worked the fixed days: each one's share (0 to 1, adding up to 1). Takes the place of ...By when present.
-    designDaysSplit: { type: [new Schema({ memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true }, share: { type: Number, required: true, min: 0, max: 1 } }, { _id: false })], default: () => [] },
-    developmentDaysSplit: { type: [new Schema({ memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true }, share: { type: Number, required: true, min: 0, max: 1 } }, { _id: false })], default: () => [] },
+    designDaysSplit: {
+      type: [
+        new Schema(
+          { memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true }, share: { type: Number, required: true, min: 0, max: 1 } },
+          { _id: false }
+        ),
+      ],
+      default: () => [],
+    },
+    developmentDaysSplit: {
+      type: [
+        new Schema(
+          { memberId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true }, share: { type: Number, required: true, min: 0, max: 1 } },
+          { _id: false }
+        ),
+      ],
+      default: () => [],
+    },
     members: { type: [projectMemberSchema], default: () => [] },
     // When the project is due (UTC midnight of the picked day); null = not set. Once the project is
     // Live / Completed the Deadlines page shows its last report date instead (lib/projects/deadlines.ts).

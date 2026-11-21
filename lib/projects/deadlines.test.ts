@@ -5,13 +5,28 @@ const today = "2026-10-29";
 
 describe("deadlineInfo", () => {
   it("uses the last report date for a finished project, whatever deadline was set", () => {
-    expect(deadlineInfo({ status: "live", deadline: "2026-10-20", lastReportOn: "2026-10-25", today })).toMatchObject({ date: "2026-10-25", source: "last_report", state: "finished", lateByDays: 5 });
-    expect(deadlineInfo({ status: "completed", deadline: "2026-11-01", lastReportOn: "2026-10-25", today })).toMatchObject({ date: "2026-10-25", state: "finished", lateByDays: 0 });
+    expect(deadlineInfo({ status: "live", deadline: "2026-10-20", lastReportOn: "2026-10-25", today })).toMatchObject({
+      date: "2026-10-25",
+      source: "last_report",
+      state: "finished",
+      lateByDays: 5,
+    });
+    expect(deadlineInfo({ status: "completed", deadline: "2026-11-01", lastReportOn: "2026-10-25", today })).toMatchObject({
+      date: "2026-10-25",
+      state: "finished",
+      lateByDays: 0,
+    });
     expect(deadlineInfo({ status: "live", deadline: null, lastReportOn: "2026-10-25", today })).toMatchObject({ date: "2026-10-25", lateByDays: null });
   });
 
   it("gives a rejected project no deadline, even one set by hand, and never calls it overdue", () => {
-    expect(deadlineInfo({ status: "rejected", deadline: "2026-09-01", lastReportOn: "2026-07-20", today })).toEqual({ date: null, source: null, state: "rejected", daysLeft: null, lateByDays: null });
+    expect(deadlineInfo({ status: "rejected", deadline: "2026-09-01", lastReportOn: "2026-07-20", today })).toEqual({
+      date: null,
+      source: null,
+      state: "rejected",
+      daysLeft: null,
+      lateByDays: null,
+    });
     expect(deadlineInfo({ status: "rejected", deadline: null, lastReportOn: null, today }).state).toBe("rejected");
   });
 

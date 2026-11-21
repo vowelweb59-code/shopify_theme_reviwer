@@ -16,9 +16,22 @@ import { ServiceRevenueTaken } from "@/models/service-revenue";
 // - A dry run unless --apply. Amounts are never written into the code or the repository.
 const apply = process.argv.includes("--apply");
 const file = process.argv.find((a, i) => i >= 2 && !a.startsWith("--"));
-const onlyMonths = process.argv.find((a) => a.startsWith("--months="))?.slice(9).split(",").map((m) => m.trim()).filter(Boolean) ?? null;
+const onlyMonths =
+  process.argv
+    .find((a) => a.startsWith("--months="))
+    ?.slice(9)
+    .split(",")
+    .map((m) => m.trim())
+    .filter(Boolean) ?? null;
 
-interface Row { month: string; section: string | null; client: string; profile: string | null; bde: string | null; total: number }
+interface Row {
+  month: string;
+  section: string | null;
+  client: string;
+  profile: string | null;
+  bde: string | null;
+  total: number;
+}
 
 const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 /** "Sep26", "December2025", "Mar 25", "APRIL 24" -> "2026-09" ... */
@@ -45,14 +58,23 @@ async function readXlsx(path: string): Promise<Row[]> {
   const rows: Row[] = [];
   for (const ws of wb.worksheets) {
     const month = sheetMonth(ws.name);
-    if (!month) { console.log(`  skipped tab "${ws.name}" (not a month)`); continue; }
+    if (!month) {
+      console.log(`  skipped tab "${ws.name}" (not a month)`);
+      continue;
+    }
     let section: string | null = null;
     ws.eachRow({ includeEmpty: false }, (r, n) => {
       if (n < 3) return;
       const [a, b, c, d, e, f] = [1, 2, 3, 4, 5, 6].map((i) => plain(r.getCell(i).value));
       const str = (x: unknown) => (typeof x === "string" && x.trim() ? x.trim() : null);
-      if (str(b) && [c, d, e, f].every((x) => x === null) && typeof a !== "number") { section = str(b); return; }
-      if (str(a) && [b, c, d, e, f].every((x) => x === null)) { section = str(a); return; }
+      if (str(b) && [c, d, e, f].every((x) => x === null) && typeof a !== "number") {
+        section = str(b);
+        return;
+      }
+      if (str(a) && [b, c, d, e, f].every((x) => x === null)) {
+        section = str(a);
+        return;
+      }
       // Summary rows ("TOTAL" at the foot of a tab) are not clients.
       if (/^\s*(grand\s+|sub\s*)?total(\s|$)/i.test(str(b) ?? "")) return;
       if (str(b) && typeof e === "number") rows.push({ month, section, client: str(b)!, profile: str(c), bde: str(d), total: e });
@@ -69,15 +91,33 @@ async function main() {
   if (!rows.length) throw new Error(`No rows for ${onlyMonths?.join(", ")}. The file has: ${[...new Set(all.map((r) => r.month))].sort().join(", ")}`);
   const months = [...new Set(rows.map((r) => r.month))].sort();
   const total = rows.reduce((n, r) => n + r.total, 0);
-  console.log(`${apply ? "APPLYING" : "Dry run"}: ${rows.length} rows, ${new Set(rows.map((r) => r.client)).size} client names, ${months.length} month(s) ${months[0]}${months.length > 1 ? ` to ${months[months.length - 1]}` : ""}, total ${total.toFixed(2)}`);
+  console.log(
+    `${apply ? "APPLYING" : "Dry run"}: ${rows.length} rows, ${new Set(rows.map((r) => r.client)).size} client names, ${months.length} month(s) ${months[0]}${months.length > 1 ? ` to ${months[months.length - 1]}` : ""}, total ${total.toFixed(2)}`
+  );
   await connectToDatabase();
   const replacing = await ServiceRevenueTaken.countDocuments(onlyMonths ? { month: { $in: months } } : {});
   console.log(`  ${onlyMonths ? `Months ${months.join(", ")} hold` : "The collection holds"} ${replacing} rows now; they will be replaced.`);
   if (!apply) return console.log("Nothing written. Add --apply to import.");
   await ServiceRevenueTaken.deleteMany(onlyMonths ? { month: { $in: months } } : {});
-  await ServiceRevenueTaken.insertMany(rows.map((r) => ({ _id: randomUUID(), month: r.month, clientName: r.client, section: r.section, profile: r.profile, bde: r.bde, amountCents: Math.round(r.total * 100) })));
+  await ServiceRevenueTaken.insertMany(
+    rows.map((r) => ({
+      _id: randomUUID(),
+      month: r.month,
+      clientName: r.client,
+      section: r.section,
+      profile: r.profile,
+      bde: r.bde,
+      amountCents: Math.round(r.total * 100),
+    }))
+  );
   await recordServiceAudit("revenue.import", { rows: rows.length, months: months.length, scope: onlyMonths ? "months" : "all" });
   console.log("Done.");
 }
 
-main().then(() => process.exit(0), (e) => { console.error(e instanceof Error ? e.message : e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  }
+);

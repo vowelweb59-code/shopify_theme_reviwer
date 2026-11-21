@@ -22,10 +22,16 @@ async function main() {
   const clients = await ServiceClient.find({ name }).select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   if (clients.length !== 1) throw new Error(`${clients.length} clients are named "${name}"; need exactly one.`);
   const c = clients[0]!;
-  const clash = await ServiceClient.find({ _id: { $ne: c._id }, $or: [{ name: alias }, { aliases: alias }] }).select("name").lean<Array<{ name: string }>>();
+  const clash = await ServiceClient.find({ _id: { $ne: c._id }, $or: [{ name: alias }, { aliases: alias }] })
+    .select("name")
+    .lean<Array<{ name: string }>>();
   if (clash.length) throw new Error(`"${alias}" is already a name or alias of ${clash.map((x) => x.name).join(", ")}.`);
   const key = ` ${normalizeName(alias)} `;
-  const waiting = (await ServiceTimeEntry.find({ clientId: null, clientRaw: { $ne: null }, state: { $in: ["NEEDS_REVIEW", "PARSED"] } }).select("clientRaw minutes").lean<Array<{ clientRaw: string; minutes: number }>>()).filter((e) => ` ${normalizeName(e.clientRaw)} `.includes(key));
+  const waiting = (
+    await ServiceTimeEntry.find({ clientId: null, clientRaw: { $ne: null }, state: { $in: ["NEEDS_REVIEW", "PARSED"] } })
+      .select("clientRaw minutes")
+      .lean<Array<{ clientRaw: string; minutes: number }>>()
+  ).filter((e) => ` ${normalizeName(e.clientRaw)} `.includes(key));
   console.log(`${apply ? "APPLYING" : "Dry run"}: add alias "${alias}" to client "${c.name}" (aliases now: ${c.aliases.join(", ") || "none"}).`);
   console.log(`  Waiting entries written that way: ${waiting.length} (${(waiting.reduce((n, e) => n + e.minutes, 0) / 60).toFixed(1)} h)`);
   if (!apply) return console.log("Nothing written. Add --apply to save it.");
@@ -35,4 +41,10 @@ async function main() {
   await runFollowUps();
   console.log(`Done: ${moved} entries re-matched to clients.`);
 }
-main().then(() => process.exit(0), (e) => { console.error(e instanceof Error ? e.message : e); process.exit(1); });
+main().then(
+  () => process.exit(0),
+  (e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  }
+);

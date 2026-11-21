@@ -52,7 +52,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
     if (fetched) {
       versions = fetched;
       refreshedAt = new Date();
-      await Theme.updateOne({ _id: project.themeId }, { $set: { themeStoreVersions: fetched, themeStoreVersionsAt: refreshedAt, themeStoreVersionsFormat: VERSIONS_FORMAT } });
+      await Theme.updateOne(
+        { _id: project.themeId },
+        { $set: { themeStoreVersions: fetched, themeStoreVersionsAt: refreshedAt, themeStoreVersionsFormat: VERSIONS_FORMAT } }
+      );
     } else if (versions.length === 0) {
       error = "Couldn't read this theme's release notes from the Shopify Theme Store.";
     }
@@ -60,8 +63,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
     error = "This theme has no Shopify Theme Store listing saved yet (use Check Theme Store on the theme page).";
   }
 
-  const entries = await TimeEntry.find({ projectId }).select("memberId date hours note").lean<{ memberId: unknown; date: Date; hours: number; note?: string }[]>();
-  const members = await TeamMember.find({ _id: { $in: [...new Set(entries.map((e) => String(e.memberId)))] } }).select("name").lean<{ _id: unknown; name: string }[]>();
+  const entries = await TimeEntry.find({ projectId })
+    .select("memberId date hours note")
+    .lean<{ memberId: unknown; date: Date; hours: number; note?: string }[]>();
+  const members = await TeamMember.find({ _id: { $in: [...new Set(entries.map((e) => String(e.memberId)))] } })
+    .select("name")
+    .lean<{ _id: unknown; name: string }[]>();
   const nameById = new Map(members.map((m) => [String(m._id), m.name]));
   const days: TimeEntryDay[] = entries.map((e) => ({
     date: e.date.toISOString().slice(0, 10),

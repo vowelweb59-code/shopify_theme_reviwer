@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+build
+coverage
+graphify-out
+public
+package-lock.json
+tsconfig.tsbuildinfo
+# Fixtures are real saved pages and files: never reformat them.
+**/__fixtures__/**
+data/**

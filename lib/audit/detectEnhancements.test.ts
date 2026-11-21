@@ -136,9 +136,9 @@ describe("detectEnhancementPoints", () => {
     // Two data files feed the EnhancementPoint collection now (theme-store
     // trends and, once seeded, native capabilities) — union both so this
     // test keeps working regardless of which have been generated yet.
-    const trendIds: string[] = JSON.parse(
-      fs.readFileSync(path.join(process.cwd(), "data", "theme-trend-points.json"), "utf8")
-    ).points.map((p: { pointId: string }) => p.pointId);
+    const trendIds: string[] = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "theme-trend-points.json"), "utf8")).points.map(
+      (p: { pointId: string }) => p.pointId
+    );
 
     const nativeCapabilitiesPath = path.join(process.cwd(), "data", "native-capabilities.json");
     const nativeIds: string[] = fs.existsSync(nativeCapabilitiesPath)

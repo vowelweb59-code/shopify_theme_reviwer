@@ -90,7 +90,9 @@ async function loadThemeFindingHistory(
 
   const [mostRecentPriorFindings, allPriorFindings] = await Promise.all([
     Finding.find({ auditRunId: priorRuns[0]._id }).select("ruleId category filePath severity finding status ignoredReason").lean(),
-    Finding.find({ auditRunId: { $in: priorRuns.map((r) => r._id) } }).select("ruleId category filePath severity finding").lean(),
+    Finding.find({ auditRunId: { $in: priorRuns.map((r) => r._id) } })
+      .select("ruleId category filePath severity finding")
+      .lean(),
   ]);
   return { mostRecentPriorFindings, allPriorFindings };
 }
@@ -114,33 +116,29 @@ function extractSourceSnippet(files: ParsedFile[], filePath: string, lineNumber:
     .join("\n");
 }
 
-function toFindingDocs(
-  findings: ExecutedFinding[],
-  auditRunId: unknown,
-  layer: "static" | "live",
-  files: ParsedFile[],
-  history: HistoryClassification[]
-) {
+function toFindingDocs(findings: ExecutedFinding[], auditRunId: unknown, layer: "static" | "live", files: ParsedFile[], history: HistoryClassification[]) {
   return findings.map((f, i) =>
-    withoutEmpty(withoutRuleCitation({
-      auditRunId,
-      ruleId: f.ruleId,
-      requirementId: f.requirementId,
-      filePath: f.filePath,
-      lineNumber: f.lineNumber,
-      category: f.category,
-      severity: f.severity,
-      layer,
-      presetLabel: f.presetLabel,
-      finding: f.finding,
-      recommendation: f.recommendation,
-      sourceReference: f.sourceReference,
-      sourceUrl: f.sourceUrl,
-      sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
-      historicalState: history[i].historicalState,
-      status: history[i].carriedStatus ?? "open",
-      ignoredReason: history[i].carriedIgnoredReason,
-    }))
+    withoutEmpty(
+      withoutRuleCitation({
+        auditRunId,
+        ruleId: f.ruleId,
+        requirementId: f.requirementId,
+        filePath: f.filePath,
+        lineNumber: f.lineNumber,
+        category: f.category,
+        severity: f.severity,
+        layer,
+        presetLabel: f.presetLabel,
+        finding: f.finding,
+        recommendation: f.recommendation,
+        sourceReference: f.sourceReference,
+        sourceUrl: f.sourceUrl,
+        sourceSnippet: layer === "static" ? extractSourceSnippet(files, f.filePath, f.lineNumber) : null,
+        historicalState: history[i].historicalState,
+        status: history[i].carriedStatus ?? "open",
+        ignoredReason: history[i].carriedIgnoredReason,
+      })
+    )
   );
 }
 
@@ -213,8 +211,7 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
     timer.record("parsing", result.timing.parsing);
 
     await setStage(auditRun._id, "running_rules");
-    const { findings: staticFindings, summary: staticSummary, ruleErrors, timing: rulesTiming } =
-      await runAuditRules(result.files);
+    const { findings: staticFindings, summary: staticSummary, ruleErrors, timing: rulesTiming } = await runAuditRules(result.files);
     timer.record("themeIndex", rulesTiming.themeIndex);
     timer.record("ruleExecution", rulesTiming.ruleExecution);
 
@@ -317,10 +314,7 @@ async function executeAuditRunNow(params: ExecuteAuditRunParams, hooks?: Execute
     // Best-effort: a failed prune must not turn a finished audit into an error.
     await pruneOldAuditRuns(theme._id).catch((err) => console.error("[audit] retention prune failed:", err instanceof Error ? err.message : err));
 
-    const findings = [
-      ...staticFindings.map((f) => ({ ...f, layer: "static" as const })),
-      ...liveFindings.map((f) => ({ ...f, layer: "live" as const })),
-    ];
+    const findings = [...staticFindings.map((f) => ({ ...f, layer: "static" as const })), ...liveFindings.map((f) => ({ ...f, layer: "live" as const }))];
     return { ok: true, auditRun, findings };
   } catch (err) {
     const message =

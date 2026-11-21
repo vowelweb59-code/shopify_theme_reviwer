@@ -5,20 +5,38 @@ import { normalizeName } from "./leave";
 // Nov 2026: the 9th is a Monday, the 14th a Saturday, the 15th a Sunday.
 const days = daysBetween("2026-11-09", "2026-11-17");
 const today = "2026-11-17";
-const person = (key: string, upwork: string[], theme: string[] = []): PersonInput => ({ key, name: key, reports: { upwork: new Set(upwork), theme: new Set(theme) } });
-const statusOf = (rows: ReturnType<typeof buildGrid>["rows"], key: string, day: string) => rows.find((r) => r.key === key)!.cells.find((c) => c.day === day)!.status;
+const person = (key: string, upwork: string[], theme: string[] = []): PersonInput => ({
+  key,
+  name: key,
+  reports: { upwork: new Set(upwork), theme: new Set(theme) },
+});
+const statusOf = (rows: ReturnType<typeof buildGrid>["rows"], key: string, day: string) =>
+  rows.find((r) => r.key === key)!.cells.find((c) => c.day === day)!.status;
 
 describe("buildGrid", () => {
   it("flags a working day with no report and no leave, and not the weekend", () => {
     // Reported Mon, Tue, Thu, Fri (not Wed 11th); nothing on Sat 14th / Sun 15th; Mon 16th reported.
-    const { rows, flags } = buildGrid({ days, today, people: [person("a", ["2026-11-09", "2026-11-10", "2026-11-12", "2026-11-13", "2026-11-16"])], leaves: new Map() });
+    const { rows, flags } = buildGrid({
+      days,
+      today,
+      people: [person("a", ["2026-11-09", "2026-11-10", "2026-11-12", "2026-11-13", "2026-11-16"])],
+      leaves: new Map(),
+    });
     expect(flags.map((f) => [f.day, f.kind])).toEqual([["2026-11-11", "missing"]]);
     expect(statusOf(rows, "a", "2026-11-14")).toBe("saturday");
     expect(statusOf(rows, "a", "2026-11-15")).toBe("sunday");
   });
 
   it("does not flag an announced leave, and flags a leave on a day hours were reported", () => {
-    const leaves = new Map<string, Map<string, Leave>>([["a", new Map([["2026-11-11", { half: false, reason: "Diwali" }], ["2026-11-12", { half: false, reason: null }]])]]);
+    const leaves = new Map<string, Map<string, Leave>>([
+      [
+        "a",
+        new Map([
+          ["2026-11-11", { half: false, reason: "Diwali" }],
+          ["2026-11-12", { half: false, reason: null }],
+        ]),
+      ],
+    ]);
     const { rows, flags } = buildGrid({ days, today, people: [person("a", ["2026-11-09", "2026-11-10", "2026-11-12", "2026-11-13", "2026-11-16"])], leaves });
     expect(statusOf(rows, "a", "2026-11-11")).toBe("leave");
     expect(flags.map((f) => [f.day, f.kind])).toEqual([["2026-11-12", "leave-but-reported"]]);

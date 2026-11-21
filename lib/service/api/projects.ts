@@ -8,7 +8,6 @@ import { expandAllocations, loadAttribution, projectOf } from "../hours/attribut
 import { autoAssignProjects } from "../hours/auto-assign";
 import { normalizeName } from "../import/text";
 import { recordServiceAudit } from "../audit/record";
-import { applyActivityRules } from "../projects/activity-rules";
 import { dateForManualMove } from "../projects/manual-date";
 import { matchSender } from "../projects/sender-name";
 import { validateTransition } from "../projects/transitions";
@@ -45,7 +44,14 @@ type ProjectDoc = {
   people: Person[];
   assignments: Assignment[];
   history: Array<{ fromStatus: string | null; toStatus: string; reason: string | null; at: Date }>;
-  contract: { type: "HOURLY" | "FIXED"; weeklyLimitMinutes: number | null; hourlyRateCents: number | null; fixedPriceCents: number | null; trackingMode: "TIMER" | "MANUAL" | null; status: string } | null;
+  contract: {
+    type: "HOURLY" | "FIXED";
+    weeklyLimitMinutes: number | null;
+    hourlyRateCents: number | null;
+    fixedPriceCents: number | null;
+    trackingMode: "TIMER" | "MANUAL" | null;
+    status: string;
+  } | null;
 };
 
 export type ProjectKind = "timer" | "fixed" | "direct" | "inhouse";
@@ -79,8 +85,16 @@ export type ProjectListRow = ServiceProjectView & {
 };
 
 const view = (p: ProjectDoc): ServiceProjectView => ({
-  id: p._id, name: p.name, status: p.status, contractRef: p.contractRef ?? null, description: p.description ?? null, projectType: p.projectType ?? null,
-  startDate: day(p.startDate), targetDate: day(p.targetDate), revisedDate: day(p.revisedDate), createdAt: new Date(p.createdAt).toISOString(),
+  id: p._id,
+  name: p.name,
+  status: p.status,
+  contractRef: p.contractRef ?? null,
+  description: p.description ?? null,
+  projectType: p.projectType ?? null,
+  startDate: day(p.startDate),
+  targetDate: day(p.targetDate),
+  revisedDate: day(p.revisedDate),
+  createdAt: new Date(p.createdAt).toISOString(),
 });
 
 async function find(id: string): Promise<ProjectDoc> {
@@ -90,32 +104,6 @@ async function find(id: string): Promise<ProjectDoc> {
 }
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// --- list ---------------------------------------------------------------------------------------------------------------
-
-/** Choices for the list filters and the bulk-edit bar. */
-export async function filterOptions() {
-  const roleNames = async (role: ServicePersonRole) => {
-    const rows = await ServiceProject.aggregate<{ _id: string }>([{ $unwind: "$people" }, { $match: { "people.role": role } }, { $group: { _id: "$people.name" } }]);
-    return rows.map((r) => r._id).sort((a, b) => a.localeCompare(b));
-  };
-  const [{ departments }, businessAnalysts, businessDevelopers, profiles, users] = await Promise.all([
-    loadProjectDepartments(),
-    roleNames("BUSINESS_ANALYST"),
-    roleNames("BUSINESS_DEVELOPER"),
-    ServiceUpworkProfile.find().select("name").sort({ name: 1 }).lean<Array<{ _id: string; name: string }>>(),
-    assignableUsers(),
-  ]);
-  return {
-    departments: departments.map((d) => ({ id: d._id, name: d.name })),
-    businessAnalysts,
-    businessDevelopers,
-    canBulkEdit: true,
-    profiles: profiles.map((p) => ({ id: p._id, name: p.name })),
-    users,
-  };
-}
-
 export type ListQuery = { status?: string | null; q?: string | null; department?: string | null; ba?: string | null; bd?: string | null; hours?: boolean };
 
 export async function listProjects(query: ListQuery): Promise<ProjectListRow[]> {
@@ -152,7 +140,15 @@ export async function listProjects(query: ListQuery): Promise<ProjectListRow[]> 
     const since = new Date(Date.now() - 30 * 86_400_000);
     const entries = await ServiceTimeEntry.find({ state: { $ne: "REJECTED" }, minutes: { $gt: 0 } })
       .select("projectId clientId minutes entryDate allocations")
-      .lean<Array<{ projectId: string | null; clientId: string | null; minutes: number; entryDate: Date; allocations: Array<{ projectId: string; minutes: number }> }>>();
+      .lean<
+        Array<{
+          projectId: string | null;
+          clientId: string | null;
+          minutes: number;
+          entryDate: Date;
+          allocations: Array<{ projectId: string; minutes: number }>;
+        }>
+      >();
     for (const e of expandAllocations(entries)) {
       const pid = projectOf(e, att.owner);
       if (!pid) continue;
@@ -163,7 +159,11 @@ export async function listProjects(query: ListQuery): Promise<ProjectListRow[]> 
     }
   }
 
-  const sortedNames = (people: Person[], role: ServicePersonRole) => people.filter((x) => x.role === role).map((x) => x.name).sort((a, b) => a.localeCompare(b));
+  const sortedNames = (people: Person[], role: ServicePersonRole) =>
+    people
+      .filter((x) => x.role === role)
+      .map((x) => x.name)
+      .sort((a, b) => a.localeCompare(b));
   return rows.map((r) => {
     const inHouse = r.inHouse || (!!r.clientId && inHouseClient.has(r.clientId));
     const dept = deptOf.get(r._id);
@@ -171,7 +171,13 @@ export async function listProjects(query: ListQuery): Promise<ProjectListRow[]> 
       ...view(r),
       inHouse,
       // In-house = our own work. Otherwise: Direct = paid outside Upwork (the Direct profile), Fixed = fixed-price contract, Timer = the rest.
-      kind: inHouse ? "inhouse" : /^direct$/i.test(profileName.get(r.upworkProfileId ?? "") ?? "") ? "direct" : r.contract?.type === "FIXED" ? "fixed" : "timer",
+      kind: inHouse
+        ? "inhouse"
+        : /^direct$/i.test(profileName.get(r.upworkProfileId ?? "") ?? "")
+          ? "direct"
+          : r.contract?.type === "FIXED"
+            ? "fixed"
+            : "timer",
       department: dept ? { id: dept, name: deptName.get(dept)! } : null,
       businessAnalysts: sortedNames(r.people, "BUSINESS_ANALYST"),
       businessDevelopers: sortedNames(r.people, "BUSINESS_DEVELOPER"),
@@ -209,15 +215,6 @@ export async function createProject(body: Record<string, unknown>) {
   await recordServiceAudit("project.create", { projectId: doc._id, name: data.name });
   return getProject(String(doc._id));
 }
-
-export async function patchProject(id: string, body: Record<string, unknown>) {
-  await find(id);
-  const data = projectFields(body, true);
-  await ServiceProject.updateOne({ _id: id }, { $set: data });
-  await recordServiceAudit("project.update", { projectId: id, fields: Object.keys(data) });
-  return getProject(id);
-}
-
 export async function changeStatus(id: string, body: Record<string, unknown>) {
   const p = await find(id);
   const to = oneOf(body.to, "to", SERVICE_PROJECT_STATUSES);
@@ -225,7 +222,10 @@ export async function changeStatus(id: string, body: Record<string, unknown>) {
   const check = validateTransition(p.status, to, reason);
   if (!check.ok) throw badRequest(check.error);
   // Conditional on the status read, so two people moving the same project at once cannot both win.
-  const r = await ServiceProject.updateOne({ _id: id, status: p.status }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } } });
+  const r = await ServiceProject.updateOne(
+    { _id: id, status: p.status },
+    { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } } }
+  );
   if (r.modifiedCount === 0) throw badRequest("The project changed meanwhile. Reload and try again.");
   await recordServiceAudit("project.status", { projectId: id, from: p.status, to, reason: reason ?? null });
   return getProject(id);
@@ -233,7 +233,10 @@ export async function changeStatus(id: string, body: Record<string, unknown>) {
 
 /** Picker source for assignments: active management users. */
 export async function assignableUsers() {
-  const rows = await ServiceUser.find({ active: true, kind: "MANAGEMENT" }).select("displayName").sort({ displayName: 1 }).lean<Array<{ _id: string; displayName: string }>>();
+  const rows = await ServiceUser.find({ active: true, kind: "MANAGEMENT" })
+    .select("displayName")
+    .sort({ displayName: 1 })
+    .lean<Array<{ _id: string; displayName: string }>>();
   return rows.map((u) => ({ id: u._id, displayName: u.displayName }));
 }
 
@@ -241,7 +244,9 @@ export type AssignmentView = { userId: string; assignmentRole: "MANAGER" | "EMPL
 
 export async function getAssignments(id: string): Promise<AssignmentView[]> {
   const p = await find(id);
-  const users = await ServiceUser.find({ _id: { $in: p.assignments.map((a) => a.userId) } }).select("displayName").lean<Array<{ _id: string; displayName: string }>>();
+  const users = await ServiceUser.find({ _id: { $in: p.assignments.map((a) => a.userId) } })
+    .select("displayName")
+    .lean<Array<{ _id: string; displayName: string }>>();
   const name = new Map(users.map((u) => [u._id, u.displayName]));
   return p.assignments.map((a) => ({ userId: a.userId, assignmentRole: a.role, user: { id: a.userId, displayName: name.get(a.userId) ?? "Unknown" } }));
 }
@@ -272,7 +277,18 @@ export type ProjectDetails = {
   businessAnalysts: Array<{ name: string; linked: boolean }>;
   executives: Array<{ name: string; linked: boolean }>;
   businessDevelopers: Array<{ name: string; linked: boolean }>;
-  upworkContracts: Array<{ ref: string; profile: string | null; bde: string | null; ba: string | null; url: string | null; endedBy: string | null; startDate: string | null; endDate: string | null; rating: number | null; duration: string | null }>;
+  upworkContracts: Array<{
+    ref: string;
+    profile: string | null;
+    bde: string | null;
+    ba: string | null;
+    url: string | null;
+    endedBy: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    rating: number | null;
+    duration: string | null;
+  }>;
   canEdit: boolean;
   canSeeMoney: boolean;
   suggestions: string[];
@@ -282,8 +298,24 @@ export type ProjectDetails = {
 export async function getDetails(id: string): Promise<ProjectDetails> {
   const p = await find(id);
   const [contracts, users, profile, senders, profiles] = await Promise.all([
-    ServiceUpworkContract.find({ projectId: id }).sort({ startDate: -1, sheetRef: -1 }).lean<Array<{ sheetRef: string; profile: string | null; bde: string | null; ba: string | null; url: string | null; endedBy: string | null; startDate: Date | null; endDate: Date | null; finalRating: number | null; changedRating: number | null; duration: string | null }>>(),
-    ServiceUser.find({ _id: { $in: p.assignments.filter((a) => a.role === "MANAGER").map((a) => a.userId) } }).select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
+    ServiceUpworkContract.find({ projectId: id }).sort({ startDate: -1, sheetRef: -1 }).lean<
+      Array<{
+        sheetRef: string;
+        profile: string | null;
+        bde: string | null;
+        ba: string | null;
+        url: string | null;
+        endedBy: string | null;
+        startDate: Date | null;
+        endDate: Date | null;
+        finalRating: number | null;
+        changedRating: number | null;
+        duration: string | null;
+      }>
+    >(),
+    ServiceUser.find({ _id: { $in: p.assignments.filter((a) => a.role === "MANAGER").map((a) => a.userId) } })
+      .select("displayName")
+      .lean<Array<{ _id: string; displayName: string }>>(),
     p.upworkProfileId ? ServiceUpworkProfile.findById(p.upworkProfileId).select("name").lean<{ _id: string; name: string } | null>() : null,
     ServiceChatSender.find().select("displayName").sort({ displayName: 1 }).lean<Array<{ displayName: string }>>(),
     ServiceUpworkProfile.find().select("name").sort({ name: 1 }).lean<Array<{ _id: string; name: string }>>(),
@@ -300,8 +332,16 @@ export async function getDetails(id: string): Promise<ProjectDetails> {
     executives: names("EXECUTIVE"),
     businessDevelopers: names("BUSINESS_DEVELOPER"),
     upworkContracts: contracts.map((c) => ({
-      ref: c.sheetRef, profile: c.profile, bde: c.bde, ba: c.ba, url: c.url, endedBy: c.endedBy, startDate: day(c.startDate), endDate: day(c.endDate),
-      rating: c.changedRating ?? c.finalRating ?? null, duration: c.duration,
+      ref: c.sheetRef,
+      profile: c.profile,
+      bde: c.bde,
+      ba: c.ba,
+      url: c.url,
+      endedBy: c.endedBy,
+      startDate: day(c.startDate),
+      endDate: day(c.endDate),
+      rating: c.changedRating ?? c.finalRating ?? null,
+      duration: c.duration,
     })),
     canEdit: true,
     canSeeMoney: true,
@@ -311,7 +351,10 @@ export async function getDetails(id: string): Promise<ProjectDetails> {
 }
 
 async function senderList() {
-  return (await ServiceChatSender.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>()).map((s) => ({ id: s._id, displayName: s.displayName }));
+  return (await ServiceChatSender.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>()).map((s) => ({
+    id: s._id,
+    displayName: s.displayName,
+  }));
 }
 
 const personNames = (v: unknown, field: string, max: number) => {
@@ -326,7 +369,9 @@ export async function setPeople(id: string, body: Record<string, unknown>) {
   const lists: Array<[ServicePersonRole, string[]]> = [
     ["BUSINESS_ANALYST", personNames(body.businessAnalysts, "businessAnalysts", 30)],
     ["EXECUTIVE", personNames(body.executives, "executives", 50)],
-    ...(body.businessDevelopers !== undefined ? [["BUSINESS_DEVELOPER", personNames(body.businessDevelopers, "businessDevelopers", 30)] as [ServicePersonRole, string[]]] : []),
+    ...(body.businessDevelopers !== undefined
+      ? [["BUSINESS_DEVELOPER", personNames(body.businessDevelopers, "businessDevelopers", 30)] as [ServicePersonRole, string[]]]
+      : []),
   ];
   const senders = await senderList();
   const replaced = new Set(lists.map(([r]) => r));
@@ -352,12 +397,16 @@ export async function setReview(id: string, body: Record<string, unknown>) {
   const raw = body.rating;
   let rating: number | null = null;
   if (raw !== null && raw !== undefined) {
-    if (typeof raw !== "number" || raw < 1 || raw > 5 || Math.abs(raw * 10 - Math.round(raw * 10)) > 1e-9) throw badRequest("rating must be 1 to 5, one decimal at most.");
+    if (typeof raw !== "number" || raw < 1 || raw > 5 || Math.abs(raw * 10 - Math.round(raw * 10)) > 1e-9)
+      throw badRequest("rating must be 1 to 5, one decimal at most.");
     rating = raw;
   }
   const comment = str(body.comment, "comment", { max: 2000, optional: true });
   if (rating === null && comment) throw badRequest("a comment needs a rating");
-  await ServiceProject.updateOne({ _id: id }, { $set: { reviewRating: rating, reviewComment: rating === null ? null : comment, reviewedAt: rating === null ? null : new Date() } });
+  await ServiceProject.updateOne(
+    { _id: id },
+    { $set: { reviewRating: rating, reviewComment: rating === null ? null : comment, reviewedAt: rating === null ? null : new Date() } }
+  );
   await recordServiceAudit("project.review_set", { projectId: id, rating });
   return { rating };
 }
@@ -390,19 +439,10 @@ export async function setUpworkProfile(id: string, body: Record<string, unknown>
   await recordServiceAudit("project.profile_set", { projectId: id, profileId });
   return { profileId };
 }
-
-// --- bulk ------------------------------------------------------------------------------------------------------------
-
-/** Runs the 45-day On hold / Active rule now (it also runs after every import). */
-export async function runActivityRules() {
-  const r = await applyActivityRules();
-  await recordServiceAudit("project.activity_rules", { held: r.held.length, resumed: r.resumed.length, reopened: r.reopened.length });
-  return r;
-}
-
 /** One change applied to many projects. A project the change cannot apply to is skipped and reported; the rest are changed. */
 export async function bulkEdit(body: Record<string, unknown>) {
-  if (!Array.isArray(body.projectIds) || body.projectIds.length < 1 || body.projectIds.length > 500) throw badRequest("projectIds must list 1 to 500 projects.");
+  if (!Array.isArray(body.projectIds) || body.projectIds.length < 1 || body.projectIds.length > 500)
+    throw badRequest("projectIds must list 1 to 500 projects.");
   const projectIds = [...new Set((body.projectIds as unknown[]).map((x) => str(x, "projectIds", { max: 64 })!))];
   const a = (body.action ?? {}) as Record<string, unknown>;
   const kind = oneOf(a.kind, "action.kind", ["status", "profile", "people", "manager", "inHouse", "contract"] as const);
@@ -413,9 +453,10 @@ export async function bulkEdit(body: Record<string, unknown>) {
 
   // Validate the action once.
   const to = kind === "status" ? oneOf(a.to, "action.to", SERVICE_PROJECT_STATUSES) : null;
-  const reason = kind === "status" ? str(a.reason, "action.reason", { max: 1000, optional: true }) ?? undefined : undefined;
+  const reason = kind === "status" ? (str(a.reason, "action.reason", { max: 1000, optional: true }) ?? undefined) : undefined;
   const profileId = kind === "profile" ? str(a.profileId, "action.profileId", { max: 64, optional: true }) : null;
-  if (kind === "profile" && profileId && !(await ServiceUpworkProfile.exists({ _id: profileId }))) return { changed: 0, skipped: [{ name: "—", reason: "unknown Upwork profile" }] };
+  if (kind === "profile" && profileId && !(await ServiceUpworkProfile.exists({ _id: profileId })))
+    return { changed: 0, skipped: [{ name: "—", reason: "unknown Upwork profile" }] };
   const managerMode = kind === "manager" ? oneOf(a.mode, "action.mode", ["add", "remove"] as const) : null;
   const userId = kind === "manager" ? str(a.userId, "action.userId", { max: 64 })! : null;
   if (kind === "manager" && !(await ServiceUser.exists({ _id: userId, active: true }))) return { changed: 0, skipped: [{ name: "—", reason: "unknown user" }] };
@@ -429,19 +470,33 @@ export async function bulkEdit(body: Record<string, unknown>) {
     if (a.type !== undefined) contractSet.type = oneOf(a.type, "action.type", ["HOURLY", "FIXED"] as const);
     if (a.weeklyLimitMinutes !== undefined) {
       const w = a.weeklyLimitMinutes;
-      if (w !== null && (typeof w !== "number" || !Number.isInteger(w) || w < 0 || w > 168 * 60)) throw badRequest("action.weeklyLimitMinutes must be 0 to 10080.");
+      if (w !== null && (typeof w !== "number" || !Number.isInteger(w) || w < 0 || w > 168 * 60))
+        throw badRequest("action.weeklyLimitMinutes must be 0 to 10080.");
       contractSet.weeklyLimitMinutes = w || null;
     }
-    if (a.trackingMode !== undefined) contractSet.trackingMode = a.trackingMode === null ? null : oneOf(a.trackingMode, "action.trackingMode", ["TIMER", "MANUAL"] as const);
+    if (a.trackingMode !== undefined)
+      contractSet.trackingMode = a.trackingMode === null ? null : oneOf(a.trackingMode, "action.trackingMode", ["TIMER", "MANUAL"] as const);
   }
 
   for (const p of projects) {
     switch (kind) {
       case "status": {
-        if (p.status === to) { skipped.push({ name: p.name, reason: "already in that status" }); continue; }
+        if (p.status === to) {
+          skipped.push({ name: p.name, reason: "already in that status" });
+          continue;
+        }
         const check = validateTransition(p.status, to!, reason);
-        if (!check.ok) { skipped.push({ name: p.name, reason: check.error }); continue; }
-        await ServiceProject.updateOne({ _id: p._id }, { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: await dateForManualMove(to!, p, now) } } });
+        if (!check.ok) {
+          skipped.push({ name: p.name, reason: check.error });
+          continue;
+        }
+        await ServiceProject.updateOne(
+          { _id: p._id },
+          {
+            $set: { status: to },
+            $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: await dateForManualMove(to!, p, now) } },
+          }
+        );
         break;
       }
       case "profile":
@@ -452,7 +507,8 @@ export async function bulkEdit(body: Record<string, unknown>) {
         break;
       case "manager":
         if (managerMode === "add") {
-          if (!p.assignments.some((x) => x.userId === userId && x.role === "MANAGER")) await ServiceProject.updateOne({ _id: p._id }, { $push: { assignments: { userId, role: "MANAGER" } } });
+          if (!p.assignments.some((x) => x.userId === userId && x.role === "MANAGER"))
+            await ServiceProject.updateOne({ _id: p._id }, { $push: { assignments: { userId, role: "MANAGER" } } });
         } else await ServiceProject.updateOne({ _id: p._id }, { $pull: { assignments: { userId, role: "MANAGER" } } });
         break;
       case "people": {
@@ -462,16 +518,43 @@ export async function bulkEdit(body: Record<string, unknown>) {
         if (peopleMode === "remove") list = list.filter((x) => x.role !== peopleRole || !keys.has(normalizeName(x.name)));
         if (peopleMode !== "remove") {
           const have = new Set(list.filter((x) => x.role === peopleRole).map((x) => x.name));
-          for (const name of new Map(names.map((n) => [normalizeName(n), n])).values()) if (!have.has(name)) list = [...list, { role: peopleRole!, name, senderId: matchSender(name, senders) }];
+          for (const name of new Map(names.map((n) => [normalizeName(n), n])).values())
+            if (!have.has(name)) list = [...list, { role: peopleRole!, name, senderId: matchSender(name, senders) }];
         }
         await ServiceProject.updateOne({ _id: p._id }, { $set: { people: list } });
         break;
       }
       case "contract": {
-        if (!Object.keys(contractSet).length) { skipped.push({ name: p.name, reason: "nothing to change" }); continue; }
-        if (p.contract) await ServiceProject.updateOne({ _id: p._id }, { $set: Object.fromEntries(Object.entries(contractSet).map(([k, v]) => [`contract.${k}`, v])) });
-        else if (p.clientId) await ServiceProject.updateOne({ _id: p._id }, { $set: { contract: { type: "HOURLY", status: "ACTIVE", weeklyLimitMinutes: null, hourlyRateCents: null, fixedPriceCents: null, trackingMode: null, externalRef: null, startDate: null, endDate: null, ...contractSet } } });
-        else { skipped.push({ name: p.name, reason: "project has no client, so no contract" }); continue; }
+        if (!Object.keys(contractSet).length) {
+          skipped.push({ name: p.name, reason: "nothing to change" });
+          continue;
+        }
+        if (p.contract)
+          await ServiceProject.updateOne({ _id: p._id }, { $set: Object.fromEntries(Object.entries(contractSet).map(([k, v]) => [`contract.${k}`, v])) });
+        else if (p.clientId)
+          await ServiceProject.updateOne(
+            { _id: p._id },
+            {
+              $set: {
+                contract: {
+                  type: "HOURLY",
+                  status: "ACTIVE",
+                  weeklyLimitMinutes: null,
+                  hourlyRateCents: null,
+                  fixedPriceCents: null,
+                  trackingMode: null,
+                  externalRef: null,
+                  startDate: null,
+                  endDate: null,
+                  ...contractSet,
+                },
+              },
+            }
+          );
+        else {
+          skipped.push({ name: p.name, reason: "project has no client, so no contract" });
+          continue;
+        }
         break;
       }
     }
@@ -480,6 +563,12 @@ export async function bulkEdit(body: Record<string, unknown>) {
   for (const id of projectIds) if (!projects.some((p) => p._id === id)) skipped.push({ name: id, reason: "not found" });
   // A new profile or new people can decide where waiting entries of multi-project clients belong.
   if (kind === "profile" || kind === "people") await autoAssignProjects();
-  await recordServiceAudit("project.bulk_edit", { action: kind, ...(kind === "status" ? { to } : {}), selected: projectIds.length, changed, skipped: skipped.length });
+  await recordServiceAudit("project.bulk_edit", {
+    action: kind,
+    ...(kind === "status" ? { to } : {}),
+    selected: projectIds.length,
+    changed,
+    skipped: skipped.length,
+  });
   return { changed, skipped };
 }

@@ -29,7 +29,10 @@ export type VersionTimeRow = {
   inProgress: boolean;
 };
 
-export type VersionTimeResult = { rows: VersionTimeRow[]; /** Versions the Theme Store lists without a date; they can't mark a window, so their work sits in the next dated release. */ undated: string[] };
+export type VersionTimeResult = {
+  rows: VersionTimeRow[];
+  /** Versions the Theme Store lists without a date; they can't mark a window, so their work sits in the next dated release. */ undated: string[];
+};
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T00:00:00Z`) / 86_400_000);
@@ -42,10 +45,20 @@ const daysBetween = (from: string, to: string) => dayNumber(to) - dayNumber(from
  * to `today`. Newest first.
  */
 export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[], today: string): VersionTimeResult {
-  const dated = versions.filter((v): v is { version: string; releasedOn: string } => v.releasedOn !== null).sort((a, b) => a.releasedOn.localeCompare(b.releasedOn));
+  const dated = versions
+    .filter((v): v is { version: string; releasedOn: string } => v.releasedOn !== null)
+    .sort((a, b) => a.releasedOn.localeCompare(b.releasedOn));
   const undated = versions.filter((v) => v.releasedOn === null).map((v) => v.version);
 
-  const summarize = (version: string, releasedOn: string | null, since: string | null, calendarDays: number | null, inProgress: boolean, inWindow: TimeEntryDay[], store?: StoreVersion): VersionTimeRow => {
+  const summarize = (
+    version: string,
+    releasedOn: string | null,
+    since: string | null,
+    calendarDays: number | null,
+    inProgress: boolean,
+    inWindow: TimeEntryDay[],
+    store?: StoreVersion
+  ): VersionTimeRow => {
     const days = new Set(inWindow.map((e) => e.date));
     const byPerson = new Map<string, { name: string; hours: number; days: Set<string> }>();
     for (const e of inWindow) {
@@ -63,7 +76,9 @@ export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[
       daysWorked: days.size,
       hours: round2(hours),
       effortDays: round2(hours / HOURS_PER_DAY),
-      people: [...byPerson.values()].map((p) => ({ name: p.name, hours: round2(p.hours), days: p.days.size })).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name)),
+      people: [...byPerson.values()]
+        .map((p) => ({ name: p.name, hours: round2(p.hours), days: p.days.size }))
+        .sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name)),
       summary: store?.summary ?? null,
       notes: store?.notes ?? [],
       reports: inWindow
@@ -77,12 +92,29 @@ export function versionTimeRows(versions: StoreVersion[], entries: TimeEntryDay[
   const rows: VersionTimeRow[] = dated.map((v, i) => {
     const since = i > 0 ? dated[i - 1].releasedOn : null;
     const inWindow = entries.filter((e) => e.date <= v.releasedOn && (since === null || e.date > since));
-    return summarize(v.version, v.releasedOn, since, since === null ? null : daysBetween(since, v.releasedOn), false, inWindow, versions.find((x) => x.version === v.version));
+    return summarize(
+      v.version,
+      v.releasedOn,
+      since,
+      since === null ? null : daysBetween(since, v.releasedOn),
+      false,
+      inWindow,
+      versions.find((x) => x.version === v.version)
+    );
   });
 
   const latest = dated.length > 0 ? dated[dated.length - 1].releasedOn : null;
   if (latest !== null) {
-    rows.push(summarize("Next release", null, latest, Math.max(0, daysBetween(latest, today)), true, entries.filter((e) => e.date > latest)));
+    rows.push(
+      summarize(
+        "Next release",
+        null,
+        latest,
+        Math.max(0, daysBetween(latest, today)),
+        true,
+        entries.filter((e) => e.date > latest)
+      )
+    );
   }
   return { rows: rows.reverse(), undated };
 }

@@ -109,8 +109,8 @@ export function Ga4ConnectionsContent() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">GA4 Analytics</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Connect every Google account that owns a theme&apos;s GA4 property. Each account is stored separately with
-          read-only Analytics access; connecting one never replaces another.
+          Connect every Google account that owns a theme&apos;s GA4 property. Each account is stored separately with read-only Analytics access; connecting one
+          never replaces another.
         </p>
       </div>
 
@@ -138,8 +138,7 @@ export function Ga4ConnectionsContent() {
 
         {!configured && (
           <p className="mb-4 text-sm text-red-700 dark:text-red-300">
-            GA4 isn&apos;t configured on this server: set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL and
-            ANALYTICS_TOKEN_ENCRYPTION_KEY (see .env.example).
+            GA4 isn&apos;t configured on this server: set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL and ANALYTICS_TOKEN_ENCRYPTION_KEY (see .env.example).
           </p>
         )}
 
@@ -187,10 +186,22 @@ export function Ga4ConnectionsContent() {
                       <div className="flex flex-wrap justify-end gap-2">
                         {c.status === "active" ? (
                           <>
-                            <Button variant="secondary" size="sm" loading={busy[c.id] === "validate"} disabled={Boolean(busy[c.id])} onClick={() => act(c, "validate")}>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              loading={busy[c.id] === "validate"}
+                              disabled={Boolean(busy[c.id])}
+                              onClick={() => act(c, "validate")}
+                            >
                               Check access
                             </Button>
-                            <Button variant="destructive" size="sm" loading={busy[c.id] === "disconnect"} disabled={Boolean(busy[c.id])} onClick={() => act(c, "disconnect")}>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              loading={busy[c.id] === "disconnect"}
+                              disabled={Boolean(busy[c.id])}
+                              onClick={() => act(c, "disconnect")}
+                            >
                               Disconnect
                             </Button>
                           </>
@@ -205,7 +216,13 @@ export function Ga4ConnectionsContent() {
                           )
                         )}
                         {c.status === "error" && (
-                          <Button variant="destructive" size="sm" loading={busy[c.id] === "disconnect"} disabled={Boolean(busy[c.id])} onClick={() => act(c, "disconnect")}>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            loading={busy[c.id] === "disconnect"}
+                            disabled={Boolean(busy[c.id])}
+                            onClick={() => act(c, "disconnect")}
+                          >
                             Disconnect
                           </Button>
                         )}

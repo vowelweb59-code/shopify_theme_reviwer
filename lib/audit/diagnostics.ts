@@ -14,10 +14,7 @@ export type AuditDiagnostics = {
   rulesSkippedDueToError: number; // a rule threw and was excluded from this run
 };
 
-export function computeAuditDiagnostics(
-  files: ParsedFile[],
-  opts: { filesSkipped: number; rulesSkippedDueToError: number }
-): AuditDiagnostics {
+export function computeAuditDiagnostics(files: ParsedFile[], opts: { filesSkipped: number; rulesSkippedDueToError: number }): AuditDiagnostics {
   let parserWarnings = 0;
   let unresolvedDynamicReferences = 0;
   for (const f of files) {

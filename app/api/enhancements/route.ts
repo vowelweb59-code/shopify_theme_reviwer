@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
-import {
-  EnhancementPoint,
-  ENHANCEMENT_CATEGORIES,
-  ADOPTION_TIERS,
-  ENHANCEMENT_STATUSES,
-  ENHANCEMENT_SOURCES,
-} from "@/models/enhancement-point";
+import { EnhancementPoint, ENHANCEMENT_CATEGORIES, ADOPTION_TIERS, ENHANCEMENT_STATUSES, ENHANCEMENT_SOURCES } from "@/models/enhancement-point";
 import { EnhancementSheet } from "@/models/enhancement-sheet";
 
 const MAX_NOTES_LENGTH = 5000;
@@ -29,10 +23,7 @@ export async function GET(request: Request) {
   }
   if (category) {
     if (!ENHANCEMENT_CATEGORIES.includes(category as (typeof ENHANCEMENT_CATEGORIES)[number])) {
-      return NextResponse.json(
-        { error: `category must be one of: ${ENHANCEMENT_CATEGORIES.join(", ")}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `category must be one of: ${ENHANCEMENT_CATEGORIES.join(", ")}` }, { status: 400 });
     }
     filter.category = category;
   }

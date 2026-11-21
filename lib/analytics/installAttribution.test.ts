@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { installsAreEstimated } from "./engine/metrics";
 import { mergeFrom } from "./sync/runSync";
-import { attributeInstalls, installRows, installsByThemeRequest, matchesAlias, mergeInstallRows, pickThemeDimension, themeAliases, unattributedReportRows } from "./installAttribution";
+import {
+  attributeInstalls,
+  installRows,
+  installsByThemeRequest,
+  matchesAlias,
+  mergeInstallRows,
+  pickThemeDimension,
+  themeAliases,
+  unattributedReportRows,
+} from "./installAttribution";
 
 describe("pickThemeDimension", () => {
   it("finds the custom event parameter that names the theme, preferring a name or title", () => {
@@ -15,7 +24,12 @@ describe("pickThemeDimension", () => {
   });
   it("falls back to any theme parameter, and to null when there is none", () => {
     expect(pickThemeDimension([{ apiName: "customEvent:installed_theme", uiName: "" }])).toBe("customEvent:installed_theme");
-    expect(pickThemeDimension([{ apiName: "customEvent:store_url", uiName: "Store URL" }, { apiName: "theme", uiName: "Theme" }])).toBeNull();
+    expect(
+      pickThemeDimension([
+        { apiName: "customEvent:store_url", uiName: "Store URL" },
+        { apiName: "theme", uiName: "Theme" },
+      ])
+    ).toBeNull();
   });
 });
 
@@ -63,10 +77,26 @@ describe("attributeInstalls", () => {
 
 describe("install rows", () => {
   it("makes one total row per positive day, and adds rows of the same day together", () => {
-    const exact = installRows(new Map([["2026-11-08", 3], ["2026-11-09", 0]]));
+    const exact = installRows(
+      new Map([
+        ["2026-11-08", 3],
+        ["2026-11-09", 0],
+      ])
+    );
     expect(exact.map((r) => r.date)).toEqual(["2026-11-08"]);
-    const merged = mergeInstallRows(exact, installRows(new Map([["2026-11-08", 0.5], ["2026-11-05", 1.25]])));
-    expect(merged.map((r) => [r.date, r.metrics.eventCount]).sort()).toEqual([["2026-11-05", 1.25], ["2026-11-08", 3.5]]);
+    const merged = mergeInstallRows(
+      exact,
+      installRows(
+        new Map([
+          ["2026-11-08", 0.5],
+          ["2026-11-05", 1.25],
+        ])
+      )
+    );
+    expect(merged.map((r) => [r.date, r.metrics.eventCount]).sort()).toEqual([
+      ["2026-11-05", 1.25],
+      ["2026-11-08", 3.5],
+    ]);
   });
   it("hands the unnamed installs on as property-wide report rows", () => {
     expect(unattributedReportRows(new Map([["2026-11-05", 4]]))).toEqual([{ dimensions: ["20261105", "shopify_theme_install"], metrics: [4] }]);
@@ -82,7 +112,10 @@ describe("installsByThemeRequest", () => {
 });
 
 describe("when installs are still estimated", () => {
-  const period = (start: string, prev: string | null = null) => ({ current: { start, end: "2026-11-30" }, previous: prev ? { start: prev, end: start } : null });
+  const period = (start: string, prev: string | null = null) => ({
+    current: { start, end: "2026-11-30" },
+    previous: prev ? { start: prev, end: start } : null,
+  });
   const base = { pagePathPrefix: "/themes/rare/", earlier: null, installsExactFrom: "2026-11-05" };
 
   it("never for a theme with a property of its own", () => {

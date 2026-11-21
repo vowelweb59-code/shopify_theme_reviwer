@@ -2,7 +2,7 @@ import "server-only";
 // Team view (ported from the Upwork app's team.controller.ts): who worked on which projects and how much, per week. The team
 // are the Chat senders of TIMER STATUS. One shared login, so the salary is shown and editable for everyone signed in.
 import { badRequest, notFound, oneOf, str } from "./http";
-import { buildPeople, loadContext, loadEntryRows, summarise, type Row } from "./reports";
+import { loadContext, loadEntryRows, summarise, type Row } from "./reports";
 import { recordServiceAudit } from "../audit/record";
 import { istDate } from "../import/text";
 import { weekOf } from "../import/week";
@@ -19,20 +19,16 @@ function week(raw?: string | null) {
   if (raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) throw badRequest("week must be YYYY-MM-DD");
   return weekOf(raw || istDate(new Date()));
 }
-
-/** Everyone with hours this week or last, most hours first. */
-export async function teamList(weekRaw?: string | null) {
-  const w = week(weekRaw);
-  const { people } = await buildPeople(await loadContext(), { from: w.start, to: w.end, days: 7 });
-  const shown = people.map(({ rows: _rows, ...p }) => p); // eslint-disable-line @typescript-eslint/no-unused-vars
-  return {
-    week: w,
-    totals: { minutes: shown.reduce((n, p) => n + p.minutes, 0), people: shown.filter((p) => p.minutes > 0).length, flagged: shown.reduce((n, p) => n + p.flagged, 0) },
-    people: shown,
-  };
-}
-
-type Sender = { _id: string; externalId: string; displayName: string; userId: string | null; designation: string | null; team: string | null; salaryMonthlyMinor: number | null; salaryCurrency: string };
+type Sender = {
+  _id: string;
+  externalId: string;
+  displayName: string;
+  userId: string | null;
+  designation: string | null;
+  team: string | null;
+  salaryMonthlyMinor: number | null;
+  salaryCurrency: string;
+};
 
 async function sender(id: string): Promise<Sender> {
   const row = await ServiceChatSender.findById(id).lean<Sender | null>();
@@ -72,14 +68,30 @@ export async function teamDetail(id: string, weekRaw?: string | null) {
   return {
     week: w,
     person: { id: s._id, name: s.displayName, user: user ? { id: user._id, displayName: user.displayName } : null },
-    profile: { designation: s.designation, team: s.team, salary: { monthly: s.salaryMonthlyMinor === null ? null : s.salaryMonthlyMinor / 100, currency: s.salaryCurrency } },
+    profile: {
+      designation: s.designation,
+      team: s.team,
+      salary: { monthly: s.salaryMonthlyMinor === null ? null : s.salaryMonthlyMinor / 100, currency: s.salaryCurrency },
+    },
     ...summary,
     lastReportAt: summary.lastReportAt?.toISOString() ?? null,
     byDay,
     byProject: [...split.values()].sort((a, b) => b.minutes - a.minutes),
     weeks,
-    recent: [...current].sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime()).slice(0, 30)
-      .map((r) => ({ id: r.id, entryDate: r.entryDate, project: r.project, client: r.client, minutes: r.minutes, source: r.source, memo: r.memo, flagged: r.flagged, late: r.late })),
+    recent: [...current]
+      .sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime())
+      .slice(0, 30)
+      .map((r) => ({
+        id: r.id,
+        entryDate: r.entryDate,
+        project: r.project,
+        client: r.client,
+        minutes: r.minutes,
+        source: r.source,
+        memo: r.memo,
+        flagged: r.flagged,
+        late: r.late,
+      })),
   };
 }
 export type TeamDetail = Awaited<ReturnType<typeof teamDetail>>;
@@ -104,7 +116,10 @@ export async function setSalary(id: string, body: Record<string, unknown>) {
     if (!Number.isFinite(monthly) || monthly < 0 || monthly > 20_000_000) throw badRequest("monthly must be a number between 0 and 20,000,000.");
   }
   const currency = body.currency === undefined ? s.salaryCurrency : oneOf(body.currency, "currency", ["INR", "USD"] as const);
-  await ServiceChatSender.updateOne({ _id: s._id }, { $set: { salaryMonthlyMinor: monthly === null ? null : Math.round(monthly * 100), salaryCurrency: currency } });
+  await ServiceChatSender.updateOne(
+    { _id: s._id },
+    { $set: { salaryMonthlyMinor: monthly === null ? null : Math.round(monthly * 100), salaryCurrency: currency } }
+  );
   await recordServiceAudit("team_member.salary_set", { senderId: s._id });
   return { id: s._id };
 }

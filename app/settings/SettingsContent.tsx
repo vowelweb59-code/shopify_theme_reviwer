@@ -59,18 +59,14 @@ function GoogleSheetsPanel() {
       <div>
         <h2 className="text-sm font-medium text-zinc-950 dark:text-zinc-50">Google Sheets export</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          Optional (phase-5 §14) — connect a Google account to export a report directly as a new Google Sheet, in
-          addition to the existing CSV/XLSX/JSON/HTML/PDF downloads.
+          Optional (phase-5 §14) — connect a Google account to export a report directly as a new Google Sheet, in addition to the existing
+          CSV/XLSX/JSON/HTML/PDF downloads.
         </p>
       </div>
 
-      {banner?.kind === "connected" && (
-        <p className="text-sm text-emerald-700 dark:text-emerald-400">Connected to Google.</p>
-      )}
+      {banner?.kind === "connected" && <p className="text-sm text-emerald-700 dark:text-emerald-400">Connected to Google.</p>}
       {banner?.kind === "error" && (
-        <p className="text-sm text-red-700 dark:text-red-300">
-          Could not connect to Google{banner.message ? `: ${banner.message}` : "."}
-        </p>
+        <p className="text-sm text-red-700 dark:text-red-300">Could not connect to Google{banner.message ? `: ${banner.message}` : "."}</p>
       )}
 
       {!status ? (
@@ -92,8 +88,7 @@ function GoogleSheetsPanel() {
       ) : null}
       {status?.connected && status.broadScope && (
         <p className="text-xs text-status-warning-text">
-          This account was connected with access to all of its spreadsheets. Disconnect and connect again to limit the app
-          to the sheets it creates.
+          This account was connected with access to all of its spreadsheets. Disconnect and connect again to limit the app to the sheets it creates.
         </p>
       )}
       {status && !status.connected && (
@@ -129,9 +124,7 @@ export function SettingsContent() {
   function toggleSeverity(severity: string) {
     if (!config) return;
     const has = config.blockerSeverities.includes(severity);
-    const blockerSeverities = has
-      ? config.blockerSeverities.filter((s) => s !== severity)
-      : [...config.blockerSeverities, severity];
+    const blockerSeverities = has ? config.blockerSeverities.filter((s) => s !== severity) : [...config.blockerSeverities, severity];
     setConfig({ ...config, blockerSeverities });
     setSaved(false);
   }
@@ -165,8 +158,8 @@ export function SettingsContent() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">General</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Configure what &ldquo;submission ready&rdquo; actually means (phase-7 §2) — changing these changes every
-          audit&apos;s READY/NOT_READY/INCOMPLETE verdict, not just the current one.
+          Configure what &ldquo;submission ready&rdquo; actually means (phase-7 §2) — changing these changes every audit&apos;s READY/NOT_READY/INCOMPLETE
+          verdict, not just the current one.
         </p>
       </div>
 
@@ -179,18 +172,12 @@ export function SettingsContent() {
           <div>
             <h3 className="text-sm font-medium text-zinc-950 dark:text-zinc-50">Blocker severities</h3>
             <p className="mt-1 text-xs text-zinc-500">
-              An open finding at one of these severities makes the audit NOT_READY. Resolved/ignored findings never
-              count, regardless of severity.
+              An open finding at one of these severities makes the audit NOT_READY. Resolved/ignored findings never count, regardless of severity.
             </p>
             <div className="mt-3 flex flex-wrap gap-3 text-sm">
               {SEVERITIES.map((s) => (
                 <label key={s} className="flex items-center gap-2 capitalize">
-                  <input
-                    type="checkbox"
-                    checked={config.blockerSeverities.includes(s)}
-                    onChange={() => toggleSeverity(s)}
-                    className="h-4 w-4"
-                  />
+                  <input type="checkbox" checked={config.blockerSeverities.includes(s)} onChange={() => toggleSeverity(s)} className="h-4 w-4" />
                   {s}
                 </label>
               ))}
@@ -200,8 +187,7 @@ export function SettingsContent() {
           <div>
             <h3 className="text-sm font-medium text-zinc-950 dark:text-zinc-50">Minimum coverage for a READY claim</h3>
             <p className="mt-1 text-xs text-zinc-500">
-              Below this, the audit is INCOMPLETE rather than READY, even with zero blockers — too many requirements
-              have no automated check behind them yet.
+              Below this, the audit is INCOMPLETE rather than READY, even with zero blockers — too many requirements have no automated check behind them yet.
             </p>
             <div className="mt-3 flex items-center gap-2 text-sm">
               <input

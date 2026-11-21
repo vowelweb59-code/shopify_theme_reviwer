@@ -105,9 +105,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ the
         demoRealism: {
           presetLabels,
           findings: demoFindings,
-          notTestedReason: (latestAudit.demoStorePresets ?? []).length === 0
-            ? "no demo store URL was given for this audit. Save it on the Overview's presets card, then audit again."
-            : `the demo store could not be read: ${(latestAudit.liveCheckErrors ?? [])[0]?.error ?? "unknown reason"}`,
+          notTestedReason:
+            (latestAudit.demoStorePresets ?? []).length === 0
+              ? "no demo store URL was given for this audit. Save it on the Overview's presets card, then audit again."
+              : `the demo store could not be read: ${(latestAudit.liveCheckErrors ?? [])[0]?.error ?? "unknown reason"}`,
         },
         liveFeatures: latestAudit.liveFeatures,
       });

@@ -80,7 +80,15 @@ function FilterAction({
  * the active filters come from another dimension family the API can't
  * answer, and the table says so instead of requesting.
  */
-export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = false }: { dimension: FilterParam; defaultSort?: BreakdownSort; byTheme?: boolean }) {
+export function BreakdownTable({
+  dimension,
+  defaultSort = "installs",
+  byTheme = false,
+}: {
+  dimension: FilterParam;
+  defaultSort?: BreakdownSort;
+  byTheme?: boolean;
+}) {
   const { params, setParams, apiQuery } = useDashboardParams();
   const [sort, setSort] = useState<{ key: BreakdownSort; order: "asc" | "desc" }>({ key: defaultSort, order: "desc" });
   // The page resets whenever the selection or sort changes (derived, not synced in an effect).
@@ -113,8 +121,8 @@ export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = 
     return (
       <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-border-subtle p-6 text-sm text-zinc-600 dark:text-zinc-300">
         <p>
-          {FILTER_LABELS[dimension]} can&apos;t be broken down while filtering by {names}: they&apos;re stored as separate dimension families, so
-          no data carries both.
+          {FILTER_LABELS[dimension]} can&apos;t be broken down while filtering by {names}: they&apos;re stored as separate dimension families, so no data
+          carries both.
         </p>
         <Button size="sm" variant="secondary" onClick={() => setParams({ filters: {} })}>
           Remove filters
@@ -173,11 +181,20 @@ export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = 
                   <th className="px-4 py-3 font-medium">{FILTER_LABELS[dimension]}</th>
                   {splitByTheme && <th className="px-4 py-3 font-medium">Theme</th>}
                   {columns.map((c) => (
-                    <th key={c.key} className="px-4 py-3 text-right font-medium" aria-sort={c.sort && sort.key === c.sort ? (sort.order === "asc" ? "ascending" : "descending") : undefined}>
+                    <th
+                      key={c.key}
+                      className="px-4 py-3 text-right font-medium"
+                      aria-sort={c.sort && sort.key === c.sort ? (sort.order === "asc" ? "ascending" : "descending") : undefined}
+                    >
                       {c.sort ? (
-                        <button type="button" onClick={() => toggleSort(c.sort!)} className="inline-flex items-center gap-1 uppercase hover:text-zinc-900 dark:hover:text-zinc-100">
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(c.sort!)}
+                          className="inline-flex items-center gap-1 uppercase hover:text-zinc-900 dark:hover:text-zinc-100"
+                        >
                           {c.header}
-                          {sort.key === c.sort && (sort.order === "asc" ? <ChevronUp className="h-3 w-3" aria-hidden /> : <ChevronDown className="h-3 w-3" aria-hidden />)}
+                          {sort.key === c.sort &&
+                            (sort.order === "asc" ? <ChevronUp className="h-3 w-3" aria-hidden /> : <ChevronDown className="h-3 w-3" aria-hidden />)}
                         </button>
                       ) : (
                         c.header
@@ -197,7 +214,11 @@ export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = 
                     </td>
                     {splitByTheme && (
                       <td className="px-4 py-3">
-                        <button type="button" onClick={() => r.theme && setParams({ theme: r.theme.slug })} className="font-medium text-primary hover:underline">
+                        <button
+                          type="button"
+                          onClick={() => r.theme && setParams({ theme: r.theme.slug })}
+                          className="font-medium text-primary hover:underline"
+                        >
                           {r.theme?.name}
                         </button>
                       </td>
@@ -211,7 +232,13 @@ export function BreakdownTable({ dimension, defaultSort = "installs", byTheme = 
                       </td>
                     ))}
                     <td className="px-2 py-3 text-right">
-                      <FilterAction row={r} dimension={dimension} groupDims={groupDims} filters={params.filters} onFilter={(filters) => setParams({ filters })} />
+                      <FilterAction
+                        row={r}
+                        dimension={dimension}
+                        groupDims={groupDims}
+                        filters={params.filters}
+                        onFilter={(filters) => setParams({ filters })}
+                      />
                     </td>
                   </tr>
                 ))}

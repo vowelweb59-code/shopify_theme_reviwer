@@ -12,7 +12,14 @@ describe("parseDirectory", () => {
     expect(cards).toHaveLength(16);
     expect(new Set(cards.map((c) => c.slug)).size).toBe(16);
     const geeks = cards.find((c) => c.slug === "it-geeks");
-    expect(geeks).toMatchObject({ name: "IT-Geeks", rating: 5, reviewCount: 5059, location: "SALT LAKE CITY, United States", startingPrice: 1000, moreServices: 31 });
+    expect(geeks).toMatchObject({
+      name: "IT-Geeks",
+      rating: 5,
+      reviewCount: 5059,
+      location: "SALT LAKE CITY, United States",
+      startingPrice: 1000,
+      moreServices: 31,
+    });
     expect(geeks?.services).toEqual(["Store build or redesign", "Store migration", "Troubleshooting", "Theme customization", "SEO"]);
   });
 
@@ -22,7 +29,11 @@ describe("parseDirectory", () => {
   });
 
   it("finds country slugs and labels them", () => {
-    expect(parseCountrySlugs('<a href="/partners/directory/locations/spain">x</a><a href="/partners/directory/locations/united-kingdom">y</a><a href="/partners/directory/locations/">z</a>')).toEqual(["spain", "united-kingdom"]);
+    expect(
+      parseCountrySlugs(
+        '<a href="/partners/directory/locations/spain">x</a><a href="/partners/directory/locations/united-kingdom">y</a><a href="/partners/directory/locations/">z</a>'
+      )
+    ).toEqual(["spain", "united-kingdom"]);
     expect(countryLabel("united-kingdom")).toBe("United Kingdom");
     expect(countryFromLocation("Dover, United States")).toBe("United States");
     expect(countryFromLocation(null)).toBeNull();
@@ -46,6 +57,11 @@ describe("parseDirectory", () => {
       '<a data-click-disabled="" data-component-name="partner-directory-contact-email" href="mailto:Support@Clovecode.com?subject=Hi" aria-label="Contact X by email">Contact</a>' +
       '<a data-click-disabled="" href="https://www.clovecode.com/?utm_source=sref" target="_blank" aria-label="Visit website (opens in a new tab)">g</a>' +
       '<a href="https://some-merchant.com/">merchant</a><a href="tel:+1 555 0100">call</a>';
-    expect(parseProfile(html)).toEqual({ website: "https://www.clovecode.com", email: "support@clovecode.com", phone: "+1 555 0100", partnerSince: "March 2019" });
+    expect(parseProfile(html)).toEqual({
+      website: "https://www.clovecode.com",
+      email: "support@clovecode.com",
+      phone: "+1 555 0100",
+      partnerSince: "March 2019",
+    });
   });
 });

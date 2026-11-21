@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     if (error === "access_denied") return finish({ ads: "cancelled" });
     return finish({ ads: "error", adsError: "Google couldn't complete the sign-in. Please try again." });
   }
-  if (!isValidOAuthState(searchParams.get("state"), expectedState)) return finish({ ads: "error", adsError: "The sign-in link expired or didn't start from this app. Please connect again." });
+  if (!isValidOAuthState(searchParams.get("state"), expectedState))
+    return finish({ ads: "error", adsError: "The sign-in link expired or didn't start from this app. Please connect again." });
   const code = searchParams.get("code");
   if (!code) return finish({ ads: "error", adsError: "Google didn't return an authorization code." });
 
@@ -31,11 +32,21 @@ export async function GET(request: NextRequest) {
     const result = await exchangeAdsCode(code);
     const existing = await AdsConnection.findOne({ key: "ads" }).select("+encryptedRefreshToken");
     const refresh = result.refreshToken ? encryptSecret(result.refreshToken) : existing?.encryptedRefreshToken;
-    if (!refresh) return finish({ ads: "error", adsError: "Google didn't return a refresh token. Remove the app's access in your Google account and connect again." });
+    if (!refresh)
+      return finish({ ads: "error", adsError: "Google didn't return a refresh token. Remove the app's access in your Google account and connect again." });
     await AdsConnection.updateOne(
       { key: "ads" },
       {
-        $set: { googleAccountId: result.googleAccountId, email: result.email, status: "active", encryptedAccessToken: encryptSecret(result.accessToken), encryptedRefreshToken: refresh, tokenExpiresAt: result.expiryDate, scopes: result.scopes, lastError: null },
+        $set: {
+          googleAccountId: result.googleAccountId,
+          email: result.email,
+          status: "active",
+          encryptedAccessToken: encryptSecret(result.accessToken),
+          encryptedRefreshToken: refresh,
+          tokenExpiresAt: result.expiryDate,
+          scopes: result.scopes,
+          lastError: null,
+        },
         $setOnInsert: { key: "ads" },
       },
       { upsert: true }

@@ -29,7 +29,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       </div>
       <div className="flex items-center justify-between text-sm">
         <span className="text-zinc-500">Sorted by value earned, highest first.</span>
-        <Link href={showAll ? "/service/performance/members" : "/service/performance/members?all=1"} className="text-primary hover:underline">{showAll ? "Hide inactive members" : "Show inactive members"}</Link>
+        <Link href={showAll ? "/service/performance/members" : "/service/performance/members?all=1"} className="text-primary hover:underline">
+          {showAll ? "Hide inactive members" : "Show inactive members"}
+        </Link>
       </div>
       <div className="overflow-x-auto rounded-lg border border-border-subtle bg-surface">
         <table className="w-full min-w-[820px] text-sm">
@@ -47,13 +49,26 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             {people.map((m) => (
               <tr key={m.key} className="hover:bg-surface-muted/50">
                 <td className="px-4 py-2.5">
-                  <Link href={`/service/performance/${m.slug}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{m.name}</Link>
-                  <div className="text-xs text-zinc-500">{m.left ? "Left the company" : !m.active ? "Inactive (no report in 2 months)" : m.designation ?? ""}</div>
+                  <Link href={`/service/performance/${m.slug}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
+                    {m.name}
+                  </Link>
+                  <div className="text-xs text-zinc-500">
+                    {m.left ? "Left the company" : !m.active ? "Inactive (no report in 2 months)" : (m.designation ?? "")}
+                  </div>
                 </td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{m.projectsHandled}<div className="text-xs text-zinc-500">{m.projectsNow} running</div></td>
+                <td className="px-4 py-2.5 text-right tabular-nums">
+                  {m.projectsHandled}
+                  <div className="text-xs text-zinc-500">{m.projectsNow} running</div>
+                </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{fmtMinutes(m.totalMinutes)}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums font-medium">{fmtUsd(m.valueCents)}{m.unpricedMinutes > 0 && <div className="text-xs font-normal text-zinc-500">+ {fmtMinutes(m.unpricedMinutes)} unpriced</div>}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{stars(m.weightedRating)}<div className="text-xs text-zinc-500">{m.ratedProjects ? `${m.ratedProjects} reviewed` : "no reviews"}</div></td>
+                <td className="px-4 py-2.5 text-right tabular-nums font-medium">
+                  {fmtUsd(m.valueCents)}
+                  {m.unpricedMinutes > 0 && <div className="text-xs font-normal text-zinc-500">+ {fmtMinutes(m.unpricedMinutes)} unpriced</div>}
+                </td>
+                <td className="px-4 py-2.5 text-right tabular-nums">
+                  {stars(m.weightedRating)}
+                  <div className="text-xs text-zinc-500">{m.ratedProjects ? `${m.ratedProjects} reviewed` : "no reviews"}</div>
+                </td>
                 <td className="px-4 py-2.5 text-right text-zinc-500">{m.lastReport ? fmtLongDay(m.lastReport) : "—"}</td>
               </tr>
             ))}
@@ -61,8 +76,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         </table>
       </div>
       <p className="text-xs text-zinc-500">
-        Average review = each reviewed project&apos;s closing rating weighted by the member&apos;s hours on it. Value earned = hours × the project&apos;s hourly rate (fixed work with no rate at $15/h; hourly work with no rate is
-        left unpriced). Reported hours, not Upwork-verified.
+        Average review = each reviewed project&apos;s closing rating weighted by the member&apos;s hours on it. Value earned = hours × the project&apos;s hourly
+        rate (fixed work with no rate at $15/h; hourly work with no rate is left unpriced). Reported hours, not Upwork-verified.
       </p>
     </div>
   );

@@ -20,8 +20,20 @@ export function CountriesTab({ data }: { data: SalesSummary }) {
   const columns: TableColumn<CountryRow>[] = [
     { key: "country", header: "Country", render: (r) => <span className="font-medium">{countryName(r.country)}</span>, sortValue: (r) => r.country },
     { key: "sales", header: "Sales", render: (r) => <SalesCell m={r} />, sortValue: (r) => r.netSales, className: "text-right" },
-    { key: "share", header: "Share of sales", render: (r) => <span className="tabular-nums">{shareOf(r.netSales, total)}</span>, sortValue: (r) => r.netSales, className: "text-right" },
-    { key: "gross", header: "Revenue", render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>, sortValue: (r) => r.gross, className: "text-right" },
+    {
+      key: "share",
+      header: "Share of sales",
+      render: (r) => <span className="tabular-nums">{shareOf(r.netSales, total)}</span>,
+      sortValue: (r) => r.netSales,
+      className: "text-right",
+    },
+    {
+      key: "gross",
+      header: "Revenue",
+      render: (r) => <span className="tabular-nums">{formatMoney(r.gross)}</span>,
+      sortValue: (r) => r.gross,
+      className: "text-right",
+    },
   ];
   return (
     <section className="flex flex-col gap-3">

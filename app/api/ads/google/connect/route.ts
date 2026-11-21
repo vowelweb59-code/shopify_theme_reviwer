@@ -6,7 +6,12 @@ import { adsReturnUrl } from "@/lib/ads/oauthReturn";
 // GET /api/ads/google/connect: starts the Google Ads consent flow (navigated to, not fetched).
 export async function GET(request: Request) {
   if (!isAdsConfigured()) {
-    return NextResponse.redirect(adsReturnUrl(request.url, { ads: "error", adsError: "Google Ads isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL)." }));
+    return NextResponse.redirect(
+      adsReturnUrl(request.url, {
+        ads: "error",
+        adsError: "Google Ads isn't configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL).",
+      })
+    );
   }
   const state = createOAuthState();
   const response = NextResponse.redirect(buildAdsAuthUrl(state));

@@ -39,8 +39,7 @@ export function AnalyticsShell({ children }: { children: ReactNode }) {
       <div>
         <h1 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Analytics</h1>
         <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-          Try Theme clicks and theme installs, from each theme&apos;s GA4 property. Figures are read from the synced copy in this app, not
-          live from GA4.
+          Try Theme clicks and theme installs, from each theme&apos;s GA4 property. Figures are read from the synced copy in this app, not live from GA4.
         </p>
       </div>
 
@@ -62,7 +61,10 @@ export function AnalyticsShell({ children }: { children: ReactNode }) {
           <DashboardControls params={params} onChange={setParams} themes={themeOptions} />
           <FilterBar params={params} onChange={setParams} />
 
-          <nav aria-label="Analytics sections" className="-mb-2 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border-subtle [scrollbar-width:none]">
+          <nav
+            aria-label="Analytics sections"
+            className="-mb-2 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border-subtle [scrollbar-width:none]"
+          >
             {ANALYTICS_SECTIONS.map((s) => {
               const active = pathname === s.href;
               return (

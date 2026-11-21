@@ -33,14 +33,25 @@ export async function buildAttendanceReport(month: string) {
   const to = new Date(`${last}T00:00:00Z`);
 
   const [serviceEntries, themeEntries, members, messages, sync] = await Promise.all([
-    ServiceTimeEntry.find({ entryDate: { $gte: from, $lte: to } }).select("-_id senderExternalId entryDate").lean<{ senderExternalId: string; entryDate: Date }[]>(),
-    TimeEntry.find({ date: { $gte: from, $lte: to } }).select("-_id memberId date").lean<{ memberId: { toString(): string }; date: Date }[]>(),
+    ServiceTimeEntry.find({ entryDate: { $gte: from, $lte: to } })
+      .select("-_id senderExternalId entryDate")
+      .lean<{ senderExternalId: string; entryDate: Date }[]>(),
+    TimeEntry.find({ date: { $gte: from, $lte: to } })
+      .select("-_id memberId date")
+      .lean<{ memberId: { toString(): string }; date: Date }[]>(),
     TeamMember.find({}).select("name aliases").lean<{ _id: { toString(): string }; name: string; aliases?: string[] }[]>(),
-    AttendanceMessage.find({ postedAt: { $gte: new Date(from.getTime() - (LEAVE_LOOKBACK_DAYS - LOOKBACK_DAYS) * 86_400_000) } }).sort({ postedAt: 1 }).select("-_id text mentions postedAt senderName").lean<{ text: string; mentions: { start: number; length: number; displayName: string | null }[]; postedAt: Date; senderName: string }[]>(),
-    AttendanceSync.findOne({ key: "attendance" }).select("-_id lastSyncAt lastCount lastError lastWindowFrom").lean<{ lastSyncAt: Date | null; lastCount: number; lastError: string | null; lastWindowFrom: Date | null } | null>(),
+    AttendanceMessage.find({ postedAt: { $gte: new Date(from.getTime() - (LEAVE_LOOKBACK_DAYS - LOOKBACK_DAYS) * 86_400_000) } })
+      .sort({ postedAt: 1 })
+      .select("-_id text mentions postedAt senderName")
+      .lean<{ text: string; mentions: { start: number; length: number; displayName: string | null }[]; postedAt: Date; senderName: string }[]>(),
+    AttendanceSync.findOne({ key: "attendance" })
+      .select("-_id lastSyncAt lastCount lastError lastWindowFrom")
+      .lean<{ lastSyncAt: Date | null; lastCount: number; lastError: string | null; lastWindowFrom: Date | null } | null>(),
   ]);
   const senderIds = [...new Set(serviceEntries.map((e) => e.senderExternalId))];
-  const senders = await ServiceChatSender.find({ externalId: { $in: senderIds } }).select("-_id externalId displayName").lean<{ externalId: string; displayName: string }[]>();
+  const senders = await ServiceChatSender.find({ externalId: { $in: senderIds } })
+    .select("-_id externalId displayName")
+    .lean<{ externalId: string; displayName: string }[]>();
 
   // People: theme members first (name and aliases), then service senders, merged when they are the same person.
   const people = new Map<string, PersonInput & { names: string[] }>();
@@ -82,7 +93,12 @@ export async function buildAttendanceReport(month: string) {
   const review: { postedAt: string; text: string; why: string }[] = [];
   let announcements = 0;
   for (const m of messages) {
-    const parsed = parseLeaveMessage(m.text, m.mentions, m.postedAt, list.flatMap((p) => p.names));
+    const parsed = parseLeaveMessage(
+      m.text,
+      m.mentions,
+      m.postedAt,
+      list.flatMap((p) => p.names)
+    );
     if (parsed.kind === "other") continue;
     if (parsed.kind === "unparsed") {
       review.push({ postedAt: m.postedAt.toISOString(), text: m.text, why: parsed.why });

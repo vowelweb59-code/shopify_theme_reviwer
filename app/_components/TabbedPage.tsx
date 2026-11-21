@@ -113,9 +113,7 @@ export function TabbedPageClient({
                 type="button"
                 onClick={() => selectTab(t.id)}
                 className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === t.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                  activeTab === t.id ? "border-primary text-primary" : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
                 }`}
               >
                 {t.label}

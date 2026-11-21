@@ -39,7 +39,12 @@ export function GoogleAdsTab() {
   }
 
   const columns: TableColumn<Account>[] = [
-    { key: "name", header: "Account", render: (a) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{a.name ?? "—"}</span>, sortValue: (a) => (a.name ?? "").toLowerCase() },
+    {
+      key: "name",
+      header: "Account",
+      render: (a) => <span className="font-medium text-zinc-950 dark:text-zinc-50">{a.name ?? "—"}</span>,
+      sortValue: (a) => (a.name ?? "").toLowerCase(),
+    },
     { key: "id", header: "Customer ID", render: (a) => <span className="tabular-nums">{formatId(a.id)}</span>, sortValue: (a) => a.id },
     { key: "type", header: "Type", render: (a) => (a.manager ? "Manager (MCC)" : "Ad account"), sortValue: (a) => (a.manager ? 0 : 1) },
     { key: "currency", header: "Currency", render: (a) => a.currency ?? "—", sortValue: (a) => a.currency ?? "" },
@@ -50,19 +55,25 @@ export function GoogleAdsTab() {
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Google Ads</h2>
       <p className="max-w-3xl text-sm text-zinc-500">
-        Connect the Google account that has access to your Google Ads accounts. The app asks for access to Google Ads only, and you can disconnect here at any time.
+        Connect the Google account that has access to your Google Ads accounts. The app asks for access to Google Ads only, and you can disconnect here at any
+        time.
       </p>
 
       {outcome && <p className={`text-sm ${outcome.ok ? "text-green-600" : "text-status-fail-text"}`}>{outcome.text}</p>}
       {error && <p className="text-sm text-status-fail-text">{error}</p>}
       {data && !data.configured && (
-        <p className="text-sm text-status-fail-text">Google isn&apos;t configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL).</p>
+        <p className="text-sm text-status-fail-text">
+          Google isn&apos;t configured on this server (GOOGLE_CLIENT_ID/SECRET, ANALYTICS_TOKEN_ENCRYPTION_KEY, APP_URL).
+        </p>
       )}
 
       {!loading && data && !data.connected && (
         <div className="flex flex-col items-start gap-2">
           {data.error && <p className="text-sm text-status-fail-text">{data.error}</p>}
-          <a href="/api/ads/google/connect" className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90">
+          <a
+            href="/api/ads/google/connect"
+            className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+          >
             <Megaphone className="mr-1.5 h-4 w-4" aria-hidden />
             Connect Google Ads
           </a>
@@ -83,8 +94,18 @@ export function GoogleAdsTab() {
             </a>
           </div>
           {data.error && <p className="text-sm text-status-fail-text">{data.error}</p>}
-          {data.accounts && data.accounts.length > 0 && <ResponsiveTable columns={columns} rows={data.accounts} rowKey={(a) => a.id} theadClassName="bg-primary-tint text-primary-tint-text" pageSize={25} />}
-          {data.accounts && data.accounts.length === 0 && !data.error && <p className="text-sm text-zinc-500">This Google account can&apos;t open any Google Ads accounts.</p>}
+          {data.accounts && data.accounts.length > 0 && (
+            <ResponsiveTable
+              columns={columns}
+              rows={data.accounts}
+              rowKey={(a) => a.id}
+              theadClassName="bg-primary-tint text-primary-tint-text"
+              pageSize={25}
+            />
+          )}
+          {data.accounts && data.accounts.length === 0 && !data.error && (
+            <p className="text-sm text-zinc-500">This Google account can&apos;t open any Google Ads accounts.</p>
+          )}
         </>
       )}
     </section>

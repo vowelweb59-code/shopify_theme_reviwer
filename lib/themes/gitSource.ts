@@ -41,7 +41,13 @@ export function gitTokenStatus(env: NodeJS.ProcessEnv): string {
   if (raw === undefined) return "GIT_ACCESS_TOKEN is not set: private repositories will fail (public ones still clone).";
   const token = raw.trim();
   if (!token) return "GIT_ACCESS_TOKEN is set but empty.";
-  const kind = token.startsWith("github_pat_") ? "fine-grained token" : token.startsWith("ghp_") ? "classic token" : token.startsWith("gh") ? "GitHub token" : "unrecognised format";
+  const kind = token.startsWith("github_pat_")
+    ? "fine-grained token"
+    : token.startsWith("ghp_")
+      ? "classic token"
+      : token.startsWith("gh")
+        ? "GitHub token"
+        : "unrecognised format";
   const problems = [
     /^["']|["']$/.test(token) ? "wrapped in quotes" : "",
     /\s/.test(token) ? "contains whitespace" : "",
@@ -54,11 +60,15 @@ export function gitTokenStatus(env: NodeJS.ProcessEnv): string {
 function gitFailureReason(err: unknown): string {
   const e = err as NodeJS.ErrnoException & { stderr?: string };
   if (e.code === "ENOENT") return "git is not installed on the server.";
-  const lines = String(e.stderr ?? e.message).split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = String(e.stderr ?? e.message)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   return (lines.filter((l) => /^(fatal|error|remote):/i.test(l)).join(" ") || lines[lines.length - 1] || "unknown error").slice(0, 300);
 }
 
-export type GitTestResult = { ok: true; branch: string; commit: string; hasThemeRoot: boolean; tokenSent: boolean } | { ok: false; error: string; tokenSent: boolean };
+export type GitTestResult =
+  { ok: true; branch: string; commit: string; hasThemeRoot: boolean; tokenSent: boolean } | { ok: false; error: string; tokenSent: boolean };
 
 /**
  * Checks a repository the way the audit will read it, without downloading the files: `git ls-remote` (URL, access, branch), then a
@@ -81,7 +91,10 @@ export async function testGitSource(repoUrl: string, branch: string | null): Pro
   }
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "theme-git-test-"));
   try {
-    await run("git", ["clone", "--depth", "1", "--filter=blob:none", "--no-checkout", ...(branch ? ["--branch", branch] : []), "--", repoUrl, dir], { env, timeout: 120_000 });
+    await run("git", ["clone", "--depth", "1", "--filter=blob:none", "--no-checkout", ...(branch ? ["--branch", branch] : []), "--", repoUrl, dir], {
+      env,
+      timeout: 120_000,
+    });
     const { stdout } = await run("git", ["-C", dir, "ls-tree", "--name-only", "HEAD"], { env });
     const names = new Set(stdout.split("\n").map((l) => l.trim()));
     if (!branch) {

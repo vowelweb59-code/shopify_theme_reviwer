@@ -36,7 +36,13 @@ type Row = {
   assignments?: Array<{ userId: string; role: "MANAGER" | "EMPLOYEE" }>;
   /** Set by the overview, not stored: see "Moved to another department". */
   movedDept?: boolean;
-  contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null; weeklyLimitMinutes: number | null; fixedPriceCents: number | null; weeklyLimitHistory?: LimitStep[] } | null;
+  contract: {
+    type: "HOURLY" | "FIXED";
+    hourlyRateCents: number | null;
+    weeklyLimitMinutes: number | null;
+    fixedPriceCents: number | null;
+    weeklyLimitHistory?: LimitStep[];
+  } | null;
 };
 
 // Every contract made in the old app defaulted to HOURLY, so an hourly contract with no rate and no weekly quote has a type nobody
@@ -79,7 +85,10 @@ const monthBounds = (anchor: string) => {
   const [y, m] = anchor.split("-").map(Number);
   return { start: `${anchor.slice(0, 7)}-01`, end: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10) };
 };
-const shiftMonth = (anchor: string, by: number) => { const [y, m] = anchor.split("-").map(Number); return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10); };
+const shiftMonth = (anchor: string, by: number) => {
+  const [y, m] = anchor.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + by, 1)).toISOString().slice(0, 10);
+};
 
 const h1 = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { maximumFractionDigits: 1 });
 
@@ -103,7 +112,12 @@ function Segments({ items }: { items: Array<{ to: string; text: string; on: bool
   );
 }
 
-const DOT: Record<string, string> = { active: "bg-status-pass-icon", closed: "bg-status-info-icon", on_hold: "bg-status-warning-icon", all: "bg-status-not-tested-icon" };
+const DOT: Record<string, string> = {
+  active: "bg-status-pass-icon",
+  closed: "bg-status-info-icon",
+  on_hold: "bg-status-warning-icon",
+  all: "bg-status-not-tested-icon",
+};
 
 /** Status filter: one rounded group, the chosen status a raised pill with its colour dot and count (owner, 2026-11-18: make it look better; On hold second). */
 function Tabs({ items }: { items: Array<{ id: string; to: string; text: string; on: boolean; count: number }> }) {
@@ -118,7 +132,11 @@ function Tabs({ items }: { items: Array<{ id: string; to: string; text: string; 
         >
           <span className={`h-2 w-2 rounded-full ${DOT[i.id]}`} aria-hidden="true" />
           {i.text}
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${i.on ? "bg-primary-tint text-primary-tint-text" : "bg-surface text-zinc-500"}`}>{i.count}</span>
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${i.on ? "bg-primary-tint text-primary-tint-text" : "bg-surface text-zinc-500"}`}
+          >
+            {i.count}
+          </span>
         </Link>
       ))}
     </nav>
@@ -154,7 +172,9 @@ function WeekCell({ minutes, limit, unit = "wk" }: { minutes: number; limit: num
     <div className="ml-auto w-36">
       <div className="flex justify-between text-xs tabular-nums">
         <span className={over ? "font-medium text-status-fail-text" : undefined}>{fmtMinutes(minutes)}</span>
-        <span className="text-zinc-500">of {h1(limit)}h{unit === "total" ? " total" : ""}</span>
+        <span className="text-zinc-500">
+          of {h1(limit)}h{unit === "total" ? " total" : ""}
+        </span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
         <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
@@ -182,7 +202,11 @@ function MoneyCell({ cents, scope }: { cents: number; scope: number | null }) {
   );
 }
 
-export default async function ServiceOverviewPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string; hold?: string }> }) {
+export default async function ServiceOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; status?: string; hours?: string; by?: string; on?: string; hold?: string }>;
+}) {
   const sp = await searchParams;
   const teamOnly = sp.hours === "team";
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
@@ -197,7 +221,14 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   ]);
   const userName = new Map(users.map((u) => [u._id, u.displayName]));
   const profileName = new Map(profiles.map((x) => [x._id, x.name]));
-  const who = (p: Row, role: string) => [...new Set(p.people.filter((x) => x.role === role).map((x) => (role === "BUSINESS_DEVELOPER" ? canonicalBd(x.name) : role === "BUSINESS_ANALYST" ? canonicalBa(x.name) : x.name)))].join(", ");
+  const who = (p: Row, role: string) =>
+    [
+      ...new Set(
+        p.people
+          .filter((x) => x.role === role)
+          .map((x) => (role === "BUSINESS_DEVELOPER" ? canonicalBd(x.name) : role === "BUSINESS_ANALYST" ? canonicalBa(x.name) : x.name))
+      ),
+    ].join(", ");
   const today = istDate(new Date());
   const countsFor = (sender: string) => !teamOnly || dmMatch(names.get(sender)) !== null;
   // Closed projects: what we took from the client, from all reported hours.
@@ -209,7 +240,11 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const lastAnyDay = new Map<string, string>();
   const lastDmDay = new Map<string, string>();
   const lastDmReport = new Map<string, string>();
-  const twoMonthsAgo = (() => { const d = new Date(`${today}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 2); return d.toISOString().slice(0, 10); })();
+  const twoMonthsAgo = (() => {
+    const d = new Date(`${today}T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() - 2);
+    return d.toISOString().slice(0, 10);
+  })();
   const dmActive = (name: string) => !dmHasLeft(name) && (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
   // All-time hours are needed for Closed (money), for fixed-price projects (hours used against the workable total) and for the team column.
   {
@@ -245,7 +280,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const movedCutoff = new Date(new Date(`${today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
   const all: Row[] = allRows.map((p) => {
     if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return p;
-    return (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p;
+    return (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff
+      ? { ...p, status: "ON_HOLD" as const, movedDept: true }
+      : p;
   });
   const ofType = all.filter(tab.match);
   const inStatus = ofType.filter(status.match);
@@ -262,7 +299,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const HOLD_KINDS = ["idle", "moved", "team", "waiting"] as const;
   const holdFilter = status.id === "on_hold" ? HOLD_KINDS.find((k) => k === sp.hold) : undefined;
   const per: Per = { by: byMonth ? "month" : undefined, on: isoDay(sp.on) ?? undefined, hold: holdFilter };
-  const periodName = byMonth ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }) : weekLabel(week);
+  const periodName = byMonth
+    ? new Date(`${week.start}T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })
+    : weekLabel(week);
   const unit = byMonth ? "month" : "week";
   const prevOn = byMonth ? shiftMonth(anchor, -1) : shiftWeek(week.start, -1);
   const nextOn = byMonth ? shiftMonth(anchor, 1) : shiftWeek(week.start, 1);
@@ -275,12 +314,16 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const limitOf = (p: Row) => (p.contract ? limitForPeriod(p.contract.weeklyLimitHistory ?? [], p.contract.weeklyLimitMinutes, week.start, week.end) : null);
 
   /** Why a project is on hold: nobody reported in the window, only others did, or the team did (held by hand / waiting for the next sync). */
-  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] => p.status === "WAITING_FOR_CLIENT" ? "waiting" : p.movedDept ? "moved" : (lastAnyDay.get(p._id) ?? "") < movedCutoff ? "idle" : "team";
+  const holdKindOf = (p: Row): (typeof HOLD_KINDS)[number] =>
+    p.status === "WAITING_FOR_CLIENT" ? "waiting" : p.movedDept ? "moved" : (lastAnyDay.get(p._id) ?? "") < movedCutoff ? "idle" : "team";
   const onHoldAll = status.id === "on_hold" ? inStatus : [];
   const holdCount = (k: (typeof HOLD_KINDS)[number]) => onHoldAll.filter((p) => holdKindOf(p) === k).length;
   const projects = holdFilter ? inStatus.filter((p) => holdKindOf(p) === holdFilter) : inStatus;
   const dmTeamOf = (p: Row): string[] => {
-    const byHours = [...(dmHours.get(p._id) ?? [])].filter(([n, m]) => m > 0 && dmActive(n)).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    const byHours = [...(dmHours.get(p._id) ?? [])]
+      .filter(([n, m]) => m > 0 && dmActive(n))
+      .sort((a, b) => b[1] - a[1])
+      .map(([n]) => n);
     const seen = new Set(byHours.map((n) => dmMatch(n)));
     const listed = p.people.filter((x) => dmMatch(x.name) !== null && dmActive(x.name) && !seen.has(dmMatch(x.name))).map((x) => x.name);
     for (const n of listed) seen.add(dmMatch(n));
@@ -307,12 +350,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // scope grew and it is now charged at $15/h): no workable-hours cap, revenue = hours x that rate.
   const billedByHours = (p: Row) => kindOf(p) === "fixed" && p.contract?.hourlyRateCents != null;
   const fixedBudget = (p: Row) => (kindOf(p) === "fixed" && !billedByHours(p) ? workableMinutes(p.contract?.fixedPriceCents) : null);
-  const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? limitOf(p) ?? 0 : 0), 0);
+  const quotaMinutes = projects.reduce((n, p) => n + (fixedBudget(p) === null ? (limitOf(p) ?? 0) : 0), 0);
   // Amounts (owner, 2026-11-17: "revenue generated, total scope of work in amount and how much achieved, like the hours"):
   // hourly = this week's hours x the hourly rate against the weekly quota x the rate; fixed = hours used x $15 against the fixed price.
-  const rateOf = (p: Row) => (kindOf(p) === "fixed" && !billedByHours(p) ? STANDARD_RATE_CENTS : p.contract?.hourlyRateCents ?? null);
+  const rateOf = (p: Row) => (kindOf(p) === "fixed" && !billedByHours(p) ? STANDARD_RATE_CENTS : (p.contract?.hourlyRateCents ?? null));
   const scopeCents = (p: Row): number | null => {
-    if (kindOf(p) === "fixed") return billedByHours(p) ? null : p.contract?.fixedPriceCents ?? null;
+    if (kindOf(p) === "fixed") return billedByHours(p) ? null : (p.contract?.fixedPriceCents ?? null);
     const l = limitOf(p);
     const r = rateOf(p);
     return l !== null && r !== null ? Math.round((l / 60) * r) : null;
@@ -320,13 +363,15 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   const achievedCents = (p: Row): number => {
     const r = rateOf(p);
     if (r === null) return 0;
-    const m = kindOf(p) === "fixed" ? minutes.get(p._id) ?? 0 : thisWeek.get(p._id) ?? 0;
+    const m = kindOf(p) === "fixed" ? (minutes.get(p._id) ?? 0) : (thisWeek.get(p._id) ?? 0);
     return Math.round((m / 60) * r);
   };
   const hourlyInView = projects.filter((p) => kindOf(p) === "hourly");
   const revenueWeek = hourlyInView.reduce((n, p) => n + achievedCents(p), 0);
   const scopeWeek = hourlyInView.reduce((n, p) => n + (scopeCents(p) ?? 0), 0);
-  const fixedWeekCents = projects.filter((p) => kindOf(p) === "fixed").reduce((n, p) => n + Math.round(((thisWeek.get(p._id) ?? 0) / 60) * (rateOf(p) ?? 0)), 0);
+  const fixedWeekCents = projects
+    .filter((p) => kindOf(p) === "fixed")
+    .reduce((n, p) => n + Math.round(((thisWeek.get(p._id) ?? 0) / 60) * (rateOf(p) ?? 0)), 0);
   const overQuota = projects.filter((p) => {
     const f = fixedBudget(p);
     if (f !== null) return (minutes.get(p._id) ?? 0) > f;
@@ -340,7 +385,10 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
   // Highest money first in every view (owner, 2026-11-20), by the money taken in the SELECTED period: the period's hours x the project's
   // rate (hourly rate; fixed projects at their billed rate or the standard $15/h). Closed has no period (all-time view), so it is
   // ordered by Taken from client. Projects with no figure last, ties by name.
-  const periodCents = (p: Row) => { const r = rateOf(p); return r === null ? 0 : Math.round(((thisWeek.get(p._id) ?? 0) / 60) * r); };
+  const periodCents = (p: Row) => {
+    const r = rateOf(p);
+    return r === null ? 0 : Math.round(((thisWeek.get(p._id) ?? 0) / 60) * r);
+  };
   const moneyOf = (p: Row) => (showMoney ? takenCents(p) : periodCents(p)) ?? -1;
   const ranked = [...projects].sort((x, y) => moneyOf(y) - moneyOf(x) || x.name.localeCompare(y.name));
 
@@ -349,11 +397,35 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       {!showMoney && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Segments items={[{ to: h(tab.id, status.id, teamOnly, { on: per.on }), text: "Week", on: !byMonth }, { to: h(tab.id, status.id, teamOnly, { by: "month", on: per.on }), text: "Month", on: byMonth }]} />
-            <Link href={h(tab.id, status.id, teamOnly, { by: per.by, on: prevOn })} aria-label={`Previous ${unit}`} className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted">←</Link>
-            <span className="min-w-44 text-center text-sm font-medium">{periodName}{isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-xs text-primary-tint-text">now</span>}</span>
-            <Link href={h(tab.id, status.id, teamOnly, { by: per.by, on: nextOn })} aria-label={`Next ${unit}`} className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted">→</Link>
-            {!isCurrent && <Link href={h(tab.id, status.id, teamOnly, { by: per.by })} className="text-sm text-primary hover:underline">Back to this {unit}</Link>}
+            <Segments
+              items={[
+                { to: h(tab.id, status.id, teamOnly, { on: per.on }), text: "Week", on: !byMonth },
+                { to: h(tab.id, status.id, teamOnly, { by: "month", on: per.on }), text: "Month", on: byMonth },
+              ]}
+            />
+            <Link
+              href={h(tab.id, status.id, teamOnly, { by: per.by, on: prevOn })}
+              aria-label={`Previous ${unit}`}
+              className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted"
+            >
+              ←
+            </Link>
+            <span className="min-w-44 text-center text-sm font-medium">
+              {periodName}
+              {isCurrent && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-xs text-primary-tint-text">now</span>}
+            </span>
+            <Link
+              href={h(tab.id, status.id, teamOnly, { by: per.by, on: nextOn })}
+              aria-label={`Next ${unit}`}
+              className="rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm hover:bg-surface-muted"
+            >
+              →
+            </Link>
+            {!isCurrent && (
+              <Link href={h(tab.id, status.id, teamOnly, { by: per.by })} className="text-sm text-primary hover:underline">
+                Back to this {unit}
+              </Link>
+            )}
           </div>
           <form action="/service" method="get" className="flex items-center gap-2 text-sm">
             {tab.id !== DEFAULT_TAB && <input type="hidden" name="tab" value={tab.id} />}
@@ -361,8 +433,17 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             {teamOnly && <input type="hidden" name="hours" value="team" />}
             {byMonth && <input type="hidden" name="by" value="month" />}
             {holdFilter && <input type="hidden" name="hold" value={holdFilter} />}
-            <label className="text-zinc-500" htmlFor="jump-date">Jump to a date</label>
-            <input id="jump-date" type="date" name="on" defaultValue={anchor} max={today} className="rounded-md border border-border-subtle bg-surface px-2 py-1.5" />
+            <label className="text-zinc-500" htmlFor="jump-date">
+              Jump to a date
+            </label>
+            <input
+              id="jump-date"
+              type="date"
+              name="on"
+              defaultValue={anchor}
+              max={today}
+              className="rounded-md border border-border-subtle bg-surface px-2 py-1.5"
+            />
             <button className="rounded-md border border-border-subtle bg-surface px-3 py-1.5 hover:bg-surface-muted">Go</button>
           </form>
         </div>
@@ -388,12 +469,28 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             items={[
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: undefined }), text: `All on hold ${onHoldAll.length}`, on: !holdFilter },
               { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "idle" }), text: `No activity ${holdCount("idle")}`, on: holdFilter === "idle" },
-              { to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "moved" }), text: `Moved to another department ${holdCount("moved")}`, on: holdFilter === "moved" },
-              ...(holdCount("waiting") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "waiting" }), text: `Waiting for client ${holdCount("waiting")}`, on: holdFilter === "waiting" }] : []),
-              ...(holdCount("team") > 0 ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "team" }), text: `Team reported ${holdCount("team")}`, on: holdFilter === "team" }] : []),
+              {
+                to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "moved" }),
+                text: `Moved to another department ${holdCount("moved")}`,
+                on: holdFilter === "moved",
+              },
+              ...(holdCount("waiting") > 0
+                ? [
+                    {
+                      to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "waiting" }),
+                      text: `Waiting for client ${holdCount("waiting")}`,
+                      on: holdFilter === "waiting",
+                    },
+                  ]
+                : []),
+              ...(holdCount("team") > 0
+                ? [{ to: h(tab.id, "on_hold", teamOnly, { ...per, hold: "team" }), text: `Team reported ${holdCount("team")}`, on: holdFilter === "team" }]
+                : []),
             ]}
           />
-          <span className="text-xs text-zinc-500">30-day window. Moved to another department = other teams still report, none from your team for 30 days; No activity = nobody reported.</span>
+          <span className="text-xs text-zinc-500">
+            30-day window. Moved to another department = other teams still report, none from your team for 30 days; No activity = nobody reported.
+          </span>
         </div>
       )}
       {status.id === "on_hold" && <CloseFromPosts />}
@@ -401,17 +498,44 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
       {showMoney ? (
         <div className="grid gap-4 sm:grid-cols-3">
           <Kpi accent="info" label="Closed projects" value={projects.length.toLocaleString("en-IN")} />
-          <Kpi accent="warn" label="Average closing review" value={avgReview !== null ? <><span className="text-status-warning-icon">★</span> {avgReview.toFixed(1)}</> : "—"} note={`${rated.length} of ${projects.length} have a review`} />
-          <Kpi accent="pass" label="Taken from clients" value={fmtUsd(totalTaken)} note="Hourly: hours × rate. Fixed: the price. No rate or price counts as nothing." />
+          <Kpi
+            accent="warn"
+            label="Average closing review"
+            value={
+              avgReview !== null ? (
+                <>
+                  <span className="text-status-warning-icon">★</span> {avgReview.toFixed(1)}
+                </>
+              ) : (
+                "—"
+              )
+            }
+            note={`${rated.length} of ${projects.length} have a review`}
+          />
+          <Kpi
+            accent="pass"
+            label="Taken from clients"
+            value={fmtUsd(totalTaken)}
+            note="Hourly: hours × rate. Fixed: the price. No rate or price counts as nothing."
+          />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi accent="pass" label="Active projects" value={activeOfType.length.toLocaleString("en-IN")} note={`${counts(STATUS_TABS.find((x) => x.id === "on_hold")!)} on hold`} />
+          <Kpi
+            accent="pass"
+            label="Active projects"
+            value={activeOfType.length.toLocaleString("en-IN")}
+            note={`${counts(STATUS_TABS.find((x) => x.id === "on_hold")!)} on hold`}
+          />
           <Kpi
             accent="primary"
             label={`Hours ${isCurrent ? `this ${unit} ` : ""}· ${periodName}`}
             value={fmtMinutes(weekMinutes)}
-            note={quotaMinutes ? `of ${h1(quotaMinutes)}h ${unit === "week" ? "weekly" : "monthly"} quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%` : "No weekly quota set"}
+            note={
+              quotaMinutes
+                ? `of ${h1(quotaMinutes)}h ${unit === "week" ? "weekly" : "monthly"} quota · ${Math.round((weekMinutes / quotaMinutes) * 100)}%`
+                : "No weekly quota set"
+            }
           />
           <Kpi
             accent="info"
@@ -419,7 +543,12 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
             value={fmtUsd(revenueWeek)}
             note={`${scopeWeek ? `of ${fmtUsd(scopeWeek)} ${unit === "week" ? "weekly" : "monthly"} scope · ${Math.round((revenueWeek / scopeWeek) * 100)}%` : "No weekly scope set"}${fixedWeekCents ? ` · fixed: ${fmtUsd(fixedWeekCents)}` : ""}`}
           />
-          <Kpi accent={overQuota ? "fail" : "pass"} label="Over limit" value={overQuota.toLocaleString("en-IN")} note={overQuota ? `past the ${unit === "week" ? "weekly" : "monthly"} quota (hourly) or the workable hours (fixed)` : "none"} />
+          <Kpi
+            accent={overQuota ? "fail" : "pass"}
+            label="Over limit"
+            value={overQuota.toLocaleString("en-IN")}
+            note={overQuota ? `past the ${unit === "week" ? "weekly" : "monthly"} quota (hourly) or the workable hours (fixed)` : "none"}
+          />
         </div>
       )}
 
@@ -440,7 +569,9 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           <tbody className="divide-y divide-border-subtle">
             {projects.length === 0 && (
               <tr>
-                <td colSpan={showMoney ? 7 : 6} className="px-4 py-8 text-center text-zinc-500">No projects match these filters.</td>
+                <td colSpan={showMoney ? 7 : 6} className="px-4 py-8 text-center text-zinc-500">
+                  No projects match these filters.
+                </td>
               </tr>
             )}
             {ranked.map((p) => {
@@ -451,17 +582,44 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
               return (
                 <tr key={p._id} className="hover:bg-surface-muted/50">
                   <td className="px-4 py-2.5">
-                    <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">{p.name}</Link>
+                    <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
+                      {p.name}
+                    </Link>
                     <div className="text-xs text-zinc-500">
                       {(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}
-                      {p.movedDept && <span className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text" title="Other teams report on it, none from your team for 30 days. Its own status is unchanged.">⇄ Another department</span>}
-                      {p.status === "WAITING_FOR_CLIENT" && <span className="ml-2 rounded-full bg-status-info-bg px-2 py-0.5 text-[11px] font-medium text-status-info-text" title="Waiting for the client to reply">◔ Waiting for client</span>}
-                      {p.status === "PARTIAL_HOLD" && <span className="ml-2 rounded-full bg-status-warning-bg px-2 py-0.5 text-[11px] font-medium text-status-warning-text" title="Client on a break: still a live project, never put on hold automatically">◑ Partial hold</span>}
+                      {p.movedDept && (
+                        <span
+                          className="ml-2 rounded-full bg-primary-tint px-2 py-0.5 text-[11px] font-medium text-primary-tint-text"
+                          title="Other teams report on it, none from your team for 30 days. Its own status is unchanged."
+                        >
+                          ⇄ Another department
+                        </span>
+                      )}
+                      {p.status === "WAITING_FOR_CLIENT" && (
+                        <span
+                          className="ml-2 rounded-full bg-status-info-bg px-2 py-0.5 text-[11px] font-medium text-status-info-text"
+                          title="Waiting for the client to reply"
+                        >
+                          ◔ Waiting for client
+                        </span>
+                      )}
+                      {p.status === "PARTIAL_HOLD" && (
+                        <span
+                          className="ml-2 rounded-full bg-status-warning-bg px-2 py-0.5 text-[11px] font-medium text-status-warning-text"
+                          title="Client on a break: still a live project, never put on hold automatically"
+                        >
+                          ◑ Partial hold
+                        </span>
+                      )}
                     </div>
                     {(p.status === "ON_HOLD" || p.status === "WAITING_FOR_CLIENT") && (
                       <div className="text-xs text-zinc-400">
                         {lastAnyDay.get(p._id) ? `Last report ${fmtLongDay(lastAnyDay.get(p._id)!)}` : "No report yet"}
-                        {lastDmDay.get(p._id) && lastDmDay.get(p._id) !== lastAnyDay.get(p._id) ? ` · team ${fmtLongDay(lastDmDay.get(p._id)!)}` : lastAnyDay.get(p._id) && !lastDmDay.get(p._id) ? " · none from the team" : ""}
+                        {lastDmDay.get(p._id) && lastDmDay.get(p._id) !== lastAnyDay.get(p._id)
+                          ? ` · team ${fmtLongDay(lastDmDay.get(p._id)!)}`
+                          : lastAnyDay.get(p._id) && !lastDmDay.get(p._id)
+                            ? " · none from the team"
+                            : ""}
                       </div>
                     )}
                   </td>
@@ -488,25 +646,42 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                     ) : kind === "fixed" ? (
                       <>
                         <span className="rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary-tint-text">Fixed</span>
-                        <div className="mt-0.5 text-xs text-zinc-500">{billedByHours(p) ? `billed ${fmtUsd(c.hourlyRateCents!)}/h` : c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}</div>
+                        <div className="mt-0.5 text-xs text-zinc-500">
+                          {billedByHours(p) ? `billed ${fmtUsd(c.hourlyRateCents!)}/h` : c.fixedPriceCents != null ? fmtUsd(c.fixedPriceCents) : "no price"}
+                        </div>
                       </>
                     ) : kind === "hourly" ? (
                       <>
                         <span className="rounded-full bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-text">Hourly</span>
-                        <div className="mt-0.5 text-xs tabular-nums text-zinc-500">{c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "no rate"}</div>
+                        <div className="mt-0.5 text-xs tabular-nums text-zinc-500">
+                          {c.hourlyRateCents != null ? `${fmtUsd(c.hourlyRateCents)}/h` : "no rate"}
+                        </div>
                       </>
                     ) : (
-                      <span className="rounded-full bg-status-warning-bg px-2 py-0.5 text-xs font-medium text-status-warning-text" title="No rate or weekly quota entered: open the project to set Fixed or Hourly">Not set</span>
+                      <span
+                        className="rounded-full bg-status-warning-bg px-2 py-0.5 text-xs font-medium text-status-warning-text"
+                        title="No rate or weekly quota entered: open the project to set Fixed or Hourly"
+                      >
+                        Not set
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {/* Fixed projects (owner 2026-11-19): the period's work first, the total (or billed total) under it. */}
-                    {kind === "fixed" && !showMoney && <div className="mb-1 tabular-nums">{fmtMinutes(thisWeek.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span></div>}
+                    {kind === "fixed" && !showMoney && (
+                      <div className="mb-1 tabular-nums">
+                        {fmtMinutes(thisWeek.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span>
+                      </div>
+                    )}
                     {showMoney ? (
                       // Closed (owner, 2026-11-18): the total hours worked on the project over its life, not this week's.
-                      <div className="tabular-nums">{(minutes.get(p._id) ?? 0) > 0 ? fmtMinutes(minutes.get(p._id)!) : "—"} <span className="text-xs text-zinc-500">total</span></div>
+                      <div className="tabular-nums">
+                        {(minutes.get(p._id) ?? 0) > 0 ? fmtMinutes(minutes.get(p._id)!) : "—"} <span className="text-xs text-zinc-500">total</span>
+                      </div>
                     ) : billedByHours(p) ? (
-                      <div className="tabular-nums">{fmtMinutes(minutes.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">total, billed by hours</span></div>
+                      <div className="tabular-nums">
+                        {fmtMinutes(minutes.get(p._id) ?? 0)} <span className="text-xs text-zinc-500">total, billed by hours</span>
+                      </div>
                     ) : fixedBudget(p) !== null ? (
                       <WeekCell minutes={minutes.get(p._id) ?? 0} limit={fixedBudget(p)} unit="total" />
                     ) : (
@@ -516,13 +691,29 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
                   {!showMoney && (
                     <td className="px-4 py-2.5 text-right">
                       {/* Fixed projects (owner 2026-11-20): what the period's hours were worth on top, the all-time amount under it. */}
-                      {kind === "fixed" && <div className="mb-1 tabular-nums">{fmtUsd(periodCents(p))} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span></div>}
-                      {billedByHours(p) ? <div className="tabular-nums">{fmtUsd(achievedCents(p))} <span className="text-xs text-zinc-500">total</span></div> : <MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} />}
+                      {kind === "fixed" && (
+                        <div className="mb-1 tabular-nums">
+                          {fmtUsd(periodCents(p))} <span className="text-xs text-zinc-500">{isCurrent ? `this ${unit}` : `in this ${unit}`}</span>
+                        </div>
+                      )}
+                      {billedByHours(p) ? (
+                        <div className="tabular-nums">
+                          {fmtUsd(achievedCents(p))} <span className="text-xs text-zinc-500">total</span>
+                        </div>
+                      ) : (
+                        <MoneyCell cents={achievedCents(p)} scope={scopeCents(p)} />
+                      )}
                     </td>
                   )}
                   {showMoney && (
                     <td className="px-4 py-2.5 text-right tabular-nums">
-                      {p.reviewRating != null ? <span title={`${p.reviewRating.toFixed(1)} out of 5`}><span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}</span> : "—"}
+                      {p.reviewRating != null ? (
+                        <span title={`${p.reviewRating.toFixed(1)} out of 5`}>
+                          <span className="text-status-warning-icon">★</span> {p.reviewRating.toFixed(1)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   )}
                   {showMoney && <td className="px-4 py-2.5 text-right tabular-nums">{takenCents(p) != null ? fmtUsd(takenCents(p)!) : "—"}</td>}
@@ -532,7 +723,10 @@ export default async function ServiceOverviewPage({ searchParams }: { searchPara
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-zinc-500">Reported hours from the TIMER STATUS space, not Upwork-verified. {teamOnly ? "Only your Digital Marketing team's reports are counted." : "Everyone on a project counts."}</p>
+      <p className="text-xs text-zinc-500">
+        Reported hours from the TIMER STATUS space, not Upwork-verified.{" "}
+        {teamOnly ? "Only your Digital Marketing team's reports are counted." : "Everyone on a project counts."}
+      </p>
     </div>
   );
 }

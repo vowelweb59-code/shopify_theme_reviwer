@@ -11,7 +11,9 @@ type Facts = { onOpsStore: boolean; listed: boolean; why: string[] };
 async function loadFacts(): Promise<Map<string, Facts>> {
   const [themes, records] = await Promise.all([
     Theme.find().select("name themeStoreLive").lean<{ _id: unknown; name: string; themeStoreLive?: boolean | null }[]>(),
-    DemoStoreThemeRecord.find().select("store themeName schemaName themeStoreListed endedAt").lean<{ store?: string; themeName: string; schemaName?: string | null; themeStoreListed?: boolean | null; endedAt?: Date | null }[]>(),
+    DemoStoreThemeRecord.find()
+      .select("store themeName schemaName themeStoreListed endedAt")
+      .lean<{ store?: string; themeName: string; schemaName?: string | null; themeStoreListed?: boolean | null; endedAt?: Date | null }[]>(),
   ]);
   const out = new Map<string, Facts>();
   for (const theme of themes) {

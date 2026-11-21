@@ -40,7 +40,10 @@ function webpSize(buf: Buffer): { width: number; height: number } | null {
   const kind = buf.toString("latin1", 12, 16);
   if (kind === "VP8X") return { width: 1 + buf.readUIntLE(24, 3), height: 1 + buf.readUIntLE(27, 3) };
   if (kind === "VP8L") {
-    const b0 = buf[21], b1 = buf[22], b2 = buf[23], b3 = buf[24];
+    const b0 = buf[21],
+      b1 = buf[22],
+      b2 = buf[23],
+      b3 = buf[24];
     return { width: 1 + (((b1 & 0x3f) << 8) | b0), height: 1 + (((b3 & 0xf) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6)) };
   }
   if (kind === "VP8 ") return { width: buf.readUInt16LE(26) & 0x3fff, height: buf.readUInt16LE(28) & 0x3fff };

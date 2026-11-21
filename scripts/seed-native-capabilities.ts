@@ -39,11 +39,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { connectToDatabase } from "../lib/db/connect";
-import {
-  EnhancementPoint,
-  ENHANCEMENT_CATEGORIES,
-  NATIVE_CAPABILITY_COMPLETENESS,
-} from "../models/enhancement-point";
+import { EnhancementPoint, ENHANCEMENT_CATEGORIES, NATIVE_CAPABILITY_COMPLETENESS } from "../models/enhancement-point";
 import { tierForPercentage } from "../lib/enhancements/tiers";
 
 type Category = (typeof ENHANCEMENT_CATEGORIES)[number];
@@ -103,9 +99,7 @@ async function main() {
       throw new Error(`${cap.pointId}: unknown nativeCapabilityCompleteness "${cap.nativeCapabilityCompleteness}"`);
     }
     if (!/^https:\/\/(shopify\.dev|help\.shopify\.com)\//.test(cap.sourceUrl)) {
-      throw new Error(
-        `${cap.pointId}: sourceUrl must be a real shopify.dev or help.shopify.com page, got "${cap.sourceUrl}"`
-      );
+      throw new Error(`${cap.pointId}: sourceUrl must be a real shopify.dev or help.shopify.com page, got "${cap.sourceUrl}"`);
     }
 
     const trend = UNRELIABLE_ADOPTION_MEASUREMENT.has(cap.pointId) ? undefined : trendByPointId.get(cap.pointId);

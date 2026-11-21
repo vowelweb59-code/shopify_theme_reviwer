@@ -24,7 +24,16 @@ for (let d = "2026-08-01"; d <= "2026-09-24"; d = addDays(d, 1)) DAYS.push(d);
 function rowsFor(themeId: mongoose.Types.ObjectId, property: string, scale = 1) {
   const rows: Record<string, unknown>[] = [];
   const add = (date: string, breakdown: AggregateBreakdown, eventName: string, dims: Record<string, string>, eventCount: number) =>
-    rows.push({ analyticsThemeId: themeId, ga4PropertyId: property, date, breakdown, eventName, dims, dimsKey: buildDimsKey(breakdown, dims), metrics: { eventCount: eventCount * scale } });
+    rows.push({
+      analyticsThemeId: themeId,
+      ga4PropertyId: property,
+      date,
+      breakdown,
+      eventName,
+      dims,
+      dimsKey: buildDimsKey(breakdown, dims),
+      metrics: { eventCount: eventCount * scale },
+    });
   for (const date of DAYS) {
     add(date, "total", "add_to_cart", {}, 12);
     add(date, "total", "shopify_theme_install", {}, 2);
@@ -57,8 +66,22 @@ describe.skipIf(!uri)("GA4 analytics engine (MongoDB)", () => {
   beforeEach(async () => {
     await Promise.all([AnalyticsAggregate.deleteMany({}), AnalyticsTheme.deleteMany({})]);
     const [adorn, dynamic, , gravity] = await AnalyticsTheme.create([
-      { name: "Adorn", slug: "adorn", ga4PropertyId: ADORN_PROPERTY, ga4PropertyTimeZone: "UTC", connectionStatus: "connected", syncedThroughDate: "2026-09-24" },
-      { name: "Dynamic", slug: "dynamic", ga4PropertyId: DYNAMIC_PROPERTY, ga4PropertyTimeZone: "Asia/Kolkata", connectionStatus: "connected", syncedThroughDate: "2026-09-24" },
+      {
+        name: "Adorn",
+        slug: "adorn",
+        ga4PropertyId: ADORN_PROPERTY,
+        ga4PropertyTimeZone: "UTC",
+        connectionStatus: "connected",
+        syncedThroughDate: "2026-09-24",
+      },
+      {
+        name: "Dynamic",
+        slug: "dynamic",
+        ga4PropertyId: DYNAMIC_PROPERTY,
+        ga4PropertyTimeZone: "Asia/Kolkata",
+        connectionStatus: "connected",
+        syncedThroughDate: "2026-09-24",
+      },
       { name: "Flaunt", slug: "flaunt" },
       { name: "Gravity", slug: "gravity", ga4PropertyId: "333333333", ga4PropertyTimeZone: "UTC", connectionStatus: "connected", isActive: false },
     ]);

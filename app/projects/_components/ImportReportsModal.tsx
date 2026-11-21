@@ -9,7 +9,10 @@ type Summary = { created: number; alreadyImported: number; needsReview: { text: 
 const INPUT = "rounded-md border border-border-subtle bg-transparent px-3 py-2";
 
 /** Paste daily time reports from the Theme Status Group space; durations are suggested from them on each project. */
-type ChatStatus = { configured: boolean; connection: { email: string; status: "active" | "revoked"; lastSyncAt: string | null; lastError: string | null } | null };
+type ChatStatus = {
+  configured: boolean;
+  connection: { email: string; status: "active" | "revoked"; lastSyncAt: string | null; lastError: string | null } | null;
+};
 type SyncResult = Summary & { fetched: number; reports: number; connectedAs: string };
 type VerifyResult = {
   messagesInSpace: number;
@@ -128,7 +131,11 @@ export function ImportReportsModal({
     setError(null);
     setSummary(null);
     try {
-      const res = await fetch("/api/chat-reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ memberId, text }) });
+      const res = await fetch("/api/chat-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId, text }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "Failed to import the reports.");
@@ -144,7 +151,12 @@ export function ImportReportsModal({
   }
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} title="Import from Google Chat" description="Reads the daily time reports in the Theme Status Group space. Reports already imported are skipped.">
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Import from Google Chat"
+      description="Reads the daily time reports in the Theme Status Group space. Reports already imported are skipped."
+    >
       {notice && (
         <p role="status" className={`mb-3 text-sm ${notice.tone === "ok" ? "text-status-pass-text" : "text-status-fail-text"}`}>
           {notice.text}
@@ -159,7 +171,8 @@ export function ImportReportsModal({
         ) : chat.connection?.status === "active" ? (
           <>
             <p className="text-xs text-zinc-500">
-              Connected as {chat.connection.email}. {chat.connection.lastSyncAt ? `Last synced ${new Date(chat.connection.lastSyncAt).toLocaleString()}.` : "Not synced yet."}
+              Connected as {chat.connection.email}.{" "}
+              {chat.connection.lastSyncAt ? `Last synced ${new Date(chat.connection.lastSyncAt).toLocaleString()}.` : "Not synced yet."}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" size="sm" onClick={() => void handleSync()} loading={syncing}>
@@ -173,7 +186,10 @@ export function ImportReportsModal({
         ) : (
           <>
             {chat.connection && <p className="text-xs text-status-fail-text">{chat.connection.lastError ?? "The connection was revoked."}</p>}
-            <a href="/api/chat/google/connect" className="self-start rounded-md border border-border-subtle px-3 py-1.5 text-xs font-medium hover:bg-black/[.04] dark:hover:bg-white/[.06]">
+            <a
+              href="/api/chat/google/connect"
+              className="self-start rounded-md border border-border-subtle px-3 py-1.5 text-xs font-medium hover:bg-black/[.04] dark:hover:bg-white/[.06]"
+            >
               Connect Google Chat
             </a>
           </>
@@ -182,7 +198,8 @@ export function ImportReportsModal({
         {syncResult && (
           <div role="status" className="text-xs">
             <p className="text-status-pass-text">
-              Read {syncResult.fetched} message{syncResult.fetched === 1 ? "" : "s"}, found {syncResult.reports} report{syncResult.reports === 1 ? "" : "s"}: imported {syncResult.created}
+              Read {syncResult.fetched} message{syncResult.fetched === 1 ? "" : "s"}, found {syncResult.reports} report{syncResult.reports === 1 ? "" : "s"}:
+              imported {syncResult.created}
               {syncResult.alreadyImported > 0 ? `, ${syncResult.alreadyImported} already imported` : ""}.
             </p>
             {syncResult.needsReview.length > 0 && (
@@ -198,7 +215,10 @@ export function ImportReportsModal({
         )}
       </div>
       <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-subtle p-3 text-sm">
-        <p className="text-xs text-zinc-500">Reports marked &ldquo;Needs a look&rdquo; (unknown theme, no Theme Update project, poster not matched) can be re-checked after you fix the cause, without reading Chat again.</p>
+        <p className="text-xs text-zinc-500">
+          Reports marked &ldquo;Needs a look&rdquo; (unknown theme, no Theme Update project, poster not matched) can be re-checked after you fix the cause,
+          without reading Chat again.
+        </p>
         <div>
           <Button type="button" size="sm" variant="secondary" onClick={handleRecheck} loading={rechecking}>
             Re-check flagged reports
@@ -223,7 +243,9 @@ export function ImportReportsModal({
         )}
       </div>
       <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-subtle p-3 text-sm">
-        <p className="text-xs text-zinc-500">Compares every message in the space with the stored reports, and lists anything that was not imported. Nothing is changed.</p>
+        <p className="text-xs text-zinc-500">
+          Compares every message in the space with the stored reports, and lists anything that was not imported. Nothing is changed.
+        </p>
         <div>
           <Button type="button" size="sm" variant="secondary" onClick={handleVerify} loading={verifying}>
             Check that everything was imported
@@ -233,8 +255,8 @@ export function ImportReportsModal({
         {verify && (
           <div role="status" className="flex flex-col gap-1 text-xs">
             <p className="text-zinc-700 dark:text-zinc-300">
-              The space has {verify.messagesInSpace} messages ({verify.firstMessage} to {verify.lastMessage}): {verify.reportMessages} contain time reports, {verify.reportsInSpace} reports in all, and {verify.otherMessages} are other chat.
-              {" "}{verify.storedReports} reports are stored.
+              The space has {verify.messagesInSpace} messages ({verify.firstMessage} to {verify.lastMessage}): {verify.reportMessages} contain time reports,{" "}
+              {verify.reportsInSpace} reports in all, and {verify.otherMessages} are other chat. {verify.storedReports} reports are stored.
             </p>
             <p className={verify.missing.length === 0 ? "text-status-pass-text" : "text-status-fail-text"}>
               {verify.missing.length === 0 ? "Every report in the space is stored." : `${verify.missing.length} in the space are not stored:`}
@@ -253,7 +275,9 @@ export function ImportReportsModal({
                 ))}
               </ul>
             )}
-            {verify.storedNotInSpace > 0 && <p className="text-zinc-500">{verify.storedNotInSpace} stored reports are not in the space now (pasted by hand, or edited or deleted there).</p>}
+            {verify.storedNotInSpace > 0 && (
+              <p className="text-zinc-500">{verify.storedNotInSpace} stored reports are not in the space now (pasted by hand, or edited or deleted there).</p>
+            )}
             {verify.otherSamples.length > 0 && (
               <details>
                 <summary className="cursor-pointer text-zinc-500">Other messages in the space (not time reports)</summary>
@@ -272,54 +296,63 @@ export function ImportReportsModal({
       <details>
         <summary className="mb-3 cursor-pointer text-xs text-zinc-500">Or paste reports by hand</summary>
         <p className="mb-3 text-xs text-zinc-500">One person&apos;s reports at a time; a report starts at its Date line.</p>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">Posted by</span>
-          <select required value={memberId} onChange={(e) => setMemberId(e.target.value)} className={INPUT}>
-            <option value="" disabled>
-              Choose a team member…
-            </option>
-            {team.map((m) => (
-              <option key={m._id} value={m._id}>
-                {m.name}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Posted by</span>
+            <select required value={memberId} onChange={(e) => setMemberId(e.target.value)} className={INPUT}>
+              <option value="" disabled>
+                Choose a team member…
               </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">Reports</span>
-          <textarea required rows={8} value={text} onChange={(e) => setText(e.target.value)} className={`${INPUT} font-mono text-xs`} placeholder={"Date: 22-10-2026\nTheme Name: Kombat | Gaming Theme | Theme Studio\nMemo: Worked on the product page\nTimer: 08.30 hrs"} />
-        </label>
-        {error && <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>}
-        {summary && (
-          <div role="status" className="flex flex-col gap-2 text-sm">
-            <p className="text-status-pass-text">
-              Imported {summary.created} report{summary.created === 1 ? "" : "s"}
-              {summary.alreadyImported > 0 ? `; ${summary.alreadyImported} were already imported` : ""}.
-            </p>
-            {summary.needsReview.length > 0 && (
-              <div className="rounded-md border border-border-subtle p-3 text-xs">
-                <p className="mb-1 font-medium text-status-fail-text">Needs a look ({summary.needsReview.length}):</p>
-                <ul className="flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
-                  {summary.needsReview.map((r, i) => (
-                    <li key={i}>
-                      {r.reason} <span className="text-zinc-400">— {r.text.split("\n").find((l) => /theme/i.test(l)) ?? r.text.slice(0, 60)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              {team.map((m) => (
+                <option key={m._id} value={m._id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Reports</span>
+            <textarea
+              required
+              rows={8}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className={`${INPUT} font-mono text-xs`}
+              placeholder={"Date: 22-10-2026\nTheme Name: Kombat | Gaming Theme | Theme Studio\nMemo: Worked on the product page\nTimer: 08.30 hrs"}
+            />
+          </label>
+          {error && (
+            <div className="rounded-md border border-red-300 bg-status-fail-bg px-3 py-2 text-xs text-status-fail-text dark:border-red-900/50">{error}</div>
+          )}
+          {summary && (
+            <div role="status" className="flex flex-col gap-2 text-sm">
+              <p className="text-status-pass-text">
+                Imported {summary.created} report{summary.created === 1 ? "" : "s"}
+                {summary.alreadyImported > 0 ? `; ${summary.alreadyImported} were already imported` : ""}.
+              </p>
+              {summary.needsReview.length > 0 && (
+                <div className="rounded-md border border-border-subtle p-3 text-xs">
+                  <p className="mb-1 font-medium text-status-fail-text">Needs a look ({summary.needsReview.length}):</p>
+                  <ul className="flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
+                    {summary.needsReview.map((r, i) => (
+                      <li key={i}>
+                        {r.reason} <span className="text-zinc-400">— {r.text.split("\n").find((l) => /theme/i.test(l)) ?? r.text.slice(0, 60)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            <Button type="submit" loading={submitting}>
+              Import
+            </Button>
           </div>
-        )}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-          <Button type="submit" loading={submitting}>
-            Import
-          </Button>
-        </div>
-      </form>
+        </form>
       </details>
     </Modal>
   );

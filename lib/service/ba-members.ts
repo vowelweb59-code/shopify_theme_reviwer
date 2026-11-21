@@ -21,5 +21,5 @@ export const uniqueBa = (names: readonly string[]) => [...new Set(names.map(cano
 /** The BA a written name stands for, or null. */
 export function baMatch(written: string | null | undefined): (typeof BA_MEMBERS)[number] | null {
   const first = (written ?? "").trim().split(/\s+/)[0]?.toLowerCase();
-  return first ? BA_MEMBERS.find((b) => b.first === first) ?? null : null;
+  return first ? (BA_MEMBERS.find((b) => b.first === first) ?? null) : null;
 }

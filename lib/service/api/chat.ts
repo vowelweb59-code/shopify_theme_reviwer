@@ -38,11 +38,22 @@ export type ServiceChatStatus = {
 export async function chatStatus(): Promise<ServiceChatStatus> {
   const space = serviceChatSpace();
   const [conn, spaceRow] = await Promise.all([
-    ServiceChatConnection.findOne({ key: "service-chat" }).lean<{ status: string; updatedAt: Date; email: string; createdAt: Date; lastSyncAt: Date | null; lastError: string | null; lastResult: ServiceChatStatus["lastResult"] } | null>(),
+    ServiceChatConnection.findOne({ key: "service-chat" }).lean<{
+      status: string;
+      updatedAt: Date;
+      email: string;
+      createdAt: Date;
+      lastSyncAt: Date | null;
+      lastError: string | null;
+      lastResult: ServiceChatStatus["lastResult"];
+    } | null>(),
     ServiceChatSpace.findOne({ externalId: space }).select("_id").lean<{ _id: string } | null>(),
   ]);
   const checkpoints = spaceRow
-    ? await ServiceSyncCheckpoint.find({ spaceId: spaceRow._id }).sort({ month: -1 }).limit(12).lean<Array<{ month: string; completedAt: Date | null; updatedAt: Date }>>()
+    ? await ServiceSyncCheckpoint.find({ spaceId: spaceRow._id })
+        .sort({ month: -1 })
+        .limit(12)
+        .lean<Array<{ month: string; completedAt: Date | null; updatedAt: Date }>>()
     : [];
   return {
     configured: isServiceChatConfigured(),
@@ -53,7 +64,7 @@ export async function chatStatus(): Promise<ServiceChatStatus> {
     space,
     lastSyncAt: conn?.status === "active" && conn.lastSyncAt ? new Date(conn.lastSyncAt).toISOString() : null,
     lastError: conn?.lastError ?? null,
-    lastResult: conn?.status === "active" ? conn.lastResult ?? null : null,
+    lastResult: conn?.status === "active" ? (conn.lastResult ?? null) : null,
     months: checkpoints.map((c) => ({ month: c.month, syncedAt: (c.completedAt ?? c.updatedAt)?.toISOString() ?? null })),
   };
 }

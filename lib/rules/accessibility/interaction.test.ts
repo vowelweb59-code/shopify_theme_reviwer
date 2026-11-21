@@ -68,7 +68,8 @@ describe("A11Y-HOVER-ONLY-MENU-001", () => {
 
   it("flags a menu script that opens on mouseenter with no focus or key listener", () => {
     const findings = findingsFor("A11Y-HOVER-ONLY-MENU-001", {
-      "assets/menu.js": "document.querySelectorAll('.menu-item').forEach((el) => {\n  el.addEventListener('mouseenter', () => el.classList.add('is-open'));\n});",
+      "assets/menu.js":
+        "document.querySelectorAll('.menu-item').forEach((el) => {\n  el.addEventListener('mouseenter', () => el.classList.add('is-open'));\n});",
     });
     expect(findings).toHaveLength(1);
     expect(findings[0].lineNumber).toBe(2);
@@ -76,8 +77,7 @@ describe("A11Y-HOVER-ONLY-MENU-001", () => {
 
   it("does not flag a menu script that also handles focus", () => {
     const findings = findingsFor("A11Y-HOVER-ONLY-MENU-001", {
-      "assets/menu.js":
-        "el.addEventListener('mouseenter', open); // .menu-item\nel.addEventListener('focusin', open);",
+      "assets/menu.js": "el.addEventListener('mouseenter', open); // .menu-item\nel.addEventListener('focusin', open);",
     });
     expect(findings).toHaveLength(0);
   });
@@ -170,7 +170,7 @@ describe("A11Y-FOCUS-RESTORE-001", () => {
 describe("A11Y-OUTLINE-REMOVAL-001 (embedded CSS)", () => {
   it("flags outline: none inside a section's {% stylesheet %} with no focus replacement", () => {
     const findings = findingsFor("A11Y-OUTLINE-REMOVAL-001", {
-      "sections/hero.liquid": "<a class=\"hero__link\" href=\"/\">Go</a>\n{% stylesheet %}\n.hero__link { outline: none; }\n{% endstylesheet %}",
+      "sections/hero.liquid": '<a class="hero__link" href="/">Go</a>\n{% stylesheet %}\n.hero__link { outline: none; }\n{% endstylesheet %}',
     });
     expect(findings).toHaveLength(1);
     expect(findings[0].lineNumber).toBe(3);
@@ -178,8 +178,7 @@ describe("A11Y-OUTLINE-REMOVAL-001 (embedded CSS)", () => {
 
   it("does not flag when the same file styles :focus-visible for that selector", () => {
     const findings = findingsFor("A11Y-OUTLINE-REMOVAL-001", {
-      "sections/hero.liquid":
-        "<style>\n.hero__link { outline: none; }\n.hero__link:focus-visible { box-shadow: 0 0 0 2px; }\n</style>",
+      "sections/hero.liquid": "<style>\n.hero__link { outline: none; }\n.hero__link:focus-visible { box-shadow: 0 0 0 2px; }\n</style>",
     });
     expect(findings).toHaveLength(0);
   });

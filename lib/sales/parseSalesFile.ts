@@ -74,7 +74,10 @@ const HEADER_ALIASES: Record<string, string[]> = {
 };
 
 function norm(s: unknown): string {
-  return String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  return String(s ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
 }
 
 /** Splits CSV/TSV text into rows, honouring "quoted, fields" and escaped "" quotes. */
@@ -241,7 +244,8 @@ export function salesFromRows(rows: string[][], { headerOptional = false } = {})
     const cells = r.map(norm);
     return HEADER_ALIASES.date.some((a) => cells.includes(a)) && HEADER_ALIASES.shopDomain.some((a) => cells.includes(a));
   });
-  if (headerRow === -1 && !headerOptional) throw new SalesFileError('Couldn\'t find the header row — the sheet needs at least a "Date" and a "Shop Domain" column.');
+  if (headerRow === -1 && !headerOptional)
+    throw new SalesFileError('Couldn\'t find the header row — the sheet needs at least a "Date" and a "Shop Domain" column.');
 
   // Rows pasted without their header are read by content alone (date,
   // domain, charge type, money, country); shop name and the sheet's
@@ -255,7 +259,7 @@ export function salesFromRows(rows: string[][], { headerOptional = false } = {})
   let skipped = 0;
   for (const r of rows.slice(headerRow + 1)) {
     const cells = r.map((c) => String(c ?? "").trim());
-    const get = (i: number) => (i >= 0 ? cells[i] ?? "" : "");
+    const get = (i: number) => (i >= 0 ? (cells[i] ?? "") : "");
     if (cells.every((c) => !c)) continue; // blank line
 
     const soldAt = parseSaleDate(get(idx.date)) ?? parseSaleDate(cells.find((c) => /^\d{4}-\d{2}-\d{2}/.test(c)) ?? "");
@@ -310,7 +314,12 @@ export function salesFromRows(rows: string[][], { headerOptional = false } = {})
 export async function parseSalesFile(buffer: Buffer, fileName: string, themeName?: string): Promise<ParseResult> {
   if (!isXlsx(buffer, fileName)) return salesFromRows(parseDelimited(buffer.toString("utf8").replace(/^﻿/, "")));
   const sheets = await readWorkbook(buffer);
-  const named = themeName ? matchThemeForTab(themeName, sheets.map((s) => ({ ...s, name: s.name }))) : null;
+  const named = themeName
+    ? matchThemeForTab(
+        themeName,
+        sheets.map((s) => ({ ...s, name: s.name }))
+      )
+    : null;
   for (const sheet of named ? [named, ...sheets] : sheets) {
     try {
       return salesFromRows(sheet.rows);

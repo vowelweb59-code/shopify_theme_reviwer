@@ -3,7 +3,15 @@
 //   "Contract ended of Danisa with 3-star ratings on Rahul"
 // Owner, 2026-11-16: client - Upwork profile - hourly rate - BD | BA | (start date). Anything that does not read cleanly returns null and goes to a list for a person to check.
 export type NewProjectPost =
-  | { kind: "accepted"; client: string; hourlyRateCents: number | null; profile: string | null; businessDeveloper: string | null; businessAnalyst: string | null; startDate: Date | null }
+  | {
+      kind: "accepted";
+      client: string;
+      hourlyRateCents: number | null;
+      profile: string | null;
+      businessDeveloper: string | null;
+      businessAnalyst: string | null;
+      startDate: Date | null;
+    }
   | { kind: "ended"; client: string; rating: number | null; profile: string | null };
 
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -29,12 +37,23 @@ export function parseNewProjectPost(text: string, posted: Date): NewProjectPost 
     const rateIdx = parts.findIndex((p, i) => i > 0 && /^\$\s*\d/.test(p));
     const rate = rateIdx > 0 ? /\$\s*(\d+(?:\.\d+)?)/.exec(parts[rateIdx]) : null;
     const profile = rateIdx > 1 ? parts[1] : null;
-    const tail = (rateIdx > 0 ? parts.slice(rateIdx + 1).join(" - ") : parts.slice(1).join(" - ")).split("|").map((s) => s.trim()).filter(Boolean);
+    const tail = (rateIdx > 0 ? parts.slice(rateIdx + 1).join(" - ") : parts.slice(1).join(" - "))
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean);
     const last = tail[tail.length - 1];
     const startDate = last ? parseDayMonth(last, posted) : null;
     const people = startDate ? tail.slice(0, -1) : tail;
     const [businessDeveloper = null, businessAnalyst = null] = people;
-    return { kind: "accepted", client, hourlyRateCents: rate ? Math.round(parseFloat(rate[1]) * 100) : null, profile, businessDeveloper, businessAnalyst, startDate };
+    return {
+      kind: "accepted",
+      client,
+      hourlyRateCents: rate ? Math.round(parseFloat(rate[1]) * 100) : null,
+      profile,
+      businessDeveloper,
+      businessAnalyst,
+      startDate,
+    };
   }
   const end = /^contract ended (?:of|for)\s+(.+?)(?:\s+with\s+(\d(?:\.\d)?)[\s-]*stars?(?:\s+(?:ratings?|reviews?))?)?(?:\s+(?:on|by)\s+(.+))?$/i.exec(t);
   if (end) return { kind: "ended", client: end[1].trim(), rating: end[2] ? parseFloat(end[2]) : null, profile: end[3]?.trim() || null };

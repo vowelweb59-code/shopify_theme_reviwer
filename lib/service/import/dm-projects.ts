@@ -8,8 +8,17 @@ import { ServiceUser } from "@/models/service-user";
 
 export async function loadDmProjects(): Promise<DmProject[]> {
   const [projects, clients, users, senders] = await Promise.all([
-    ServiceProject.find({ clientId: { $ne: null } }).select("clientId chatKeywords people assignments")
-      .lean<Array<{ _id: string; clientId: string; chatKeywords: string[]; people: Array<{ name: string; senderId: string | null }>; assignments: Array<{ userId: string }> }>>(),
+    ServiceProject.find({ clientId: { $ne: null } })
+      .select("clientId chatKeywords people assignments")
+      .lean<
+        Array<{
+          _id: string;
+          clientId: string;
+          chatKeywords: string[];
+          people: Array<{ name: string; senderId: string | null }>;
+          assignments: Array<{ userId: string }>;
+        }>
+      >(),
     ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
     ServiceUser.find().select("displayName").lean<Array<{ _id: string; displayName: string }>>(),
     ServiceChatSender.find().select("displayName userId").lean<Array<{ _id: string; displayName: string; userId: string | null }>>(),

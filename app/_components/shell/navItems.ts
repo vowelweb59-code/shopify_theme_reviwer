@@ -1,4 +1,17 @@
-import { Activity, Briefcase, BarChart3, CalendarCheck, CalendarClock, DollarSign, FolderKanban, Palette, ShieldCheck, Store, Settings, Users } from "lucide-react";
+import {
+  Activity,
+  Briefcase,
+  BarChart3,
+  CalendarCheck,
+  CalendarClock,
+  DollarSign,
+  FolderKanban,
+  Palette,
+  ShieldCheck,
+  Store,
+  Settings,
+  Users,
+} from "lucide-react";
 
 export const NAV_ITEMS = [
   { href: "/themes", label: "Themes", icon: Palette },

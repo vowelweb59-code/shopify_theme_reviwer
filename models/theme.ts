@@ -63,7 +63,11 @@ const themeSchema = new Schema(
     demoStorePresets: { type: [themeDemoStorePresetSchema], default: () => [] },
     // Passwords of password-protected demo stores, one per store host, AES-256-GCM encrypted (lib/analytics/crypto.ts). Never
     // returned by a query unless asked for with select("+demoStorePasswords"): only the audit (lib/themes/demoPasswords.ts) does.
-    demoStorePasswords: { type: [new Schema({ host: { type: String, required: true }, password: { type: String, required: true } }, { _id: false })], default: () => [], select: false },
+    demoStorePasswords: {
+      type: [new Schema({ host: { type: String, required: true }, password: { type: String, required: true } }, { _id: false })],
+      default: () => [],
+      select: false,
+    },
     // Cached result of checking this theme's public Shopify Theme Store
     // listing (see lib/themes/themeStoreFeatures.ts) — a confirmatory-only
     // signal for AVAILABLE_FEATURES entries our own static/live detectors

@@ -8,7 +8,13 @@ import { runNextAutoAudit } from "./autoAudit";
 const CHECK_MS = intervalMs(process.env.THEME_AUTO_AUDIT_CHECK_MINUTES, 30);
 
 /** Called once from instrumentation.ts on server boot. */
-export const startThemeAutoAuditScheduler = createRepeatingJob("theme-auto-audit", "theme-auto-audit", CHECK_MS, async () => {
-  const name = await runNextAutoAudit();
-  if (name) console.log(`[theme-auto-audit] audited ${name}`);
-}, 180_000); // first run after boot is staggered so a wake from sleep is not one big burst
+export const startThemeAutoAuditScheduler = createRepeatingJob(
+  "theme-auto-audit",
+  "theme-auto-audit",
+  CHECK_MS,
+  async () => {
+    const name = await runNextAutoAudit();
+    if (name) console.log(`[theme-auto-audit] audited ${name}`);
+  },
+  180_000
+); // first run after boot is staggered so a wake from sleep is not one big burst

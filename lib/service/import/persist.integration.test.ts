@@ -15,11 +15,19 @@ const BASE = process.env.SERVICE_TEST_MONGODB_URI;
 const suite = BASE ? describe : describe.skip;
 
 const SPACE = "spaces/TEST";
-const msg = (id: string, at: string, text: string, sender = "users/1", name = "Asha Patel"): RawChatMessage => ({ externalId: `${SPACE}/messages/${id}`, senderExternalId: sender, senderName: name, postedAt: at, text });
+const msg = (id: string, at: string, text: string, sender = "users/1", name = "Asha Patel"): RawChatMessage => ({
+  externalId: `${SPACE}/messages/${id}`,
+  senderExternalId: sender,
+  senderName: name,
+  postedAt: at,
+  text,
+});
 const NOW = new Date("2026-10-20T12:00:00Z");
 
 async function importMonth(messages: RawChatMessage[]) {
-  const clients = clientRegistry((await ServiceClient.find().lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((c) => ({ id: c._id, name: c.name, aliases: c.aliases })));
+  const clients = clientRegistry(
+    (await ServiceClient.find().lean<Array<{ _id: string; name: string; aliases: string[] }>>()).map((c) => ({ id: c._id, name: c.name, aliases: c.aliases }))
+  );
   const spaces: SpaceInput[] = [{ externalId: SPACE, name: "Timer Status", type: "TIMER_STATUS", messages }];
   return persistPlan(planImport({ month: "2026-10", spaces, clients, now: NOW }), spaces);
 }
@@ -38,10 +46,7 @@ suite("service import persist (MongoDB)", () => {
     await mongoose.connection.dropDatabase();
   });
 
-  const day = [
-    msg("1", "2026-10-15T04:00:00Z", "Acme | Sapana - TIMER ON"),
-    msg("2", "2026-10-15T07:00:00Z", "Acme | Sapana - TIMER OFF"),
-  ];
+  const day = [msg("1", "2026-10-15T04:00:00Z", "Acme | Sapana - TIMER ON"), msg("2", "2026-10-15T07:00:00Z", "Acme | Sapana - TIMER OFF")];
 
   it("imports a timer pair once and is idempotent", async () => {
     await ServiceClient.create({ name: "Acme" });
@@ -69,7 +74,10 @@ suite("service import persist (MongoDB)", () => {
     const live = { type: "HOURLY", status: "ACTIVE" };
     const stacy = await ServiceProject.create({ name: "Stacy", clientId: client._id, status: "ACTIVE", chatKeywords: ["Stacy King"], contract: live });
     await ServiceProject.create({ name: "Mathew", clientId: client._id, status: "ACTIVE", chatKeywords: ["Mathew Gerson"], contract: live });
-    await importMonth([msg("1", "2026-10-15T04:00:00Z", "Stacy King (Mathew Gerson) | Sapana - TIMER ON"), msg("2", "2026-10-15T06:00:00Z", "Stacy King (Mathew Gerson) | Sapana - TIMER OFF")]);
+    await importMonth([
+      msg("1", "2026-10-15T04:00:00Z", "Stacy King (Mathew Gerson) | Sapana - TIMER ON"),
+      msg("2", "2026-10-15T06:00:00Z", "Stacy King (Mathew Gerson) | Sapana - TIMER OFF"),
+    ]);
     expect(await autoAssignProjects()).toBe(0); // already placed by the import's follow-ups
     expect((await ServiceTimeEntry.findOne().lean<{ projectId: string }>())!.projectId).toBe(stacy._id);
     const p = await ServiceProject.findById(stacy._id).lean<{ people: Array<{ role: string; name: string }> }>();

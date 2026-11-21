@@ -25,7 +25,17 @@ describe("listSpaceMessages", () => {
       new Map([["users/2", "Pranay Nimje"]]),
       fakeFetch(
         [
-          { messages: [{ name: "spaces/AAA/messages/1", text: "Date: 1-10-2026", createTime: "2026-10-02T00:00:00Z", sender: { name: "users/1", displayName: "Kunal Mendhe" } }], nextPageToken: "p2" },
+          {
+            messages: [
+              {
+                name: "spaces/AAA/messages/1",
+                text: "Date: 1-10-2026",
+                createTime: "2026-10-02T00:00:00Z",
+                sender: { name: "users/1", displayName: "Kunal Mendhe" },
+              },
+            ],
+            nextPageToken: "p2",
+          },
           {
             messages: [
               { name: "spaces/AAA/messages/2", text: "Date: 2-10-2026", createTime: "2026-10-03T00:00:00Z", sender: { name: "users/2" } },
@@ -47,14 +57,22 @@ describe("listSpaceMessages", () => {
   });
 
   it("reports Google's error without echoing the response body", async () => {
-    const failing = (async () => ({ ok: false, status: 403, json: async () => ({ error: { status: "PERMISSION_DENIED", message: "Chat API has not been used" } }) })) as unknown as typeof fetch;
+    const failing = (async () => ({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: { status: "PERMISSION_DENIED", message: "Chat API has not been used" } }),
+    })) as unknown as typeof fetch;
     await expect(listSpaceMessages("AAA", "token", null, new Map(), failing)).rejects.toThrow("403 PERMISSION_DENIED: Chat API has not been used");
   });
 });
 
 describe("listMemberNames", () => {
   it("maps user ids to display names", async () => {
-    const names = await listMemberNames("AAA", "token", fakeFetch([{ memberships: [{ member: { name: "users/1", displayName: "Kunal Mendhe" } }, { member: { name: "users/2" } }] }]));
+    const names = await listMemberNames(
+      "AAA",
+      "token",
+      fakeFetch([{ memberships: [{ member: { name: "users/1", displayName: "Kunal Mendhe" } }, { member: { name: "users/2" } }] }])
+    );
     expect([...names]).toEqual([["users/1", "Kunal Mendhe"]]);
   });
 });
@@ -81,8 +99,16 @@ describe("looksLikeReport: chatter and blank templates", () => {
 
 describe("looksLikeReport: the how-to-report posts", () => {
   it("does not treat the format guide as a report", () => {
-    expect(looksLikeReport("Date:- (DD-MM-YYYY) Theme Name:- Theme Name | Work Category Memo:- Description of work completed Timer:- H hrs There are 3 types of work reports.")).toBe(false);
-    expect(looksLikeReport("Date is mandatory. Always use DD-MM-YYYY format. Use exact theme names. Do not rename fields. Always use Date, Theme Name, Memo and Timer.")).toBe(false);
+    expect(
+      looksLikeReport(
+        "Date:- (DD-MM-YYYY) Theme Name:- Theme Name | Work Category Memo:- Description of work completed Timer:- H hrs There are 3 types of work reports."
+      )
+    ).toBe(false);
+    expect(
+      looksLikeReport(
+        "Date is mandatory. Always use DD-MM-YYYY format. Use exact theme names. Do not rename fields. Always use Date, Theme Name, Memo and Timer."
+      )
+    ).toBe(false);
   });
   it("still reads a real report that mentions a date", () => {
     expect(looksLikeReport("Date:- (24-10-2026)\nTheme Name:- Soft | Beauty\nMemo:- Fixed header\nTimer:- 2 hrs")).toBe(true);

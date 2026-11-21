@@ -54,7 +54,18 @@ const NULLABLE_FINDING_FIELDS = [
   "statusUpdatedAt",
 ] as const;
 
-const INDEXED_MODELS = [Finding, AuditRun, ThemeVersion, ThemeZip, ThemeRankHistory, EnhancementPoint, AnalyticsSync, AnalyticsAggregate, AnalyticsTheme, GoogleConnection];
+const INDEXED_MODELS = [
+  Finding,
+  AuditRun,
+  ThemeVersion,
+  ThemeZip,
+  ThemeRankHistory,
+  EnhancementPoint,
+  AnalyticsSync,
+  AnalyticsAggregate,
+  AnalyticsTheme,
+  GoogleConnection,
+];
 
 async function dbSizeMb() {
   const s = await mongoose.connection.db!.stats();
@@ -64,13 +75,17 @@ async function dbSizeMb() {
 async function main() {
   await connectToDatabase();
   const before = await dbSizeMb();
-  console.log(`${dryRun ? "[dry run] " : ""}Before: data ${before.data.toFixed(2)} MB, on disk ${before.storage.toFixed(2)} MB, indexes ${before.indexes.toFixed(2)} MB`);
+  console.log(
+    `${dryRun ? "[dry run] " : ""}Before: data ${before.data.toFixed(2)} MB, on disk ${before.storage.toFixed(2)} MB, indexes ${before.indexes.toFixed(2)} MB`
+  );
 
   // -1. GA4 analytics: only installs and Try Theme, in the kept breakdowns.
   const aggregates = mongoose.connection.db!.collection("analyticsaggregates");
   const unwanted = { $or: [{ eventName: { $nin: [...TRACKED_EVENTS] } }, { breakdown: { $nin: Object.keys(AGGREGATE_BREAKDOWNS) } }] };
   if (dryRun) {
-    console.log(`Analytics rows to delete (other events / dropped breakdowns): ${await aggregates.countDocuments(unwanted)} of ${await aggregates.estimatedDocumentCount()}`);
+    console.log(
+      `Analytics rows to delete (other events / dropped breakdowns): ${await aggregates.countDocuments(unwanted)} of ${await aggregates.estimatedDocumentCount()}`
+    );
   } else {
     const deleted = await aggregates.deleteMany(unwanted);
     console.log(`Deleted ${deleted.deletedCount} analytics rows (other events / dropped breakdowns)`);
@@ -83,7 +98,19 @@ async function main() {
     }
   }
   const OLD_METRICS = ["totalUsers", "activeUsers", "newUsers", "sessions"].map((m) => `metrics.${m}`);
-  const DIMS = ["country", "city", "deviceCategory", "browser", "operatingSystem", "sessionSource", "sessionMedium", "sessionCampaignName", "sessionDefaultChannelGroup", "landingPage", "pagePath"];
+  const DIMS = [
+    "country",
+    "city",
+    "deviceCategory",
+    "browser",
+    "operatingSystem",
+    "sessionSource",
+    "sessionMedium",
+    "sessionCampaignName",
+    "sessionDefaultChannelGroup",
+    "landingPage",
+    "pagePath",
+  ];
   const oldShape = { $or: [...OLD_METRICS.map((f) => ({ [f]: { $exists: true } })), ...DIMS.map((d) => ({ [`dims.${d}`]: { $type: "null" } }))] };
   const reshaped = await aggregates.countDocuments(oldShape);
   console.log(`Analytics rows to slim (old user/session metrics, null dimensions): ${reshaped}`);
@@ -111,7 +138,11 @@ async function main() {
       prunedFindings += r.findings;
     }
   }
-  console.log(dryRun ? `Audit runs to prune: ${prunedRuns} complete runs (plus older failed ones)` : `Pruned ${prunedRuns} audit runs and ${prunedFindings} findings (kept ${AUDIT_RUNS_KEPT_PER_THEME} per theme)`);
+  console.log(
+    dryRun
+      ? `Audit runs to prune: ${prunedRuns} complete runs (plus older failed ones)`
+      : `Pruned ${prunedRuns} audit runs and ${prunedFindings} findings (kept ${AUDIT_RUNS_KEPT_PER_THEME} per theme)`
+  );
 
   // 1. Snippets: re-cap long lines.
   const findings = mongoose.connection.db!.collection("findings");
@@ -133,7 +164,10 @@ async function main() {
 
   // 1b. Citations that repeat the rule's own.
   const citeOps: mongoose.mongo.AnyBulkWriteOperation[] = [];
-  for await (const doc of findings.find({ $or: [{ sourceReference: { $type: "string" } }, { sourceUrl: { $type: "string" } }] }, { projection: { ruleId: 1, sourceReference: 1, sourceUrl: 1 } })) {
+  for await (const doc of findings.find(
+    { $or: [{ sourceReference: { $type: "string" } }, { sourceUrl: { $type: "string" } }] },
+    { projection: { ruleId: 1, sourceReference: 1, sourceUrl: 1 } }
+  )) {
     const stripped = withoutRuleCitation(doc as unknown as { ruleId: string; sourceReference?: string | null; sourceUrl?: string | null });
     const unset: Record<string, ""> = {};
     if (!("sourceReference" in stripped) && doc.sourceReference != null) unset.sourceReference = "";

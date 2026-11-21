@@ -1,12 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  ADOPTION_TIERS,
-  TIER_THRESHOLDS,
-  TIER_ORDER,
-  TIER_LABELS,
-  TIER_BLURBS,
-  tierForPercentage,
-} from "./tiers";
+import { ADOPTION_TIERS, TIER_THRESHOLDS, TIER_ORDER, TIER_LABELS, TIER_BLURBS, tierForPercentage } from "./tiers";
 
 describe("tierForPercentage", () => {
   it("buckets the documented ranges", () => {

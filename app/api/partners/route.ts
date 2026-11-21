@@ -32,7 +32,9 @@ export async function GET() {
     ShopifyPartner.aggregate<{ _id: string; n: number }>([{ $unwind: "$countrySlugs" }, { $group: { _id: "$countrySlugs", n: { $sum: 1 } } }]),
   ]);
   return NextResponse.json({
-    countries: countries.map((c) => ({ slug: c._id, label: countryLabel(c._id), count: c.n })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
+    countries: countries
+      .map((c) => ({ slug: c._id, label: countryLabel(c._id), count: c.n }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
     detailsPending: partners.filter((p) => !p.detailAt).length,
     lastCrawledAt: partners.reduce<Date | null>((latest, p) => (!latest || p.lastSeenAt > latest ? p.lastSeenAt : latest), null),
     partners: partners.map((p) => ({

@@ -77,8 +77,18 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
     return map;
   }, [detail]);
 
-  if (loading) return <PageContainer><p className="text-sm text-zinc-500">Loading…</p></PageContainer>;
-  if (notFound || !detail) return <PageContainer><p className="text-sm text-zinc-500">Theme not found.</p></PageContainer>;
+  if (loading)
+    return (
+      <PageContainer>
+        <p className="text-sm text-zinc-500">Loading…</p>
+      </PageContainer>
+    );
+  if (notFound || !detail)
+    return (
+      <PageContainer>
+        <p className="text-sm text-zinc-500">Theme not found.</p>
+      </PageContainer>
+    );
 
   return (
     <PageContainer>
@@ -86,9 +96,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
       <TabbedPageClient
         title={detail.theme.name}
         titleAction={
-          detail.latestAudit && (
-            <DownloadReportDropdown auditRunId={detail.latestAudit._id} hasExistingSheet={Boolean(detail.theme.googleSheetUrl)} />
-          )
+          detail.latestAudit && <DownloadReportDropdown auditRunId={detail.latestAudit._id} hasExistingSheet={Boolean(detail.theme.googleSheetUrl)} />
         }
         defaultTabId=""
         orientation="vertical"
@@ -127,9 +135,7 @@ export function ThemeDetailTabs({ themeId }: { themeId: string }) {
           {
             id: "versions",
             label: "Versions",
-            content: (
-              <VersionsSection versions={detail.versions} latestVersionId={detail.latestVersion?._id ?? null} totalsByVersion={totalsByVersion} />
-            ),
+            content: <VersionsSection versions={detail.versions} latestVersionId={detail.latestVersion?._id ?? null} totalsByVersion={totalsByVersion} />,
           },
         ]}
       />

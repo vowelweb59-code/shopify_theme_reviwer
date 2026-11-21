@@ -52,7 +52,12 @@ function makeDataApi(ga4: FakeGa4): DataApi {
       runReport: (async ({ property, requestBody }: { property: string; requestBody: ReportRequest }) => {
         ga4.calls++;
         const [r] = requestBody.dateRanges!;
-        ga4.requests.push({ property, start: r.startDate!, end: r.endDate!, pageFiltered: JSON.stringify(requestBody.dimensionFilter ?? {}).includes("pagePath") });
+        ga4.requests.push({
+          property,
+          start: r.startDate!,
+          end: r.endDate!,
+          pageFiltered: JSON.stringify(requestBody.dimensionFilter ?? {}).includes("pagePath"),
+        });
         await ga4.onCall?.(ga4.calls);
         const failure = ga4.failures.find((f) => ga4.calls >= f.atCall && f.times > 0);
         if (failure) {
@@ -121,8 +126,22 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     };
   });
 
-  const job = (id: string) => AnalyticsSync.findById(id).lean<Record<string, unknown> & { status: string; cursorDate: string; chunksDone: number; attempt: number; nextRetryAt: Date | null; isActive?: boolean; error?: { code: string } }>();
-  const theme = () => AnalyticsTheme.findById(themeId).lean<Record<string, unknown> & { syncedThroughDate: string; historyStartDate: string; connectionStatus: string; lastSuccessfulSyncAt: Date | null }>();
+  const job = (id: string) =>
+    AnalyticsSync.findById(id).lean<
+      Record<string, unknown> & {
+        status: string;
+        cursorDate: string;
+        chunksDone: number;
+        attempt: number;
+        nextRetryAt: Date | null;
+        isActive?: boolean;
+        error?: { code: string };
+      }
+    >();
+  const theme = () =>
+    AnalyticsTheme.findById(themeId).lean<
+      Record<string, unknown> & { syncedThroughDate: string; historyStartDate: string; connectionStatus: string; lastSuccessfulSyncAt: Date | null }
+    >();
 
   it("initial sync stores the property's whole history, from its creation date", async () => {
     const { sync, done } = await startSync(themeId, "mapped", deps);
@@ -136,13 +155,17 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
 
     // Per breakdown per day: one row each for Try Theme and installs.
     expect(await AnalyticsAggregate.countDocuments()).toBe(days * BREAKDOWNS * 2);
-    const install = await AnalyticsAggregate.findOne({ date: "2026-08-15", breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: Record<string, number> }>();
+    const install = await AnalyticsAggregate.findOne({ date: "2026-08-15", breakdown: "total", eventName: "shopify_theme_install" }).lean<{
+      metrics: Record<string, number>;
+    }>();
     expect(install?.metrics).toEqual({ eventCount: 2 });
     expect(ga4.calls).toBe(3 * BREAKDOWNS);
   });
 
   it("incremental sync re-fetches only the trailing window, without duplicating rows", async () => {
-    await (await startSync(themeId, "mapped", deps)).done;
+    await (
+      await startSync(themeId, "mapped", deps)
+    ).done;
     const before = await AnalyticsAggregate.countDocuments();
     ga4.calls = 0;
 
@@ -154,16 +177,22 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
   });
 
   it("applies GA4 revisions and drops rows GA4 no longer returns, only inside the re-fetched window", async () => {
-    await (await startSync(themeId, "mapped", deps)).done;
+    await (
+      await startSync(themeId, "mapped", deps)
+    ).done;
     ga4.dims.country = "Nepal"; // GA4 re-attributed recent traffic
     ga4.installCount = 5;
-    await (await startSync(themeId, "manual", deps)).done;
+    await (
+      await startSync(themeId, "manual", deps)
+    ).done;
 
     const recent = addDays(TODAY, -1);
     const countries = await AnalyticsAggregate.distinct("dims.country", { breakdown: "country", date: recent });
     expect(countries).toEqual(["Nepal"]);
     expect(await AnalyticsAggregate.distinct("dims.country", { breakdown: "country", date: "2026-08-01" })).toEqual(["India"]);
-    const install = await AnalyticsAggregate.findOne({ date: recent, breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: { eventCount: number } }>();
+    const install = await AnalyticsAggregate.findOne({ date: recent, breakdown: "total", eventName: "shopify_theme_install" }).lean<{
+      metrics: { eventCount: number };
+    }>();
     expect(install?.metrics.eventCount).toBe(5);
   });
 
@@ -186,7 +215,13 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     await done;
 
     const queued = await job(sync.id);
-    expect(queued).toMatchObject({ status: "queued", chunksDone: 1, cursorDate: addDays("2026-07-01", CHUNK_DAYS), attempt: 1, error: { code: "unavailable" } });
+    expect(queued).toMatchObject({
+      status: "queued",
+      chunksDone: 1,
+      cursorDate: addDays("2026-07-01", CHUNK_DAYS),
+      attempt: 1,
+      error: { code: "unavailable" },
+    });
     expect(queued?.isActive).toBe(true); // still holds the lock
     expect(queued?.nextRetryAt).toEqual(new Date(NOW.getTime() + 5 * 60 * 1000));
     expect(retries).toEqual([{ syncId: sync.id, delayMs: 5 * 60 * 1000 }]);
@@ -223,13 +258,17 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
 
   it("lost access fails the job and flags the theme; a revoked token flags the account", async () => {
     ga4.failures.push({ atCall: 1, error: httpError(403, "PERMISSION_DENIED"), times: 1 });
-    await (await startSync(themeId, "mapped", deps)).done;
+    await (
+      await startSync(themeId, "mapped", deps)
+    ).done;
     expect((await theme())?.connectionStatus).toBe("error");
     expect(await AnalyticsSync.findOne().lean()).toMatchObject({ status: "failed", error: { code: "permission_denied" } });
 
     await AnalyticsTheme.updateOne({ _id: themeId }, { connectionStatus: "connected" });
     ga4.failures.push({ atCall: ga4.calls + 1, error: Object.assign(new Error(), { response: { data: { error: "invalid_grant" } } }), times: 1 });
-    await (await startSync(themeId, "manual", deps)).done;
+    await (
+      await startSync(themeId, "manual", deps)
+    ).done;
     expect((await GoogleConnection.findById(accountId).lean<{ status: string }>())?.status).toBe("revoked");
   });
 
@@ -244,7 +283,10 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done;
     // Simulate a job that died mid-run an hour ago.
-    await AnalyticsSync.collection.updateOne({ _id: new mongoose.Types.ObjectId(sync.id) }, { $set: { status: "running", isActive: true, cursorDate: "2026-08-30", chunksDone: 2, updatedAt: new Date(NOW.getTime() - 60 * 60 * 1000) } });
+    await AnalyticsSync.collection.updateOne(
+      { _id: new mongoose.Types.ObjectId(sync.id) },
+      { $set: { status: "running", isActive: true, cursorDate: "2026-08-30", chunksDone: 2, updatedAt: new Date(NOW.getTime() - 60 * 60 * 1000) } }
+    );
 
     expect(await recoverInterruptedSyncs(NOW)).toBe(1);
     ga4.calls = 0;
@@ -266,7 +308,14 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
   });
 
   async function schedulerScenario() {
-    const dynamic = await AnalyticsTheme.create({ name: "Dynamic", slug: "dynamic", googleConnectionId: accountId, ga4PropertyId: "222222222", ga4PropertyTimeZone: "Asia/Kolkata", connectionStatus: "connected" });
+    const dynamic = await AnalyticsTheme.create({
+      name: "Dynamic",
+      slug: "dynamic",
+      googleConnectionId: accountId,
+      ga4PropertyId: "222222222",
+      ga4PropertyTimeZone: "Asia/Kolkata",
+      connectionStatus: "connected",
+    });
     let step = 0;
     const tick = () => {
       const at = new Date(NOW.getTime() + step++ * 14 * 60 * 1000);
@@ -281,7 +330,17 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(await tick()).toMatchObject({ started: 1, themeId: dynamic._id.toString() });
 
     // A job already waiting (e.g. "Sync now") runs first; the rotation waits a step.
-    await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: PROPERTY, syncType: "manual", status: "queued", isActive: true, rangeStart: TODAY, rangeEnd: TODAY, cursorDate: TODAY, chunksTotal: 1 });
+    await AnalyticsSync.create({
+      analyticsThemeId: themeId,
+      ga4PropertyId: PROPERTY,
+      syncType: "manual",
+      status: "queued",
+      isActive: true,
+      rangeStart: TODAY,
+      rangeEnd: TODAY,
+      cursorDate: TODAY,
+      chunksTotal: 1,
+    });
     expect(await tick()).toEqual({ resumed: 1, started: 0, themeId: null });
 
     await GoogleConnection.updateOne({ _id: accountId }, { status: "revoked" });
@@ -333,7 +392,8 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
 
   it("a remap mid-sync cancels the old job and queues the new property's full sync, which purges the old rows", async () => {
     ga4.onCall = async (call) => {
-      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null, historyStartDate: null });
+      if (call === BREAKDOWNS)
+        await AnalyticsTheme.updateOne({ _id: themeId }, { ga4PropertyId: "987654321", syncedThroughDate: null, historyStartDate: null });
     };
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done; // the worker also runs the job queued for the new property
@@ -348,12 +408,18 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
   it("a page filter change mid-sync restarts the full history under the new filter; the old job never writes progress", async () => {
     ga4.onCall = async (call) => {
       // Mid-chunk (the chunk's last report): what Settings does when a filter is added.
-      if (call === BREAKDOWNS) await AnalyticsTheme.updateOne({ _id: themeId }, { pagePathPrefix: "/themes/adorn/", syncedThroughDate: null, historyStartDate: null });
+      if (call === BREAKDOWNS)
+        await AnalyticsTheme.updateOne({ _id: themeId }, { pagePathPrefix: "/themes/adorn/", syncedThroughDate: null, historyStartDate: null });
     };
     const { sync, done } = await startSync(themeId, "mapped", deps);
     await done;
     expect(await job(sync.id)).toMatchObject({ status: "cancelled", chunksDone: 1 });
-    const next = await AnalyticsSync.findOne({ _id: { $ne: sync.id } }).lean<{ status: string; pagePathPrefix: string; syncType: string; rangeStart: string }>();
+    const next = await AnalyticsSync.findOne({ _id: { $ne: sync.id } }).lean<{
+      status: string;
+      pagePathPrefix: string;
+      syncType: string;
+      rangeStart: string;
+    }>();
     // Full history again, not an incremental sync from the old job's progress.
     expect(next).toMatchObject({ status: "succeeded", pagePathPrefix: "/themes/adorn/", syncType: "initial", rangeStart: "2026-07-01" });
     expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, historyStartDate: "2026-07-01" });
@@ -377,16 +443,33 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
     expect(earlierDates.sort().at(-1)).toBe("2026-07-20");
     expect((await AnalyticsAggregate.distinct("date", { ga4PropertyId: PROPERTY })).sort()[0]).toBe("2026-07-21");
     // Installs on the earlier dates are estimated (this theme had all of that day's Try Theme clicks).
-    const install = await AnalyticsAggregate.findOne({ ga4PropertyId: "444444444", date: "2026-07-10", breakdown: "total", eventName: "shopify_theme_install" }).lean<{ metrics: { eventCount: number } }>();
+    const install = await AnalyticsAggregate.findOne({
+      ga4PropertyId: "444444444",
+      date: "2026-07-10",
+      breakdown: "total",
+      eventName: "shopify_theme_install",
+    }).lean<{ metrics: { eventCount: number } }>();
     expect(install?.metrics.eventCount).toBe(2);
     expect(await theme()).toMatchObject({ syncedThroughDate: TODAY, connectionStatus: "connected" });
   });
 
   it("a queued recent-days sync whose theme's history was reset meanwhile is replaced by a full history sync", async () => {
-    await (await startSync(themeId, "mapped", deps)).done;
+    await (
+      await startSync(themeId, "mapped", deps)
+    ).done;
     // Queued while synced, then the history is reset with the mapping ending up the same
     // (a filter changed and changed back): the snapshot matches, but the plan is stale.
-    const stale = await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: PROPERTY, syncType: "scheduled", status: "queued", isActive: true, rangeStart: "2026-09-21", rangeEnd: TODAY, cursorDate: "2026-09-21", chunksTotal: 1 });
+    const stale = await AnalyticsSync.create({
+      analyticsThemeId: themeId,
+      ga4PropertyId: PROPERTY,
+      syncType: "scheduled",
+      status: "queued",
+      isActive: true,
+      rangeStart: "2026-09-21",
+      rangeEnd: TODAY,
+      cursorDate: "2026-09-21",
+      chunksTotal: 1,
+    });
     await AnalyticsTheme.updateOne({ _id: themeId }, { syncedThroughDate: null, historyStartDate: null, lastSuccessfulSyncAt: null });
     await drainSyncQueue(deps);
     expect(await job(stale._id.toString())).toMatchObject({ status: "cancelled" });
@@ -396,10 +479,23 @@ describe.skipIf(!uri)("GA4 sync pipeline (MongoDB)", () => {
   });
 
   it("a queued job left over from an old mapping is cancelled and replaced, without marking the theme as broken", async () => {
-    const stale = await AnalyticsSync.create({ analyticsThemeId: themeId, ga4PropertyId: "555555555", syncType: "scheduled", status: "queued", isActive: true, rangeStart: "2026-09-20", rangeEnd: TODAY, cursorDate: "2026-09-20", chunksTotal: 1 });
+    const stale = await AnalyticsSync.create({
+      analyticsThemeId: themeId,
+      ga4PropertyId: "555555555",
+      syncType: "scheduled",
+      status: "queued",
+      isActive: true,
+      rangeStart: "2026-09-20",
+      rangeEnd: TODAY,
+      cursorDate: "2026-09-20",
+      chunksTotal: 1,
+    });
     await drainSyncQueue(deps);
     expect(await job(stale._id.toString())).toMatchObject({ status: "cancelled" });
-    expect(await AnalyticsSync.findOne({ _id: { $ne: stale._id } }).lean<{ status: string; ga4PropertyId: string }>()).toMatchObject({ status: "succeeded", ga4PropertyId: PROPERTY });
+    expect(await AnalyticsSync.findOne({ _id: { $ne: stale._id } }).lean<{ status: string; ga4PropertyId: string }>()).toMatchObject({
+      status: "succeeded",
+      ga4PropertyId: PROPERTY,
+    });
     expect(await theme()).toMatchObject({ connectionStatus: "connected", syncedThroughDate: TODAY });
   });
 });

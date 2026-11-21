@@ -12,7 +12,10 @@ export type StatusChange = { projectId: string; name: string; from: string; to: 
  * linked to it (the same scoping as lib/projects/loadTotals.ts). Returns what changed (with `dryRun`, what would).
  */
 export async function syncBuildStatuses(options: { dryRun?: boolean } = {}): Promise<StatusChange[]> {
-  const projects = await Project.find({ type: { $in: ["theme_development", "preset_development", null] }, status: { $in: ["planning", "under_designing", "under_development"] } })
+  const projects = await Project.find({
+    type: { $in: ["theme_development", "preset_development", null] },
+    status: { $in: ["planning", "under_designing", "under_development"] },
+  })
     .select("name themeId type status")
     .lean<{ _id: unknown; name: string; themeId: unknown; type?: string | null; status: string }[]>();
   if (projects.length === 0) return [];
@@ -34,7 +37,9 @@ export async function syncBuildStatuses(options: { dryRun?: boolean } = {}): Pro
   })
     .select("kind themeId projectId memberId")
     .lean<{ kind: string; themeId: unknown; projectId: unknown; memberId: unknown }[]>();
-  const members = await TeamMember.find({ _id: { $in: [...new Set(reports.map((r) => String(r.memberId)))] } }).select("designation").lean<{ _id: unknown; designation: string }[]>();
+  const members = await TeamMember.find({ _id: { $in: [...new Set(reports.map((r) => String(r.memberId)))] } })
+    .select("designation")
+    .lean<{ _id: unknown; designation: string }[]>();
   const designation = new Map(members.map((m) => [String(m._id), m.designation]));
 
   const changes: StatusChange[] = [];

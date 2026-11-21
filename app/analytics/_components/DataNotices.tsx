@@ -16,7 +16,11 @@ export function DataWarnings({ meta }: { meta: MetricsMeta }) {
         {meta.warnings.map((w) => (
           <li key={w}>{w}</li>
         ))}
-        {meta.mixedTimeZones && <li>These themes&apos; GA4 properties use different time zones, so &ldquo;today&rdquo; and other presets resolve to each property&apos;s own dates.</li>}
+        {meta.mixedTimeZones && (
+          <li>
+            These themes&apos; GA4 properties use different time zones, so &ldquo;today&rdquo; and other presets resolve to each property&apos;s own dates.
+          </li>
+        )}
       </ul>
     </div>
   );

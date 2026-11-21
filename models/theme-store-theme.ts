@@ -24,7 +24,10 @@ const themeStoreThemeSchema = new Schema(
     latestVersionReleasedAt: { type: String, default: null },
     features: { type: [String], default: [] },
     /** The app add-on the theme's page suggests ("Made for your theme"); null when it suggests none. */
-    companionApp: { type: { _id: false, name: String, subtitle: { type: String, default: null }, url: String, pricing: { type: String, default: null } }, default: null },
+    companionApp: {
+      type: { _id: false, name: String, subtitle: { type: String, default: null }, url: String, pricing: { type: String, default: null } },
+      default: null,
+    },
     /** When the theme's page was last checked for companionApp (null = not yet, so the next refresh reads the page again). */
     companionAppAt: { type: Date, default: null },
     detailAt: { type: Date, default: null },

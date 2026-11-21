@@ -13,8 +13,18 @@ describe("projectTotals", () => {
   });
 
   it("is null while there is nothing fixed and nothing reported, and works with only reports or only fixed days", () => {
-    expect(projectTotals({ designDays: null, developmentDays: null }, [])).toMatchObject({ designDays: null, developmentDays: null, spaceHours: 0, fixedHours: 0, totalHours: 0 });
-    expect(projectTotals({ designDays: null, developmentDays: null }, [{ minutes: 510, designation: "Shopify Developer" }])).toMatchObject({ designDays: null, developmentDays: 1, totalHours: 8.5 });
+    expect(projectTotals({ designDays: null, developmentDays: null }, [])).toMatchObject({
+      designDays: null,
+      developmentDays: null,
+      spaceHours: 0,
+      fixedHours: 0,
+      totalHours: 0,
+    });
+    expect(projectTotals({ designDays: null, developmentDays: null }, [{ minutes: 510, designation: "Shopify Developer" }])).toMatchObject({
+      designDays: null,
+      developmentDays: 1,
+      totalHours: 8.5,
+    });
     expect(projectTotals({ designDays: 10, developmentDays: null }, [])).toMatchObject({ designDays: 10, developmentDays: null, totalHours: 85 });
   });
 });

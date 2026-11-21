@@ -167,8 +167,8 @@ describe("extractVersionFromSettingsSchema", () => {
         "  ] },",
         "  // {",
         '  //   "name": "Gift wrapping",',
-        "  //   \"settings\": [",
-        "  //     { \"type\": \"checkbox\", \"id\": \"enable_gift_wrapping\" }",
+        '  //   "settings": [',
+        '  //     { "type": "checkbox", "id": "enable_gift_wrapping" }',
         "  //   ]",
         "  // },",
         "]",
@@ -179,9 +179,7 @@ describe("extractVersionFromSettingsSchema", () => {
 
   it("does not treat // inside a string value (e.g. a URL) as a comment", () => {
     const root = makeThemeDir({
-      "config/settings_schema.json": settingsSchema([
-        { name: "theme_info", theme_version: "1.1.6", theme_documentation_url: "https://example.com/docs/" },
-      ]),
+      "config/settings_schema.json": settingsSchema([{ name: "theme_info", theme_version: "1.1.6", theme_documentation_url: "https://example.com/docs/" }]),
     });
     expect(extractVersionFromSettingsSchema(root)).toEqual({ version: "1.1.6" });
   });

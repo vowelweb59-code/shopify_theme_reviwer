@@ -33,11 +33,7 @@ const RULE_STATUS_LABEL: Record<string, string> = {
 
 function SummaryCard({ label, value, tone }: { label: string; value: number; tone?: "warn" | "danger" }) {
   const color =
-    tone === "danger"
-      ? "text-red-700 dark:text-red-400"
-      : tone === "warn"
-        ? "text-amber-700 dark:text-amber-400"
-        : "text-zinc-950 dark:text-zinc-50";
+    tone === "danger" ? "text-red-700 dark:text-red-400" : tone === "warn" ? "text-amber-700 dark:text-amber-400" : "text-zinc-950 dark:text-zinc-50";
   return (
     <div>
       <div className={`text-2xl font-semibold ${color}`}>{value}</div>
@@ -83,8 +79,8 @@ export function MaintenanceContent() {
       <div>
         <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Maintenance</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          The control center for keeping the auditor itself accurate (phase-7 §23-24) — where coverage gaps, untested
-          rules, and the full requirement-to-rule traceability matrix are visible at a glance.
+          The control center for keeping the auditor itself accurate (phase-7 §23-24) — where coverage gaps, untested rules, and the full requirement-to-rule
+          traceability matrix are visible at a glance.
         </p>
       </div>
 

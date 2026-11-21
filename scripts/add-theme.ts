@@ -38,14 +38,20 @@ async function main(themeName: string) {
 
   const listing = await fetchThemeStoreFeatureLabels(theme?.name ?? themeName);
   if (listing.ok) {
-    console.log(`Theme Store: themes.shopify.com/themes/${listing.slug} found. ${listing.presets.length} presets (${listing.presets.map((p) => p.name).join(", ")}), ${listing.features.length} features, ${listing.reviewCount ?? "no"} reviews.`);
+    console.log(
+      `Theme Store: themes.shopify.com/themes/${listing.slug} found. ${listing.presets.length} presets (${listing.presets.map((p) => p.name).join(", ")}), ${listing.features.length} features, ${listing.reviewCount ?? "no"} reviews.`
+    );
   } else {
     console.log(`Theme Store: not read (${listing.error})`);
   }
 
   const slug = slugify(theme?.name ?? themeName);
   const analytics = await AnalyticsTheme.findOne({ slug });
-  console.log(analytics ? `Analytics: "${analytics.name}" already exists${analytics.ga4PropertyId ? ` (GA4 property ${analytics.ga4PropertyId}${analytics.pagePathPrefix ? `, pages ${analytics.pagePathPrefix}` : ""})` : ", not mapped to a GA4 property yet"}.` : `Analytics: "${themeName}" will be created, unmapped.`);
+  console.log(
+    analytics
+      ? `Analytics: "${analytics.name}" already exists${analytics.ga4PropertyId ? ` (GA4 property ${analytics.ga4PropertyId}${analytics.pagePathPrefix ? `, pages ${analytics.pagePathPrefix}` : ""})` : ", not mapped to a GA4 property yet"}.`
+      : `Analytics: "${themeName}" will be created, unmapped.`
+  );
 
   if (!apply) return console.log("\nDry run: nothing written. Pass --apply to do it.");
 

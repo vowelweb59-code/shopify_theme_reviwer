@@ -238,7 +238,12 @@ function ThemeForm({
                       // A property can be shared only by themes that all have page filters.
                       const others = p.mappedThemes.filter((t) => t.id !== theme?.id);
                       const blocked = others.some((t) => !t.pagePathPrefix);
-                      const label = others.length === 0 ? "" : blocked ? ` — used by ${others.map((t) => t.name).join(", ")}` : ` — shared with ${others.map((t) => `${t.name} (${t.pagePathPrefix})`).join(", ")}`;
+                      const label =
+                        others.length === 0
+                          ? ""
+                          : blocked
+                            ? ` — used by ${others.map((t) => t.name).join(", ")}`
+                            : ` — shared with ${others.map((t) => `${t.name} (${t.pagePathPrefix})`).join(", ")}`;
                       return (
                         <option key={p.propertyId} value={p.propertyId} disabled={blocked}>
                           {p.displayName} ({p.propertyId}){label}
@@ -263,7 +268,8 @@ function ThemeForm({
           spellCheck={false}
         />
         <span className="text-xs text-zinc-500">
-          Only for a GA4 property that also tracks other themes: counts just the pages starting with this path. Installs have no page, so they&apos;re estimated from this theme&apos;s share of Try Theme clicks. Changing it re-syncs the theme&apos;s history.
+          Only for a GA4 property that also tracks other themes: counts just the pages starting with this path. Installs have no page, so they&apos;re estimated
+          from this theme&apos;s share of Try Theme clicks. Changing it re-syncs the theme&apos;s history.
         </span>
       </label>
 
@@ -271,8 +277,8 @@ function ThemeForm({
         <fieldset className="flex flex-col gap-3 rounded-md border border-border-subtle p-3">
           <legend className="px-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">Earlier history (optional)</legend>
           <span className="text-xs text-zinc-500">
-            For a theme that used to be tracked in another theme&apos;s property: dates up to the last day below are read from that property (only
-            this theme&apos;s pages, with the filter), later dates from its own. Changing it re-syncs the theme&apos;s history.
+            For a theme that used to be tracked in another theme&apos;s property: dates up to the last day below are read from that property (only this
+            theme&apos;s pages, with the filter), later dates from its own. Changing it re-syncs the theme&apos;s history.
           </span>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Earlier GA4 property</span>
@@ -291,7 +297,14 @@ function ThemeForm({
             <>
               <label className="flex flex-col gap-1.5 text-sm">
                 <span className="text-zinc-700 dark:text-zinc-300">This theme&apos;s pages in it</span>
-                <input value={earlierPrefix} onChange={(e) => setEarlierPrefix(e.target.value)} maxLength={200} className={INPUT_CLASSES} placeholder="e.g. /themes/flaunt/" spellCheck={false} />
+                <input
+                  value={earlierPrefix}
+                  onChange={(e) => setEarlierPrefix(e.target.value)}
+                  maxLength={200}
+                  className={INPUT_CLASSES}
+                  placeholder="e.g. /themes/flaunt/"
+                  spellCheck={false}
+                />
               </label>
               <label className="flex flex-col gap-1.5 text-sm">
                 <span className="text-zinc-700 dark:text-zinc-300">Last day to read from it</span>
@@ -500,10 +513,22 @@ export function Ga4ThemesSection({ connections, configured }: { connections: Con
                       </Button>
                       {t.ga4PropertyId && (
                         <>
-                          <Button variant="secondary" size="sm" loading={busy[t.id] === "validate"} disabled={Boolean(busy[t.id])} onClick={() => act(t, "validate")}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            loading={busy[t.id] === "validate"}
+                            disabled={Boolean(busy[t.id])}
+                            onClick={() => act(t, "validate")}
+                          >
                             Validate
                           </Button>
-                          <Button variant="destructive" size="sm" loading={busy[t.id] === "disconnect"} disabled={Boolean(busy[t.id])} onClick={() => act(t, "disconnect")}>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            loading={busy[t.id] === "disconnect"}
+                            disabled={Boolean(busy[t.id])}
+                            onClick={() => act(t, "disconnect")}
+                          >
                             Disconnect
                           </Button>
                         </>
