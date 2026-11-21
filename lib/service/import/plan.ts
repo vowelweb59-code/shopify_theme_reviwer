@@ -296,6 +296,26 @@ export function planImport(input: PlanInput): ImportPlan {
     }
   }
 
+  // ---- 4b. owner rule (2026-11-21, Rupali on Racheal Francis, 16 Nov: the report said ON Timer 2:30, the timer messages gave 3:21 and the app
+  //          showed 3:21): when the ON figure(s) in the day's reports are LOWER than the timer hours (beyond the tolerance), the report
+  //          counts: the timer entries are cut down to the reported ON total. A report HIGHER than the timer still leaves the timer value. ----
+  const reportedOn = new Map<string, number>();
+  for (const { e, key } of manual) if (e.state !== 'REJECTED' && e.reportedOnTimerMinutes) reportedOn.set(key, (reportedOn.get(key) ?? 0) + e.reportedOnTimerMinutes);
+  for (const [key, on] of reportedOn) {
+    const total = timerTotals.get(key) ?? 0;
+    if (!total || on >= total || reconcileOnTimer(total, on)?.status !== 'MISMATCH') continue;
+    let left = on;
+    for (const [t, k] of timerKey) {
+      if (k !== key || t.state === 'REJECTED' || t.flags.includes('OPEN_INTERVAL') || t.flags.includes('ORPHAN_OFF')) continue;
+      const keep = Math.min(t.minutes, left);
+      left -= keep;
+      if (keep === t.minutes) continue;
+      t.minutes = keep;
+      t.notes.push('TIMER_CAPPED_TO_REPORT_ON');
+      if (keep === 0) { t.notes.push(AUTO_IGNORED); t.state = 'REJECTED'; }
+    }
+  }
+
   // ---- 5. owner rule: one person, one client, one day with BOTH timer hours and a manual report counts only one of them, the larger
   //         (a report's OFF-timer hours next to its own ON figure are extra work and are not part of this comparison) ----
   const counted = (e: PlannedEntry) => e.state !== 'REJECTED' && !e.flags.includes('OPEN_INTERVAL') && !e.flags.includes('ORPHAN_OFF') && !e.flags.includes('DUPLICATE_ON');

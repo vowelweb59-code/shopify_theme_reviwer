@@ -90,6 +90,29 @@ describe('month plan', () => {
     expect(p.entries.find((e) => e.source === 'MANUAL_REPORT')).toMatchObject({ minutes: 0, state: 'REJECTED', notes: expect.arrayContaining(['NOTHING_TO_COUNT']) });
   });
 
+  it('counts the report instead of the timer when its ON figure is lower than the timer (owner 2026-11-21)', () => {
+    const p = plan(master(
+      m('s8', '2026-10-23T10:00', 'Beta Ltd | Rahul - TIMER ON'),
+      m('s8', '2026-10-23T13:21', 'Beta Ltd | Rahul - TIMER OFF'),
+      m('s8', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 02:30 hrs\nMemo: x'),
+    ));
+    const timer = p.entries.find((e) => e.source === 'TIMER_CALCULATED' && e.senderExternalId === 's8')!;
+    expect(timer).toMatchObject({ minutes: 150, state: 'PARSED' });
+    expect(timer.notes).toContain('TIMER_CAPPED_TO_REPORT_ON');
+  });
+
+  it('cuts several timer intervals of the day down to the reported ON total, in order', () => {
+    const p = plan(master(
+      m('s10', '2026-10-23T09:00', 'Beta Ltd | Rahul - TIMER ON'),
+      m('s10', '2026-10-23T10:00', 'Beta Ltd | Rahul - TIMER OFF'),
+      m('s10', '2026-10-23T14:00', 'Beta Ltd | Rahul - TIMER ON'),
+      m('s10', '2026-10-23T16:00', 'Beta Ltd | Rahul - TIMER OFF'),
+      m('s10', '2026-10-23T19:00', 'Daily Report – 23/10/2026\nClient: Beta Ltd | Rahul\nON Timer: 01:30 hrs\nMemo: x'),
+    ));
+    const timers = p.entries.filter((e) => e.source === 'TIMER_CALCULATED' && e.senderExternalId === 's10');
+    expect(timers.map((t) => t.minutes)).toEqual([60, 30]);
+  });
+
   it('sets aside an ON with no OFF, and counts an ON figure that has no timer messages behind it as reported', () => {
     const p = plan(master(
       m('s3', '2026-10-23T09:00', 'Gamma Inc | Ali - TIMER ON'),
