@@ -7,8 +7,7 @@ import { ServiceProject } from "@/models/service-project";
 // it. Only the BD changes. Audit `projects.set_bd`. Dry run unless --apply (the owner runs it; it writes to the live database):
 //   npx tsx --env-file=.env.production.local scripts/set-project-bd.ts [--apply]
 //
-// Not here: Dan Staggs (not a Digital Marketing project: removed with scripts/service-remove-project.ts) and the 69 completed projects still
-// written "Aliasger" (not classified yet).
+// Not here: the 69 completed projects still written "Aliasger" (not classified yet).
 const EZZI = "Ali Asger Ezzi";
 const BAGICHAWALA = "Ali Asger Bagichawala";
 const ASSIGNMENTS: Array<{ project: string; bd: string | null; note?: string }> = [
@@ -23,6 +22,7 @@ const ASSIGNMENTS: Array<{ project: string; bd: string | null; note?: string }> 
   { project: "Ebru Coffee", bd: EZZI },
   { project: "Leesa McGregor", bd: EZZI, note: "read from \"Leesa Macregor - and Adina Las Vegas - Ezzi\": check" },
   { project: "Adina Las Vegas", bd: EZZI },
+  { project: "Dan Staggs", bd: "Mohit", note: "kept in the app (owner 2026-11-21), BD Mohit" },
 ];
 
 const apply = process.argv.includes("--apply");
