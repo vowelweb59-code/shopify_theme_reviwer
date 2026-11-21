@@ -63,6 +63,17 @@ describe('filterPlanToDigitalMarketing', () => {
     expect(out.entries[0]!.projectId).toBeUndefined();
   });
 
+  it("drops a team member's no-client entry for a client the owner declared not Digital Marketing, but never one with a matched client", () => {
+    const out = filterPlanToDigitalMarketing(
+      plan(
+        [msg('1', 'Himanshi Makheja'), msg('2', 'Himanshi Makheja'), msg('3', 'Himanshi Makheja'), msg('4', 'Himanshi Makheja')],
+        [entry('1', 'Himanshi Makheja', null, 'Sandra Rose'), entry('2', 'Himanshi Makheja', null, 'Kutaisi Airport Car Rental'), entry('3', 'Himanshi Makheja', 'andrew', 'Sandra Rose'), entry('4', 'Himanshi Makheja', null, 'Hajara Hussain | Direct')],
+      ),
+      [marketing],
+    );
+    expect(out.entries.map((e) => e.messageExternalId)).toEqual(['3', '4']);
+  });
+
   it('keeps the start message of a timer pair that is kept', () => {
     const p = plan([msg('on', 'Ravi Kumar'), msg('off', 'Ravi Kumar')], [entry('off', 'Ravi Kumar', 'andrew', 'Andrew Johnson', 'on')]);
     expect(filterPlanToDigitalMarketing(p, [marketing]).messages.map((m) => m.externalId)).toEqual(['on', 'off']);

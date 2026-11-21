@@ -19,6 +19,18 @@ import type { KnownClient } from "./client-match";
 import { normalizeName } from "./text";
 import type { ImportPlan, PlannedEntry } from "./plan";
 
+/**
+ * Client names the owner declared NOT Digital Marketing work (2026-11-18 to 11-21), written the way the team's reports spell them. A team member's
+ * report naming one of them, with no client matched, is dropped instead of waiting in Review: removing such entries by hand did not last, because
+ * their Chat messages stay (other reports share them) and every re-read or sync rebuilds the entries from those messages. Only entries with no
+ * client are dropped, so a client later created with that name is not affected. Hajara Hussain / Summur used to be on this list: she is a client now.
+ */
+export const NOT_DM_CLIENTS: readonly RegExp[] = [
+  /sandra ro(?:se|use)/i, /sandra\s*\|\s*zajal/i, /yahya sh/i, /stellar vloeren/i, /jay hwang/i, /siddhant doshi|dreamzhub/i,
+  /lily \(noma/i, /^s robert\b/i, /carl martin/i, /kutaisi airport/i,
+];
+export const isNotDmClient = (raw: string | null | undefined) => !!raw && NOT_DM_CLIENTS.some((re) => re.test(raw));
+
 export interface DmProject {
   id: string;
   clientId: string;
@@ -101,6 +113,7 @@ export function filterPlanToDigitalMarketing(plan: ImportPlan, dmProjects: reado
   const entries: PlannedEntry[] = [];
   for (const e of plan.entries) {
     if (dmMatch(e.senderName) !== null) {
+      if (!e.clientId && isNotDmClient(e.clientRaw)) continue;
       entries.push(e);
       continue;
     }
