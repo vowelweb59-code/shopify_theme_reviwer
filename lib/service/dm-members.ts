@@ -6,8 +6,8 @@ export const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", 
 /** Team members who have left the company (owner): still in DM_MEMBERS so their past hours keep counting, but never shown as a current member. */
 export const DM_LEFT = ["Priyanka Raut", "Batul"];
 
-/** Part-time availability (owner, 2026-11-21): the share of a full week a member works. Bhavesh works from home for half a day only. Anyone not listed works a full week. */
-export const DM_AVAILABILITY: Record<string, number> = { Bhavesh: 0.5 };
+/** Part-time availability (owner, 2026-11-21): the share of a full week a member works. Bhavesh and Hamza work half days only. Anyone not listed works a full week. */
+export const DM_AVAILABILITY: Record<string, number> = { Bhavesh: 0.5, Hamza: 0.5 };
 
 const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 
