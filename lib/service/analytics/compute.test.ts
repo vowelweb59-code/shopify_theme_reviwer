@@ -61,6 +61,19 @@ describe("computeAnalytics", () => {
     expect(half.capacityMinutes).toBe(5 * 360);
   });
 
+  it("counts one BD written two ways as one person", () => {
+    const r = computeAnalytics({
+      ...base,
+      projects: [
+        project({ id: "a", people: [{ role: "BUSINESS_DEVELOPER", name: "Aliasger B" }] }),
+        project({ id: "b", people: [{ role: "BUSINESS_DEVELOPER", name: "Ali Asger Bagichawala" }, { role: "BUSINESS_DEVELOPER", name: "Aliasger B" }] }),
+      ],
+      entries: [e("Hamza", "a", "2026-11-02", 600), e("Hamza", "b", "2026-11-03", 600)],
+    });
+    expect(r.bds).toHaveLength(1);
+    expect(r.bds[0]).toMatchObject({ name: "Ali Asger Bagichawala", projects: 2, valueCents: 30000 });
+  });
+
   it("limits to the range and counts new projects by their first report ever", () => {
     const r = computeAnalytics({
       ...base,

@@ -1,4 +1,6 @@
 import { capacityForWeek, rateOf, type DailyRule, type PerfEntry, type PerfProject } from "../performance/compute";
+import { baMatch } from "../ba-members";
+import { bdMatch } from "../bd-members";
 import { weekOf } from "../import/week";
 
 // Service analytics (owner, 2026-11-21): the team's record over a chosen range, in the shape project-management dashboards use: headline
@@ -177,7 +179,8 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
     }
     return [...m].map(([name, c]) => ({ name, minutes: c.minutes, valueCents: c.value, projects: c.projects.size })).sort((a, b) => b.valueCents - a.valueCents);
   };
-  const who = (role: string) => (p: AProject) => p.people.filter((x) => x.role === role).map((x) => x.name);
+  // The same person written two ways ("Aliasger B", "Ali Asger Bagichawala") is one BD; a project counts once for each.
+  const who = (role: string) => (p: AProject) => [...new Set(p.people.filter((x) => x.role === role).map((x) => (role === "BUSINESS_DEVELOPER" ? bdMatch(x.name)?.name : role === "BUSINESS_ANALYST" ? baMatch(x.name)?.name : undefined) ?? x.name))];
   const statusCount = new Map<string, number>();
   for (const p of input.projects) statusCount.set(p.status, (statusCount.get(p.status) ?? 0) + 1);
   const ratingHistogram = [0, 0, 0, 0, 0];

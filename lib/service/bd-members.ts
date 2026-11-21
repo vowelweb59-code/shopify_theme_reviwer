@@ -15,6 +15,18 @@ export const BD_MEMBERS = [
 
 const norm = (s: string) => s.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
 
+/**
+ * A BD name as it should be shown (owner, 2026-11-21: "Aliasger B and Aliasger Bagichawala are same"): the spellings of Ali Asger Bagichawala all show
+ * as one name. Every other name is shown as written (plain "Aliasger" stays as written: it is only assumed to be Ezzi).
+ */
+export function canonicalBd(written: string): string {
+  const m = bdMatch(written);
+  return m && m.name === "Ali Asger Bagichawala" ? m.name : written;
+}
+
+/** Names in a list shown as one each: the same person written two ways appears once. */
+export const uniqueBd = (names: readonly string[]) => [...new Set(names.map(canonicalBd))];
+
 /** The BD a written name stands for, or null. */
 export function bdMatch(written: string | null | undefined): (typeof BD_MEMBERS)[number] | null {
   const w = norm(written ?? "");
