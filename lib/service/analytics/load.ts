@@ -1,6 +1,6 @@
 import "server-only";
 import { computeAnalytics, type AProject } from "./compute";
-import { DM_AVAILABILITY, dmHasLeft } from "../dm-members";
+import { DM_AVAILABILITY, DM_DAILY_AVAILABILITY, dmHasLeft } from "../dm-members";
 import { istDate } from "../import/text";
 import { weekOf } from "../import/week";
 import { WEEKLY_CAPACITY_MINUTES } from "../performance/compute";
@@ -38,7 +38,7 @@ export async function loadAnalytics(rangeRaw?: string | null) {
   const capacityByMember = Object.fromEntries(Object.entries(DM_AVAILABILITY).map(([k, f]) => [k, Math.round(WEEKLY_CAPACITY_MINUTES * f)]));
   const data = computeAnalytics({
     projects, clientNames: Object.fromEntries(clients.map((c) => [c._id, c.name])), entries: dm.entries, today, fromDate,
-    capacityMinutes: WEEKLY_CAPACITY_MINUTES, capacityByMember,
+    capacityMinutes: WEEKLY_CAPACITY_MINUTES, capacityByMember, dailyRules: DM_DAILY_AVAILABILITY,
   });
   const memberName = (key: string) => dm.nameOf.get(key) ?? key;
   // Leaderboards list only people who are still here: not left, and a report in the last 2 months.

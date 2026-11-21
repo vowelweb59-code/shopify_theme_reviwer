@@ -1,4 +1,4 @@
-import { rateOf, type PerfEntry, type PerfProject } from "../performance/compute";
+import { capacityForWeek, rateOf, type DailyRule, type PerfEntry, type PerfProject } from "../performance/compute";
 import { weekOf } from "../import/week";
 
 // Service analytics (owner, 2026-11-21): the team's record over a chosen range, in the shape project-management dashboards use: headline
@@ -22,6 +22,8 @@ export interface AnalyticsInput {
   fromDate: string | null;
   capacityMinutes: number;
   capacityByMember: Readonly<Record<string, number>>;
+  /** Members whose availability depends on the days they worked (Hamza). */
+  dailyRules?: Readonly<Record<string, DailyRule>>;
 }
 
 export interface WeekLine { start: string; minutes: number; valueCents: number; capacityMinutes: number; utilization: number; members: number; clients: number; projects: number; current: boolean }
@@ -55,7 +57,10 @@ const top = <T,>(xs: readonly T[], n: number, by: (x: T) => number) => [...xs].s
 
 export function computeAnalytics(input: AnalyticsInput): Analytics {
   const byId = new Map(input.projects.map((p) => [p.id, p]));
-  const capOf = (member: string) => input.capacityByMember[member] ?? input.capacityMinutes;
+  const dayMap = new Map<string, number>();
+  for (const e of input.entries) if (e.minutes > 0 && e.date <= input.today) dayMap.set(`${e.member}|${e.date}`, (dayMap.get(`${e.member}|${e.date}`) ?? 0) + e.minutes);
+  // A member's availability in the week starting `week` (a half-day member against half a week, Hamza by the days he worked).
+  const capOf = (member: string, week: string) => capacityForWeek(member, week, { capacityMinutes: input.capacityMinutes, byMember: input.capacityByMember, daily: input.dailyRules, dayMinutes: (k, d) => dayMap.get(`${k}|${d}`) ?? 0 });
   const valueOf = (e: PerfEntry) => { const r = rateOf(byId.get(e.projectId)!); return r === null ? 0 : Math.round((e.minutes / 60) * r); };
   const all = input.entries.filter((e) => e.minutes > 0 && e.date <= input.today && byId.has(e.projectId));
   const inRange = input.fromDate ? all.filter((e) => e.date >= input.fromDate!) : all;
@@ -69,7 +74,7 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
   const capacityOfWeek = (w: string) => {
     const set = new Set<string>();
     for (let i = 0; i < 4; i++) for (const m of weekMembers.get(addDays(w, -7 * i)) ?? []) set.add(m);
-    return [...set].reduce((n, m) => n + capOf(m), 0);
+    return [...set].reduce((n, m) => n + capOf(m, w), 0);
   };
   const wk = new Map<string, { minutes: number; value: number; members: Set<string>; clients: Set<string>; projects: Set<string> }>();
   for (const e of inRange) {
@@ -136,7 +141,7 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
     cur.minutes += e.minutes; cur.projects.add(e.projectId);
     pw.set(k, cur);
   }
-  const personWeeks: PersonWeek[] = [...pw.values()].map((x) => ({ member: x.member, start: x.start, minutes: x.minutes, capacityMinutes: capOf(x.member), pct: x.minutes / capOf(x.member), projects: x.projects.size }));
+  const personWeeks: PersonWeek[] = [...pw.values()].map((x) => ({ member: x.member, start: x.start, minutes: x.minutes, capacityMinutes: capOf(x.member, x.start), pct: x.minutes / capOf(x.member, x.start), projects: x.projects.size }));
 
   // Teammates.
   const tm = new Map<string, { minutes: number; value: number; projects: Set<string>; weeks: Map<string, number>; rated: number; ratedMinutes: number; ratedProjects: Set<string> }>();
@@ -151,9 +156,11 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
   const teammates: Teammate[] = [...tm].map(([key, t]) => {
     const done = [...t.weeks].filter(([w]) => w !== currentWeek).map(([, m]) => m);
     const avg = done.length ? done.reduce((n, m) => n + m, 0) / done.length : 0;
+    const doneWeeks = [...t.weeks.keys()].filter((w) => w !== currentWeek);
+    const cap = doneWeeks.length ? doneWeeks.reduce((n, w) => n + capOf(key, w), 0) / doneWeeks.length : capOf(key, currentWeek);
     return {
       key, minutes: t.minutes, valueCents: t.value, projects: t.projects.size, ratedProjects: t.ratedProjects.size, rating: t.ratedMinutes ? t.rated / t.ratedMinutes : null,
-      activeWeeks: done.length, avgWeekMinutes: Math.round(avg), peakWeekMinutes: Math.max(0, ...done), capacityMinutes: capOf(key), utilization: capOf(key) ? avg / capOf(key) : 0,
+      activeWeeks: done.length, avgWeekMinutes: Math.round(avg), peakWeekMinutes: Math.max(0, ...done), capacityMinutes: Math.round(cap), utilization: cap ? avg / cap : 0,
     };
   }).sort((a, b) => b.valueCents - a.valueCents);
 

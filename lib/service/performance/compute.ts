@@ -7,6 +7,23 @@
 export const WEEKLY_CAPACITY_MINUTES = 8.5 * 5 * 60;
 /** Fixed-price work with no hourly rate is valued at the standard $15 an hour, as the Revenue tab does. */
 export const STANDARD_RATE_CENTS = 1500;
+/** A full working day. */
+export const FULL_DAY_MINUTES = 8.5 * 60;
+
+/** A member whose availability depends on the day: a reported full day counts as full, every other weekday as a half day. */
+export interface DailyRule { halfDayMinutes: number; fullDayFromMinutes: number }
+
+/** A member's availability for the week starting `weekStart` (Monday). */
+export function capacityForWeek(member: string, weekStart: string, o: { capacityMinutes: number; byMember?: Readonly<Record<string, number>>; daily?: Readonly<Record<string, DailyRule>>; dayMinutes: (member: string, date: string) => number }): number {
+  const rule = o.daily?.[member];
+  if (!rule) return o.byMember?.[member] ?? o.capacityMinutes;
+  let total = 0;
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(Date.parse(`${weekStart}T00:00:00Z`) + i * 86_400_000).toISOString().slice(0, 10);
+    total += o.dayMinutes(member, date) >= rule.fullDayFromMinutes ? FULL_DAY_MINUTES : rule.halfDayMinutes;
+  }
+  return total;
+}
 /** Projects that count toward a member's allocation: running ones (not on hold, not moved, not closed). */
 export const ALLOCATED_STATUSES = ["ACTIVE", "PARTIAL_HOLD"];
 
@@ -80,6 +97,8 @@ export interface PerfInput {
   capacityMinutes?: number;
   /** Part-time members: their weekly availability by member key. */
   capacityByMember?: Record<string, number>;
+  /** Members whose availability depends on the day they worked. */
+  dailyRules?: Record<string, DailyRule>;
 }
 
 export const rateOf = (p: PerfProject): number | null => p.hourlyRateCents ?? (p.fixed ? STANDARD_RATE_CENTS : null);
@@ -91,6 +110,8 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
   const since30 = addDays(input.today, -29);
   const since28 = addDays(input.today, -27);
   const entries = input.entries.filter((e) => e.minutes > 0 && e.date <= input.today && byId.has(e.projectId));
+  const dayMap = new Map<string, number>();
+  for (const e of entries) dayMap.set(`${e.member}|${e.date}`, (dayMap.get(`${e.member}|${e.date}`) ?? 0) + e.minutes);
 
   // The team's last 28 days on each project (a member's share of it is shown beside their allocation).
   const team28 = new Map<string, number>();
@@ -148,7 +169,7 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
       x.allocatedMinutes = Math.round(x.last28Minutes / 4);
       m.allocatedMinutes += x.allocatedMinutes;
     }
-    m.capacityMinutes = input.capacityByMember?.[m.key] ?? capacity;
+    m.capacityMinutes = capacityForWeek(m.key, input.weekStart, { capacityMinutes: capacity, byMember: input.capacityByMember, daily: input.dailyRules, dayMinutes: (k, d) => dayMap.get(`${k}|${d}`) ?? 0 });
     m.occupancy = m.capacityMinutes ? m.allocatedMinutes / m.capacityMinutes : 0;
   }
   return [...members.values()].map(({ _p, ...m }) => (void _p, m));

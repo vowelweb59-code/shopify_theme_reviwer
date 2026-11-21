@@ -61,6 +61,18 @@ describe("computePerformance", () => {
     expect(by(r, "Bhavesh").occupancy).toBeCloseTo(150 / half);
   });
 
+  it("counts a day worked in full as a full day and every other weekday as a 6-hour half day", () => {
+    const rules = { Hamza: { halfDayMinutes: 360, fullDayFromMinutes: 480 } };
+    const r = computePerformance({
+      ...base,
+      projects: [project({ id: "a" })],
+      entries: [e("Hamza", "a", "2026-11-16", 500), e("Hamza", "a", "2026-11-17", 300), e("Trishul", "a", "2026-11-16", 100)],
+      dailyRules: rules,
+    });
+    expect(by(r, "Hamza").capacityMinutes).toBe(510 + 4 * 360);
+    expect(by(r, "Trishul").capacityMinutes).toBe(8.5 * 5 * 60);
+  });
+
   it("ignores entries dated after today", () => {
     const r = computePerformance({ ...base, projects: [project({ id: "a" })], entries: [e("Bhavesh", "a", "2029-10-19", 240), e("Bhavesh", "a", "2026-11-10", 60)] });
     expect(by(r, "Bhavesh").totalMinutes).toBe(60);

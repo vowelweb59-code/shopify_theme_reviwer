@@ -6,8 +6,15 @@ export const DM_MEMBERS = ["Himanshi", "Aman", "Pranjal", "Bhavesh", "Trishul", 
 /** Team members who have left the company (owner): still in DM_MEMBERS so their past hours keep counting, but never shown as a current member. */
 export const DM_LEFT = ["Priyanka Raut", "Batul"];
 
-/** Part-time availability (owner, 2026-11-21): the share of a full week a member works. Bhavesh and Hamza work half days only. Anyone not listed works a full week. */
-export const DM_AVAILABILITY: Record<string, number> = { Bhavesh: 0.5, Hamza: 0.5 };
+/** Part-time availability (owner, 2026-11-21): the share of a full week a member works. Bhavesh works half days only. Anyone not listed works a full week. */
+export const DM_AVAILABILITY: Record<string, number> = { Bhavesh: 0.5 };
+
+/**
+ * Members whose availability depends on the day (owner, 2026-11-21, Hamza): a weekday on which they reported a full day counts as a full day
+ * (8h 30m), every other weekday (Monday to Friday) as a half day of `halfDayMinutes` (6 hours). `fullDayFromMinutes` is how much they must
+ * have reported that day for it to count as a full day.
+ */
+export const DM_DAILY_AVAILABILITY: Record<string, { halfDayMinutes: number; fullDayFromMinutes: number }> = { Hamza: { halfDayMinutes: 6 * 60, fullDayFromMinutes: 8 * 60 } };
 
 const normName = (s: string | null | undefined) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 

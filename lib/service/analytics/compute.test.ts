@@ -47,6 +47,20 @@ describe("computeAnalytics", () => {
     expect(r.personWeeks.byCapacity[0].pct).toBeCloseTo(1200 / 1275);
   });
 
+  it("measures a day-rule member week by week: full days count in full, the other weekdays as 6 hours", () => {
+    const rules = { Hamza: { halfDayMinutes: 360, fullDayFromMinutes: 480 } };
+    const r = computeAnalytics({
+      ...base,
+      projects: [project({ id: "a" })],
+      entries: [e("Hamza", "a", "2026-11-02", 510), e("Hamza", "a", "2026-11-03", 510), e("Hamza", "a", "2026-11-10", 300)],
+      dailyRules: rules,
+    });
+    const full = r.personWeeks.byHours.find((x) => x.start === "2026-11-02")!;
+    const half = r.personWeeks.byHours.find((x) => x.start === "2026-11-09")!;
+    expect(full.capacityMinutes).toBe(2 * 510 + 3 * 360);
+    expect(half.capacityMinutes).toBe(5 * 360);
+  });
+
   it("limits to the range and counts new projects by their first report ever", () => {
     const r = computeAnalytics({
       ...base,
