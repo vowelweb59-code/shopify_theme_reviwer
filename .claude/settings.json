@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.local)",
+      "Read(.env.*.local)",
+      "Read(.env.production*)",
+      "Read(.env.development*)",
+      "Read(.env.test*)",
+      "Bash(cat *.env*)",
+      "Bash(type *.env*)",
+      "Bash(more *.env*)",
+      "Bash(less *.env*)",
+      "Bash(head *.env*)",
+      "Bash(tail *.env*)",
+      "Bash(grep *.env*)",
+      "Bash(rg *.env*)",
+      "Bash(sed *.env*)",
+      "Bash(awk *.env*)",
+      "Bash(cp *.env*)",
+      "Bash(printenv*)",
+      "Bash(env)",
+      "Bash(set)",
+      "Bash(export -p*)",
+      "Bash(declare -x*)",
+      "PowerShell(Get-Content *.env*)",
+      "PowerShell(gc *.env*)",
+      "PowerShell(type *.env*)",
+      "PowerShell(cat *.env*)",
+      "PowerShell(Select-String *.env*)",
+      "PowerShell(Get-ChildItem Env:*)",
+      "PowerShell(dir Env:*)"
+    ]
+  }
+}
