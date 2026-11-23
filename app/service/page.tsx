@@ -18,6 +18,7 @@ import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceUser } from "@/models/service-user";
 import { projectHref } from "@/lib/service/ui/back";
+import { statusOnDay, type StatusStep } from "@/lib/service/projects/status-at";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ type Row = {
   assignments?: Array<{ userId: string; role: "MANAGER" | "EMPLOYEE" }>;
   /** Set by the overview, not stored: see "Moved to another department". */
   movedDept?: boolean;
+  /** Status changes with their dates: a past week or month shows the status the project had then. */
+  history?: StatusStep[];
   /** Manual placement (project Settings): STAY = never moved, MOVED = always moved, null = the automatic 30-day rule. */
   deptOverride?: "STAY" | "MOVED" | null;
   contract: {
@@ -222,7 +225,10 @@ export default async function ServiceOverviewPage({
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
   const [allRows, profiles, att, names, users] = await Promise.all([
-    ServiceProject.find().select("name clientId status reviewRating contract upworkProfileId people assignments deptOverride").sort({ name: 1 }).lean<Row[]>(),
+    ServiceProject.find()
+      .select("name clientId status reviewRating contract upworkProfileId people assignments deptOverride history")
+      .sort({ name: 1 })
+      .lean<Row[]>(),
     ServiceUpworkProfile.find().select("name").lean<Array<{ _id: string; name: string }>>(),
     loadAttribution(),
     senderNames(),
@@ -285,9 +291,19 @@ export default async function ServiceOverviewPage({
   // Moved to another department (owner, 2026-11-20): a project other teams still report on but nobody from the team has reported on for
   // 30 days (the gestation period) leaves Active / On hold for the On hold tab's "Moved to another department" group. Only the overview
   // moves it: the project's own status is unchanged. Dates after today are typing errors and were ignored above.
+  // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
+  // ?by=month or ?on=YYYY-MM-DD (any day inside the week / month wanted) is given.
+  const anchor = isoDay(sp.on) ?? today;
+  const byMonth = sp.by === "month";
+  const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
+  const isCurrent = today >= week.start && today <= week.end;
   const MOVED_DAYS = 30;
   const movedCutoff = new Date(new Date(`${today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
+  // A past week or month shows each project with the status it had at the end of that period (owner, 2026-11-23: a project completed on
+  // 15 August looks Active in the week before). The department placement is today's and is not applied to a past period.
+  const pastEnd = week.end < today ? week.end : null;
   const all: Row[] = allRows.map((p) => {
+    if (pastEnd) return { ...p, status: statusOnDay(p.status, p.history, pastEnd, (d) => istDate(d)) as ServiceProjectStatus };
     if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return p;
     // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21).
     if (p.deptOverride === "STAY") return p;
@@ -298,12 +314,6 @@ export default async function ServiceOverviewPage({
   const inStatus = ofType.filter(status.match);
   const counts = (s: (typeof STATUS_TABS)[number]) => ofType.filter(s.match).length;
 
-  // Hours reported in the chosen period per project (the same placement as the project page); the period is the current week unless
-  // ?by=month or ?on=YYYY-MM-DD (any day inside the week / month wanted) is given.
-  const anchor = isoDay(sp.on) ?? today;
-  const byMonth = sp.by === "month";
-  const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
-  const isCurrent = today >= week.start && today <= week.end;
   // On hold is split into groups (owner, 2026-11-20); `hold` picks one: idle (nobody reported in 30 days), moved (to another department),
   // waiting (for the client), team (the team reported in the last 30 days but the project is on hold).
   const HOLD_KINDS = ["idle", "moved", "team", "waiting"] as const;

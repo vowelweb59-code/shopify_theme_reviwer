@@ -241,7 +241,7 @@ export async function changeStatus(id: string, body: Record<string, unknown>) {
   if (dept !== undefined) set.deptOverride = dept === "AUTO" ? null : dept;
   const push =
     to !== p.status
-      ? { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p) } }
+      ? { history: { fromStatus: p.status, toStatus: to, reason: reason ?? null, at: await dateForManualMove(to, p), madeAt: new Date() } }
       : { history: { fromStatus: p.status, toStatus: p.status, reason: reason ?? `Placement set to ${dept}`, at: new Date() } };
   // Conditional on the status read, so two people moving the same project at once cannot both win.
   const r = await ServiceProject.updateOne({ _id: id, status: p.status }, { $set: set, $push: push });
@@ -513,7 +513,7 @@ export async function bulkEdit(body: Record<string, unknown>) {
           { _id: p._id },
           {
             $set: { status: to },
-            $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: await dateForManualMove(to!, p, now) } },
+            $push: { history: { fromStatus: p.status, toStatus: to, reason: reason ?? "Bulk edit", at: await dateForManualMove(to!, p, now), madeAt: now } },
           }
         );
         break;

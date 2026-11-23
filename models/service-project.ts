@@ -23,6 +23,9 @@ const historySchema = new Schema(
     toStatus: { type: String, enum: SERVICE_PROJECT_STATUSES, required: true },
     reason: { type: String, default: null },
     at: { type: Date, default: () => new Date() },
+    // The real time a status was changed by hand, when `at` was set to the last report date instead (the overview of a past week
+    // shows the status as it was on the day the change was made). Null on older entries and automatic changes: `at` is then the time.
+    madeAt: { type: Date, default: null },
   },
   { _id: false }
 );
