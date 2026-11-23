@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { statusOnDay } from "./status-at";
+import { closeByLastReport, statusOnDay } from "./status-at";
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
 const history = [
@@ -27,6 +27,15 @@ describe("statusOnDay", () => {
     const h = [{ fromStatus: "ACTIVE", toStatus: "COMPLETED", at: "2026-11-20T05:00:00Z", madeAt: "2026-11-23T08:00:00Z" }];
     expect(statusOnDay("COMPLETED", h, "2026-11-22", day)).toBe("ACTIVE");
     expect(statusOnDay("COMPLETED", h, "2026-11-23", day)).toBe("COMPLETED");
+  });
+  it("a closing recorded by a rule is dated the last report, a closing made by hand is not moved", () => {
+    const rule = [{ fromStatus: "ACTIVE", toStatus: "COMPLETED", at: "2026-10-27T05:00:00Z" }];
+    const moved = closeByLastReport(rule, "2025-03-04", day);
+    expect(statusOnDay("COMPLETED", moved, "2025-03-03", day)).toBe("ACTIVE");
+    expect(statusOnDay("COMPLETED", moved, "2025-03-04", day)).toBe("COMPLETED");
+    const byHand = [{ fromStatus: "ACTIVE", toStatus: "COMPLETED", at: "2026-11-20T05:00:00Z", madeAt: "2026-11-23T08:00:00Z" }];
+    expect(statusOnDay("COMPLETED", closeByLastReport(byHand, "2026-11-20", day), "2026-11-22", day)).toBe("ACTIVE");
+    expect(closeByLastReport(rule, undefined, day)).toEqual(rule);
   });
   it("with no history it is the current status", () => {
     expect(statusOnDay("ON_HOLD", [], "2026-01-01", day)).toBe("ON_HOLD");

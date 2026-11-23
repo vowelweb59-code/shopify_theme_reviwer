@@ -18,7 +18,7 @@ import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceUser } from "@/models/service-user";
 import { projectHref } from "@/lib/service/ui/back";
-import { statusOnDay, type StatusStep } from "@/lib/service/projects/status-at";
+import { closeByLastReport, statusOnDay, type StatusStep } from "@/lib/service/projects/status-at";
 
 export const dynamic = "force-dynamic";
 
@@ -253,6 +253,7 @@ export default async function ServiceOverviewPage({
   // first), then team members listed on the project's people without any report. Always from all-time hours, whatever the period.
   const dmHours = new Map<string, Map<string, number>>();
   const lastAnyDay = new Map<string, string>();
+  const firstAnyDay = new Map<string, string>();
   const lastDmDay = new Map<string, string>();
   const lastDmReport = new Map<string, string>();
   const twoMonthsAgo = (() => {
@@ -278,6 +279,7 @@ export default async function ServiceOverviewPage({
       const day_ = e.entryDate.toISOString().slice(0, 10);
       if (day_ <= today) {
         if (day_ > (lastAnyDay.get(pid) ?? "")) lastAnyDay.set(pid, day_);
+        if (day_ < (firstAnyDay.get(pid) ?? "9999")) firstAnyDay.set(pid, day_);
         if (dmMatch(who_) !== null && day_ > (lastDmDay.get(pid) ?? "")) lastDmDay.set(pid, day_);
       }
       if (dmMatch(who_) !== null && who_) {
@@ -302,13 +304,19 @@ export default async function ServiceOverviewPage({
   // A past week or month shows each project with the status it had at the end of that period (owner, 2026-11-23: a project completed on
   // 15 August looks Active in the week before). The department placement is today's and is not applied to a past period.
   const pastEnd = week.end < today ? week.end : null;
-  const all: Row[] = allRows.map((p) => {
-    if (pastEnd) return { ...p, status: statusOnDay(p.status, p.history, pastEnd, (d) => istDate(d)) as ServiceProjectStatus };
-    if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return p;
+  const all: Row[] = allRows.flatMap((p) => {
+    if (pastEnd) {
+      // Only projects that had a first report by the end of the period existed then; a rule-dated closing is placed on the last report.
+      const first = firstAnyDay.get(p._id);
+      if (!first || first > pastEnd) return [];
+      const history = closeByLastReport(p.history, lastAnyDay.get(p._id), (d) => istDate(d));
+      return [{ ...p, status: statusOnDay(p.status, history, pastEnd, (d) => istDate(d)) as ServiceProjectStatus }];
+    }
+    if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return [p];
     // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21).
-    if (p.deptOverride === "STAY") return p;
+    if (p.deptOverride === "STAY") return [p];
     const automatic = (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff;
-    return p.deptOverride === "MOVED" || automatic ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p;
+    return [p.deptOverride === "MOVED" || automatic ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p];
   });
   const ofType = all.filter(tab.match);
   const inStatus = ofType.filter(status.match);
