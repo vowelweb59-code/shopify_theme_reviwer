@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import { NAV_ITEMS } from "./navItems";
+import { FOOTER_ITEMS, NAV_ITEMS } from "./navItems";
 import { SignOutButton } from "./SignOutButton";
 
 function isActive(pathname: string, href: string) {
@@ -68,8 +68,30 @@ export function MobileNav({ authEnabled }: { authEnabled: boolean }) {
                 );
               })}
             </nav>
+            <nav aria-label="Footer" className="mt-auto flex flex-col gap-0.5 border-t border-border-subtle px-2 py-2">
+              {FOOTER_ITEMS.map((item) => {
+                const active = isActive(pathname, item.href);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
+                      active
+                        ? "bg-primary-tint font-medium text-primary-tint-text"
+                        : "text-zinc-600 hover:bg-black/[.04] hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[.04] dark:hover:text-zinc-100"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
             {authEnabled && (
-              <div className="mt-auto border-t border-border-subtle px-2 py-2">
+              <div className="border-t border-border-subtle px-2 py-2">
                 <SignOutButton />
               </div>
             )}

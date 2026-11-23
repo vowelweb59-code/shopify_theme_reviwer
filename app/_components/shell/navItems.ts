@@ -24,6 +24,8 @@ export const NAV_ITEMS = [
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/sales", label: "Sales", icon: DollarSign },
   { href: "/demo-store", label: "Shopify Theme Store", icon: Store },
-  { href: "/insights", label: "Audit Rules", icon: ShieldCheck },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
+/** Reference pages kept out of the main list (owner, 2026-11-23): shown in the footer menu of the sidebar and the mobile drawer. */
+export const FOOTER_ITEMS = [{ href: "/insights", label: "Audit Rules", icon: ShieldCheck }] as const;
