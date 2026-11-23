@@ -37,6 +37,15 @@ describe("statusOnDay", () => {
     expect(statusOnDay("COMPLETED", closeByLastReport(byHand, "2026-11-20", day), "2026-11-22", day)).toBe("ACTIVE");
     expect(closeByLastReport(rule, undefined, day)).toEqual(rule);
   });
+  it("a closing moved back before the creation entry still closes the project", () => {
+    const h = [
+      { fromStatus: null, toStatus: "ACTIVE", at: "2026-10-27T05:00:00Z" },
+      { fromStatus: "ACTIVE", toStatus: "COMPLETED", at: "2026-10-27T06:00:00Z" },
+    ];
+    const moved = closeByLastReport(h, "2025-03-04", day);
+    expect(statusOnDay("COMPLETED", moved, "2026-10-31", day)).toBe("COMPLETED");
+    expect(statusOnDay("COMPLETED", moved, "2025-03-03", day)).toBe("ACTIVE");
+  });
   it("with no history it is the current status", () => {
     expect(statusOnDay("ON_HOLD", [], "2026-01-01", day)).toBe("ON_HOLD");
     expect(statusOnDay("ON_HOLD", undefined, "2026-01-01", day)).toBe("ON_HOLD");

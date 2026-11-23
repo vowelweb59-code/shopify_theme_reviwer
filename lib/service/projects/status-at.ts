@@ -31,7 +31,13 @@ export function closeByLastReport(
  */
 export function statusOnDay<S extends string>(current: S, history: readonly StatusStep[] | undefined, day: string, dayOf: (at: Date) => string): S | string {
   if (!history || history.length === 0) return current;
-  const steps = history.map((h) => ({ ...h, day: dayOf(new Date(h.madeAt ?? h.at)), t: +new Date(h.madeAt ?? h.at) })).sort((a, b) => a.t - b.t);
+  // The creation entry (no earlier status) always comes first: a closing moved back to a project's last report must not sort before it.
+  const steps = history
+    .map((h) => {
+      const t = +new Date(h.madeAt ?? h.at);
+      return h.fromStatus === null ? { ...h, day: "", t: -Infinity } : { ...h, day: dayOf(new Date(h.madeAt ?? h.at)), t };
+    })
+    .sort((a, b) => a.t - b.t);
   let status: string | null = null;
   for (const s of steps) if (s.day <= day) status = s.toStatus;
   return status ?? steps[0].fromStatus ?? steps[0].toStatus;

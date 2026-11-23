@@ -254,6 +254,9 @@ export default async function ServiceOverviewPage({
   const dmHours = new Map<string, Map<string, number>>();
   const lastAnyDay = new Map<string, string>();
   const firstAnyDay = new Map<string, string>();
+  // Every report day per project (anyone's, and the team's), so a past period can be judged as it stood on its last day.
+  const daysAny = new Map<string, string[]>();
+  const daysDm = new Map<string, string[]>();
   const lastDmDay = new Map<string, string>();
   const lastDmReport = new Map<string, string>();
   const twoMonthsAgo = (() => {
@@ -280,6 +283,8 @@ export default async function ServiceOverviewPage({
       if (day_ <= today) {
         if (day_ > (lastAnyDay.get(pid) ?? "")) lastAnyDay.set(pid, day_);
         if (day_ < (firstAnyDay.get(pid) ?? "9999")) firstAnyDay.set(pid, day_);
+        daysAny.set(pid, [...(daysAny.get(pid) ?? []), day_]);
+        if (dmMatch(who_) !== null) daysDm.set(pid, [...(daysDm.get(pid) ?? []), day_]);
         if (dmMatch(who_) !== null && day_ > (lastDmDay.get(pid) ?? "")) lastDmDay.set(pid, day_);
       }
       if (dmMatch(who_) !== null && who_) {
@@ -299,18 +304,38 @@ export default async function ServiceOverviewPage({
   const byMonth = sp.by === "month";
   const week = byMonth ? monthBounds(anchor) : weekOf(anchor);
   const isCurrent = today >= week.start && today <= week.end;
-  const MOVED_DAYS = 30;
-  const movedCutoff = new Date(new Date(`${today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
-  // A past week or month shows each project with the status it had at the end of that period (owner, 2026-11-23: a project completed on
-  // 15 August looks Active in the week before). The department placement is today's and is not applied to a past period.
+  // A past week or month shows each project as it stood on the last day of that period (owner, 2026-11-23: a project completed on
+  // 15 August looks Active in the week before): the status then, and the same activity rules as today judged on that day (30 days with
+  // nobody reporting = On hold; reports by others but none from the team for 30 days = Moved to another department).
   const pastEnd = week.end < today ? week.end : null;
+  const MOVED_DAYS = 30;
+  const movedCutoff = new Date(new Date(`${pastEnd ?? today}T00:00:00Z`).getTime() - MOVED_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const lastUpTo = (days: string[] | undefined, d: string) => (days ?? []).reduce((m, x) => (x <= d && x > m ? x : m), "");
+  if (pastEnd) {
+    // The "last report" figures below then mean the last report on or before the end of the period.
+    for (const id of new Set([...lastAnyDay.keys(), ...lastDmDay.keys()])) {
+      const a = lastUpTo(daysAny.get(id), pastEnd);
+      const t = lastUpTo(daysDm.get(id), pastEnd);
+      if (a) lastAnyDay.set(id, a);
+      else lastAnyDay.delete(id);
+      if (t) lastDmDay.set(id, t);
+      else lastDmDay.delete(id);
+    }
+  }
   const all: Row[] = allRows.flatMap((p) => {
     if (pastEnd) {
       // Only projects that had a first report by the end of the period existed then; a rule-dated closing is placed on the last report.
       const first = firstAnyDay.get(p._id);
       if (!first || first > pastEnd) return [];
-      const history = closeByLastReport(p.history, lastAnyDay.get(p._id), (d) => istDate(d));
-      return [{ ...p, status: statusOnDay(p.status, history, pastEnd, (d) => istDate(d)) as ServiceProjectStatus }];
+      const lastAll = lastUpTo(daysAny.get(p._id), "9999");
+      const history = closeByLastReport(p.history, lastAll, (d) => istDate(d));
+      const then = statusOnDay(p.status, history, pastEnd, (d) => istDate(d)) as ServiceProjectStatus;
+      if (then !== "ACTIVE" && then !== "ON_HOLD") return [{ ...p, status: then }];
+      const a = lastAnyDay.get(p._id) ?? "";
+      const t = lastDmDay.get(p._id) ?? "";
+      if (a < movedCutoff) return [{ ...p, status: "ON_HOLD" as const }];
+      if (t < movedCutoff) return [{ ...p, status: "ON_HOLD" as const, movedDept: true }];
+      return [{ ...p, status: then }];
     }
     if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return [p];
     // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21).
