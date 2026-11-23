@@ -26,7 +26,9 @@ async function main() {
     { _id: p._id, status: "ACTIVE" },
     {
       $set: { status: "ON_HOLD" },
-      $push: { history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason: HOLD_UNTIL_TEAM_REASON, at: await dateForManualMove("ON_HOLD", p) } },
+      $push: {
+        history: { fromStatus: "ACTIVE", toStatus: "ON_HOLD", reason: HOLD_UNTIL_TEAM_REASON, at: await dateForManualMove("ON_HOLD", p), madeAt: new Date() },
+      },
     }
   ); // dated the last report (owner, 2026-11-20)
   await recordServiceAudit("project.hold", { projectId: p._id, via: "scripts/service-hold-project.ts" });

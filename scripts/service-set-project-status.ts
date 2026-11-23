@@ -34,7 +34,7 @@ async function main() {
   const at = await dateForManualMove(to, p);
   await ServiceProject.updateOne(
     { _id: p._id, status: p.status },
-    { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason, at } } }
+    { $set: { status: to }, $push: { history: { fromStatus: p.status, toStatus: to, reason, at, madeAt: new Date() } } }
   );
   await recordServiceAudit("project.set_status", { projectId: p._id, from: p.status, to, via: "scripts/service-set-project-status.ts" });
   console.log("Done.");
