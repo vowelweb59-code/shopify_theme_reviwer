@@ -2,10 +2,12 @@ import Link from "next/link";
 import { uniqueBa } from "@/lib/service/ba-members";
 import { uniqueBd } from "@/lib/service/bd-members";
 import { dmMatch } from "@/lib/service/dm-members";
+import { MANUAL_SENDER_NAME } from "@/lib/service/hours/manual-hours";
 import { workableMinutes } from "@/lib/service/hours/fixed-budget";
 import { load } from "@/lib/service/api/http";
 import { istDate } from "@/lib/service/import/text";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
+import { listManualHours, manualHoursMembers } from "@/lib/service/api/manual-hours";
 import { assignableUsers, getAssignments, getDetails, getProject } from "@/lib/service/api/projects";
 import { fmtMinutes, fmtUsd, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
 import { Avatar, Card, DayBars, Metric, PeopleLine, Row } from "./_components/OverviewParts";
@@ -13,6 +15,7 @@ import { TeamHoursTable } from "./_components/TeamHoursTable";
 import { AssignmentsEditor } from "./_components/AssignmentsEditor";
 import { ContractEditor } from "./_components/ContractEditor";
 import { InHouseEditor, KeywordsEditor, PeopleEditor, ProfileEditor, ReviewEditor } from "./_components/DetailsEditors";
+import { ManualHours } from "./_components/ManualHours";
 import { StatusControl } from "./_components/StatusControl";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +37,7 @@ export default async function ServiceProjectPage({
   // The period to look at (owner, 2026-11-20): a week or a calendar month; `on` is any day inside it (`week` is the older name of the same parameter).
   const pick = onRaw ?? week;
   const wk = pick && /^\d{4}-\d{2}-\d{2}$/.test(pick) ? pick : pick && /^\d{4}-\d{2}$/.test(pick) ? `${pick}-01` : null;
-  const [project, assignments, pw, details, team_, users] = await load(() =>
+  const [project, assignments, pw, details, team_, users, manualRows, manualMembers] = await load(() =>
     Promise.all([
       getProject(id),
       getAssignments(id),
@@ -42,6 +45,8 @@ export default async function ServiceProjectPage({
       getDetails(id),
       teamHours(id, wk, teamOnly, byMonth ? "month" : "week"),
       assignableUsers(),
+      listManualHours(id),
+      manualHoursMembers(),
     ])
   );
   const managers = assignments.filter((a) => a.assignmentRole === "MANAGER");
@@ -306,6 +311,10 @@ export default async function ServiceProjectPage({
                 )}
               </Card>
 
+              <Card title="Manual hours" subtitle="Hours added by hand. They belong to the project, and to no team member until you allocate them to someone.">
+                <ManualHours projectId={project.id} rows={manualRows} members={manualMembers} today={todayIso} />
+              </Card>
+
               <Card title="Who worked how much" subtitle="* = not in the Digital Marketing team">
                 <TeamHoursTable rows={team_.rows} months={team_.months} periodText={periodText} unit={unit} starred={outsider} compact />
               </Card>
@@ -449,4 +458,4 @@ export default async function ServiceProjectPage({
 }
 
 /** "*" before the name of someone outside the Digital Marketing team (their hours count because they are on this project). */
-const outsider = (name: string) => (dmMatch(name) ? "" : "*");
+const outsider = (name: string) => (dmMatch(name) || name === MANUAL_SENDER_NAME ? "" : "*");

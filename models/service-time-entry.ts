@@ -1,7 +1,8 @@
 import { Schema, model, models, type InferSchemaType } from "mongoose";
 import { SERVICE_ENTRY_STATES, uuidId } from "./service-shared";
 
-// Hours reported in TIMER STATUS, owned by the Chat sender. TIMER_CALCULATED = OFF minus ON; MANUAL_REPORT = as written.
+// Hours reported in TIMER STATUS, owned by the Chat sender. TIMER_CALCULATED = OFF minus ON; MANUAL_REPORT = as written; MANUAL_ADDED = added by
+// hand on a project (lib/service/hours/manual-hours.ts): no Chat message, sender "manual" until allocated to a team member.
 // Reported hours, not Upwork-verified billable hours. Weekly figures are computed from these rows, never stored.
 // `projectId` is set when a person (or the auto-assign rules) placed the entry; otherwise its client's only live project
 // owns it (lib/service/hours/attribution.ts). `allocations` share one entry's minutes across several projects (they add
@@ -23,7 +24,7 @@ const serviceTimeEntrySchema = new Schema(
     allocations: { type: [allocationSchema], default: () => [] },
     entryDate: { type: Date, required: true }, // IST day, as UTC midnight
     minutes: { type: Number, required: true },
-    source: { type: String, enum: ["TIMER_CALCULATED", "MANUAL_REPORT"], required: true },
+    source: { type: String, enum: ["TIMER_CALCULATED", "MANUAL_REPORT", "MANUAL_ADDED"], required: true },
     state: { type: String, enum: SERVICE_ENTRY_STATES, default: "PARSED" },
     flags: { type: [String], default: () => [] },
     notes: { type: [String], default: () => [] },

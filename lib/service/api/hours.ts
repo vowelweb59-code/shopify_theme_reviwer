@@ -4,6 +4,7 @@ import "server-only";
 import { badRequest, day, int, isoDay, notFound, oneOf, str } from "./http";
 import { memo } from "@/lib/cache/memo";
 import { dmMatch } from "../dm-members";
+import { MANUAL_SENDER_ID, MANUAL_SENDER_NAME } from "../hours/manual-hours";
 import { limitForPeriod, limitForWeek, isMonday, withCorrection, withScopeChange, type LimitStep } from "../hours/limit-history";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { istDate } from "../import/text";
@@ -43,7 +44,7 @@ export type EntryLite = {
   clientId: string | null;
   minutes: number;
   entryDate: Date;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   state: string;
   senderExternalId: string;
   allocations: Array<{ projectId: string; minutes: number }>;
@@ -76,7 +77,7 @@ function periodHours(entries: readonly HourEntry[], limitMinutes: number | null,
     limitMinutes,
     completedMinutes: completed,
     trackedMinutes: sum(confirmed.filter((e) => e.source === "TIMER_CALCULATED")),
-    manualMinutes: sum(confirmed.filter((e) => e.source === "MANUAL_REPORT")),
+    manualMinutes: sum(confirmed.filter((e) => e.source !== "TIMER_CALCULATED")),
     unconfirmedMinutes: sum(inP.filter((e) => !e.confirmed)),
     remainingMinutes: limitMinutes === null ? null : Math.max(limitMinutes - completed, 0),
     overLimitMinutes: limitMinutes === null ? 0 : Math.max(completed - limitMinutes, 0),
@@ -104,7 +105,9 @@ export const senderNames = (): Promise<Map<string, string>> => memo("service:sen
 
 async function senderNamesUncached(): Promise<Map<string, string>> {
   const rows = await ServiceChatSender.find().select("externalId displayName").lean<Array<{ externalId: string; displayName: string }>>();
-  return new Map(rows.map((s) => [s.externalId, s.displayName]));
+  const names = new Map(rows.map((s) => [s.externalId, s.displayName]));
+  names.set(MANUAL_SENDER_ID, MANUAL_SENDER_NAME); // manual hours not allocated to anyone
+  return names;
 }
 
 type ProjectRow = {
@@ -311,7 +314,7 @@ export type LiveReport = {
   client: string | null;
   inHouse: boolean;
   project: string | null;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   minutes: number;
   memo: string | null;
   late: boolean;

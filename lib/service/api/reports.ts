@@ -40,7 +40,7 @@ export type Row = {
   senderKey: string;
   entryDate: string;
   minutes: number;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   flagged: boolean;
   late: boolean;
   projectId: string | null;
@@ -74,7 +74,7 @@ type RawEntry = {
   senderExternalId: string;
   entryDate: Date;
   minutes: number;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   state: string;
   isLate: boolean;
   projectId: string | null;

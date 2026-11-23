@@ -28,7 +28,7 @@ export type ReviewEntry = {
   clientRaw: string | null;
   suggestedClient: string | null;
   entryDate: string;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   minutes: number;
   state: "PARSED" | "NEEDS_REVIEW" | "APPROVED" | "REJECTED";
   flags: string[];

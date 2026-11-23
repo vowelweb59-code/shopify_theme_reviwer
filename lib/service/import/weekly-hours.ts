@@ -6,7 +6,7 @@ export interface HourEntry {
   /** IST calendar date. */
   date: string;
   minutes: number;
-  source: "TIMER_CALCULATED" | "MANUAL_REPORT";
+  source: "TIMER_CALCULATED" | "MANUAL_REPORT" | "MANUAL_ADDED";
   /** False while the entry is flagged or awaiting approval. */
   confirmed: boolean;
 }
@@ -37,7 +37,7 @@ export function weeklyHours(entries: readonly HourEntry[], limitMinutes: number 
     limitMinutes,
     completedMinutes: completed,
     trackedMinutes: sum(confirmed.filter((e) => e.source === "TIMER_CALCULATED")),
-    manualMinutes: sum(confirmed.filter((e) => e.source === "MANUAL_REPORT")),
+    manualMinutes: sum(confirmed.filter((e) => e.source !== "TIMER_CALCULATED")),
     unconfirmedMinutes: sum(inWeek.filter((e) => !e.confirmed)),
     remainingMinutes: limitMinutes === null ? null : Math.max(limitMinutes - completed, 0),
     overLimitMinutes: limitMinutes === null ? 0 : Math.max(completed - limitMinutes, 0),

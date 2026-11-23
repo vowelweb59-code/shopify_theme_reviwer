@@ -1,6 +1,7 @@
 import { memo } from "@/lib/cache/memo";
 import { senderNames } from "../api/hours";
 import { dmMatch } from "../dm-members";
+import { isManualSender } from "../hours/manual-hours";
 import { loadAllTimeEntries } from "../hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { profileKey, type AppClient, type ProjectHours, type RevProject, type SheetRow } from "./by-project";
@@ -37,7 +38,7 @@ async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients:
   // The sales sheet is the Digital Marketing team's revenue only (owner, 2026-11-17), so only the team's own hours are worth counting
   // against it: some projects also have people from other teams reporting on them.
   const [allEntries, names] = await Promise.all([loadAllTimeEntries(), senderNames()]);
-  const entries = allEntries.filter((e) => dmMatch(names.get(e.senderExternalId)) !== null);
+  const entries = allEntries.filter((e) => dmMatch(names.get(e.senderExternalId)) !== null || isManualSender(e.senderExternalId));
   const byProject = new Map(projects.map((p) => [p._id, p]));
   const sums = new Map<string, number>();
   for (const e of expandAllocations(entries)) {
