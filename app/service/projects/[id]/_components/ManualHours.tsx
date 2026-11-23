@@ -16,6 +16,21 @@ export function ManualHours({ projectId, rows, members, today }: { projectId: st
   const [member, setMember] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ date: "", hours: "", minutes: "", note: "" });
+
+  function startEdit(r: ManualHoursRow) {
+    setEditing(r.id);
+    setDraft({ date: r.date, hours: String(Math.floor(r.minutes / 60)), minutes: String(r.minutes % 60), note: r.note ?? "" });
+  }
+
+  async function saveEdit(id: string) {
+    setError(null);
+    const r = await mutate("PATCH", `/manual-hours/${id}`, draft);
+    if (!r.ok) return setError(r.error);
+    setEditing(null);
+    router.refresh();
+  }
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -127,34 +142,93 @@ export function ManualHours({ projectId, rows, members, today }: { projectId: st
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td className="whitespace-nowrap px-3 py-2">{fmtLongDay(r.date)}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{fmtMinutes(r.minutes)}</td>
-                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{r.note ?? <span className="text-zinc-300 dark:text-zinc-600">—</span>}</td>
-                  <td className="px-3 py-2">
-                    <select
-                      aria-label="Allocate to"
-                      value={r.member ?? ""}
-                      onChange={(e) => allocate(r.id, e.target.value)}
-                      className={`${input} ${r.member ? "" : "text-zinc-500"}`}
-                    >
-                      <option value="">Nobody (project only)</option>
-                      {r.member && !members.some((m) => m.key === r.member) && <option value={r.member}>{r.memberName}</option>}
-                      {members.map((m) => (
-                        <option key={m.key} value={m.key}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button type="button" onClick={() => remove(r.id)} className="text-sm text-status-fail-text hover:underline">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((r) =>
+                editing === r.id ? (
+                  <tr key={r.id} className="bg-surface-muted/50">
+                    <td className="px-3 py-2">
+                      <input
+                        type="date"
+                        aria-label="Date"
+                        value={draft.date}
+                        max={today}
+                        onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                        className={input}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          aria-label="Hours"
+                          value={draft.hours}
+                          onChange={(e) => setDraft({ ...draft, hours: e.target.value })}
+                          className={`${input} w-16`}
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          step={1}
+                          aria-label="Minutes"
+                          value={draft.minutes}
+                          onChange={(e) => setDraft({ ...draft, minutes: e.target.value })}
+                          className={`${input} w-16`}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        aria-label="Note"
+                        value={draft.note}
+                        maxLength={500}
+                        onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                        className={`${input} w-full min-w-32`}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-zinc-500">{r.memberName ?? "Nobody (project only)"}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <button type="button" onClick={() => saveEdit(r.id)} className="mr-3 text-sm font-medium text-primary hover:underline">
+                        Save
+                      </button>
+                      <button type="button" onClick={() => setEditing(null)} className="text-sm text-zinc-500 hover:underline">
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={r.id}>
+                    <td className="whitespace-nowrap px-3 py-2">{fmtLongDay(r.date)}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{fmtMinutes(r.minutes)}</td>
+                    <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{r.note ?? <span className="text-zinc-300 dark:text-zinc-600">—</span>}</td>
+                    <td className="px-3 py-2">
+                      <select
+                        aria-label="Allocate to"
+                        value={r.member ?? ""}
+                        onChange={(e) => allocate(r.id, e.target.value)}
+                        className={`${input} ${r.member ? "" : "text-zinc-500"}`}
+                      >
+                        <option value="">Nobody (project only)</option>
+                        {r.member && !members.some((m) => m.key === r.member) && <option value={r.member}>{r.memberName}</option>}
+                        {members.map((m) => (
+                          <option key={m.key} value={m.key}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <button type="button" onClick={() => startEdit(r)} className="mr-3 text-sm text-primary hover:underline">
+                        Edit
+                      </button>
+                      <button type="button" onClick={() => remove(r.id)} className="text-sm text-status-fail-text hover:underline">
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
           <p className="border-t border-border-subtle px-3 py-2 text-xs text-zinc-500">

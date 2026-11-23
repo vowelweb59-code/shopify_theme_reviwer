@@ -123,6 +123,31 @@ export async function allocateManualHours(entryId: string, body: Record<string, 
   return listManualHours(e.projectId);
 }
 
+/** Edits an entry: any of date, hours + minutes, note, member. Fields left out keep their value. */
+export async function updateManualHours(entryId: string, body: Record<string, unknown>) {
+  const e = await manualEntry(entryId);
+  const set: Record<string, unknown> = {};
+  if (body.date !== undefined) {
+    const date = isoDay(body.date, "date");
+    if (!date) throw badRequest("Enter a date.");
+    if (date.toISOString().slice(0, 10) > istDate(new Date())) throw badRequest("The date cannot be in the future.");
+    set.entryDate = date;
+  }
+  if (body.hours !== undefined || body.minutes !== undefined) {
+    try {
+      set.minutes = manualMinutes(body.hours, body.minutes);
+    } catch (err) {
+      throw badRequest(err instanceof Error ? err.message : "Check the hours.");
+    }
+  }
+  if (body.note !== undefined) set.memo = str(body.note, "note", { max: 500, optional: true }) ?? null;
+  if (body.member !== undefined) set.senderExternalId = await senderFor(body.member);
+  if (Object.keys(set).length === 0) throw badRequest("Nothing to change.");
+  await ServiceTimeEntry.updateOne({ _id: entryId }, { $set: set });
+  await recordServiceAudit("hours.manual_edit", { projectId: e.projectId, entryId, fields: Object.keys(set) });
+  return listManualHours(e.projectId);
+}
+
 export async function deleteManualHours(entryId: string) {
   const e = await manualEntry(entryId);
   await ServiceTimeEntry.deleteOne({ _id: entryId });
