@@ -7,7 +7,6 @@ import { useApi } from "@/app/analytics/_components/useApi";
 import { CategoriesTab, type CrawlProgress } from "./_components/CategoriesTab";
 import { CountriesTab } from "./_components/CountriesTab";
 import { ImportTab } from "./_components/ImportTab";
-import { MarketingTab } from "./_components/MarketingTab";
 import { PresetsTab } from "./_components/PresetsTab";
 import { StoresTab, type DetectionProgress } from "./_components/StoresTab";
 import { ThemesTab } from "./_components/ThemesTab";
@@ -72,8 +71,6 @@ export function SalesContent() {
       />
     ),
   };
-
-  const marketingTab = { id: "marketing", label: "Marketing", content: <MarketingTab /> };
 
   return (
     <div className="flex flex-col gap-6">
@@ -145,7 +142,7 @@ export function SalesContent() {
       )}
 
       {data && !hasSales ? (
-        <TabbedPageClient title="" tabs={[marketingTab, importTab]} defaultTabId="import" />
+        <TabbedPageClient title="" tabs={[importTab]} defaultTabId="import" />
       ) : data ? (
         <TabbedPageClient
           title=""
@@ -179,7 +176,6 @@ export function SalesContent() {
                 />
               ),
             },
-            marketingTab,
             importTab,
           ]}
         />
