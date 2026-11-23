@@ -122,8 +122,6 @@ function applyQueueRules(e: PlannedEntry, now: Date) {
   }
   if (e.minutes === 0 && (e.flags.includes("MISSING_DURATION") || e.flags.includes("INVALID_DURATION"))) return ignore("NO_HOURS_WRITTEN");
   const ageDays = (now.getTime() - Date.parse(e.entryDate)) / DAY_MS;
-  // Owner rule: a timer switched off with no ON has no hours to count, whatever its age: set aside like an ON with no OFF.
-  if (e.flags.includes("ORPHAN_OFF")) return ignore("OFF_WITHOUT_ON");
   // Owner rule: a stranded ON or OFF figure with no hours to count (a report giving only an ON figure, a timer stopped within the
   // minute) is set aside.
   if (e.minutes === 0) return ignore("NOTHING_TO_COUNT");
@@ -260,11 +258,6 @@ export function planImport(input: PlanInput): ImportPlan {
 
   const entries = manual.map((x) => x.e);
   for (const e of entries) {
-    // Owner rule: a timer switched on and never off (or switched on twice) is ignored: it has no hours to count.
-    if (e.flags.includes("OPEN_INTERVAL") || e.flags.includes("DUPLICATE_ON")) {
-      e.notes.push(AUTO_IGNORED);
-      e.state = "REJECTED";
-    }
     applyQueueRules(e, now);
     if (e.state !== "REJECTED") e.state = e.flags.length ? "NEEDS_REVIEW" : "PARSED";
   }

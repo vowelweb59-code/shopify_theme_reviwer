@@ -2,9 +2,6 @@
 
 /** Plain-language meaning of each flag the importer can raise. */
 export const FLAG_LABELS: Record<string, string> = {
-  OPEN_INTERVAL: "Timer switched on, never switched off",
-  ORPHAN_OFF: "Timer switched off, no matching ON",
-  DUPLICATE_ON: "Switched on twice in a row",
   UNKNOWN_CLIENT: "Client not recognised",
   AMBIGUOUS_CLIENT: "Client could match several names",
   MULTIPLE_REPORTS_SAME_DAY: "Several reports for this client on one day",

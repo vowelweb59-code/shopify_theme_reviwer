@@ -1,9 +1,8 @@
 // Pure parser tests for the two time-report streams (docs/design/data-import.md). No database.
 import { describe, expect, it } from "vitest";
 import { parseManualReport } from "./manual-report";
-import { pairTimerEvents, type TimerInterval } from "./timer-intervals";
 import { parseTimerMessage, type TimerEvent } from "./timer-message";
-import { istDate, normalizeName, parseDayMonthYear, parseDuration } from "./text";
+import { normalizeName, parseDayMonthYear, parseDuration } from "./text";
 
 let n = 0;
 /** createTime is UTC; pass IST wall time as "YYYY-MM-DDTHH:mm" and it is converted. */
@@ -13,11 +12,6 @@ const ev = (text: string, wall: string, senderId?: string): TimerEvent => {
   const r = parseTimerMessage(msg(text, wall, senderId));
   if (r.kind !== "EVENT") throw new Error(`not an event: ${text} -> ${r.kind}`);
   return r.event;
-};
-const pair = (...events: TimerEvent[]) => pairTimerEvents(events);
-const only = (i: TimerInterval[]) => {
-  expect(i).toHaveLength(1);
-  return i[0];
 };
 
 describe("timer message parsing", () => {
@@ -99,75 +93,6 @@ describe("timer message parsing", () => {
   it("ignores chatter but surfaces a malformed timer line", () => {
     expect(parseTimerMessage(msg("lunch break, back at 2", "2026-10-24T10:00")).kind).toBe("IGNORED");
     expect(parseTimerMessage(msg("Dan Staggs Mohammed TIMER ON", "2026-10-24T10:00"))).toMatchObject({ kind: "UNRECOGNIZED", reason: "BAD_FORMAT" });
-  });
-});
-
-describe("interval pairing (hours = OFF minus ON)", () => {
-  it("calculates the duration from message timestamps", () => {
-    const i = only(pair(ev("Dan Staggs | Mohammed - TIMER ON", "2026-10-26T09:40"), ev("Dan Staggs | Mohammed - TIMER OFF", "2026-10-26T13:10")));
-    expect(i).toMatchObject({ minutes: 210, istDate: "2026-10-26", state: "PARSED", flags: [] });
-  });
-
-  it("handles several clients and profiles at once without crossing them", () => {
-    const out = pair(
-      ev("A | P1 - TIMER ON", "2026-10-26T09:00"),
-      ev("B | P2 - TIMER ON", "2026-10-26T09:30"),
-      ev("B | P2 - TIMER OFF", "2026-10-26T10:30"),
-      ev("A | P1 - TIMER OFF", "2026-10-26T11:00")
-    );
-    expect(out.map((i) => [i.client, i.minutes])).toEqual([
-      ["A", 120],
-      ["B", 60],
-    ]);
-  });
-
-  it("keeps people separate: another sender cannot close my timer", () => {
-    const out = pair(ev("A | P - TIMER ON", "2026-10-26T09:00", "u1"), ev("A | P - TIMER OFF", "2026-10-26T10:00", "u2"));
-    expect(out.map((i) => i.flags[0]).sort()).toEqual(["ORPHAN_OFF", "OPEN_INTERVAL"].sort());
-    expect(out.every((i) => i.minutes === null)).toBe(true);
-  });
-
-  it("ALWAYS flags an ON with no OFF and gives it no hours", () => {
-    const i = only(pair(ev("A | P - TIMER ON", "2026-10-26T09:00")));
-    expect(i).toMatchObject({ minutes: null, endAt: null, state: "NEEDS_REVIEW" });
-    expect(i.flags).toContain("OPEN_INTERVAL");
-  });
-
-  it("flags an OFF with no ON and a second ON while one is open", () => {
-    const o = only(pair(ev("A | P - TIMER OFF", "2026-10-26T09:00")));
-    expect(o).toMatchObject({ minutes: null, state: "NEEDS_REVIEW", flags: ["ORPHAN_OFF"] });
-
-    const out = pair(ev("A | P - TIMER ON", "2026-10-26T09:00"), ev("A | P - TIMER ON", "2026-10-26T09:30"), ev("A | P - TIMER OFF", "2026-10-26T10:00"));
-    const dup = out.find((i) => i.flags.includes("DUPLICATE_ON"))!;
-    expect(dup).toMatchObject({ minutes: null, state: "NEEDS_REVIEW" });
-    expect(dup.flags).toContain("OPEN_INTERVAL");
-    expect(out.find((i) => i.minutes === 30)).toBeTruthy();
-  });
-
-  it("auto-pairs a client typo when unambiguous, noting it without sending it to review", () => {
-    const i = only(pair(ev("Dan Staggs | Mohammed - TIMER ON", "2026-10-26T09:00"), ev("Dan Stags | Mohammed - TIMER OFF", "2026-10-26T10:00")));
-    expect(i.minutes).toBe(60);
-    expect(i.notes).toContain("CLIENT_NAME_CORRECTED");
-    expect(i.flags).toEqual([]);
-    expect(i.state).toBe("PARSED");
-
-    // A wholly different client is never merged.
-    expect(pair(ev("Dan Staggs | Mohammed - TIMER ON", "2026-10-26T09:00"), ev("Someone Else | Mohammed - TIMER OFF", "2026-10-26T10:00"))).toHaveLength(2);
-  });
-
-  it("flags midnight crossings and implausible lengths for review but still reports them", () => {
-    const night = only(pair(ev("A | P - TIMER ON", "2026-10-26T23:00"), ev("A | P - TIMER OFF", "2026-10-27T01:00")));
-    expect(night).toMatchObject({ minutes: 120, istDate: "2026-10-26", state: "NEEDS_REVIEW" });
-    expect(night.flags).toContain("CROSSES_MIDNIGHT");
-    const long = only(pair(ev("A | P - TIMER ON", "2026-10-26T01:00"), ev("A | P - TIMER OFF", "2026-10-26T20:00")));
-    expect(long.flags).toContain("SUSPICIOUS_DURATION");
-  });
-
-  it("assigns the day in IST, not UTC", () => {
-    // 00:30 IST on the 27th is still the 26th in UTC.
-    expect(istDate(new Date(ist("2026-10-27T00:30")))).toBe("2026-10-27");
-    const i = only(pair(ev("A | P - TIMER ON", "2026-10-27T00:10"), ev("A | P - TIMER OFF", "2026-10-27T01:10")));
-    expect(i.istDate).toBe("2026-10-27");
   });
 });
 

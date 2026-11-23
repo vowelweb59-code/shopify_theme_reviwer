@@ -7,7 +7,6 @@ import { fmtMinutes, INPUT } from "@/lib/service/ui/format";
 import type { ReviewEntry, ReviewProject } from "@/lib/service/api/review";
 import { BTN, SECTION, flagLabel } from "./shared";
 
-const IST = "+05:30";
 type ClientOption = { id: string; name: string };
 
 /**
@@ -32,7 +31,6 @@ export function ReviewEntries({ entries, clients, projects }: { entries: ReviewE
 /** One entry awaiting review, with the original Chat text beside the actions so the reviewer can check it. */
 function ReviewRow({ entry: e, clients, projects }: { entry: ReviewEntry; clients: ClientOption[]; projects: ReviewProject[] }) {
   const router = useRouter();
-  const needsTime = e.openTimer || e.orphanOff;
   const [clientName, setClientName] = useState(e.client?.name ?? "");
   const [adding, setAdding] = useState(false);
   const typed = clientName.trim().toLowerCase();
@@ -43,7 +41,6 @@ function ReviewRow({ entry: e, clients, projects }: { entry: ReviewEntry; client
   const [newInHouse, setNewInHouse] = useState(false);
   const [projectId, setProjectId] = useState(e.projectId ?? "");
   const options = adding ? [] : projects.filter((p) => p.clientId === (matched || null));
-  const [when, setWhen] = useState(""); // datetime-local, read as IST
   const [reason, setReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -80,12 +77,6 @@ function ReviewRow({ entry: e, clients, projects }: { entry: ReviewEntry; client
     void run("approve", body);
   }
 
-  function resolve() {
-    if (!when) return setError(e.openTimer ? "Enter when the timer was switched off." : "Enter when the timer was switched on.");
-    const at = `${when}:00${IST}`;
-    void run("resolve-timer", e.openTimer ? { endAt: at } : { startAt: at });
-  }
-
   return (
     <li className={SECTION}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -94,10 +85,10 @@ function ReviewRow({ entry: e, clients, projects }: { entry: ReviewEntry; client
           <span className="text-zinc-500">
             {" "}
             · {e.sender}
-            {e.profile ? ` (${e.profile})` : ""} · {e.entryDate} · {e.source === "TIMER_CALCULATED" ? "timer" : "manual report"}
+            {e.profile ? ` (${e.profile})` : ""} · {e.entryDate} · {"report"}
           </span>
         </div>
-        <div className="text-lg font-semibold">{needsTime ? "Time missing" : fmtMinutes(e.minutes)}</div>
+        <div className="text-lg font-semibold">{fmtMinutes(e.minutes)}</div>
       </div>
 
       <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Why this needs review">
@@ -117,86 +108,73 @@ function ReviewRow({ entry: e, clients, projects }: { entry: ReviewEntry; client
       </details>
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
-        {needsTime ? (
+        <>
           <label className="text-sm">
-            <span className="mb-1 block text-zinc-500">{e.openTimer ? "Switched off at (IST)" : "Switched on at (IST)"}</span>
-            <input type="datetime-local" value={when} onChange={(ev) => setWhen(ev.target.value)} className={INPUT} />
+            <span className="mb-1 block text-zinc-500">Client</span>
+            <input
+              list="service-review-clients"
+              value={clientName}
+              onChange={(ev) => {
+                setClientName(ev.target.value);
+                setAdding(false);
+              }}
+              placeholder="Type to search"
+              disabled={adding}
+              className={`${INPUT} w-56`}
+            />
           </label>
-        ) : (
-          <>
-            <label className="text-sm">
-              <span className="mb-1 block text-zinc-500">Client</span>
-              <input
-                list="service-review-clients"
-                value={clientName}
-                onChange={(ev) => {
-                  setClientName(ev.target.value);
-                  setAdding(false);
-                }}
-                placeholder="Type to search"
-                disabled={adding}
-                className={`${INPUT} w-56`}
-              />
-            </label>
-            <button type="button" onClick={() => setAdding((v) => !v)} className={`${BTN} mb-0.5`}>
-              {adding ? "Pick an existing client" : "+ New client"}
-            </button>
-            {adding && (
-              <>
-                <label className="text-sm">
-                  <span className="mb-1 block text-zinc-500">New client name</span>
-                  <input value={newName} onChange={(ev) => setNewName(ev.target.value)} maxLength={120} className={`${INPUT} w-56`} />
-                </label>
-                <label className="flex items-center gap-1 pb-1.5 text-sm">
-                  <input type="checkbox" checked={newInHouse} onChange={(ev) => setNewInHouse(ev.target.checked)} /> In-house
-                </label>
-              </>
-            )}
-            {options.length > 1 && (
+          <button type="button" onClick={() => setAdding((v) => !v)} className={`${BTN} mb-0.5`}>
+            {adding ? "Pick an existing client" : "+ New client"}
+          </button>
+          {adding && (
+            <>
               <label className="text-sm">
-                <span className="mb-1 block text-zinc-500">Project</span>
-                <select value={projectId} onChange={(ev) => setProjectId(ev.target.value)} className={`${INPUT} w-48`}>
-                  <option value="">Decide later</option>
-                  {options.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.projectName}
-                    </option>
-                  ))}
-                </select>
+                <span className="mb-1 block text-zinc-500">New client name</span>
+                <input value={newName} onChange={(ev) => setNewName(ev.target.value)} maxLength={120} className={`${INPUT} w-56`} />
               </label>
-            )}
-            <fieldset className="text-sm">
-              <legend className="mb-1 text-zinc-500">Hours</legend>
-              <div className="flex items-center gap-1">
-                <input
-                  aria-label="Hours"
-                  inputMode="numeric"
-                  value={hours}
-                  onChange={(ev) => setHours(ev.target.value.replace(/\D/g, ""))}
-                  className={`${INPUT} w-14`}
-                />
-                <span>h</span>
-                <input
-                  aria-label="Minutes"
-                  inputMode="numeric"
-                  value={mins}
-                  onChange={(ev) => setMins(ev.target.value.replace(/\D/g, ""))}
-                  className={`${INPUT} w-14`}
-                />
-                <span>m</span>
-              </div>
-            </fieldset>
-          </>
-        )}
-        {needsTime ? (
-          <button disabled={busy} onClick={resolve} className={BTN}>
-            Save time
-          </button>
-        ) : (
-          <button disabled={busy} onClick={() => void approve()} className={BTN}>
-            {adding ? "Add client and approve" : "Approve"}
-          </button>
-        )}
+              <label className="flex items-center gap-1 pb-1.5 text-sm">
+                <input type="checkbox" checked={newInHouse} onChange={(ev) => setNewInHouse(ev.target.checked)} /> In-house
+              </label>
+            </>
+          )}
+          {options.length > 1 && (
+            <label className="text-sm">
+              <span className="mb-1 block text-zinc-500">Project</span>
+              <select value={projectId} onChange={(ev) => setProjectId(ev.target.value)} className={`${INPUT} w-48`}>
+                <option value="">Decide later</option>
+                {options.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.projectName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <fieldset className="text-sm">
+            <legend className="mb-1 text-zinc-500">Hours</legend>
+            <div className="flex items-center gap-1">
+              <input
+                aria-label="Hours"
+                inputMode="numeric"
+                value={hours}
+                onChange={(ev) => setHours(ev.target.value.replace(/\D/g, ""))}
+                className={`${INPUT} w-14`}
+              />
+              <span>h</span>
+              <input
+                aria-label="Minutes"
+                inputMode="numeric"
+                value={mins}
+                onChange={(ev) => setMins(ev.target.value.replace(/\D/g, ""))}
+                className={`${INPUT} w-14`}
+              />
+              <span>m</span>
+            </div>
+          </fieldset>
+        </>
+        <button disabled={busy} onClick={() => void approve()} className={BTN}>
+          {adding ? "Add client and approve" : "Approve"}
+        </button>
         <button disabled={busy} onClick={() => setRejecting((v) => !v)} className={BTN}>
           Reject…
         </button>

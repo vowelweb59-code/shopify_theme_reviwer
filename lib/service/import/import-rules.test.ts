@@ -2,7 +2,6 @@
 // manual-vs-timer reconciliation, Upwork-style weekly figures. Pure logic, no database.
 import { describe, expect, it } from "vitest";
 import { resolveClient } from "./client-match";
-import { DEFAULT_TOLERANCE_MINUTES, reconcileOnTimer } from "./reconcile";
 import { isLateReport, reportingDeadline, weekOf } from "./week";
 import { weeklyHours, type HourEntry } from "./weekly-hours";
 
@@ -49,21 +48,6 @@ describe("reporting weeks (Monday start, report cutoff Monday 17:30 IST)", () =>
   it("flags a report posted after its week closed as late", () => {
     expect(isLateReport("2026-10-24", new Date("2026-10-26T11:00:00Z"))).toBe(false);
     expect(isLateReport("2026-10-24", new Date("2026-10-26T13:00:00Z"))).toBe(true);
-  });
-});
-
-describe("manual vs timer reconciliation (ON-timer hours)", () => {
-  it("confirms when the report agrees with the timer within tolerance", () => {
-    expect(reconcileOnTimer(180, 190)).toMatchObject({ status: "MATCH", finalMinutes: 180, confirmed: true });
-    expect(reconcileOnTimer(180, 180 + DEFAULT_TOLERANCE_MINUTES)).toMatchObject({ status: "MATCH" });
-  });
-  it("keeps the timer figure but leaves it unconfirmed, with both numbers, when they disagree", () => {
-    expect(reconcileOnTimer(180, 300)).toEqual({ status: "MISMATCH", finalMinutes: 180, confirmed: false, reportedMinutes: 300, diffMinutes: 120 });
-  });
-  it("treats a timer with no mention in the report as confirmed, and a report with no timer data as unverified", () => {
-    expect(reconcileOnTimer(180, null)).toMatchObject({ status: "NO_REPORTED_ON", confirmed: true });
-    expect(reconcileOnTimer(null, 120)).toMatchObject({ status: "NO_TIMER_DATA", finalMinutes: 120, confirmed: false });
-    expect(reconcileOnTimer(null, null)).toBeNull();
   });
 });
 

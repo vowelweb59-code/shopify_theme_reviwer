@@ -10,13 +10,15 @@ import { suggestClientName } from "../import/client-field";
 import { matchProfile } from "../import/profile-match";
 import { rematchClients } from "../import/rematch";
 import { normalizeName } from "../import/text";
-import { MAX_PLAUSIBLE_MINUTES } from "../import/timer-intervals";
 import { ServiceChatMessage, ServiceChatSender } from "@/models/service-chat";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 import { ServiceUpworkAccount, ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceUser } from "@/models/service-user";
+
+/** The longest single entry a reviewer may approve: 16 hours. */
+const MAX_PLAUSIBLE_MINUTES = 16 * 60;
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Shapes (shared with the pages)
@@ -42,8 +44,6 @@ export type ReviewEntry = {
   postedAt: string;
   client: { id: string; name: string } | null;
   messageText: string;
-  openTimer: boolean;
-  orphanOff: boolean;
 };
 
 export type ReviewProject = { id: string; projectName: string; clientId: string | null };
@@ -162,8 +162,6 @@ export async function listReview(opts: { flag?: string | null; view?: string | n
         client: e.clientId ? { id: e.clientId, name: clientName.get(e.clientId) ?? "Unknown client" } : null,
         // Evidence for the reviewer: the original Chat text.
         messageText: (m?.text ?? "").slice(0, 1500),
-        openTimer: e.flags.includes("OPEN_INTERVAL"),
-        orphanOff: e.flags.includes("ORPHAN_OFF"),
       };
     }),
     clients: clientRows.map((c) => ({ id: c._id, name: c.name })),
@@ -194,8 +192,6 @@ export async function approveEntry(entryId: string, body: Record<string, unknown
   const minutes = "minutes" in body ? int(body.minutes, "minutes", { max: MAX_PLAUSIBLE_MINUTES }) : null;
   const clientId = "clientId" in body ? str(body.clientId, "clientId", { optional: true }) : null;
   const projectId = "projectId" in body ? str(body.projectId, "projectId", { optional: true }) : null;
-  if (e.flags.includes("OPEN_INTERVAL") || e.flags.includes("ORPHAN_OFF"))
-    throw badRequest("Resolve the timer first: give the missing time, or reject the entry.");
   if (!(e.clientId ?? clientId)) throw badRequest("Choose the client before approving.");
   if (clientId && !(await ServiceClient.exists({ _id: clientId }))) throw badRequest("Unknown client.");
   if (projectId && !(await ServiceProject.exists({ _id: projectId, contract: { $ne: null } }))) throw badRequest("Unknown project.");
@@ -217,39 +213,6 @@ export async function rejectEntry(entryId: string, body: Record<string, unknown>
   await applyDecision(e, { state: "REJECTED" }, [`REJECTED_BY_REVIEW: ${reason}`]);
   await recordServiceAudit("time_entry.reject", { entryId: e._id, reason });
   return { id: e._id, state: "REJECTED" };
-}
-
-const instant = (v: unknown, field: string): Date | null => {
-  if (v === undefined || v === null) return null;
-  // Offsets are required: reports are IST.
-  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) || Number.isNaN(Date.parse(v)))
-    throw badRequest(`${field} must be a date and time with an offset.`);
-  return new Date(v);
-};
-
-/** Supplies the missing end (open ON) or start (orphan OFF) and approves the resulting interval. */
-export async function resolveTimer(entryId: string, body: Record<string, unknown>) {
-  const e = await pendingEntry(entryId);
-  const endAt = instant(body.endAt, "endAt");
-  const startAt = instant(body.startAt, "startAt");
-  const open = e.flags.includes("OPEN_INTERVAL");
-  const orphan = e.flags.includes("ORPHAN_OFF");
-  if (!open && !orphan) throw badRequest("This entry is not an open or unmatched timer.");
-  if (open && (!endAt || startAt)) throw badRequest("An open timer needs endAt (the time it was switched off).");
-  if (orphan && (!startAt || endAt)) throw badRequest("An unmatched OFF needs startAt (the time it was switched on).");
-  const msg = await ServiceChatMessage.findById(e.sourceMessageId).select("postedAt").lean<{ postedAt: Date } | null>();
-  if (!msg) throw notFound("The Chat message of this entry is missing.");
-  const known = new Date(msg.postedAt); // the ON message for an open timer, the OFF message for an orphan
-  const start = open ? known : startAt!;
-  const end = open ? endAt! : known;
-  const minutes = Math.round((end.getTime() - start.getTime()) / 60_000);
-  if (minutes <= 0) throw badRequest("The OFF time must be after the ON time.");
-  if (minutes > MAX_PLAUSIBLE_MINUTES) throw badRequest("More than 16 hours: split it or reject the entry.");
-  const flags = e.flags.filter((f) => f !== "OPEN_INTERVAL" && f !== "ORPHAN_OFF" && f !== "DUPLICATE_ON");
-  const state = flags.length ? "NEEDS_REVIEW" : "APPROVED";
-  await applyDecision(e, { minutes, flags, state }, [open ? "OFF_SUPPLIED_BY_REVIEW" : "ON_SUPPLIED_BY_REVIEW"]);
-  await recordServiceAudit("time_entry.resolve_timer", { entryId: e._id, kind: open ? "open" : "orphan", minutes });
-  return { id: e._id, state, minutes, flags };
 }
 
 /** Puts an entry on a specific project (or back to automatic with null). Works on any entry that is not rejected. */
