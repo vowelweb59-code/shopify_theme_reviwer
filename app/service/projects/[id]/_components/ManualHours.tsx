@@ -27,6 +27,11 @@ export function ManualHours({ projectId, rows, members, today }: { projectId: st
     setHours("");
     setMinutes("");
     setNote("");
+    // Show the week (or month) the hours were dated in, so the Hours card visibly includes them.
+    const q = new URLSearchParams(window.location.search);
+    q.set("on", date);
+    q.delete("week");
+    router.push(`?${q}`);
     router.refresh();
   }
 
