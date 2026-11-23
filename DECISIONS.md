@@ -132,6 +132,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 57. **No Marketing tab (owner 2026-11-23)**: a Marketing tab on `/sales` with per-theme author-profile mailboxes (Themeshopy help@themeshopy.com = Gravity, Rare, Soft; Fresco Solutions support@frescosolutions.net = Noble, Zeal; SAMS support@samsitservices.com = Nexus; Vowel Web support@vowelweb.com = Adorn, Flaunt, Dynamic, Renovate, Voltix) was built as C505 and **rolled back as C506** because Harvey (skillsllm.com/skill/harvey, an autonomous cold-email app) cannot work with Zoho and was not installed. Marketing is on hold; C505 (`2d7ac81`) holds the mapping if it is wanted again (native Zoho Mail per profile).
 
+58. **Back returns to the same period and filters (owner 2026-11-23; typecheck, lint, 2 tests pass, not rendered on live data, not pushed)**: the project links in the `/service` overview and the Revenue project table carry `?back=<the list's own address>` (`projectHref`, `lib/service/ui/back.ts`); the project page keeps `back` on its own links (period arrows, Week | Month, date picker, Settings tab) and "← Projects" ("← Revenue" when it came from Revenue) goes to that address, so the week or month, tab, status, On hold group and My team only are as they were left. `safeBack` accepts only paths inside `/service`. Links from other pages (Team performance) carry no `back` and still go to `/service`. The browser's own Back button was never affected.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).

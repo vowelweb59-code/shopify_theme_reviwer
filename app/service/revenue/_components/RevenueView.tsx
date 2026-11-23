@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { revenueByProject, type AppClient, type ProjectHours, type ProjectLine, type RevProject, type SheetRow } from "@/lib/service/revenue/by-project";
+import { projectHref } from "@/lib/service/ui/back";
 import { fmtMinutes, fmtUsd, ServiceStatusBadge } from "@/lib/service/ui/format";
 import type { ServiceProjectStatus } from "@/models/service-shared";
 
@@ -69,7 +70,7 @@ const Diff = ({ cents }: { cents: number }) => (
   </span>
 );
 
-function ProjectTable({ rows }: { rows: ProjectLine[] }) {
+function ProjectTable({ rows, back }: { rows: ProjectLine[]; back: string }) {
   const th = "px-4 py-2.5 font-medium";
   return (
     <table className="w-full min-w-[820px] text-sm">
@@ -88,7 +89,7 @@ function ProjectTable({ rows }: { rows: ProjectLine[] }) {
         {rows.map((p) => (
           <tr key={p.id} className="hover:bg-surface-muted/50">
             <td className="px-4 py-2.5">
-              <Link href={`/service/projects/${p.id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
+              <Link href={projectHref(p.id, back)} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
                 {p.name}
               </Link>
             </td>
@@ -249,14 +250,14 @@ export function RevenueView({
         {rows.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-zinc-500">No projects in this group for this period.</p>
         ) : (
-          <ProjectTable rows={shown} />
+          <ProjectTable rows={shown} back={link(range.id, group.id)} />
         )}
       </div>
       {rest.length > 0 && (
         <details className="rounded-lg border border-border-subtle bg-surface">
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium">Show the other {rest.length} projects</summary>
           <div className="overflow-x-auto border-t border-border-subtle">
-            <ProjectTable rows={rest} />
+            <ProjectTable rows={rest} back={link(range.id, group.id)} />
           </div>
         </details>
       )}

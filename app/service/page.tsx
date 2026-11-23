@@ -17,6 +17,7 @@ import type { ServiceProjectStatus } from "@/models/service-shared";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceUser } from "@/models/service-user";
+import { projectHref } from "@/lib/service/ui/back";
 
 export const dynamic = "force-dynamic";
 
@@ -211,6 +212,12 @@ export default async function ServiceOverviewPage({
 }) {
   const sp = await searchParams;
   const teamOnly = sp.hours === "team";
+  // The list as it is now (owner, 2026-11-23): a project's Back link returns here, same period and filters.
+  const here = (() => {
+    const q = new URLSearchParams();
+    for (const k of ["tab", "status", "hours", "by", "on", "hold"] as const) if (sp[k]) q.set(k, sp[k]!);
+    return q.size ? `/service?${q}` : "/service";
+  })();
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
@@ -585,7 +592,7 @@ export default async function ServiceOverviewPage({
               return (
                 <tr key={p._id} className="hover:bg-surface-muted/50">
                   <td className="px-4 py-2.5">
-                    <Link href={`/service/projects/${p._id}`} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
+                    <Link href={projectHref(p._id, here)} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
                       {p.name}
                     </Link>
                     <div className="text-xs text-zinc-500">

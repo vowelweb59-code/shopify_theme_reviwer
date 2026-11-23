@@ -9,6 +9,7 @@ import { istDate } from "@/lib/service/import/text";
 import { projectWeek, teamHours } from "@/lib/service/api/hours";
 import { listManualHours, manualHoursMembers } from "@/lib/service/api/manual-hours";
 import { assignableUsers, getAssignments, getDetails, getProject } from "@/lib/service/api/projects";
+import { backLabel, safeBack } from "@/lib/service/ui/back";
 import { fmtMinutes, fmtUsd, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
 import { Avatar, Card, DayBars, Metric, PeopleLine, Row } from "./_components/OverviewParts";
 import { TeamHoursTable } from "./_components/TeamHoursTable";
@@ -27,10 +28,11 @@ export default async function ServiceProjectPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ week?: string; on?: string; by?: string; view?: string; hours?: string }>;
+  searchParams: Promise<{ week?: string; on?: string; by?: string; view?: string; hours?: string; back?: string }>;
 }) {
   const { id } = await params;
-  const { week, on: onRaw, by: byRaw, view, hours: scope } = await searchParams;
+  const { week, on: onRaw, by: byRaw, view, hours: scope, back: backRaw } = await searchParams;
+  const back = safeBack(backRaw);
   const byMonth = byRaw === "month";
   const teamOnly = scope === "team";
   const settings = view === "settings";
@@ -57,6 +59,7 @@ export default async function ServiceProjectPage({
     if (on) p.set("on", on);
     if (m) p.set("by", "month");
     if (h) p.set("hours", "team");
+    if (back) p.set("back", back);
     return p.size ? `?${p}` : "";
   };
   const unit = byMonth ? "month" : "week";
@@ -88,8 +91,8 @@ export default async function ServiceProjectPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/service" className="text-sm text-primary hover:underline">
-          ← Projects
+        <Link href={back ?? "/service"} className="text-sm text-primary hover:underline">
+          ← {backLabel(back)}
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">{project.name}</h2>
@@ -107,8 +110,8 @@ export default async function ServiceProjectPage({
 
       <nav aria-label="Project sections" className="flex gap-1 border-b border-border-subtle">
         {[
-          { id: "overview", label: "Overview", href: base },
-          { id: "settings", label: "Settings", href: `${base}?view=settings` },
+          { id: "overview", label: "Overview", href: back ? `${base}?back=${encodeURIComponent(back)}` : base },
+          { id: "settings", label: "Settings", href: `${base}?view=settings${back ? `&back=${encodeURIComponent(back)}` : ""}` },
         ].map((t) => {
           const on = (t.id === "settings") === settings;
           return (
@@ -243,6 +246,7 @@ export default async function ServiceProjectPage({
                     <form action={base} method="get" className="flex items-center gap-2">
                       {byMonth && <input type="hidden" name="by" value="month" />}
                       {teamOnly && <input type="hidden" name="hours" value="team" />}
+                      {back && <input type="hidden" name="back" value={back} />}
                       <label htmlFor="period-pick" className="sr-only">
                         Choose a {unit}
                       </label>
