@@ -61,47 +61,6 @@ export function Metric({
   );
 }
 
-/** Hours per day of the chosen week or month as thin bars (tooltips carry the figures). */
-export function DayBars({ days, month }: { days: Array<{ date: string; minutes: number }>; month: boolean }) {
-  const max = Math.max(1, ...days.map((d) => d.minutes));
-  const label = (d: { date: string }, i: number) => {
-    const dt = new Date(`${d.date}T00:00:00Z`);
-    if (!month) return dt.toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
-    return i % 5 === 0 ? String(dt.getUTCDate()) : "";
-  };
-  return (
-    <div role="img" aria-label="Hours per day">
-      <div className="flex h-24 items-end gap-1">
-        {days.map((d) => (
-          <div
-            key={d.date}
-            className="flex h-full min-w-0 flex-1 items-end"
-            title={`${new Date(`${d.date}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}: ${hm(d.minutes)}`}
-          >
-            <div
-              className={`w-full rounded-t-[4px] ${d.minutes > 0 ? "bg-primary" : "bg-surface-muted"}`}
-              style={{ height: `${d.minutes > 0 ? Math.max(4, (d.minutes / max) * 100) : 3}%` }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="mt-1.5 flex gap-1 text-[11px] text-zinc-500">
-        {days.map((d, i) => (
-          <div key={d.date} className="min-w-0 flex-1 text-center">
-            {label(d, i)}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const hm = (m: number) => {
-  const h = Math.floor(m / 60);
-  const r = Math.round(m % 60);
-  return h === 0 ? `${r}m` : r === 0 ? `${h}h` : `${h}h ${r}m`;
-};
-
 export function Avatar({ name }: { name: string }) {
   const initials = name
     .split(/\s+/)

@@ -11,7 +11,8 @@ import { listManualHours, manualHoursMembers } from "@/lib/service/api/manual-ho
 import { assignableUsers, getAssignments, getDetails, getProject } from "@/lib/service/api/projects";
 import { backLabel, safeBack } from "@/lib/service/ui/back";
 import { fmtMinutes, fmtUsd, ServiceStatusBadge, shiftWeek, weekLabel } from "@/lib/service/ui/format";
-import { Avatar, Card, DayBars, Metric, PeopleLine, Row } from "./_components/OverviewParts";
+import { Card, Metric, PeopleLine, Row } from "./_components/OverviewParts";
+import { DayHours } from "./_components/DayHours";
 import { TeamHoursTable } from "./_components/TeamHoursTable";
 import { AssignmentsEditor } from "./_components/AssignmentsEditor";
 import { ContractEditor } from "./_components/ContractEditor";
@@ -288,22 +289,11 @@ export default async function ServiceProjectPage({
                 </div>
                 {pw.hours && pw.byDay ? (
                   <div className="space-y-4">
-                    <DayBars days={pw.byDay} month={byMonth} />
-                    {pw.bySender && pw.bySender.length > 0 && (
-                      <ul className="flex flex-wrap gap-2">
-                        {pw.bySender.map((p) => (
-                          <li
-                            key={p.name}
-                            className="flex items-center gap-2 rounded-full border border-border-subtle bg-surface-muted/40 py-1 pl-1 pr-3 text-sm"
-                          >
-                            <Avatar name={p.name} />
-                            {outsider(p.name)}
-                            {p.name}
-                            <span className="tabular-nums text-zinc-500">{fmtMinutes(p.minutes)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <DayHours
+                      days={pw.byDay.map((d) => ({ ...d, people: d.people.map((p) => ({ ...p, star: outsider(p.name) })) }))}
+                      month={byMonth}
+                      totals={(pw.bySender ?? []).map((p) => ({ ...p, star: outsider(p.name) }))}
+                    />
                     <p className="text-xs text-zinc-500">
                       {pw.hours.trackedMinutes > 0 ? `Tracked ${fmtMinutes(pw.hours.trackedMinutes)} · manual ${fmtMinutes(pw.hours.manualMinutes)}. ` : ""}
                       Hours come from the daily reports. Reported hours, not Upwork-verified; a report shared across projects counts here only for this

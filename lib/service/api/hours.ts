@@ -220,7 +220,8 @@ export type ProjectWeek = {
   reason: "NO_CONTRACT" | null;
   sharedClient?: boolean;
   unassignedEntries?: number;
-  byDay?: Array<{ date: string; minutes: number }>;
+  /** Per day of the period: the minutes and who reported them (people most hours first). */
+  byDay?: Array<{ date: string; minutes: number; people: Array<{ name: string; minutes: number }> }>;
   bySender?: Array<{ name: string; minutes: number }>;
   needsReview?: number;
 };
@@ -243,7 +244,15 @@ export async function projectWeek(id: string, weekRaw?: string | null, teamOnly 
   const dayCount = Math.round((Date.parse(`${week.end}T00:00:00Z`) - Date.parse(`${week.start}T00:00:00Z`)) / 86_400_000) + 1;
   const byDay = Array.from({ length: dayCount }, (_, i) => {
     const d = shiftDays(week.start, i);
-    return { date: d, minutes: hourEntries.filter((e) => e.date === d && e.confirmed).reduce((n, e) => n + e.minutes, 0) };
+    const who = new Map<string, number>();
+    let minutes = 0;
+    for (const e of entries)
+      if (isConfirmed(e) && day(e.entryDate) === d) {
+        minutes += e.minutes;
+        const n = names.get(e.senderExternalId) ?? "Unknown sender";
+        who.set(n, (who.get(n) ?? 0) + e.minutes);
+      }
+    return { date: d, minutes, people: [...who].map(([name, m]) => ({ name, minutes: m })).sort((a, b) => b.minutes - a.minutes) };
   });
   const bySender = new Map<string, number>();
   for (const e of entries)
