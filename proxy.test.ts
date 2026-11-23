@@ -93,6 +93,15 @@ describe("proxy login gate", () => {
     expect(run("/api/session", { method: "POST" }).headers.get("x-middleware-next")).toBe("1");
   });
 
+  it("serves the privacy and terms pages to anyone, and only those exact paths", () => {
+    expect(run("/privacy").headers.get("x-middleware-next")).toBe("1");
+    expect(run("/terms").headers.get("x-middleware-next")).toBe("1");
+    expect(run("/privacy/x").status).toBe(307);
+    expect(run("/privacy.json").status).toBe(307);
+    expect(run("/termsofuse").status).toBe(307);
+    expect(run("/settings").status).toBe(307);
+  });
+
   it("lets a valid session through and bounces it off /login", () => {
     Object.assign(process.env, ENV);
     const token = createSessionToken(process.env);

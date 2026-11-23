@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, authMode, isValidSessionToken } from "@/lib/auth/session";
+import { isPublicLegalPath } from "@/lib/legal/pages";
 
 export { authMode };
 
@@ -11,9 +12,9 @@ export const config = {
   matcher: ["/((?!api/health$|_next/static/|favicon\\.ico$).*)"],
 };
 
-// Reachable without a session: the login page and the sign-in/out endpoint.
+// Reachable without a session: the login page, the sign-in/out endpoint and the public privacy / terms pages (Google's consent screen links to them).
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/api/session";
+  return pathname === "/login" || pathname === "/api/session" || isPublicLegalPath(pathname);
 }
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);

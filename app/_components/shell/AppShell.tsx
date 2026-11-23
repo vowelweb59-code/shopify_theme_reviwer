@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
+import { isPublicLegalPath } from "@/lib/legal/pages";
 
-/** Sidebar (desktop) + top bar/drawer (mobile) + content area — replaces the old horizontal top nav app-wide. The login page renders bare. */
+/** Sidebar (desktop) + top bar/drawer (mobile) + content area — replaces the old horizontal top nav app-wide. The login page and the public privacy / terms pages render bare. */
 export function AppShell({ children, authEnabled }: { children: ReactNode; authEnabled: boolean }) {
   const pathname = usePathname();
-  if (pathname === "/login") return <>{children}</>;
+  if (pathname === "/login" || isPublicLegalPath(pathname)) return <>{children}</>;
 
   return (
     <div className="flex min-h-full">
