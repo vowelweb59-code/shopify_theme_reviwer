@@ -152,6 +152,8 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 
 67. **Not started projects leave the Active tab (owner 2026-11-24: "Not started project should not be visible in active projects"; typecheck and lint pass, not rendered against live data, pushed)**: `STATUS_TABS` in `app/service/page.tsx` now has Active (Active, Blocked, Partial hold), On hold, **Not started** (own tab, status Not started only), Closed, All. The Active count and headline numbers no longer include them; All still does. A project held by the item 65 rule is On hold, not in the Not started tab.
 
+68. **Item 65 withdrawn: Not started projects stay in the Not started tab (owner 2026-11-24: "Keep Not started projects in the Not started tab"; tests pass, pushed)**: the rule that moved a Not started project to On hold once the team reported on it is removed from `applyActivityRules` (and its test). It had already held two projects on live data (Emily Harrison – Sapana, Manuel Schmidt – Rahul); `scripts/service-restore-not-started.ts [--apply]` (dry run by default, owner runs `--apply`, audit `projects.restore_not_started`) puts back to Not started those whose newest status change is that automatic hold (dry run: exactly those two). `NOT_STARTED_HOLD_REASON` stays only so the Revenue tab still reads such old holds as Not started until the script is run. Kashi Raj Bhatia – Ashfaque is Not started in the live database and now stays so.
+
 **B. Waiting on the owner's data**
 1. "Rejected on" dates for the rounds added from the manual sheet: Noble, Grocery, Nexus, Velocity, Apollo (feeds the rework split).
 2. Total **design days for Noble and Grocery** (their splits are saved but price nothing until days exist).
