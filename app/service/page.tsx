@@ -67,9 +67,11 @@ const TABS = [
 const DEFAULT_TAB = "all";
 
 const STATUS_TABS = [
-  { id: "active", label: "Active", match: (p: Row) => ["NOT_STARTED", "ACTIVE", "BLOCKED", "PARTIAL_HOLD"].includes(p.status) },
+  { id: "active", label: "Active", match: (p: Row) => ["ACTIVE", "BLOCKED", "PARTIAL_HOLD"].includes(p.status) },
   // Waiting for client counts as on hold, with its own tag and its own filter (owner, 2026-11-20).
   { id: "on_hold", label: "On hold", match: (p: Row) => p.status === "ON_HOLD" || p.status === "WAITING_FOR_CLIENT" },
+  // Not started has its own tab and is not in Active (owner, 2026-11-24).
+  { id: "not_started", label: "Not started", match: (p: Row) => p.status === "NOT_STARTED" },
   { id: "closed", label: "Closed", match: (p: Row) => ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(p.status) },
   { id: "all", label: "All", match: () => true },
 ] as const;
