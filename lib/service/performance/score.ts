@@ -6,6 +6,9 @@
 // average review is still the plain average of the rated projects.
 export const UNRATED_STARS = 3.5;
 
+/** A Cancelled or Not started project has no impact on anyone's score (owner, 2026-11-24). */
+export const NO_SCORE_STATUSES: readonly string[] = ["CANCELLED", "NOT_STARTED"];
+
 const KNOTS: ReadonlyArray<readonly [number, number]> = [
   [1, 3],
   [2, 2],

@@ -46,6 +46,24 @@ describe("computePerformance", () => {
     expect(m.simpleRating).toBe(4);
   });
 
+  it("leaves Cancelled and Not started projects out of the review score", () => {
+    const r = computePerformance({
+      ...base,
+      projects: [
+        project({ id: "a", reviewRating: 5, status: "COMPLETED" }),
+        project({ id: "x", reviewRating: 1, status: "CANCELLED" }),
+        project({ id: "n", status: "NOT_STARTED" }),
+      ],
+      entries: [e("Batul", "a", "2026-01-05", 120), e("Batul", "x", "2026-01-06", 600), e("Batul", "n", "2026-01-07", 600)],
+    });
+    const m = by(r, "Batul");
+    expect(m.weightedRating).toBe(5);
+    expect(m.ratedProjects).toBe(1);
+    expect(m.scoredProjects).toBe(1);
+    expect(m.projectsHandled).toBe(3);
+    expect(m.totalMinutes).toBe(1320);
+  });
+
   it("allocates a member's usual week (last 28 days / 4), whatever the project's quota", () => {
     const r = computePerformance({
       ...base,

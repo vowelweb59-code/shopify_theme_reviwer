@@ -1,5 +1,5 @@
 import { capacityForWeek, rateOf, type DailyRule, type PerfEntry, type PerfProject } from "../performance/compute";
-import { memberRating } from "../performance/score";
+import { memberRating, NO_SCORE_STATUSES } from "../performance/score";
 import { baMatch } from "../ba-members";
 import { bdMatch } from "../bd-members";
 import { weekOf } from "../import/week";
@@ -283,10 +283,12 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
     t.projects.add(p.id);
     const w = weekStartOf(e.date);
     t.weeks.set(w, (t.weeks.get(w) ?? 0) + e.minutes);
-    const bp = t.byProject.get(p.id) ?? { rating: p.reviewRating, minutes: 0 };
-    bp.minutes += e.minutes;
-    t.byProject.set(p.id, bp);
-    if (p.reviewRating !== null) t.ratedProjects.add(p.id);
+    if (!NO_SCORE_STATUSES.includes(p.status)) {
+      const bp = t.byProject.get(p.id) ?? { rating: p.reviewRating, minutes: 0 };
+      bp.minutes += e.minutes;
+      t.byProject.set(p.id, bp);
+      if (p.reviewRating !== null) t.ratedProjects.add(p.id);
+    }
     tm.set(e.member, t);
   }
   const teammates: Teammate[] = [...tm]
