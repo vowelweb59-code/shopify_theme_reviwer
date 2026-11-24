@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CloseFromPosts } from "./_components/CloseFromPosts";
+import { FillReviews } from "./_components/FillReviews";
 import type { ReactNode } from "react";
 import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
@@ -549,6 +550,7 @@ export default async function ServiceOverviewPage({
         </div>
       )}
       {status.id === "on_hold" && <CloseFromPosts />}
+      {status.id === "closed" && <FillReviews />}
 
       {showMoney ? (
         <div className="grid gap-4 sm:grid-cols-3">

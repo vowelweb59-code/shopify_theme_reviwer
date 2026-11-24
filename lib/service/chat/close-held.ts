@@ -22,8 +22,8 @@ export interface CloseHeldResult extends ClosurePlan {
 
 const SINCE = new Date("2022-01-01T00:00:00Z");
 
-export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: string[] } = {}): Promise<CloseHeldResult> {
-  const now = new Date();
+/** Reads the whole New Project Update space and returns its "Contract ended" and "Accepted" posts, profiles resolved to our Upwork profile ids. */
+export async function readNewProjectPosts(now = new Date()) {
   const msgs = await listServiceMessages(await serviceRefreshToken(), NEW_PROJECT_SPACE, { from: SINCE, to: new Date(now.getTime() + 60_000) });
   const profiles = await ServiceUpworkProfile.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>();
   const profileByName = new Map<string, string>();
@@ -46,6 +46,12 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
       });
     else if (post?.kind === "accepted") accepted.push({ client: post.client, profileId: profileOf(post.profile), posted });
   }
+  return { ended, accepted, postsRead: msgs.length };
+}
+
+export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: string[] } = {}): Promise<CloseHeldResult> {
+  const now = new Date();
+  const { ended, accepted, postsRead } = await readNewProjectPosts(now);
 
   const heldRows = await ServiceProject.find({ status: "ON_HOLD" })
     .select("name clientId upworkProfileId history reviewRating")
@@ -76,7 +82,7 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
     ended,
     accepted
   );
-  const result: CloseHeldResult = { ...plan, heldCount: heldRows.length, postsRead: msgs.length, applied: [] };
+  const result: CloseHeldResult = { ...plan, heldCount: heldRows.length, postsRead, applied: [] };
   if (!opts.apply) return result;
 
   const wanted = new Set(opts.ids ?? []);
