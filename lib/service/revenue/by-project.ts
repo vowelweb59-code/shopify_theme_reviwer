@@ -29,6 +29,8 @@ export interface RevProject {
   profileKeys: readonly string[];
   type: "HOURLY" | "FIXED" | null;
   rateCents: number | null;
+  /** Still marked Not started (or held because the team works on a Not started project): left out of Revenue, its hours shown apart. */
+  notStarted?: boolean;
 }
 export interface ProjectHours {
   projectId: string;

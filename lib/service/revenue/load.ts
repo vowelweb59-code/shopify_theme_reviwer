@@ -6,10 +6,22 @@ import { loadAllTimeEntries } from "../hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "../hours/attribution";
 import { profileKey, type AppClient, type ProjectHours, type RevProject, type SheetRow } from "./by-project";
 import { normName } from "./match";
+import { NOT_STARTED_HOLD_REASON } from "../projects/activity-rules";
 import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceRevenueTaken } from "@/models/service-revenue";
 import { ServiceUpworkProfile } from "@/models/service-upwork";
+
+/**
+ * Not started as the owner keeps it (2026-11-24): the status is Not started, or the project is On hold because the team worked on it
+ * while it was still Not started (`NOT_STARTED_HOLD_REASON` is its newest status change; any later change by hand ends it).
+ */
+export function isNotStartedProject(status: string, history: Array<{ toStatus: string; reason: string | null; at: Date }>): boolean {
+  if (status === "NOT_STARTED") return true;
+  if (status !== "ON_HOLD") return false;
+  const latest = [...(history ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at))[0];
+  return latest?.reason === NOT_STARTED_HOLD_REASON;
+}
 
 /** What the Revenue tab compares: the imported sheet rows, the app's clients and the reported minutes per project and month. */
 export const loadRevenueInput = () => memo("service:revenue-input", 30_000, loadRevenueInputUncached);
@@ -21,13 +33,14 @@ async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients:
       .select("month clientName profile amountCents")
       .lean<Array<{ month: string; clientName: string; profile: string | null; amountCents: number }>>(),
     ServiceClient.find().select("name aliases").lean<Array<{ _id: string; name: string; aliases: string[] }>>(),
-    ServiceProject.find().select("name clientId status contract upworkProfileId").lean<
+    ServiceProject.find().select("name clientId status contract upworkProfileId history").lean<
       Array<{
         _id: string;
         name: string;
         clientId: string | null;
         status: string;
         upworkProfileId: string | null;
+        history: Array<{ toStatus: string; reason: string | null; at: Date }>;
         contract: { type: "HOURLY" | "FIXED"; hourlyRateCents: number | null } | null;
       }>
     >(),
@@ -67,6 +80,7 @@ async function loadRevenueInputUncached(): Promise<{ taken: SheetRow[]; clients:
     profileKeys: p.upworkProfileId ? (profileKeys.get(p.upworkProfileId) ?? []) : [],
     type: p.contract?.type ?? null,
     rateCents: p.contract?.hourlyRateCents ?? null,
+    notStarted: isNotStartedProject(p.status, p.history),
   }));
   const clients: AppClient[] = [];
   for (const c of clientDocs) {
