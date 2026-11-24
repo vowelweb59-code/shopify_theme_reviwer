@@ -1,4 +1,5 @@
 import { capacityForWeek, rateOf, type DailyRule, type PerfEntry, type PerfProject } from "../performance/compute";
+import { memberRating } from "../performance/score";
 import { baMatch } from "../ba-members";
 import { bdMatch } from "../bd-members";
 import { weekOf } from "../import/week";
@@ -265,21 +266,27 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
   // Teammates.
   const tm = new Map<
     string,
-    { minutes: number; value: number; projects: Set<string>; weeks: Map<string, number>; rated: number; ratedMinutes: number; ratedProjects: Set<string> }
+    {
+      minutes: number;
+      value: number;
+      projects: Set<string>;
+      weeks: Map<string, number>;
+      byProject: Map<string, { rating: number | null; minutes: number }>;
+      ratedProjects: Set<string>;
+    }
   >();
   for (const e of inRange) {
     const p = byId.get(e.projectId)!;
-    const t = tm.get(e.member) ?? { minutes: 0, value: 0, projects: new Set(), weeks: new Map(), rated: 0, ratedMinutes: 0, ratedProjects: new Set() };
+    const t = tm.get(e.member) ?? { minutes: 0, value: 0, projects: new Set(), weeks: new Map(), byProject: new Map(), ratedProjects: new Set() };
     t.minutes += e.minutes;
     t.value += valueOf(e);
     t.projects.add(p.id);
     const w = weekStartOf(e.date);
     t.weeks.set(w, (t.weeks.get(w) ?? 0) + e.minutes);
-    if (p.reviewRating !== null) {
-      t.rated += p.reviewRating * e.minutes;
-      t.ratedMinutes += e.minutes;
-      t.ratedProjects.add(p.id);
-    }
+    const bp = t.byProject.get(p.id) ?? { rating: p.reviewRating, minutes: 0 };
+    bp.minutes += e.minutes;
+    t.byProject.set(p.id, bp);
+    if (p.reviewRating !== null) t.ratedProjects.add(p.id);
     tm.set(e.member, t);
   }
   const teammates: Teammate[] = [...tm]
@@ -294,7 +301,7 @@ export function computeAnalytics(input: AnalyticsInput): Analytics {
         valueCents: t.value,
         projects: t.projects.size,
         ratedProjects: t.ratedProjects.size,
-        rating: t.ratedMinutes ? t.rated / t.ratedMinutes : null,
+        rating: memberRating([...t.byProject.values()]),
         activeWeeks: done.length,
         avgWeekMinutes: Math.round(avg),
         peakWeekMinutes: Math.max(0, ...done),

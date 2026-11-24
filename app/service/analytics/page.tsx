@@ -236,7 +236,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
             }))}
           />
         </Panel>
-        <Panel title="Teammates · best reviews" note="At least 3 reviewed projects; weighted by hours.">
+        <Panel title="Teammates · best reviews" note="At least 3 reviewed projects; weighted by hours, no review = 3.5★, 5★ and 1–2★ weigh more.">
           <HBars
             rows={top(
               active.filter((t) => t.ratedProjects >= 3 && t.rating !== null),

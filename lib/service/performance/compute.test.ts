@@ -33,7 +33,7 @@ describe("computePerformance", () => {
     expect(by(r, "Rupali")).toMatchObject({ valueCents: 1500, unpricedMinutes: 60 });
   });
 
-  it("weights the review rating by the member's hours on each rated project", () => {
+  it("scores the review rating by hours, with 3.5 stars for an unrated project and more weight on 5 and 1-2 stars", () => {
     const r = computePerformance({
       ...base,
       projects: [project({ id: "a", reviewRating: 5, status: "COMPLETED" }), project({ id: "b", reviewRating: 3, status: "COMPLETED" }), project({ id: "c" })],
@@ -41,7 +41,8 @@ describe("computePerformance", () => {
     });
     const m = by(r, "Batul");
     expect(m.ratedProjects).toBe(2);
-    expect(m.weightedRating).toBeCloseTo((5 * 180 + 3 * 60) / 240);
+    // 5 stars (weight 2) x 180 min, 3 stars (weight 1) x 60 min and the unrated project c as 3.5 stars (weight 1) x 600 min.
+    expect(m.weightedRating).toBeCloseTo((5 * 2 * 180 + 3 * 1 * 60 + 3.5 * 1 * 600) / (2 * 180 + 60 + 600));
     expect(m.simpleRating).toBe(4);
   });
 

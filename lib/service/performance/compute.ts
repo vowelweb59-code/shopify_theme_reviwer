@@ -3,6 +3,7 @@
 // running projects (average of the last 4 weeks), not the projects' quotas (owner, same day). Pure: the loader (`load.ts`) turns the
 // database into these inputs.
 
+import { memberRating } from "./score";
 /** 8 h 30 a day, Monday to Friday (Saturday is optional, see attendance): a member's weekly availability. */
 export const WEEKLY_CAPACITY_MINUTES = 8.5 * 5 * 60;
 /** Fixed-price work with no hourly rate is valued at the standard $15 an hour, as the Revenue tab does. */
@@ -85,7 +86,7 @@ export interface MemberPerformance {
   /** Running projects the member reported on in the last 30 days. */
   projectsNow: number;
   ratedProjects: number;
-  /** Rating weighted by the member's hours on each rated project; null with no rated project. */
+  /** The member's score (see score.ts): every project counts, unrated ones as 3.5 stars, 5 / 1 / 2 stars weigh more; null with no hours. */
   weightedRating: number | null;
   simpleRating: number | null;
   weekMinutes: number;
@@ -197,8 +198,7 @@ export function computePerformance(input: PerfInput): MemberPerformance[] {
     m.projectsNow = m.projects.filter((x) => x.last30Minutes > 0 && ALLOCATED_STATUSES.includes(byId.get(x.projectId)!.status)).length;
     const rated = m.projects.filter((x) => x.rating !== null);
     m.ratedProjects = rated.length;
-    const hours = rated.reduce((n, x) => n + x.minutes, 0);
-    m.weightedRating = rated.length && hours ? rated.reduce((n, x) => n + x.rating! * x.minutes, 0) / hours : null;
+    m.weightedRating = memberRating(m.projects);
     m.simpleRating = rated.length ? rated.reduce((n, x) => n + x.rating!, 0) / rated.length : null;
     // Allocation: the member's usual week on every running project, i.e. what they reported on it in the last 28 days / 4.
     for (const x of m.projects) {

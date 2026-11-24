@@ -59,9 +59,9 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
           label="Average review"
           value={stars(m.weightedRating)}
           note={
-            m.ratedProjects
-              ? `${m.ratedProjects} reviewed project${m.ratedProjects === 1 ? "" : "s"} · simple average ${m.simpleRating!.toFixed(1)}`
-              : "no reviewed project yet"
+            m.projectsHandled
+              ? `${m.ratedProjects} of ${m.projectsHandled} projects reviewed · no review counts as 3.5★, 5★ and 1–2★ weigh more`
+              : "no projects yet"
           }
         />
       </div>
