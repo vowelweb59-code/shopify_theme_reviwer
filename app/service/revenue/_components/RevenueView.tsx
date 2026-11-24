@@ -144,15 +144,16 @@ export function RevenueView({
   const first = input.taken.reduce((m, t) => (t.month < m ? t.month : m), "9999-99");
   // "Last month" = the newest month the sales sheet has (owner, 2026-11-21): money taken is only known up to that month.
   const from = range.id === "1m" ? last : range.id === "12m" ? shift(last, -11) : range.id === "ytd" ? `${last.slice(0, 4)}-01` : first;
-  // Not started projects (owner, 2026-11-24): their hours are not counted in Revenue; the hours spent on them are shown apart.
-  const notStartedIds = new Set(input.projects.filter((p) => p.notStarted).map((p) => p.id));
+  // Not started and Cancelled projects (owner, 2026-11-24): their hours are not counted in Revenue; the hours spent on them are shown apart.
+  const isLeftOut = (p: RevProject) => p.notStarted || p.status === "CANCELLED";
+  const notStartedIds = new Set(input.projects.filter(isLeftOut).map((p) => p.id));
   const rev = revenueByProject(
     { ...input, projects: input.projects.filter((p) => !notStartedIds.has(p.id)), hours: input.hours.filter((h) => !notStartedIds.has(h.projectId)) },
     from,
     last
   );
   const nsRows = input.projects
-    .filter((p) => p.notStarted)
+    .filter(isLeftOut)
     .map((p) => {
       const mine = input.hours.filter((h) => h.projectId === p.id);
       return {
@@ -322,7 +323,7 @@ export function RevenueView({
       {nsRows.length > 0 && (
         <details className="rounded-lg border border-border-subtle bg-surface" open={nsTotal > 0}>
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
-            Not started projects: {fmtMinutes(nsTotal)} spent in all, {fmtMinutes(nsPeriod)} in this period{" "}
+            Not started and cancelled projects: {fmtMinutes(nsTotal)} spent in all, {fmtMinutes(nsPeriod)} in this period{" "}
             <span className="font-normal text-zinc-500">· {nsRows.length} projects, left out of Revenue above (no hours counted, no money matched)</span>
           </summary>
           <div className="overflow-x-auto border-t border-border-subtle">
