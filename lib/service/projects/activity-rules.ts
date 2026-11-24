@@ -20,6 +20,7 @@ export const AUTO_RESUME_REASON = "Automatic: hours reported again";
 export const DM_IDLE_DAYS = 60;
 /** Set by `scripts/service-hold-project.ts`: the owner holds a project until a team member reports on it. */
 export const HOLD_UNTIL_TEAM_REASON = "Hold until a Digital Marketing team report";
+export const NOT_STARTED_HOLD_REASON = "Automatic: the team is working on a project still marked Not started";
 export const AUTO_HOLD_DM_REASON = `Automatic: no Digital Marketing team report for ${DM_IDLE_DAYS} days`;
 const DAY_MS = 86_400_000;
 /** Holds placed by these rules, under the current or an earlier wording ("... for 45 days"). */
@@ -59,6 +60,15 @@ export function shouldReopen(i: { completedOn: Date | null; lastAny: Date | unde
   if (!i.completedOn || !i.lastAny) return false;
   const day = (d: Date) => istDay(new Date(d));
   return day(i.lastAny) > day(i.completedOn) && i.lastAny <= i.today;
+}
+
+/**
+ * A project still marked Not started that a Digital Marketing team member has reported hours on goes On hold (owner 2026-11-24),
+ * once: if the owner later sets it back to Not started by hand, the project is left alone (the hold is already in its history).
+ */
+export function shouldHoldNotStarted(i: { lastDm: Date | undefined; today: Date; history: Array<{ reason: string | null }> }): boolean {
+  if (!i.lastDm || i.lastDm > i.today) return false;
+  return !i.history.some((h) => h.reason === NOT_STARTED_HOLD_REASON);
 }
 
 export interface HoldInput {
@@ -115,9 +125,10 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
   }
   const dmMembers = new Set((await loadDmProjects()).filter((p) => p.teamNames.some((n) => dmMatch(n) !== null)).map((p) => p.id));
 
-  const projects = await ServiceProject.find({ status: { $in: ["ACTIVE", "ON_HOLD"] } })
+  const projects = await ServiceProject.find({ status: { $in: ["NOT_STARTED", "ACTIVE", "ON_HOLD"] } })
     .select("name status createdAt startDate history")
     .lean<Array<{ _id: string; name: string; status: string; createdAt: Date; startDate: Date | null; history: Array<{ reason: string | null; at: Date }> }>>();
+  const todayDay = new Date(`${istDay(now)}T00:00:00Z`);
   const contractStarts = new Map<string, Date[]>();
   for (const c of await ServiceUpworkContract.find({ projectId: { $in: projects.map((p) => p._id) }, startDate: { $ne: null } })
     .select("projectId startDate")
@@ -132,6 +143,17 @@ export async function applyActivityRules(now = new Date(), opts: { dryRun?: bool
     // created here only when nothing else is known (projects imported from history were created long after they began).
     const known = [p.startDate, first.get(p._id), ...(contractStarts.get(p._id) ?? [])].filter((d): d is Date => !!d);
     const began = known.length ? new Date(Math.min(...known.map((d) => new Date(d).getTime()))) : p.createdAt;
+    if (p.status === "NOT_STARTED") {
+      if (!shouldHoldNotStarted({ lastDm: lastDm.get(p._id), today: new Date(todayDay.getTime() + DAY_MS - 1), history: p.history })) continue;
+      out.reasons[p.name] = NOT_STARTED_HOLD_REASON;
+      if (!opts.dryRun)
+        await ServiceProject.updateOne(
+          { _id: p._id, status: "NOT_STARTED" },
+          { $set: { status: "ON_HOLD" }, $push: { history: { fromStatus: "NOT_STARTED", toStatus: "ON_HOLD", reason: NOT_STARTED_HOLD_REASON, at: now } } }
+        );
+      out.held.push(p.name);
+      continue;
+    }
     const reason = holdReason({ lastAny: last.get(p._id), lastDm: lastDm.get(p._id), hasDmMember: dmMembers.has(p._id), began, cutoff, dmCutoff });
     if (p.status === "ACTIVE") {
       if (!reason) continue;
