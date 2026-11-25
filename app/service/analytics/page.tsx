@@ -28,9 +28,9 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range: rangeRaw } = await searchParams;
   await connectToDatabase();
-  const { range, today, fromDate, data: d, memberName, memberSlug, left, isActive } = await loadAnalytics(rangeRaw);
+  const { range, today, fromDate, data: d, memberName, memberSlug, left } = await loadAnalytics(rangeRaw);
   const k = d.kpis;
-  const active = d.teammates.filter((t) => isActive(t.key));
+  const active = d.teammates; // everyone, including people who left or went quiet (owner, 2026-11-25)
   const topPerformer = active[0];
   const chartWeeks = d.weekly.slice(-52);
   const name = (key: string) => (

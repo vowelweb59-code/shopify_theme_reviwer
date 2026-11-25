@@ -15,7 +15,7 @@ export default async function PerformanceOverview({ searchParams }: { searchPara
   const data = await loadPerformance(on && /^\d{4}-\d{2}-\d{2}$/.test(on) ? on : null);
   const { week, today, capacityMinutes } = data;
   const isCurrent = today >= week.start && today <= week.end;
-  const people = data.members.filter((m) => m.active).sort((a, b) => b.occupancy - a.occupancy || a.name.localeCompare(b.name));
+  const people = [...data.members].sort((a, b) => b.occupancy - a.occupancy || a.name.localeCompare(b.name));
   const team = {
     capacity: people.reduce((n, m) => n + m.capacityMinutes, 0),
     allocated: people.reduce((n, m) => n + m.allocatedMinutes, 0),
