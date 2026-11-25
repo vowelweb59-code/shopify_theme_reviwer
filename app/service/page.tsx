@@ -6,7 +6,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { entriesFor, senderNames } from "@/lib/service/api/hours";
 import { canonicalBa } from "@/lib/service/ba-members";
 import { canonicalBd } from "@/lib/service/bd-members";
-import { dmHasLeft, dmMatch } from "@/lib/service/dm-members";
+import { dmMatch } from "@/lib/service/dm-members";
 import { loadAllTimeEntries } from "@/lib/service/hours/all-time";
 import { expandAllocations, loadAttribution, projectOf } from "@/lib/service/hours/attribution";
 import { STANDARD_RATE_CENTS, workableMinutes } from "@/lib/service/hours/fixed-budget";
@@ -262,12 +262,8 @@ export default async function ServiceOverviewPage({
   const daysDm = new Map<string, string[]>();
   const lastDmDay = new Map<string, string>();
   const lastDmReport = new Map<string, string>();
-  const twoMonthsAgo = (() => {
-    const d = new Date(`${today}T00:00:00Z`);
-    d.setUTCMonth(d.getUTCMonth() - 2);
-    return d.toISOString().slice(0, 10);
-  })();
-  const dmActive = (name: string) => !dmHasLeft(name) && (lastDmReport.get(dmMatch(name) ?? "") ?? "") >= twoMonthsAgo;
+  // Owner, 2026-11-25: people who left or went quiet stay in the DM team column (hiding them made projects they worked on look unstaffed).
+  const dmActive = (name: string) => dmMatch(name) !== null;
   // All-time hours are needed for Closed (money), for fixed-price projects (hours used against the workable total) and for the team column.
   {
     const entries = await loadAllTimeEntries();

@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 // Team performance > Members (owner, 2026-11-20): every member's whole record, biggest earner first. Click a name for the member's page.
 export default async function MembersPage({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
   const { all } = await searchParams;
-  const showAll = all === "1";
+  // Everyone is listed by default (owner, 2026-11-25); ?all=0 hides the inactive ones.
+  const showAll = all !== "0";
   await connectToDatabase();
   const data = await loadPerformance(null);
   const everyone = data.members;
@@ -29,7 +30,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       </div>
       <div className="flex items-center justify-between text-sm">
         <span className="text-zinc-500">Sorted by value earned, highest first.</span>
-        <Link href={showAll ? "/service/performance/members" : "/service/performance/members?all=1"} className="text-primary hover:underline">
+        <Link href={showAll ? "/service/performance/members?all=0" : "/service/performance/members"} className="text-primary hover:underline">
           {showAll ? "Hide inactive members" : "Show inactive members"}
         </Link>
       </div>
