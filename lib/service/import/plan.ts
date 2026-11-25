@@ -2,10 +2,12 @@
 // a re-run over the same messages gives the same plan (persist.ts then upserts it idempotently).
 // Rules: docs/design/data-import.md. Sender owns the hours; everything is IST. HOURS COME FROM THE REPORTS ONLY (owner, 2026-11-21: "consider the
 // report only, not the TIMER ON / TIMER OFF messages"): a report's hours are its OFF Timer line plus its ON Timer figure. The "<client> - TIMER
-// ON" / "TIMER OFF" messages are still read and stored (they are Chat messages) but make no entry and count nothing.
+// ON" / "TIMER OFF" messages are still read and stored (they are Chat messages) and count ONLY as a fallback (owner, 2026-11-25): when a person
+// wrote no report at all for that client on that day, their timer ON / OFF pairs for it count (TIMER_FALLBACK, source TIMER_CALCULATED).
 import { classifyMessage, type MessageKind } from "./classify";
 import { extractClient, findClientByFirstWord, findClientInText } from "./client-field";
 import type { KnownClient } from "./client-match";
+import type { TimerEvent } from "./timer-message";
 import { istDate, normalizeName } from "./text";
 import { isLateReport } from "./week";
 
@@ -87,6 +89,8 @@ export interface ImportPlan {
 }
 
 const DAY_MS = 86_400_000;
+/** A timer interval longer than this was left running, not worked (the older timer rule): it is not counted. */
+const MAX_TIMER_FALLBACK_MINUTES = 8.5 * 60;
 const IMPOSSIBLE_GAP_DAYS = 31; // a written date further than this from the posting day is a typo
 const OLD_DAYS = 183;
 // about six months: too old for a person to check
@@ -161,6 +165,7 @@ export function planImport(input: PlanInput): ImportPlan {
   const messages: PlannedMessage[] = [];
   const manual: Array<{ e: PlannedEntry; key: string }> = [];
   const meta = new Map<string, PlannedMessage>();
+  const timerEvents: Array<{ ev: TimerEvent; spaceExternalId: string; messageExternalId: string; senderName: string }> = [];
 
   // ---- 1. classify every message in the month ----
   for (const space of input.spaces) {
@@ -180,6 +185,8 @@ export function planImport(input: PlanInput): ImportPlan {
       };
       messages.push(pm);
       meta.set(id, pm);
+      if (c.timer?.kind === "EVENT")
+        timerEvents.push({ ev: c.timer.event, spaceExternalId: space.externalId, messageExternalId: m.externalId, senderName: m.senderName });
       c.reports.forEach((r, ordinal) => {
         const posted = istDate(postedAt);
         const flags = [...r.flags];
@@ -256,7 +263,51 @@ export function planImport(input: PlanInput): ImportPlan {
     e.notes.push("ON_TIMER_COUNTED");
   }
 
-  const entries = manual.map((x) => x.e);
+  // ---- 5. fallback: a person's timer ON / OFF pairs for a client count only on a day they wrote NO report for that client ----
+  const reportKeys = new Set(manual.map((x) => x.key));
+  const timerEntries: PlannedEntry[] = [];
+  const open = new Map<string, (typeof timerEvents)[number]>();
+  const sorted = [...timerEvents].sort((a, b) => a.ev.at.getTime() - b.ev.at.getTime());
+  for (const t of sorted) {
+    const k = `${t.ev.senderId}|${t.ev.clientKey}|${t.ev.profileKey}`;
+    if (t.ev.direction === "ON") {
+      if (!open.has(k)) open.set(k, t); // a second ON while one is open changes nothing
+      continue;
+    }
+    const start = open.get(k);
+    if (!start) continue; // an OFF with no ON has nothing to count
+    open.delete(k);
+    const minutes = Math.round((t.ev.at.getTime() - start.ev.at.getTime()) / 60_000);
+    if (minutes <= 0 || minutes > MAX_TIMER_FALLBACK_MINUTES) continue;
+    const date = istDate(start.ev.at);
+    const flags: string[] = [];
+    const notes = ["TIMER_FALLBACK"];
+    const { clientId, profile } = clientFlags(`${t.ev.client} | ${t.ev.profile}`, input.clients, flags, notes);
+    if (reportKeys.has(`${t.ev.senderId}|${clientId ?? normalizeName(t.ev.client)}|${date}`)) continue;
+    timerEntries.push({
+      spaceExternalId: t.spaceExternalId,
+      messageExternalId: t.messageExternalId,
+      startMessageExternalId: start.messageExternalId,
+      ordinal: 0,
+      source: "TIMER_CALCULATED",
+      senderExternalId: t.ev.senderId,
+      senderName: t.senderName,
+      clientId,
+      clientRaw: t.ev.client,
+      profile,
+      entryDate: date,
+      minutes,
+      state: "PARSED",
+      flags,
+      notes,
+      memo: null,
+      reportedOnTimerMinutes: null,
+      reconciliation: null,
+      isLate: false,
+    });
+  }
+
+  const entries = [...manual.map((x) => x.e), ...timerEntries];
   for (const e of entries) {
     applyQueueRules(e, now);
     if (e.state !== "REJECTED") e.state = e.flags.length ? "NEEDS_REVIEW" : "PARSED";

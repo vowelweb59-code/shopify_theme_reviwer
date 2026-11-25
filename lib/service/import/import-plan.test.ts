@@ -78,10 +78,40 @@ describe("month plan", () => {
     expect(day("s11", "04:00", "11:00").map((e) => e.minutes)).toEqual([240]); // timer shorter than the report
   });
 
-  it("timer messages alone make no entry and count nothing", () => {
+  it("timer messages count as a fallback when the person wrote no report for that client that day", () => {
     const p = plan(master(m("s7", "2026-10-23T10:00", "Acme Co | Sam - TIMER ON"), m("s7", "2026-10-23T13:00", "Acme Co | Sam - TIMER OFF")));
+    expect(p.entries.map((e) => [e.source, e.minutes, e.state, e.clientId, e.entryDate, e.notes])).toEqual([
+      ["TIMER_CALCULATED", 180, "PARSED", id("Acme Co"), "2026-10-23", ["TIMER_FALLBACK"]],
+    ]);
+  });
+
+  it("the fallback skips an open timer, an OFF with no ON, and a timer left running over 8h30", () => {
+    const p = plan(
+      master(
+        m("s7", "2026-10-23T09:00", "Acme Co | Sam - TIMER ON"), // open: never stopped
+        m("s8", "2026-10-23T10:00", "Beta Ltd | Rahul - TIMER OFF"), // no ON
+        m("s5", "2026-10-23T08:00", "Gamma Inc | Ali - TIMER ON"),
+        m("s5", "2026-10-23T18:00", "Gamma Inc | Ali - TIMER OFF") // 10 h
+      )
+    );
     expect(p.entries).toHaveLength(0);
-    expect(p.summary.byKind).toMatchObject({ TIMER: 2 });
+  });
+
+  it("the fallback does not count on a day the same person wrote a report for that client", () => {
+    const p = plan(
+      master(
+        m("s6", "2026-10-23T10:00", "Acme Co | Sam - TIMER ON"),
+        m("s6", "2026-10-23T13:00", "Acme Co | Sam - TIMER OFF"),
+        m("s6", "2026-10-23T19:00", ["Daily Report – 23/10/2026", "Client: Acme Co | Sam", "OFF Timer: 01:00 hrs", "Memo: Work."].join("\n")),
+        // another day, no report: counts
+        m("s6", "2026-10-24T10:00", "Acme Co | Sam - TIMER ON"),
+        m("s6", "2026-10-24T11:30", "Acme Co | Sam - TIMER OFF")
+      )
+    );
+    expect(p.entries.map((e) => [e.source, e.entryDate, e.minutes])).toEqual([
+      ["MANUAL_REPORT", "2026-10-23", 60],
+      ["TIMER_CALCULATED", "2026-10-24", 90],
+    ]);
   });
 
   it("a report with only OFF hours counts them, whatever the timer messages of the day say", () => {

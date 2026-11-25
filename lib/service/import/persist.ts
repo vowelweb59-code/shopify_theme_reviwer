@@ -213,12 +213,13 @@ export async function persistPlan(plan: ImportPlan, spaces: readonly SpaceInput[
     out.entriesRemoved += staleIds.length;
   }
 
-  // Timer entries no longer exist: remove those left from the older rules for this month, including those of messages the team filter dropped.
+  // Timer entries exist only as the planned fallback: remove those left from the older rules for this month, including those of messages the team filter dropped.
   const { from, to } = monthDateRange(plan.month);
   const oldTimers = await ServiceTimeEntry.find({ source: "TIMER_CALCULATED", entryDate: { $gte: from, $lt: to } })
-    .select("source state notes")
-    .lean<Array<{ _id: string; source: string; state: string; notes: string[] }>>();
-  const timerIds = removableTimerIds(oldTimers);
+    .select("source state notes sourceMessageId ordinal")
+    .lean<Array<{ _id: string; source: string; state: string; notes: string[]; sourceMessageId: string; ordinal: number }>>();
+  // The planned fallback timer entries (a day with no report, owner 2026-11-25) are not leftovers.
+  const timerIds = removableTimerIds(oldTimers.filter((r) => !planned.has(`${r.sourceMessageId}|${r.source}|${r.ordinal}`)));
   if (timerIds.length) {
     await ServiceTimeEntry.deleteMany({ _id: { $in: timerIds } });
     out.entriesRemoved += timerIds.length;
