@@ -1,6 +1,6 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Copy, Download, ExternalLink } from "lucide-react";
 import { csvCell as cell } from "@/lib/export/csvUtil";
 import { useMemo, useState } from "react";
 import { Button } from "@/app/_components/ui/Button";
@@ -12,11 +12,43 @@ import { useApi } from "./useApi";
 import { useDashboardParams } from "./useDashboardParams";
 
 const isUrl = (v: string) => /^https?:\/\//i.test(v);
+const isHost = (v: string) => /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/\S*)?$/i.test(v);
+/** A store URL the browser can open: a full URL as is, a bare host such as "shop.myshopify.com" with https:// in front; otherwise null. */
+const openable = (v: string | undefined, isUrlColumn: boolean): string | null => {
+  if (!v || v === "(not set)") return null;
+  if (isUrl(v)) return v;
+  return isUrlColumn && isHost(v) ? `https://${v}` : null;
+};
 
 function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
   const q = query.trim().toLowerCase();
   const rows = useMemo(() => (q ? group.rows.filter((r) => r.values.some((v) => v.toLowerCase().includes(q))) : group.rows), [group.rows, q]);
   const shared = group.themes.length > 1;
+  // The column holding the store address (owner, 2026-11-25: open any store from the table, one by one or all at once).
+  const urlCol = group.dimensions.findIndex((d) => /url/i.test(d.label) || /url/i.test(d.apiName));
+  const urls = useMemo(() => {
+    if (urlCol < 0) return [];
+    return [...new Set(rows.map((r) => openable(r.values[urlCol], true)).filter((u): u is string => !!u))];
+  }, [rows, urlCol]);
+  const [note, setNote] = useState<string | null>(null);
+
+  function openAll() {
+    let blocked = 0;
+    for (const u of urls) if (!window.open(u, "_blank", "noopener,noreferrer")) blocked++;
+    setNote(
+      blocked
+        ? `Your browser blocked ${blocked} of ${urls.length} tabs. Allow pop-ups for this site and press again, or use Copy all URLs and paste them into Multiple URL Opener.`
+        : `Opened ${urls.length} stores.`
+    );
+  }
+  async function copyAll() {
+    try {
+      await navigator.clipboard.writeText(urls.join("\n"));
+      setNote(`Copied ${urls.length} URLs, one per line: paste them into Multiple URL Opener.`);
+    } catch {
+      setNote("Could not copy. Allow clipboard access for this site and try again.");
+    }
+  }
 
   const columns: TableColumn<InstallRow>[] = [
     { key: "date", header: "Date", render: (r) => <span className="whitespace-nowrap tabular-nums">{r.date}</span>, sortValue: (r) => r.date },
@@ -26,9 +58,17 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
       render: (r) => {
         const v = r.values[i];
         if (!v || v === "(not set)") return <span className="text-zinc-400">—</span>;
-        return isUrl(v) ? (
-          <a href={v} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+        const href = openable(v, i === urlCol);
+        return href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+            title="Open this store in a new tab"
+          >
             {v}
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-label="Opens in a new tab" />
           </a>
         ) : (
           <span>{v}</span>
@@ -67,16 +107,35 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
         title={`${group.themes.join(" + ")}: ${group.total} install${group.total === 1 ? "" : "s"}`}
         description={`GA4 property ${group.propertyId} · ${group.range.start} to ${group.range.end}`}
         action={
-          <Button type="button" onClick={exportCsv} disabled={rows.length === 0}>
-            <Download className="mr-1.5 h-4 w-4" aria-hidden />
-            Export CSV
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {urls.length > 0 && (
+              <>
+                <Button type="button" onClick={openAll}>
+                  <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden />
+                  Open all ({urls.length})
+                </Button>
+                <Button type="button" onClick={copyAll}>
+                  <Copy className="mr-1.5 h-4 w-4" aria-hidden />
+                  Copy all URLs
+                </Button>
+              </>
+            )}
+            <Button type="button" onClick={exportCsv} disabled={rows.length === 0}>
+              <Download className="mr-1.5 h-4 w-4" aria-hidden />
+              Export CSV
+            </Button>
+          </div>
         }
       />
       {group.error ? (
         <ErrorState title="Couldn't read this property" description={group.error} />
       ) : (
         <div className="flex flex-col gap-3">
+          {note && (
+            <p role="status" className="rounded-md bg-surface-muted p-3 text-sm text-zinc-700 dark:text-zinc-300">
+              {note}
+            </p>
+          )}
           {group.filteredTo && (
             <p className="rounded-md bg-surface-muted p-3 text-sm text-zinc-700 dark:text-zinc-300">
               This property also tracks other themes. Showing only {group.filteredTo}: each install event names its theme (or one of its presets), and that is
