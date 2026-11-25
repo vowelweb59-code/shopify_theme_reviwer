@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 export const WARN = "text-status-warning-text";
-export const BAD = "text-status-fail-text";
 export const SECTION = "rounded-lg border border-border-subtle bg-surface p-4";
 export const TH = "py-2 pr-3 font-medium";
 export const THEAD = "text-xs uppercase tracking-wide text-zinc-500";

@@ -114,15 +114,6 @@ async function manualEntry(entryId: string) {
   return e as { _id: string; projectId: string; source: string };
 }
 
-/** Gives the hours to a team member (`member` = their key), or takes them back to nobody (`member` empty). */
-export async function allocateManualHours(entryId: string, body: Record<string, unknown>) {
-  const e = await manualEntry(entryId);
-  const senderExternalId = await senderFor(body.member);
-  await ServiceTimeEntry.updateOne({ _id: entryId }, { $set: { senderExternalId } });
-  await recordServiceAudit("hours.manual_allocate", { projectId: e.projectId, entryId, to: senderExternalId === MANUAL_SENDER_ID ? null : senderExternalId });
-  return listManualHours(e.projectId);
-}
-
 /** Edits an entry: any of date, hours + minutes, note, member. Fields left out keep their value. */
 export async function updateManualHours(entryId: string, body: Record<string, unknown>) {
   const e = await manualEntry(entryId);

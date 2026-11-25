@@ -16,8 +16,6 @@ export function periodHref(base: string, tab: TabId | null, p: { g: string; anch
   return `${base}?${q}${extra}`;
 }
 
-export const dashHref = (tab: TabId, p: { g: string; anchor?: string; from?: string; to?: string }, extra = "") => periodHref("/service", tab, p, extra);
-
 const pill = (on: boolean) =>
   `rounded-md border px-2.5 py-1 text-sm ${on ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border-subtle hover:bg-surface-muted"}`;
 const step = "rounded-md border border-border-subtle px-2 py-1 hover:bg-surface-muted";

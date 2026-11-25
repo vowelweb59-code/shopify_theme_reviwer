@@ -316,8 +316,6 @@ export async function projectsReport(q: { from?: string | null; to?: string | nu
     attention: attention.map((p) => ({ id: p._id, name: p.name, status: p.status })),
   };
 }
-export type ProjectsReport = Awaited<ReturnType<typeof projectsReport>>;
-
 // --- Teams tab ------------------------------------------------------------------------------------------------------------
 
 const deptLabel = (d: { managerName: string | null }) => d.managerName;
@@ -437,4 +435,3 @@ export async function departmentsReport(q: { from?: string | null; to?: string |
     departments: out,
   };
 }
-export type DepartmentsReport = Awaited<ReturnType<typeof departmentsReport>>;

@@ -17,6 +17,5 @@ export function projectHref(id: string, back: string): string {
 export function backLabel(back: string | null): string {
   if (back?.startsWith("/service/revenue")) return "Revenue";
   if (back?.startsWith("/service/performance")) return "Team performance";
-  if (back?.startsWith("/service/analytics")) return "Analytics";
   return "Projects";
 }

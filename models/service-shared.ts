@@ -20,4 +20,3 @@ export type ServiceProjectStatus = (typeof SERVICE_PROJECT_STATUSES)[number];
 export const SERVICE_PERSON_ROLES = ["BUSINESS_ANALYST", "EXECUTIVE", "BUSINESS_DEVELOPER"] as const;
 export type ServicePersonRole = (typeof SERVICE_PERSON_ROLES)[number];
 export const SERVICE_ENTRY_STATES = ["PARSED", "NEEDS_REVIEW", "APPROVED", "REJECTED"] as const;
-export type ServiceEntryState = (typeof SERVICE_ENTRY_STATES)[number];

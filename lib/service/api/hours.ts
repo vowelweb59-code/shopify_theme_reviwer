@@ -12,7 +12,6 @@ import { weekOf, type Week } from "../import/week";
 import { weeklyHours, type HourEntry, type WeeklyHours } from "../import/weekly-hours";
 import { recordServiceAudit } from "../audit/record";
 import { ServiceChatSender } from "@/models/service-chat";
-import { ServiceClient } from "@/models/service-client";
 import { ServiceProject } from "@/models/service-project";
 import { ServiceTimeEntry } from "@/models/service-time-entry";
 
@@ -49,11 +48,6 @@ export type EntryLite = {
   senderExternalId: string;
   allocations: Array<{ projectId: string; minutes: number }>;
 };
-
-export function weekParam(raw?: string | null): Week {
-  if (raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) throw badRequest("week must be YYYY-MM-DD");
-  return weekOf(raw || istDate(new Date()));
-}
 
 export type PeriodKind = "week" | "month";
 
@@ -328,72 +322,4 @@ export type LiveReport = {
   memo: string | null;
   late: boolean;
   flagged: boolean;
-};
-
-/** The newest counted entries, as they arrive (newest Chat post first). */
-export async function liveReports(limitRaw?: string | null): Promise<LiveReport[]> {
-  const limit = Math.min(Math.max(Number(limitRaw) || 40, 1), 100);
-  const rows = await ServiceTimeEntry.aggregate<EntryLite & { memo: string | null; isLate: boolean; msg: { postedAt: Date; senderName: string } }>([
-    { $match: { state: { $ne: "REJECTED" }, minutes: { $gt: 0 } } },
-    { $sort: { entryDate: -1 } },
-    { $limit: limit * 20 }, // newest days first, then order by posting time among them
-    {
-      $lookup: {
-        from: "service_chat_messages",
-        localField: "sourceMessageId",
-        foreignField: "_id",
-        as: "msg",
-        pipeline: [{ $project: { postedAt: 1, senderName: 1 } }],
-      },
-    },
-    { $unwind: "$msg" },
-    { $sort: { "msg.postedAt": -1 } },
-    { $limit: limit },
-  ]);
-  const { projects, owner } = await loadAttribution();
-  const projectName = new Map(projects.map((p) => [p._id, p.name]));
-  const clientIds = [...new Set(rows.map((r) => r.clientId).filter((x): x is string => !!x))];
-  const clients = new Map(
-    (
-      await ServiceClient.find({ _id: { $in: clientIds } })
-        .select("name inHouse")
-        .lean<Array<{ _id: string; name: string; inHouse: boolean }>>()
-    ).map((c) => [c._id, c])
-  );
-  return rows.map((e) => {
-    const pids = e.allocations?.length ? e.allocations.map((a) => a.projectId) : [projectOf(e, owner)];
-    const c = e.clientId ? clients.get(e.clientId) : undefined;
-    return {
-      id: e._id,
-      entryDate: day(e.entryDate)!,
-      postedAt: new Date(e.msg.postedAt).toISOString(),
-      sender: e.msg.senderName,
-      client: c?.name ?? null,
-      inHouse: c?.inHouse ?? false,
-      project:
-        pids
-          .map((x) => (x ? projectName.get(x) : null))
-          .filter(Boolean)
-          .join(" + ") || null,
-      source: e.source,
-      minutes: e.minutes,
-      memo: e.memo,
-      late: e.isLate,
-      flagged: e.state === "NEEDS_REVIEW",
-    };
-  });
-}
-
-export type DashboardRow = {
-  projectId: string;
-  projectName: string;
-  projectStatus: string;
-  contractType: "HOURLY" | "FIXED";
-  contractStatus: string;
-  hours: WeeklyHours;
-  needsReview: number;
-  idle: boolean;
-  unassigned: boolean;
-  sharedClient: boolean;
-  active: boolean;
 };

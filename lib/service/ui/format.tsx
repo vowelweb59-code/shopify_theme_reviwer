@@ -9,9 +9,6 @@ export function fmtMinutes(m: number): string {
   return h === 0 ? `${r}m` : r === 0 ? `${h}h` : `${h}h ${r}m`;
 }
 
-/** Hours with one decimal: 5025 minutes -> "83.8". For tables where "83h 45m" is too busy. */
-export const fmtHours = (minutes: number) => (minutes / 60).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
 /** Cents as dollars: 1500 -> "$15.00". */
 export const fmtUsd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -29,17 +26,6 @@ export const fmtDay = (iso: string) =>
 export const fmtLongDay = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 export const weekLabel = (w: Week) => `${fmtDay(w.start)} – ${fmtDay(w.end)}`;
-
-/** Completed against the weekly limit. The numbers always sit beside it, so the bar is never the only signal. */
-export function HoursBar({ hours }: { hours: { limitMinutes: number | null; completedMinutes: number; overLimitMinutes: number } }) {
-  const pct = hours.limitMinutes ? Math.min(100, (hours.completedMinutes / hours.limitMinutes) * 100) : 0;
-  const over = hours.overLimitMinutes > 0;
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
-      <div className={`h-full ${over ? "bg-status-fail-icon" : "bg-primary"}`} style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
 
 // Status is never conveyed by color alone: every badge carries an icon and a text label.
 const META: Record<ServiceProjectStatus, { label: string; icon: string; tone: string }> = {
@@ -62,8 +48,6 @@ export const NEXT_STATUSES = Object.fromEntries(ALL_STATUSES.map((s) => [s, ALL_
 >;
 
 export const statusLabel = (s: ServiceProjectStatus) => META[s].label;
-export const STATUS_OPTIONS = Object.entries(META).map(([value, m]) => ({ value: value as ServiceProjectStatus, label: m.label }));
-
 export function ServiceStatusBadge({ status }: { status: ServiceProjectStatus }) {
   const m = META[status];
   return (

@@ -94,8 +94,6 @@ export async function teamDetail(id: string, weekRaw?: string | null) {
       })),
   };
 }
-export type TeamDetail = Awaited<ReturnType<typeof teamDetail>>;
-
 /** Designation and team. */
 export async function setProfile(id: string, body: Record<string, unknown>) {
   const s = await sender(id);

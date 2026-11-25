@@ -139,5 +139,4 @@ export async function buildAttendanceReport(month: string) {
   };
 }
 
-export type AttendanceReport = Awaited<ReturnType<typeof buildAttendanceReport>>;
 export type { Source };
