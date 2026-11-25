@@ -24,7 +24,7 @@ Everything below is committed and pushed (last commit `72b8678`); the details of
 **A2. Still to check / open on the Service side**
 
 1. Render deployed `72b8678` (Deploys page); `/service/chat` still shows Chat connected; the first syncs applied the two automatic hold rules.
-2. Re-run the November clean-up dry run (`service-clean-november.ts`): the widened rule may now keep some entries it removed on 2026-11-17.
+2. ~~Re-run the November clean-up dry run~~ **Done 2026-11-25** (`scripts/archive/service-clean-november.ts`, dry run): 0 entries to remove, 0 projects to write; it would only delete some of 231 outsider Chat messages, which is not wanted since item 47 keeps outsiders' reports on team clients, so it is **not applied** and the script is finished.
 3. Revenue: the 41 approximate client-name matches and the 56 sheet clients with no project here should be read once (collapsible
    lists on the tab); no rate history exists, so older months use today's rate; some app entries carry dates up to 2029 (typing
    errors) and are ignored by the comparison.
