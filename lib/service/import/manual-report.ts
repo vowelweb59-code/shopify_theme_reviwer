@@ -21,7 +21,7 @@ export interface ManualEntry {
 const HEADER = /^\s*(?:daily\s*report|timer\s*report|work\s*update|date)\b(.*)$/i;
 const DATE_IN = /(\d{1,2}[-/.]\d{1,2}[-/.](?:\d{4}|\d{2}))/;
 // Labels. "Project:" is read as the client line too (some reports name the project instead). Client and memo need a separator ("Client: x"); timer labels may omit it ("Off Timer 1:00 hr").
-const LABEL = /^\s*(client\s*name|project\s*name|client|project|memo|off\s*[-–—]?\s*timer|on\s*[-–—]?\s*timer)\s*([-–—:]+)?\s*(.*)$/i;
+const LABEL = /^\s*(client\s*name|project\s*name|client|project|memo|off\s*[-–—]?\s*timer|on\s*[-–—]?\s*timer|timer)\s*([-–—:]+)?\s*(.*)$/i;
 // Lines made only of rule characters ("=====", "-----", "—-----") are decoration, not memo text.
 const DECORATION = /^[\s=\-–—_*~.]*$/;
 const MAX_PLAUSIBLE_MINUTES = 16 * 60;
@@ -37,7 +37,8 @@ interface Draft {
 const labelKey = (raw: string): "client" | "memo" | "off" | "on" => {
   const k = raw.toLowerCase().replace(/[\s\-–—]+/g, "");
   if (k.startsWith("offtimer")) return "off";
-  if (k.startsWith("ontimer")) return "on";
+  // A bare "Timer: 3:00 hrs" (the 2024 report format) is the day's timer figure, read as the ON Timer figure (owner, 2026-11-25).
+  if (k.startsWith("ontimer") || k === "timer") return "on";
   return k === "memo" ? "memo" : "client";
 };
 

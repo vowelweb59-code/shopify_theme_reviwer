@@ -119,6 +119,26 @@ describe("manual daily report (OFF Timer)", () => {
     expect(e.memo).toContain("live app.\nand fixed DNS afterwards");
   });
 
+  it("reads a bare 'Timer: 3:00 hrs' line (the 2024 format) as the day's timer figure", () => {
+    const [a, b] = parseManualReport(
+      [
+        "======",
+        "Timer Report (28/12/2024)",
+        "Client Name: Richard Li | Adnan",
+        "Memo: Worked on development.",
+        "Timer: 1:00 hrs",
+        "Client Name:David Blum | Adnan",
+        "Memo: Worked on under-construction page.",
+        "Timer: 3:00 hrs",
+        "======",
+      ].join("\n")
+    );
+    expect(a.reportedOnTimerMinutes).toBe(60);
+    expect(b.client).toBe("David Blum | Adnan");
+    expect(b.reportedOnTimerMinutes).toBe(180);
+    expect(b.state).toBe("PARSED");
+  });
+
   it("counts only OFF Timer from the report; an ON Timer figure is recorded but never counted", () => {
     const [e] = parseManualReport("Daily Report – 24/10/2026\nClient – A\nON Timer – 03:00 hrs\nOFF Timer – 02:00 hrs");
     expect(e.minutes).toBe(120);
