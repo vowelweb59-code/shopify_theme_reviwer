@@ -11,7 +11,7 @@ const ALL_TABS = [
   { href: "/service", label: "Projects", exact: true },
   { href: "/service/revenue", label: "Revenue" },
   { href: "/service/performance", label: "Team performance" },
-  { href: "/service/space-scan", label: "Space scan (temporary)" },
+  { href: "/service/space-scan", label: "Live Project Chat Summary" },
   { href: "/service/projects", label: "Projects" },
   { href: "/service/team", label: "Team" },
   { href: "/service/departments", label: "Departments" },
