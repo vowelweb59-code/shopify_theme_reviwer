@@ -11,6 +11,8 @@ export const SERVICE_CHAT_SCOPES = [
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/chat.messages.readonly",
   "https://www.googleapis.com/auth/chat.memberships.readonly",
+  // Lists the spaces the account is in, to find each active project's space by name (owner, 2026-11-26; needs a reconnect once).
+  "https://www.googleapis.com/auth/chat.spaces.readonly",
 ];
 export const SERVICE_CHAT_CALLBACK_PATH = "/api/service/chat/google/callback";
 /** TIMER STATUS; override with SERVICE_CHAT_SPACE. */
