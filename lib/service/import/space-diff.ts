@@ -45,3 +45,23 @@ export const toSnapshot = (threads: readonly ExportThread[]): Snapshot => Object
 export function changedThreads(previous: Snapshot, current: readonly ExportThread[]): ExportThread[] {
   return current.filter((t) => previous[t.key] !== t.hash);
 }
+
+/** Splits threads into groups of at most `maxBytes` of text (a thread bigger than that is a group of its own), keeping their order, so a big first read
+ * or a big day can be handed to Claude Code in several runs. */
+export function chunkThreads(threads: readonly ExportThread[], maxBytes: number): ExportThread[][] {
+  const out: ExportThread[][] = [];
+  let current: ExportThread[] = [];
+  let size = 0;
+  for (const t of threads) {
+    const n = Buffer.byteLength(t.text, "utf8");
+    if (current.length && size + n > maxBytes) {
+      out.push(current);
+      current = [];
+      size = 0;
+    }
+    current.push(t);
+    size += n;
+  }
+  if (current.length) out.push(current);
+  return out;
+}

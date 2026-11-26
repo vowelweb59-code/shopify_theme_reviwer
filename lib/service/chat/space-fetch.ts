@@ -2,11 +2,13 @@
 // Preferred: SPACE_EXPORT_TOKEN from the env file, sent as a bearer token to the one export path (lib/auth/exportToken.ts). Fallback: sign in
 // with BASIC_AUTH_USER / BASIC_AUTH_PASSWORD. Secrets are never logged. No `server-only` import, so it runs outside Next.
 
-export async function fetchSpaceText(opts: { base?: string; username?: string; password?: string } = {}): Promise<string> {
+export async function fetchSpaceText(opts: { base?: string; username?: string; password?: string; space?: string; days?: number } = {}): Promise<string> {
+  const query = new URLSearchParams({ ...(opts.space ? { space: opts.space } : {}), ...(opts.days ? { days: String(opts.days) } : {}) }).toString();
+  const exportUrl = (b: string) => `${b}/api/service/space-scan/export${query ? `?${query}` : ""}`;
   const base = (opts.base ?? process.env.LIVE_URL ?? "https://shopify-theme-reviwer.onrender.com").replace(/\/$/, "");
   const token = process.env.SPACE_EXPORT_TOKEN?.trim();
   if (token) {
-    const res = await fetch(`${base}/api/service/space-scan/export`, {
+    const res = await fetch(exportUrl(base), {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(15 * 60_000),
     });
@@ -34,7 +36,7 @@ export async function fetchSpaceText(opts: { base?: string; username?: string; p
     .join("; ");
   if (!cookie) throw new Error("Sign-in gave no session cookie.");
 
-  const res = await fetch(`${base}/api/service/space-scan/export`, { headers: { cookie }, signal: AbortSignal.timeout(15 * 60_000) });
+  const res = await fetch(exportUrl(base), { headers: { cookie }, signal: AbortSignal.timeout(15 * 60_000) });
   if (!res.ok) throw new Error(`Export failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
   return res.text();
 }

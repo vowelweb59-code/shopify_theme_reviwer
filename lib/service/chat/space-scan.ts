@@ -35,10 +35,17 @@ export async function scanSpace(now = new Date()): Promise<SpaceScanResult> {
   return result;
 }
 
-/** The whole space as threaded plain text (a download), so it can be read by a person or an AI assistant outside the app. */
-export async function exportSpaceText(now = new Date()): Promise<string> {
-  const msgs = await listServiceMessages(await serviceRefreshToken(), SPACE_SCAN_SPACE, { from: SINCE, to: new Date(now.getTime() + 60_000) });
+/** The space as threaded plain text (a download), so it can be read by a person or an AI assistant outside the app. Default: the Lulu space, whole history. */
+export async function exportSpaceText(opts: { space?: string; days?: number | null } = {}, now = new Date()): Promise<string> {
+  const from = opts.days ? new Date(now.getTime() - opts.days * 86_400_000) : SINCE;
+  const msgs = await listServiceMessages(await serviceRefreshToken(), opts.space ?? SPACE_SCAN_SPACE, { from, to: new Date(now.getTime() + 60_000) });
   return formatSpaceThreads(msgs.map((m) => ({ id: m.externalId, sender: m.senderName, postedAt: m.postedAt, text: m.text, threadName: m.threadName })));
+}
+
+/** Only a space connected to a project can be exported by id (the export token must not open every space the account is in). */
+export async function isLinkedSpace(space: string): Promise<boolean> {
+  await connectToDatabase();
+  return Boolean(await ServiceProjectSpace.exists({ _id: space }));
 }
 
 export interface StoredSpaceReview {

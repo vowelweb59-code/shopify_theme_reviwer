@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedThreads, parseExportThreads, toSnapshot } from "./space-diff";
+import { changedThreads, chunkThreads, parseExportThreads, toSnapshot } from "./space-diff";
 
 const t1 = "=== THREAD 1 · 1 message · started 2026-11-01 15:30 IST ===\n[2026-11-01 15:30] Asha: Please send the report\n";
 const t2 = "=== THREAD 2 · 1 message · started 2026-11-02 10:00 IST ===\n[2026-11-02 10:00] Ravi: Lunch plan for Friday\n";
@@ -31,5 +31,20 @@ describe("space-diff", () => {
     const a = "=== THREAD 1 · 1 message · started 2026-11-01 15:30 IST ===\n[2026-11-01 15:30] Asha: first\n";
     const b = "=== THREAD 2 · 1 message · started 2026-11-01 15:30 IST ===\n[2026-11-01 15:30] Asha: second\n";
     expect(parseExportThreads(`${a}\n${b}`).map((t) => t.key)).toEqual(["2026-11-01 15:30|Asha", "2026-11-01 15:30|Asha#2"]);
+  });
+});
+
+describe("chunkThreads", () => {
+  const mk = (n: number, size: number) => ({ key: `k${n}`, number: n, text: "x".repeat(size), hash: String(n) });
+  it("keeps order and starts a new group when the size would be exceeded", () => {
+    const groups = chunkThreads([mk(1, 40), mk(2, 40), mk(3, 40), mk(4, 10)], 100);
+    expect(groups.map((g) => g.map((t) => t.number))).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
+  });
+  it("gives an oversized thread its own group and handles nothing", () => {
+    expect(chunkThreads([mk(1, 500), mk(2, 10)], 100).map((g) => g.map((t) => t.number))).toEqual([[1], [2]]);
+    expect(chunkThreads([], 100)).toEqual([]);
   });
 });

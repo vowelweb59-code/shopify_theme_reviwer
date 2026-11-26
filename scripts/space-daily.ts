@@ -5,64 +5,81 @@ import { join } from "node:path";
 import { connectToDatabase } from "@/lib/db/connect";
 import { recordServiceAudit } from "@/lib/service/audit/record";
 import { fetchSpaceText } from "@/lib/service/chat/space-fetch";
-import { changedThreads, parseExportThreads, toSnapshot, type Snapshot } from "@/lib/service/import/space-diff";
+import { changedThreads, chunkThreads, parseExportThreads, toSnapshot, type Snapshot } from "@/lib/service/import/space-diff";
 import { istDate } from "@/lib/service/import/text";
 import { parseSpaceReview, type SpaceReview } from "@/lib/service/import/space-review";
+import { ServiceProject } from "@/models/service-project";
+import { ServiceProjectSpace } from "@/models/service-project-space";
 import { ServiceSpaceReview } from "@/models/service-space-review";
 
-// Daily job for the "Live Project Chat Summary" tab (owner, 2026-11-26: "work on its own, same download path every time, sync automatically").
-// Everything stays in ONE folder, ~/space-scan:
-//   space-latest.txt     the whole space, downloaded from the live app every run (same path each time)
-//   snapshot.json        what the last successful run had seen (thread key -> hash)
-//   space-changes.txt    only the threads that are new or changed since then
-//   review-current.json  the list now stored in the database
-//   review-next.json     what Claude Code writes (its only output); validated here, then imported
-//   backup/              the previous list before every import;  space-daily.log: what each run did
-// Claude Code (your subscription, `claude -p`) reads ONLY the changed threads and updates the list; no API key service is used.
-// When nothing changed, Claude is not started at all. Run it from Windows Task Scheduler (see scripts/space-daily.cmd).
+// Daily job for the "Live Project Chat Summary" tabs (owner, 2026-11-26: "work on its own, same download path every time, sync automatically";
+// "last 90 days for once ... store it and add daily updates there also"). For EVERY space connected to a currently active project
+// (Active / Blocked / Partial hold), in turn:
+//   1. downloads the last 90 days of the space from the live app into ~/space-scan/<space id>/space-latest.txt (same path every time);
+//   2. compares it with that folder's snapshot.json (what the last successful run had seen): a thread is new or changed when its text differs;
+//   3. nothing changed -> stops (Claude is not started, nothing is spent);
+//   4. otherwise writes the changed threads to space-changes.txt (in chunks if big) and runs `claude -p` (the owner's subscription, tools limited to
+//      Read / Write / Edit / Glob) to update the stored list: remove tasks the new messages finish, add new tasks and opportunities. A space with NO list
+//      yet gets its first one from the whole 90 days;
+//   5. validates review-next.json, backs up the previous list (backup/), stores the new one in the database (ServiceSpaceReview, per space) and
+//      updates the snapshot. The tabs read it from there.
+// Each space has its own folder, snapshot, success mark and log line; one space failing does not stop the others. A space that finished today is
+// skipped on later starts. Task Scheduler starts it at 8:00 and every 120 minutes until 22:00 (scripts/space-daily-schedule.ps1): a PC that was off
+// at 8:00 tries again, and a failed space is tried again at the next start. Everything outside the database stays in ~/space-scan.
 //
-//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--baseline=<export.txt>] [--dry-run] [--force]
-//   --baseline=<file>  first run only: treat that export as already reviewed (no download, no AI), so only newer threads are read next time
-//   --dry-run          download and list the changes, but do not start Claude or write the database
-//   --force            run even if today's run already succeeded
-// Scheduling (owner, 2026-11-26: "if the PC is not on at 8 am, try again after 120 minutes"): Task Scheduler starts it at 8:00 and every 120
-// minutes until 22:00 (scripts/space-daily-schedule.ps1); a run that finished today (last-success.json, IST day) makes the later starts exit at once,
-// and a failed run (PC offline, Chat error) leaves no mark, so the next start tries again.
-const SPACE = process.env.SERVICE_SPACE_SCAN_SPACE?.trim() || "spaces/AAQAYekyB1Y";
-const dir = join(homedir(), "space-scan");
+//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--only="Project name"] [--sizes] [--dry-run] [--force]
+//   --only=<project name | space id>   one space only
+//   --sizes     download each space and print its size and thread count, nothing else (no snapshot, no Claude, no database)
+//   --dry-run   as the real run up to the changes (written to space-changes.txt), but no Claude, no database, no snapshot
+//   --force     ignore today's success mark
+const root = join(homedir(), "space-scan");
+const WINDOW_DAYS = 90;
+const CHUNK_BYTES = 220_000; // text handed to one Claude run
+const CLAUDE_TIMEOUT_MS = 40 * 60_000;
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+const only = arg("only");
+const sizesOnly = process.argv.includes("--sizes");
 const dryRun = process.argv.includes("--dry-run");
 const force = process.argv.includes("--force");
-const CLAUDE_TIMEOUT_MS = 40 * 60_000;
+
+interface Target {
+  space: string;
+  project: string;
+  projectId: string;
+  dir: string;
+}
 
 async function log(line: string) {
   const text = `${new Date().toISOString()} ${line}`;
   console.log(text);
-  await appendFile(join(dir, "space-daily.log"), `${text}\n`, "utf8").catch(() => undefined);
+  await appendFile(join(root, "space-daily.log"), `${text}\n`, "utf8").catch(() => undefined);
 }
 
-async function ranToday(): Promise<boolean> {
+async function jsonOr<T>(file: string): Promise<T | null> {
   try {
-    return (JSON.parse(await readFile(join(dir, "last-success.json"), "utf8")) as { day?: string }).day === istDate(new Date());
-  } catch {
-    return false;
-  }
-}
-const markSuccess = (note: string) =>
-  writeFile(join(dir, "last-success.json"), JSON.stringify({ day: istDate(new Date()), at: new Date().toISOString(), note }), "utf8");
-
-async function readSnapshot(): Promise<Snapshot | null> {
-  try {
-    return (JSON.parse(await readFile(join(dir, "snapshot.json"), "utf8")) as { threads: Snapshot }).threads;
+    return JSON.parse(await readFile(file, "utf8")) as T;
   } catch {
     return null;
   }
 }
-const writeSnapshot = (threads: Snapshot) => writeFile(join(dir, "snapshot.json"), JSON.stringify({ updatedAt: new Date().toISOString(), threads }), "utf8");
 
-async function storedReview(): Promise<SpaceReview> {
-  const d = await ServiceSpaceReview.findById(SPACE).lean();
-  if (!d) throw new Error("No reviewed list is stored yet: load the first one with scripts/import-space-review.ts, then run this again.");
+/** The spaces connected to projects that are active today. */
+async function targets(): Promise<Target[]> {
+  const links = await ServiceProjectSpace.find().lean();
+  const projects = await ServiceProject.find({ _id: { $in: links.map((l) => l.projectId) }, status: { $in: ["ACTIVE", "BLOCKED", "PARTIAL_HOLD"] } })
+    .select("name")
+    .lean<Array<{ _id: string; name: string }>>();
+  const name = new Map(projects.map((p) => [p._id, p.name]));
+  return links
+    .filter((l) => name.has(l.projectId))
+    .map((l) => ({ space: l._id, project: name.get(l.projectId)!, projectId: l.projectId, dir: join(root, l._id.replace("spaces/", "")) }))
+    .filter((t) => !only || t.project === only || t.space === only)
+    .sort((a, b) => a.project.localeCompare(b.project));
+}
+
+async function storedReview(space: string): Promise<SpaceReview | null> {
+  const d = await ServiceSpaceReview.findById(space).lean();
+  if (!d) return null;
   return parseSpaceReview({
     space: d._id,
     client: d.client,
@@ -74,22 +91,25 @@ async function storedReview(): Promise<SpaceReview> {
   });
 }
 
-function prompt(client: string | null, today: string, changes: number): string {
+function prompt(client: string | null, today: string, threads: number, part: string, firstRead: boolean): string {
   return [
-    `You maintain the reviewed list of PENDING TASKS and PITCH OPPORTUNITIES for the Google Chat space of the client "${client ?? "unknown"}" (a Shopify agency's service team). Today is ${today}.`,
-    `Two files are in the current folder: review-current.json (the list as it stands) and space-changes.txt (ONLY the ${changes} Chat threads that are new or have new replies since the last run; "=== THREAD n ===" headers, "[date time IST] Sender: text" lines; thread numbers are the export's own and stay stable).`,
+    `You maintain the reviewed list of PENDING TASKS and PITCH OPPORTUNITIES for the Google Chat space of the client "${client ?? "unknown"}" (a Shopify / marketing agency's service team). Today is ${today}.`,
+    `Two files are in the current folder: review-current.json (the list as it stands) and space-changes.txt (${firstRead ? `the last ${WINDOW_DAYS} days of the space, ` : "ONLY the Chat threads that are new or have new replies since the last run, "}${threads} threads, part ${part}; "=== THREAD n ===" headers, "[date time IST] Sender: text" lines; thread numbers are the export's own).`,
+    firstRead ? "The list is empty or incomplete: this is the FIRST read of the space. Build it fully from these threads." : "",
     "Read both completely, then write review-next.json: the same JSON object (keys space, client, reviewedAt, source, tasks, opportunities, notes), changed like this:",
-    "1. Remove a task when the changed threads show it was done, delivered, answered or dropped. Update the text or evidence of a task that moved but is still open.",
-    '2. Add a task for something newly asked, promised or awaited in the changed threads that is not done in them. Use group "client_waiting" when it was raised in the last 30 days and the client or our team is waiting, otherwise "older". Fields: group, text, asked (date text), who (who must act), evidence (one phrase), threads ("T123, T124").',
-    "3. Add an opportunity (priority High, Medium or Low; title, evidence threads, pitch one sentence) only for something newly visible in the changed threads: the client asking for more, an upsell or next phase, a problem we could fix. Do not duplicate an existing one.",
+    "1. Remove a task when the threads show it was done, delivered, answered or dropped. Update the text or evidence of a task that moved but is still open.",
+    '2. Add a task for something asked, promised or awaited in these threads that is not done in them. Do not add one that is already in the list (same matter). Use group "client_waiting" when it was raised in the last 30 days and the client or our team is waiting, otherwise "older". Fields: group, text, asked (date text), who (who must act), evidence (one phrase), threads ("T123, T124").',
+    "3. Add an opportunity (priority High, Medium or Low; title, evidence threads, pitch one sentence) only for something visible in these threads: the client asking for more, an upsell or next phase, a problem we could fix. Do not duplicate an existing one.",
     `4. Set reviewedAt to ${today}. Keep every other task, opportunity and note exactly as it is. Be conservative: do not invent, do not list greetings or finished work.`,
     "Rules: group must be client_waiting, older or unclear; priority must be High, Medium or Low; all text fields are plain strings (use null for an empty optional one). Write ONLY review-next.json (valid JSON). Do not run commands or edit any other file. Finish with a 3-line summary: tasks removed, tasks added, opportunities added.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
-function runClaude(text: string): Promise<string> {
+function runClaude(cwd: string, text: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn("claude", ["-p", "--permission-mode", "acceptEdits", "--allowedTools", "Read,Write,Edit,Glob"], { cwd: dir, shell: true });
+    const child = spawn("claude", ["-p", "--permission-mode", "acceptEdits", "--allowedTools", "Read,Write,Edit,Glob"], { cwd, shell: true });
     let out = "";
     let err = "";
     const timer = setTimeout(() => {
@@ -111,75 +131,127 @@ function runClaude(text: string): Promise<string> {
   });
 }
 
-async function main() {
-  await mkdir(join(dir, "backup"), { recursive: true });
-
-  const baseline = arg("baseline");
-  if (baseline) {
-    const threads = parseExportThreads(await readFile(baseline, "utf8"));
-    await writeSnapshot(toSnapshot(threads));
-    return log(`Baseline set from ${baseline}: ${threads.length} threads treated as already reviewed.`);
+async function processSpace(t: Target): Promise<"done" | "skipped" | "nothing"> {
+  const tag = `[${t.project}]`;
+  await mkdir(join(t.dir, "backup"), { recursive: true });
+  const today = istDate(new Date());
+  if (!sizesOnly && !dryRun && !force && (await jsonOr<{ day?: string }>(join(t.dir, "last-success.json")))?.day === today) {
+    await log(`${tag} already done today.`);
+    return "skipped";
   }
 
-  if (!dryRun && !force && (await ranToday())) return log("Already ran successfully today (IST): nothing to do.");
-
-  const previous = await readSnapshot();
-  if (!previous) throw new Error("No snapshot yet. Run once with --baseline=<the export the current list was made from>.");
-
-  await log("Downloading the space from the live app...");
-  const text = await fetchSpaceText();
-  await writeFile(join(dir, "space-latest.txt"), text, "utf8");
+  const text = await fetchSpaceText({ space: t.space, days: WINDOW_DAYS });
   const current = parseExportThreads(text);
-  if (current.length < 10) throw new Error(`The export holds only ${current.length} threads; not trusting it.`);
-  const changed = changedThreads(previous, current);
-  await log(`${current.length} threads in the space, ${changed.length} new or changed since the last run.`);
-
-  if (changed.length === 0) {
-    await writeSnapshot(toSnapshot(current));
-    if (!dryRun) await markSuccess("nothing new");
-    return log("Nothing new: the list stays as it is (Claude not started).");
+  if (sizesOnly) {
+    await log(`${tag} ${t.space}: ${(Buffer.byteLength(text, "utf8") / 1024).toFixed(0)} KB, ${current.length} threads in the last ${WINDOW_DAYS} days.`);
+    return "nothing";
   }
-  await writeFile(join(dir, "space-changes.txt"), `${changed.map((t) => t.text).join("\n\n")}\n`, "utf8");
-  if (dryRun) return log("Dry run: changes written to space-changes.txt, Claude not started, database untouched.");
+  await writeFile(join(t.dir, "space-latest.txt"), text, "utf8");
 
-  await connectToDatabase();
-  const before = await storedReview();
-  await writeFile(join(dir, "review-current.json"), JSON.stringify(before, null, 2), "utf8");
-  await writeFile(join(dir, "review-next.json"), "", "utf8");
-  const today = new Date().toISOString().slice(0, 10);
-  await log("Starting Claude Code to update the list from the changed threads...");
-  const summary = await runClaude(prompt(before.client, today, changed.length));
-  await log(`Claude Code: ${summary.replace(/\s+/g, " ").slice(0, 400)}`);
-
-  const next = parseSpaceReview(JSON.parse(await readFile(join(dir, "review-next.json"), "utf8")));
-  if (next.space !== SPACE) throw new Error("review-next.json names another space; not imported.");
-  if (before.tasks.length >= 10 && next.tasks.length < before.tasks.length * 0.5) {
-    throw new Error(`The new list dropped from ${before.tasks.length} to ${next.tasks.length} tasks; not imported, check review-next.json.`);
+  const review = await storedReview(t.space);
+  let snapshot = (await jsonOr<{ threads: Snapshot }>(join(t.dir, "snapshot.json")))?.threads ?? null;
+  // The first space (Lulu) was set up before the folders: carry its snapshot over once.
+  if (!snapshot && review) {
+    const legacy = await jsonOr<{ threads: Snapshot }>(join(root, "snapshot.json"));
+    if (legacy && t.space === "spaces/AAQAYekyB1Y") snapshot = legacy.threads;
   }
-
-  await copyFile(join(dir, "review-current.json"), join(dir, "backup", `review-${today}-${Date.now()}.json`));
-  // $set, not a replace, so the project the space is connected to survives the daily update.
-  const fields = { client: next.client, source: next.source, tasks: next.tasks, opportunities: next.opportunities, notes: next.notes };
-  await ServiceSpaceReview.updateOne({ _id: SPACE }, { $set: { ...fields, reviewedAt: new Date(next.reviewedAt) } }, { upsert: true });
-  await recordServiceAudit("space_review.daily", {
-    space: SPACE,
-    changedThreads: changed.length,
-    tasks: next.tasks.length,
-    opportunities: next.opportunities.length,
-  }).catch(() => undefined);
-  await writeSnapshot(toSnapshot(current));
-  await markSuccess(`imported, ${changed.length} threads`);
+  const firstRead = !review || !snapshot;
+  if (review && !snapshot) {
+    // A list exists but there is no record of what it was made from: take today's export as the baseline instead of re-reading everything.
+    await writeFile(join(t.dir, "snapshot.json"), JSON.stringify({ updatedAt: new Date().toISOString(), threads: toSnapshot(current) }), "utf8");
+    await log(`${tag} a list exists but no snapshot: baseline set from today's export (${current.length} threads), nothing read.`);
+    return "nothing";
+  }
+  const changed = changedThreads(firstRead ? {} : snapshot!, current);
   await log(
-    `Imported: ${next.tasks.length} tasks (was ${before.tasks.length}), ${next.opportunities.length} opportunities (was ${before.opportunities.length}).`
+    `${tag} ${current.length} threads in the last ${WINDOW_DAYS} days, ${changed.length} ${firstRead ? "to read for the first time" : "new or changed since the last run"}.`
   );
+
+  const markDone = async (note: string) =>
+    writeFile(join(t.dir, "last-success.json"), JSON.stringify({ day: today, at: new Date().toISOString(), note }), "utf8");
+  if (changed.length === 0) {
+    if (!dryRun) {
+      await writeFile(join(t.dir, "snapshot.json"), JSON.stringify({ updatedAt: new Date().toISOString(), threads: toSnapshot(current) }), "utf8");
+      await markDone("nothing new");
+    }
+    await log(`${tag} nothing new: the list stays as it is (Claude not started).`);
+    return "nothing";
+  }
+  if (dryRun) {
+    await writeFile(join(t.dir, "space-changes.txt"), `${changed.map((c) => c.text).join("\n\n")}\n`, "utf8");
+    await log(`${tag} dry run: changes written to space-changes.txt, Claude not started, database untouched.`);
+    return "nothing";
+  }
+
+  const chunks = chunkThreads(changed, CHUNK_BYTES);
+  let list: SpaceReview = review ?? {
+    space: t.space,
+    client: t.project,
+    reviewedAt: today,
+    source: `last ${WINDOW_DAYS} days, ${current.length} threads`,
+    tasks: [],
+    opportunities: [],
+    notes: [],
+  };
+  for (let i = 0; i < chunks.length; i++) {
+    await writeFile(join(t.dir, "space-changes.txt"), `${chunks[i].map((c) => c.text).join("\n\n")}\n`, "utf8");
+    await writeFile(join(t.dir, "review-current.json"), JSON.stringify(list, null, 2), "utf8");
+    await writeFile(join(t.dir, "review-next.json"), "", "utf8");
+    await log(`${tag} Claude Code, part ${i + 1} of ${chunks.length} (${chunks[i].length} threads)...`);
+    const summary = await runClaude(t.dir, prompt(list.client, today, chunks[i].length, `${i + 1} of ${chunks.length}`, firstRead));
+    await log(`${tag} Claude Code: ${summary.replace(/\s+/g, " ").slice(0, 300)}`);
+    const next = parseSpaceReview(JSON.parse(await readFile(join(t.dir, "review-next.json"), "utf8")));
+    if (next.space !== t.space) throw new Error("review-next.json names another space; not stored.");
+    if (list.tasks.length >= 10 && next.tasks.length < list.tasks.length * 0.5) {
+      throw new Error(`The list dropped from ${list.tasks.length} to ${next.tasks.length} tasks; not stored, check review-next.json.`);
+    }
+    await copyFile(join(t.dir, "review-current.json"), join(t.dir, "backup", `review-${today}-${Date.now()}.json`));
+    const fields = { client: next.client, source: next.source ?? list.source, tasks: next.tasks, opportunities: next.opportunities, notes: next.notes };
+    await ServiceSpaceReview.updateOne({ _id: t.space }, { $set: { ...fields, reviewedAt: new Date(next.reviewedAt) } }, { upsert: true });
+    list = { ...next, source: fields.source };
+  }
+  await recordServiceAudit("space_review.daily", {
+    space: t.space,
+    project: t.project,
+    firstRead,
+    changedThreads: changed.length,
+    tasks: list.tasks.length,
+    opportunities: list.opportunities.length,
+  }).catch(() => undefined);
+  await writeFile(join(t.dir, "snapshot.json"), JSON.stringify({ updatedAt: new Date().toISOString(), threads: toSnapshot(current) }), "utf8");
+  await markDone(firstRead ? "first read" : `${changed.length} threads`);
+  await log(
+    `${tag} stored: ${list.tasks.length} tasks, ${list.opportunities.length} opportunities (${firstRead ? "first read" : `${changed.length} threads read`}).`
+  );
+  return "done";
+}
+
+async function main() {
+  await mkdir(root, { recursive: true });
+  await connectToDatabase();
+  const list = await targets();
+  if (!list.length) throw new Error(only ? `No connected active project matches "${only}".` : "No space is connected to an active project.");
+  await log(`${list.length} space(s) connected to active projects${only ? ` (only ${only})` : ""}.`);
+  const failed: string[] = [];
+  for (const t of list) {
+    try {
+      await processSpace(t);
+    } catch (e) {
+      failed.push(t.project);
+      await log(`[${t.project}] FAILED: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  await log(
+    failed.length ? `Finished with ${failed.length} failed: ${failed.join(", ")} (they are tried again at the next start).` : "Finished: all spaces done."
+  );
+  if (failed.length) process.exitCode = 1;
 }
 
 main().then(
-  () => process.exit(0),
+  () => process.exit(process.exitCode ?? 0),
   async (e) => {
-    const message = e instanceof Error ? e.message : String(e);
-    await mkdir(dir, { recursive: true }).catch(() => undefined);
-    await log(`FAILED: ${message}`);
+    await mkdir(root, { recursive: true }).catch(() => undefined);
+    await log(`FAILED: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
 );
