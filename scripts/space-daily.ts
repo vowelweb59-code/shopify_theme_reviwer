@@ -6,6 +6,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 import { recordServiceAudit } from "@/lib/service/audit/record";
 import { fetchSpaceText } from "@/lib/service/chat/space-fetch";
 import { changedThreads, parseExportThreads, toSnapshot, type Snapshot } from "@/lib/service/import/space-diff";
+import { istDate } from "@/lib/service/import/text";
 import { parseSpaceReview, type SpaceReview } from "@/lib/service/import/space-review";
 import { ServiceSpaceReview } from "@/models/service-space-review";
 
@@ -20,13 +21,18 @@ import { ServiceSpaceReview } from "@/models/service-space-review";
 // Claude Code (your subscription, `claude -p`) reads ONLY the changed threads and updates the list; no API key service is used.
 // When nothing changed, Claude is not started at all. Run it from Windows Task Scheduler (see scripts/space-daily.cmd).
 //
-//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--baseline=<export.txt>] [--dry-run]
+//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--baseline=<export.txt>] [--dry-run] [--force]
 //   --baseline=<file>  first run only: treat that export as already reviewed (no download, no AI), so only newer threads are read next time
 //   --dry-run          download and list the changes, but do not start Claude or write the database
+//   --force            run even if today's run already succeeded
+// Scheduling (owner, 2026-11-26: "if the PC is not on at 8 am, try again after 120 minutes"): Task Scheduler starts it at 8:00 and every 120
+// minutes until 22:00 (scripts/space-daily-schedule.ps1); a run that finished today (last-success.json, IST day) makes the later starts exit at once,
+// and a failed run (PC offline, Chat error) leaves no mark, so the next start tries again.
 const SPACE = process.env.SERVICE_SPACE_SCAN_SPACE?.trim() || "spaces/AAQAYekyB1Y";
 const dir = join(homedir(), "space-scan");
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
 const dryRun = process.argv.includes("--dry-run");
+const force = process.argv.includes("--force");
 const CLAUDE_TIMEOUT_MS = 40 * 60_000;
 
 async function log(line: string) {
@@ -34,6 +40,16 @@ async function log(line: string) {
   console.log(text);
   await appendFile(join(dir, "space-daily.log"), `${text}\n`, "utf8").catch(() => undefined);
 }
+
+async function ranToday(): Promise<boolean> {
+  try {
+    return (JSON.parse(await readFile(join(dir, "last-success.json"), "utf8")) as { day?: string }).day === istDate(new Date());
+  } catch {
+    return false;
+  }
+}
+const markSuccess = (note: string) =>
+  writeFile(join(dir, "last-success.json"), JSON.stringify({ day: istDate(new Date()), at: new Date().toISOString(), note }), "utf8");
 
 async function readSnapshot(): Promise<Snapshot | null> {
   try {
@@ -105,6 +121,8 @@ async function main() {
     return log(`Baseline set from ${baseline}: ${threads.length} threads treated as already reviewed.`);
   }
 
+  if (!dryRun && !force && (await ranToday())) return log("Already ran successfully today (IST): nothing to do.");
+
   const previous = await readSnapshot();
   if (!previous) throw new Error("No snapshot yet. Run once with --baseline=<the export the current list was made from>.");
 
@@ -118,6 +136,7 @@ async function main() {
 
   if (changed.length === 0) {
     await writeSnapshot(toSnapshot(current));
+    if (!dryRun) await markSuccess("nothing new");
     return log("Nothing new: the list stays as it is (Claude not started).");
   }
   await writeFile(join(dir, "space-changes.txt"), `${changed.map((t) => t.text).join("\n\n")}\n`, "utf8");
@@ -149,6 +168,7 @@ async function main() {
     opportunities: next.opportunities.length,
   }).catch(() => undefined);
   await writeSnapshot(toSnapshot(current));
+  await markSuccess(`imported, ${changed.length} threads`);
   await log(
     `Imported: ${next.tasks.length} tasks (was ${before.tasks.length}), ${next.opportunities.length} opportunities (was ${before.opportunities.length}).`
   );

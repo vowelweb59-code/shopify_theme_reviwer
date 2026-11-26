@@ -147,6 +147,26 @@ export async function listServiceMessages(refreshToken: string, space: string, {
   throw new Error("Chat returned too many pages; stopping");
 }
 
+export interface ChatSpaceInfo {
+  name: string;
+  displayName: string;
+}
+
+/** The named spaces (not direct messages) the connected account is a member of, for matching them to Service projects. */
+export async function listServiceSpaces(refreshToken: string): Promise<ChatSpaceInfo[]> {
+  const token = await accessToken(refreshToken);
+  const out: ChatSpaceInfo[] = [];
+  let pageToken = "";
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const params = new URLSearchParams({ pageSize: "1000", filter: 'spaceType = "SPACE"', ...(pageToken ? { pageToken } : {}) });
+    const r = await getJson<{ spaces?: Array<{ name?: string; displayName?: string }>; nextPageToken?: string }>(token, `${API}/spaces?${params}`);
+    for (const sp of r.spaces ?? []) if (sp.name && sp.displayName) out.push({ name: sp.name, displayName: sp.displayName });
+    if (!r.nextPageToken) return out;
+    pageToken = r.nextPageToken;
+  }
+  throw new Error("Chat returned too many pages of spaces; stopping");
+}
+
 // Shared with the attendance page (lib/attendance/chat.ts), which reads its own space through this same connection.
 export const serviceChatToken = accessToken;
 export const serviceChatGet = getJson;
