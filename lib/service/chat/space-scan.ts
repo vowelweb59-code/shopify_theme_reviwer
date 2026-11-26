@@ -4,6 +4,7 @@ import { listServiceMessages } from "./google";
 import { serviceRefreshToken } from "./sync";
 import type { SpaceReview } from "../import/space-review";
 import { connectToDatabase } from "@/lib/db/connect";
+import { ServiceProjectSpace } from "@/models/service-project-space";
 import { ServiceSpaceReview } from "@/models/service-space-review";
 
 // Temporary "Space scan" tab (owner, 2026-11-26): reads one whole Chat space through the Service Chat connection (its account must be a
@@ -68,4 +69,16 @@ export async function loadSpaceReviews(): Promise<StoredSpaceReview[]> {
       notes: d.notes ?? [],
     },
   }));
+}
+
+export interface ProjectSpaceLink {
+  space: string;
+  projectId: string;
+  displayName: string | null;
+}
+
+/** Which space is connected to which project (scripts/set-space-project.ts, link-matched-spaces.ts). */
+export async function loadProjectSpaces(): Promise<ProjectSpaceLink[]> {
+  await connectToDatabase();
+  return (await ServiceProjectSpace.find().lean()).map((d) => ({ space: d._id, projectId: d.projectId, displayName: d.displayName ?? null }));
 }

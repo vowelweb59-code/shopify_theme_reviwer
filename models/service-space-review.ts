@@ -8,7 +8,7 @@ const serviceSpaceReviewSchema = new Schema(
   {
     _id: { type: String, required: true },
     client: { type: String, default: null },
-    // The Service project whose tab shows this space (scripts/set-space-project.ts); null = not connected to a project yet.
+    // Legacy: the first link was stored here (2026-11-26); links now live in service_project_spaces (models/service-project-space.ts) and win.
     projectId: { type: String, default: null, index: true },
     reviewedAt: { type: Date, required: true },
     source: { type: String, default: null },
