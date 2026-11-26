@@ -2,6 +2,9 @@ import "server-only";
 import { analyseSpace, formatSpaceThreads, type SpaceInsights } from "../import/space-insights";
 import { listServiceMessages } from "./google";
 import { serviceRefreshToken } from "./sync";
+import type { SpaceReview } from "../import/space-review";
+import { connectToDatabase } from "@/lib/db/connect";
+import { ServiceSpaceReview } from "@/models/service-space-review";
 
 // Temporary "Space scan" tab (owner, 2026-11-26): reads one whole Chat space through the Service Chat connection (its account must be a
 // member) and lists the pending tasks and the pitch opportunities it finds. Nothing is stored in the database: the last result is kept in
@@ -35,4 +38,27 @@ export async function scanSpace(now = new Date()): Promise<SpaceScanResult> {
 export async function exportSpaceText(now = new Date()): Promise<string> {
   const msgs = await listServiceMessages(await serviceRefreshToken(), SPACE_SCAN_SPACE, { from: SINCE, to: new Date(now.getTime() + 60_000) });
   return formatSpaceThreads(msgs.map((m) => ({ id: m.externalId, sender: m.senderName, postedAt: m.postedAt, text: m.text, threadName: m.threadName })));
+}
+
+/** The reviewed lists loaded with scripts/import-space-review.ts, or null before they are loaded. */
+export async function loadSpaceReview(): Promise<SpaceReview | null> {
+  await connectToDatabase();
+  const d = await ServiceSpaceReview.findById(SPACE_SCAN_SPACE).lean();
+  if (!d) return null;
+  return {
+    space: d._id,
+    client: d.client ?? null,
+    reviewedAt: new Date(d.reviewedAt).toISOString(),
+    source: d.source ?? null,
+    tasks: (d.tasks ?? []).map((t) => ({
+      group: t.group,
+      text: t.text,
+      asked: t.asked ?? null,
+      who: t.who ?? null,
+      evidence: t.evidence ?? null,
+      threads: t.threads ?? null,
+    })),
+    opportunities: (d.opportunities ?? []).map((o) => ({ priority: o.priority, title: o.title, evidence: o.evidence ?? null, pitch: o.pitch ?? null })),
+    notes: d.notes ?? [],
+  };
 }
