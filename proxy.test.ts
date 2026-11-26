@@ -102,6 +102,22 @@ describe("proxy login gate", () => {
     expect(run("/settings").status).toBe(307);
   });
 
+  it("lets the export token through on its one GET path only", () => {
+    const token = "k".repeat(40);
+    process.env.SPACE_EXPORT_TOKEN = token;
+    const call = (path: string, auth: string | null, method = "GET") => {
+      Object.assign(process.env, ENV);
+      const headers = new Headers(auth ? { authorization: auth } : {});
+      return proxy(new NextRequest(`https://app.example.com${path}`, { method, headers }));
+    };
+    expect(call("/api/service/space-scan/export", `Bearer ${token}`).headers.get("x-middleware-next")).toBe("1");
+    expect(call("/api/service/space-scan/export", "Bearer wrong-wrong-wrong-wrong-wrong-wrong-wrong").status).toBe(401);
+    expect(call("/api/service/space-scan/export", null).status).toBe(401);
+    expect(call("/api/service/space-scan", `Bearer ${token}`).status).toBe(401);
+    expect(call("/api/themes", `Bearer ${token}`).status).toBe(401);
+    expect(call("/api/service/space-scan/export", `Bearer ${token}`, "POST").status).toBe(401);
+  });
+
   it("lets a valid session through and bounces it off /login", () => {
     Object.assign(process.env, ENV);
     const token = createSessionToken(process.env);

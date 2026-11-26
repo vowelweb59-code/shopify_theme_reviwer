@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, authMode, isValidSessionToken } from "@/lib/auth/session";
+import { isExportTokenRequest } from "@/lib/auth/exportToken";
 import { isPublicLegalPath } from "@/lib/legal/pages";
 
 export { authMode };
@@ -54,6 +55,8 @@ export function isCrossSiteMutation(request: { method: string; headers: Headers;
  */
 export function proxy(request: NextRequest) {
   if (isCrossSiteMutation(request)) return new NextResponse("Cross-site request blocked.", { status: 403 });
+  // The daily Live Project Chat Summary job reads its export with a token instead of a session (lib/auth/exportToken.ts): one GET path only.
+  if (isExportTokenRequest(request, process.env)) return NextResponse.next();
 
   const mode = authMode(process.env);
   const { pathname, search } = request.nextUrl;
