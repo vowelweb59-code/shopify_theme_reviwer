@@ -22,6 +22,8 @@ export interface RawChatMessage {
   /** UTC ISO, the Chat createTime. For an edited message the text is the latest version. */
   postedAt: string;
   text: string;
+  /** Chat's thread id when the reader supplies it (only the Space scan export uses it). */
+  threadName?: string;
 }
 
 export interface SpaceInput {

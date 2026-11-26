@@ -120,7 +120,13 @@ export async function listServiceMessages(refreshToken: string, space: string, {
   for (let i = 0; i < MAX_PAGES; i++) {
     const params = new URLSearchParams({ pageSize: "1000", orderBy: "createTime ASC", filter, ...(pageToken ? { pageToken } : {}) });
     const r = await getJson<{
-      messages?: Array<{ name?: string; createTime?: string; text?: string; sender?: { name?: string; displayName?: string; type?: string } }>;
+      messages?: Array<{
+        name?: string;
+        createTime?: string;
+        text?: string;
+        sender?: { name?: string; displayName?: string; type?: string };
+        thread?: { name?: string };
+      }>;
       nextPageToken?: string;
     }>(token, `${API}/${space}/messages?${params}`);
     for (const m of r.messages ?? []) {
@@ -132,6 +138,7 @@ export async function listServiceMessages(refreshToken: string, space: string, {
         senderName: m.sender?.displayName || names.get(sender) || sender,
         postedAt: m.createTime,
         text: m.text,
+        threadName: m.thread?.name,
       });
     }
     if (!r.nextPageToken) return out;
