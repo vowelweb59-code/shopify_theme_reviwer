@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SPACE_EXPORT_PATH, SPACE_LIST_PATH, hasValidExportToken, isExportTokenRequest } from "./exportToken";
+import { SPACE_EXPORT_PATH, SPACE_LIST_PATH, SPACE_TARGETS_PATH, hasValidExportToken, isExportTokenRequest } from "./exportToken";
 
 const TOKEN = "t".repeat(40);
 const headers = (auth?: string) => new Headers(auth ? { authorization: auth } : {});
@@ -24,8 +24,10 @@ describe("export token", () => {
     expect(hasValidExportToken(headers(`Bearer ${TOKEN}`), {})).toBe(false);
   });
 
-  it("opens only the two read-only paths, only for GET", () => {
+  it("opens only the three read-only paths, only for GET", () => {
     const env = { SPACE_EXPORT_TOKEN: TOKEN };
+    expect(isExportTokenRequest(req("GET", SPACE_TARGETS_PATH, `Bearer ${TOKEN}`), env)).toBe(true);
+    expect(isExportTokenRequest(req("POST", SPACE_TARGETS_PATH, `Bearer ${TOKEN}`), env)).toBe(false);
     expect(isExportTokenRequest(req("GET", SPACE_LIST_PATH, `Bearer ${TOKEN}`), env)).toBe(true);
     expect(isExportTokenRequest(req("POST", SPACE_LIST_PATH, `Bearer ${TOKEN}`), env)).toBe(false);
     expect(isExportTokenRequest(req("GET", SPACE_EXPORT_PATH, `Bearer ${TOKEN}`), env)).toBe(true);

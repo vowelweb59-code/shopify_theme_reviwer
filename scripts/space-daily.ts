@@ -4,17 +4,18 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { connectToDatabase } from "@/lib/db/connect";
 import { recordServiceAudit } from "@/lib/service/audit/record";
-import { fetchSpaceText } from "@/lib/service/chat/space-fetch";
+import { fetchLiveJson, fetchSpaceText } from "@/lib/service/chat/space-fetch";
 import { changedThreads, chunkThreads, parseExportThreads, toSnapshot, type Snapshot } from "@/lib/service/import/space-diff";
 import { istDate } from "@/lib/service/import/text";
 import { parseSpaceReview, type SpaceReview } from "@/lib/service/import/space-review";
-import { ServiceProject } from "@/models/service-project";
+import type { ProjectMatch } from "@/lib/service/import/space-match";
 import { ServiceProjectSpace } from "@/models/service-project-space";
 import { ServiceSpaceReview } from "@/models/service-space-review";
 
 // Daily job for the "Live Project Chat Summary" tabs (owner, 2026-11-26: "work on its own, same download path every time, sync automatically";
-// "last 90 days for once ... store it and add daily updates there also"). For EVERY space connected to a currently active project
-// (Active / Blocked / Partial hold), in turn:
+// "last 90 days for once ... store it and add daily updates there also"). The projects are the live app's Active list TODAY (the same list as the
+// tabs: GET /api/service/space-scan/targets); a project that leaves it drops out (its stored list stays), one that returns is picked up again, and a
+// NEW active project with exactly one matching space is linked automatically (see autoLink). For EVERY space connected to such a project, in turn:
 //   1. downloads the last 90 days of the space from the live app into ~/space-scan/<space id>/space-latest.txt (same path every time);
 //   2. compares it with that folder's snapshot.json (what the last successful run had seen): a thread is new or changed when its text differs;
 //   3. nothing changed -> stops (Claude is not started, nothing is spent);
@@ -63,18 +64,49 @@ async function jsonOr<T>(file: string): Promise<T | null> {
   }
 }
 
-/** The spaces connected to projects that are active today. */
+interface LiveTargets {
+  liveProjects: Array<{ id: string; name: string }>;
+  targets: Array<{ projectId: string; project: string; space: string }>;
+}
+
+/** The spaces connected to the projects on the live app's Active list today (the same list as the tabs). New active projects get linked first. */
 async function targets(): Promise<Target[]> {
-  const links = await ServiceProjectSpace.find().lean();
-  const projects = await ServiceProject.find({ _id: { $in: links.map((l) => l.projectId) }, status: { $in: ["ACTIVE", "BLOCKED", "PARTIAL_HOLD"] } })
-    .select("name")
-    .lean<Array<{ _id: string; name: string }>>();
-  const name = new Map(projects.map((p) => [p._id, p.name]));
-  return links
-    .filter((l) => name.has(l.projectId))
-    .map((l) => ({ space: l._id, project: name.get(l.projectId)!, projectId: l.projectId, dir: join(root, l._id.replace("spaces/", "")) }))
+  let live = await fetchLiveJson<LiveTargets>("/api/service/space-scan/targets");
+  if (!dryRun && !sizesOnly && (await autoLink(live))) live = await fetchLiveJson<LiveTargets>("/api/service/space-scan/targets");
+  return live.targets
+    .map((t) => ({ space: t.space, project: t.project, projectId: t.projectId, dir: join(root, t.space.replace("spaces/", "")) }))
     .filter((t) => !only || t.project === only || t.space === only)
     .sort((a, b) => a.project.localeCompare(b.project));
+}
+
+/**
+ * A new active project has no space yet. When exactly ONE space not used by another project fits its client name (score 75 or more, the name
+ * match of match-spaces.ts), it is linked here (audit `project_space.auto_link`); several or none are only reported and wait for the owner.
+ * Returns true when something was linked.
+ */
+async function autoLink(live: LiveTargets): Promise<boolean> {
+  const linked = new Set(live.targets.map((t) => t.projectId));
+  const unlinked = live.liveProjects.filter((p) => !linked.has(p.id));
+  if (!unlinked.length) return false;
+  const { matches } = await fetchLiveJson<{ matches: ProjectMatch[] }>("/api/service/space-scan/spaces");
+  const taken = new Set((await ServiceProjectSpace.find().select("_id").lean<Array<{ _id: string }>>()).map((d) => d._id));
+  let any = false;
+  for (const p of unlinked) {
+    const found = matches.find((m) => m.project.id === p.id)?.candidates.filter((c) => c.score >= 75 && !taken.has(c.name)) ?? [];
+    if (found.length !== 1) {
+      await log(
+        `[${p.name}] new active project with no space: ${found.length ? `${found.length} spaces fit its name, needs you` : "no space fits its name, needs you"}.`
+      );
+      continue;
+    }
+    const c = found[0];
+    await ServiceProjectSpace.updateOne({ _id: c.name }, { $set: { projectId: p.id, displayName: c.displayName } }, { upsert: true });
+    await recordServiceAudit("project_space.auto_link", { space: c.name, project: p.name, projectId: p.id, score: c.score }).catch(() => undefined);
+    taken.add(c.name);
+    any = true;
+    await log(`[${p.name}] linked automatically to the space "${c.displayName}" (${c.name}).`);
+  }
+  return any;
 }
 
 async function storedReview(space: string): Promise<SpaceReview | null> {

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { listLiveProjects } from "@/lib/service/api/live-projects";
 import { SPACE_SCAN_SPACE, loadProjectSpaces, loadSpaceReviews } from "@/lib/service/chat/space-scan";
-import { ServiceProject } from "@/models/service-project";
 import { SpaceScan } from "./_components/SpaceScan";
 
 export const dynamic = "force-dynamic";
@@ -27,19 +26,9 @@ export default async function SpaceScanPage({ searchParams }: { searchParams: Pr
   const reviewOf = new Map(stored.map((s) => [s.review.space, s.review]));
   const unlinked = stored.filter((s) => !connected.has(s.review.space));
 
-  // A project with a connected space stays a tab even if it has since left the Active list.
-  const known = new Set(live.map((p) => p.id));
-  const extra = [...spacesOf.keys()].filter((id) => !known.has(id));
-  const names = new Map<string, string>();
-  if (extra.length) {
-    for (const p of await ServiceProject.find({ _id: { $in: extra } })
-      .select("name")
-      .lean<Array<{ _id: string; name: string }>>())
-      names.set(p._id, p.name);
-  }
-  const tabs = [...live, ...extra.map((id) => ({ id, name: names.get(id) ?? "Project" }))].sort(
-    (a, b) => Number(spacesOf.has(b.id)) - Number(spacesOf.has(a.id)) || a.name.localeCompare(b.name)
-  );
+  // Active projects only (owner, 2026-11-26): a project that is no longer on the Active list loses its tab. Its link and its stored list stay, so
+  // everything comes back when it is Active again.
+  const tabs = [...live].sort((a, b) => Number(spacesOf.has(b.id)) - Number(spacesOf.has(a.id)) || a.name.localeCompare(b.name));
   const allTabs = [
     ...tabs.map((t) => ({ id: t.id, name: t.name, has: spacesOf.has(t.id) })),
     ...(unlinked.length ? [{ id: "unlinked", name: "Not connected", has: true }] : []),
