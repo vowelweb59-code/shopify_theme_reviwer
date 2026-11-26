@@ -8,6 +8,8 @@ const serviceSpaceReviewSchema = new Schema(
   {
     _id: { type: String, required: true },
     client: { type: String, default: null },
+    // The Service project whose tab shows this space (scripts/set-space-project.ts); null = not connected to a project yet.
+    projectId: { type: String, default: null, index: true },
     reviewedAt: { type: Date, required: true },
     source: { type: String, default: null },
     tasks: [

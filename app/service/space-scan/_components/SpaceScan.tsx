@@ -28,7 +28,7 @@ const PRIORITY_TONE: Record<string, string> = {
 };
 
 /** Temporary tab: pending tasks and pitch opportunities of one Chat space. The reviewed lists (read by Claude Code, loaded into the database) come first; the wording scan is a rougher second view. */
-export function SpaceScan({ review }: { review: SpaceReview | null }) {
+export function SpaceScan({ review, showScan = false }: { review: SpaceReview | null; showScan?: boolean }) {
   const [tab, setTab] = useState<"tasks" | "opportunities">("tasks");
   const [group, setGroup] = useState("all");
   const [priority, setPriority] = useState("all");
@@ -131,7 +131,7 @@ export function SpaceScan({ review }: { review: SpaceReview | null }) {
         </ul>
       )}
 
-      <WordingScan tab={tab} />
+      {showScan && <WordingScan tab={tab} />}
     </div>
   );
 }

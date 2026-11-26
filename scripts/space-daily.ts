@@ -139,7 +139,9 @@ async function main() {
   }
 
   await copyFile(join(dir, "review-current.json"), join(dir, "backup", `review-${today}-${Date.now()}.json`));
-  await ServiceSpaceReview.replaceOne({ _id: SPACE }, { _id: SPACE, ...next, reviewedAt: new Date(next.reviewedAt) }, { upsert: true });
+  // $set, not a replace, so the project the space is connected to survives the daily update.
+  const fields = { client: next.client, source: next.source, tasks: next.tasks, opportunities: next.opportunities, notes: next.notes };
+  await ServiceSpaceReview.updateOne({ _id: SPACE }, { $set: { ...fields, reviewedAt: new Date(next.reviewedAt) } }, { upsert: true });
   await recordServiceAudit("space_review.daily", {
     space: SPACE,
     changedThreads: changed.length,

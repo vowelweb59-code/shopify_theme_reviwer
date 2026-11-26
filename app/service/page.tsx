@@ -20,6 +20,7 @@ import { ServiceUpworkProfile } from "@/models/service-upwork";
 import { ServiceUser } from "@/models/service-user";
 import { projectHref } from "@/lib/service/ui/back";
 import { closeByLastReport, statusOnDay, type StatusStep } from "@/lib/service/projects/status-at";
+import { isMovedToOtherDept } from "@/lib/service/projects/dept-placement";
 
 export const dynamic = "force-dynamic";
 
@@ -336,11 +337,10 @@ export default async function ServiceOverviewPage({
       if (t < movedCutoff) return [{ ...p, status: "ON_HOLD" as const, movedDept: true }];
       return [{ ...p, status: then }];
     }
-    if (p.status !== "ACTIVE" && p.status !== "ON_HOLD") return [p];
-    // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21).
-    if (p.deptOverride === "STAY") return [p];
-    const automatic = (lastAnyDay.get(p._id) ?? "") >= movedCutoff && (lastDmDay.get(p._id) ?? "") < movedCutoff;
-    return [p.deptOverride === "MOVED" || automatic ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p];
+    // The manual placement in the project's Settings beats the automatic rule (owner, 2026-11-21); the rule is shared with the Live Project Chat Summary tabs.
+    return [
+      isMovedToOtherDept(p, lastAnyDay.get(p._id) ?? "", lastDmDay.get(p._id) ?? "", movedCutoff) ? { ...p, status: "ON_HOLD" as const, movedDept: true } : p,
+    ];
   });
   const ofType = all.filter(tab.match);
   const inStatus = ofType.filter(status.match);

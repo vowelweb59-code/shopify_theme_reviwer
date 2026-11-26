@@ -40,25 +40,32 @@ export async function exportSpaceText(now = new Date()): Promise<string> {
   return formatSpaceThreads(msgs.map((m) => ({ id: m.externalId, sender: m.senderName, postedAt: m.postedAt, text: m.text, threadName: m.threadName })));
 }
 
-/** The reviewed lists loaded with scripts/import-space-review.ts, or null before they are loaded. */
-export async function loadSpaceReview(): Promise<SpaceReview | null> {
+export interface StoredSpaceReview {
+  projectId: string | null;
+  review: SpaceReview;
+}
+
+/** Every reviewed list loaded with scripts/import-space-review.ts, with the project each one is connected to (null = none yet). */
+export async function loadSpaceReviews(): Promise<StoredSpaceReview[]> {
   await connectToDatabase();
-  const d = await ServiceSpaceReview.findById(SPACE_SCAN_SPACE).lean();
-  if (!d) return null;
-  return {
-    space: d._id,
-    client: d.client ?? null,
-    reviewedAt: new Date(d.reviewedAt).toISOString(),
-    source: d.source ?? null,
-    tasks: (d.tasks ?? []).map((t) => ({
-      group: t.group,
-      text: t.text,
-      asked: t.asked ?? null,
-      who: t.who ?? null,
-      evidence: t.evidence ?? null,
-      threads: t.threads ?? null,
-    })),
-    opportunities: (d.opportunities ?? []).map((o) => ({ priority: o.priority, title: o.title, evidence: o.evidence ?? null, pitch: o.pitch ?? null })),
-    notes: d.notes ?? [],
-  };
+  const docs = await ServiceSpaceReview.find().lean();
+  return docs.map((d) => ({
+    projectId: d.projectId ?? null,
+    review: {
+      space: d._id,
+      client: d.client ?? null,
+      reviewedAt: new Date(d.reviewedAt).toISOString(),
+      source: d.source ?? null,
+      tasks: (d.tasks ?? []).map((t) => ({
+        group: t.group,
+        text: t.text,
+        asked: t.asked ?? null,
+        who: t.who ?? null,
+        evidence: t.evidence ?? null,
+        threads: t.threads ?? null,
+      })),
+      opportunities: (d.opportunities ?? []).map((o) => ({ priority: o.priority, title: o.title, evidence: o.evidence ?? null, pitch: o.pitch ?? null })),
+      notes: d.notes ?? [],
+    },
+  }));
 }

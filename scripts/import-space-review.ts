@@ -19,7 +19,9 @@ async function main() {
   );
   if (!apply) return console.log("Nothing written. Add --apply to save (replaces this space's list).");
   await connectToDatabase();
-  await ServiceSpaceReview.replaceOne({ _id: review.space }, { _id: review.space, ...review, reviewedAt: new Date(review.reviewedAt) }, { upsert: true });
+  // $set, not a replace, so the project the space is connected to (set-space-project.ts) survives a re-import.
+  const { space, ...fields } = review;
+  await ServiceSpaceReview.updateOne({ _id: space }, { $set: { ...fields, reviewedAt: new Date(review.reviewedAt) } }, { upsert: true });
   await recordServiceAudit("space_review.import", { space: review.space, tasks: review.tasks.length, opportunities: review.opportunities.length });
   console.log("Done.");
 }
