@@ -102,6 +102,7 @@ export async function closeHeldFromEndedPosts(opts: { apply?: boolean; ids?: str
             toStatus: "COMPLETED",
             reason: `Contract ended (New Project Update post of ${c.endedOn.toISOString().slice(0, 10)})`,
             at,
+            madeAt: now,
           },
         },
       }

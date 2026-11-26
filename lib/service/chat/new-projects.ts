@@ -137,11 +137,22 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
       }
       out.created.push(post.client);
     } else {
-      const projects = clientId
+      // An ended post closes only a project that existed when it was posted and that is not on another Upwork profile
+      // (2026-11-26: a 16 Nov post closed "Andrew Johnson – Hasan (AI Video Creation)", created 17 Nov, on 26 Nov).
+      const postProfileId = (post.profile && profileByName.get(key(post.profile))) || null;
+      const candidates = clientId
         ? await ServiceProject.find({ clientId, status: { $in: OPEN } })
-            .select("name")
-            .lean<Array<{ _id: string; name: string }>>()
+            .select("name upworkProfileId history contract.startDate")
+            .lean<
+              Array<{ _id: string; name: string; upworkProfileId?: string | null; history?: Array<{ at: Date }>; contract?: { startDate?: Date | null } }>
+            >()
         : [];
+      const projects = candidates.filter((p) => {
+        const born = p.history?.[0]?.at ?? p.contract?.startDate ?? null;
+        if (born && posted.getTime() < new Date(born).getTime() - 24 * 3600 * 1000) return false;
+        if (postProfileId && p.upworkProfileId && p.upworkProfileId !== postProfileId) return false;
+        return true;
+      });
       if (projects.length !== 1) {
         if (!clientId || !(await ServiceProject.exists({ clientId, status: "COMPLETED" })))
           out.skipped.push({ text: m.text.slice(0, 120), why: clientId ? `${projects.length} open projects` : "client not found" });
@@ -152,7 +163,7 @@ export async function syncNewProjects(opts: { dryRun?: boolean; now?: Date } = {
           { _id: projects[0]._id },
           {
             $set: { status: "COMPLETED", reviewRating: post.rating, reviewedAt: posted },
-            $push: { history: { toStatus: "COMPLETED", reason: "Contract ended (New Project Update)", at: now } },
+            $push: { history: { toStatus: "COMPLETED", reason: "Contract ended (New Project Update)", at: now, madeAt: now } },
           }
         );
       }
