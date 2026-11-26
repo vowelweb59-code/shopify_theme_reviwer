@@ -8,7 +8,7 @@ import { connectToDatabase } from "@/lib/db/connect";
 /** A failure the caller should see: 400 (bad input), 404 (missing), 409 (conflict). */
 export class ServiceError extends Error {
   constructor(
-    public readonly status: 400 | 404 | 409,
+    public readonly status: 400 | 404 | 409 | 502,
     message: string
   ) {
     super(message);
