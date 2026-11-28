@@ -71,9 +71,11 @@ export async function loadSpaceReviews(): Promise<StoredSpaceReview[]> {
         who: t.who ?? null,
         evidence: t.evidence ?? null,
         threads: t.threads ?? null,
+        risk: t.risk === true,
       })),
       opportunities: (d.opportunities ?? []).map((o) => ({ priority: o.priority, title: o.title, evidence: o.evidence ?? null, pitch: o.pitch ?? null })),
       notes: d.notes ?? [],
+      health: d.health ? { level: d.health.level, reasons: (d.health.reasons ?? []).map((r) => ({ text: r.text, threads: r.threads ?? null })) } : null,
     },
   }));
 }

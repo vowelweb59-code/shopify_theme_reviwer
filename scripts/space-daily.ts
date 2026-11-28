@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { appendFile, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { connectToDatabase } from "@/lib/db/connect";
@@ -28,11 +28,12 @@ import { ServiceSpaceReview } from "@/models/service-space-review";
 // skipped on later starts. Task Scheduler starts it at 8:00 and every 120 minutes until 22:00 (scripts/space-daily-schedule.ps1): a PC that was off
 // at 8:00 tries again, and a failed space is tried again at the next start. Everything outside the database stays in ~/space-scan.
 //
-//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--only="Project name"] [--sizes] [--dry-run] [--force]
+//   npx tsx --env-file=.env.production.local scripts/space-daily.ts [--only="Project name"] [--sizes] [--dry-run] [--force] [--rehealth]
 //   --only=<project name | space id>   one space only
 //   --sizes     download each space and print its size and thread count, nothing else (no snapshot, no Claude, no database)
 //   --dry-run   as the real run up to the changes (written to space-changes.txt), but no Claude, no database, no snapshot
 //   --force     ignore today's success mark
+//   --rehealth  one-off: judge each EXISTING list's health (red / watch / ok) and which tasks are at risk from the last 90 days, changing nothing else
 const root = join(homedir(), "space-scan");
 const WINDOW_DAYS = 90;
 const CHUNK_BYTES = 220_000; // text handed to one Claude run
@@ -42,6 +43,7 @@ const only = arg("only");
 const sizesOnly = process.argv.includes("--sizes");
 const dryRun = process.argv.includes("--dry-run");
 const force = process.argv.includes("--force");
+const rehealth = process.argv.includes("--rehealth");
 
 interface Target {
   space: string;
@@ -120,20 +122,28 @@ async function storedReview(space: string): Promise<SpaceReview | null> {
     tasks: d.tasks,
     opportunities: d.opportunities,
     notes: d.notes,
+    health: d.health,
   });
 }
+
+// Owner, 2026-11-28: "if the project is going in the incorrect direction, highlight that point in red". Claude Code judges it from the chat.
+const HEALTH_RULES =
+  '5. Judge the PROJECT\'S HEALTH from the whole picture and set "health": {"level": "ok" | "watch" | "red", "reasons": [{"text": one sentence, "threads": "T123, T124"}]}. "red" = going in the incorrect direction: the client is unhappy, complaining, escalating or threatening to leave or not pay; a promised deadline was missed or keeps slipping; our work is blocked, or the client has not answered something important for a long time; a dispute about scope, hours or payment; repeated mistakes or rework. "watch" = early signs (slow replies, small friction, doubt about continuing). "ok" = none (reasons empty). Give 1 to 4 reasons for watch or red. Judge what is happening NOW (the last few weeks), not a problem long settled. Also set "risk": true on each task that shows this kind of trouble (escalated, deadline missed, client waiting far too long) and "risk": false on every other task.';
 
 function prompt(client: string | null, today: string, threads: number, part: string, firstRead: boolean): string {
   return [
     `You maintain the reviewed list of PENDING TASKS and PITCH OPPORTUNITIES for the Google Chat space of the client "${client ?? "unknown"}" (a Shopify / marketing agency's service team). Today is ${today}.`,
     `Two files are in the current folder: review-current.json (the list as it stands) and space-changes.txt (${firstRead ? `the last ${WINDOW_DAYS} days of the space, ` : "ONLY the Chat threads that are new or have new replies since the last run, "}${threads} threads, part ${part}; "=== THREAD n ===" headers, "[date time IST] Sender: text" lines; thread numbers are the export's own).`,
     firstRead ? "The list is empty or incomplete: this is the FIRST read of the space. Build it fully from these threads." : "",
-    "Read both completely, then write review-next.json: the same JSON object (keys space, client, reviewedAt, source, tasks, opportunities, notes), changed like this:",
+    "Read both completely, then write review-next.json: the same JSON object (keys space, client, reviewedAt, source, tasks, opportunities, notes, health), changed like this:",
     "1. Remove a task when the threads show it was done, delivered, answered or dropped. Update the text or evidence of a task that moved but is still open.",
     '2. Add a task for something asked, promised or awaited in these threads that is not done in them. Do not add one that is already in the list (same matter). Use group "client_waiting" when it was raised in the last 30 days and the client or our team is waiting, otherwise "older". Fields: group, text, asked (date text), who (who must act), evidence (one phrase), threads ("T123, T124").',
     "3. Add an opportunity (priority High, Medium or Low; title, evidence threads, pitch one sentence) only for something visible in these threads: the client asking for more, an upsell or next phase, a problem we could fix. Do not duplicate an existing one.",
     `4. Set reviewedAt to ${today}. Keep every other task, opportunity and note exactly as it is. Be conservative: do not invent, do not list greetings or finished work.`,
-    "Rules: group must be client_waiting, older or unclear; priority must be High, Medium or Low; all text fields are plain strings (use null for an empty optional one). Write ONLY review-next.json (valid JSON). Do not run commands or edit any other file. Finish with a 3-line summary: tasks removed, tasks added, opportunities added.",
+    firstRead
+      ? HEALTH_RULES
+      : `${HEALTH_RULES} If these threads do not change the picture, keep the health already in the list (and set it if the list has none).`,
+    "Rules: group must be client_waiting, older or unclear; priority must be High, Medium or Low; health.level must be ok, watch or red; all text fields are plain strings (use null for an empty optional one). Write ONLY review-next.json (valid JSON). Do not run commands or edit any other file. Finish with a 3-line summary: tasks removed, tasks added, opportunities added (and the health level).",
   ]
     .filter(Boolean)
     .join("\n");
@@ -161,6 +171,73 @@ function runClaude(cwd: string, text: string): Promise<string> {
     });
     child.stdin.end(text);
   });
+}
+
+/** The newest threads that fit in `maxBytes` (a space bigger than one Claude run is judged from its latest part). */
+function newestThreads(threads: ReturnType<typeof parseExportThreads>, maxBytes: number) {
+  const picked: typeof threads = [];
+  let size = 0;
+  for (let i = threads.length - 1; i >= 0; i--) {
+    const n = Buffer.byteLength(threads[i].text, "utf8");
+    if (picked.length && size + n > maxBytes) break;
+    picked.push(threads[i]);
+    size += n;
+  }
+  return picked.reverse();
+}
+
+/** One-off (--rehealth): judge an existing list's health and its at-risk tasks from the last 90 days. The tasks, opportunities and notes stay as stored. */
+async function rehealthSpace(t: Target): Promise<"done" | "skipped" | "nothing"> {
+  const tag = `[${t.project}]`;
+  const today = istDate(new Date());
+  const review = await storedReview(t.space);
+  if (!review) {
+    await log(`${tag} no list yet: the normal run makes it (with its health).`);
+    return "nothing";
+  }
+  await mkdir(join(t.dir, "backup"), { recursive: true });
+  if (!force && (await jsonOr<{ day?: string }>(join(t.dir, "last-health.json")))?.day === today) {
+    await log(`${tag} health already judged today.`);
+    return "skipped";
+  }
+  const picked = newestThreads(parseExportThreads(await fetchSpaceText({ space: t.space, days: WINDOW_DAYS })), CHUNK_BYTES);
+  await writeFile(join(t.dir, "space-changes.txt"), `${picked.map((c) => c.text).join("\n\n")}\n`, "utf8");
+  await writeFile(join(t.dir, "review-current.json"), JSON.stringify(review, null, 2), "utf8");
+  await writeFile(join(t.dir, "review-next.json"), "", "utf8");
+  await log(`${tag} Claude Code judging the health from ${picked.length} threads...`);
+  const summary = await runClaude(
+    t.dir,
+    [
+      `You judge how the project of the client "${review.client ?? t.project}" (a Shopify / marketing agency's service team) is going, from its Google Chat space. Today is ${today}.`,
+      `Two files are in the current folder: review-current.json (the stored list of pending tasks and opportunities) and space-changes.txt (the newest threads of the last ${WINDOW_DAYS} days, ${picked.length} threads; "=== THREAD n ===" headers, "[date time IST] Sender: text" lines).`,
+      'Read both completely, then write review-next.json: IDENTICAL to review-current.json (same tasks in the same order, same opportunities and notes, same wording) except for two things: the new "health" object and the "risk" flag of each task.',
+      HEALTH_RULES.replace(/^5\. /, "1. "),
+      "Rules: do not add, remove, reorder or reword any task or opportunity. health.level must be ok, watch or red. Write ONLY review-next.json (valid JSON). Do not run commands or edit any other file. Finish with one line: the level and the number of tasks marked risk.",
+    ].join("\n")
+  );
+  await log(`${tag} Claude Code: ${summary.replace(/\s+/g, " ").slice(0, 250)}`);
+  const next = parseSpaceReview(JSON.parse(await readFile(join(t.dir, "review-next.json"), "utf8")));
+  if (next.space !== t.space || next.tasks.length !== review.tasks.length)
+    throw new Error("The judged list does not match the stored one (tasks added or removed); not stored.");
+  if (!next.health) throw new Error("Claude Code gave no health; not stored.");
+  await copyFile(join(t.dir, "review-current.json"), join(t.dir, "backup", `review-${today}-${Date.now()}-prehealth.json`));
+  // Only the health and the risk flags are taken from Claude's answer; the stored tasks keep their own text.
+  await ServiceSpaceReview.updateOne(
+    { _id: t.space },
+    { $set: { health: next.health, tasks: review.tasks.map((task, i) => ({ ...task, risk: next.tasks[i].risk })) } }
+  );
+  await writeFile(join(t.dir, "last-health.json"), JSON.stringify({ day: today, at: new Date().toISOString() }), "utf8");
+  await log(
+    `${tag} health: ${next.health.level}${
+      next.health.reasons.length
+        ? ` (${next.health.reasons
+            .map((r) => r.text)
+            .join(" | ")
+            .slice(0, 200)})`
+        : ""
+    }.`
+  );
+  return "done";
 }
 
 async function processSpace(t: Target): Promise<"done" | "skipped" | "nothing"> {
@@ -224,6 +301,7 @@ async function processSpace(t: Target): Promise<"done" | "skipped" | "nothing"> 
     tasks: [],
     opportunities: [],
     notes: [],
+    health: null,
   };
   for (let i = 0; i < chunks.length; i++) {
     await writeFile(join(t.dir, "space-changes.txt"), `${chunks[i].map((c) => c.text).join("\n\n")}\n`, "utf8");
@@ -238,7 +316,14 @@ async function processSpace(t: Target): Promise<"done" | "skipped" | "nothing"> 
       throw new Error(`The list dropped from ${list.tasks.length} to ${next.tasks.length} tasks; not stored, check review-next.json.`);
     }
     await copyFile(join(t.dir, "review-current.json"), join(t.dir, "backup", `review-${today}-${Date.now()}.json`));
-    const fields = { client: next.client, source: next.source ?? list.source, tasks: next.tasks, opportunities: next.opportunities, notes: next.notes };
+    const fields = {
+      client: next.client,
+      source: next.source ?? list.source,
+      tasks: next.tasks,
+      opportunities: next.opportunities,
+      notes: next.notes,
+      health: next.health ?? list.health,
+    };
     await ServiceSpaceReview.updateOne({ _id: t.space }, { $set: { ...fields, reviewedAt: new Date(next.reviewedAt) } }, { upsert: true });
     list = { ...next, source: fields.source };
   }
@@ -258,8 +343,30 @@ async function processSpace(t: Target): Promise<"done" | "skipped" | "nothing"> 
   return "done";
 }
 
+/** One run at a time: a later 2-hourly start while a long run is still going (the first read) exits at once. A lock older than 4 hours is stale (a crash). */
+async function takeLock(): Promise<boolean> {
+  const file = join(root, "space-daily.lock");
+  const age = await stat(file).then(
+    (st) => Date.now() - st.mtimeMs,
+    () => null
+  );
+  if (age !== null && age < 4 * 3_600_000) return false;
+  await writeFile(file, `${process.pid} ${new Date().toISOString()}`, "utf8");
+  return true;
+}
+const releaseLock = () => rm(join(root, "space-daily.lock"), { force: true });
+
 async function main() {
   await mkdir(root, { recursive: true });
+  if (!(await takeLock())) return log("Another run is still going (space-daily.lock): this start does nothing.");
+  try {
+    await run();
+  } finally {
+    await releaseLock();
+  }
+}
+
+async function run() {
   await connectToDatabase();
   const list = await targets();
   if (!list.length) throw new Error(only ? `No connected active project matches "${only}".` : "No space is connected to an active project.");
@@ -267,7 +374,7 @@ async function main() {
   const failed: string[] = [];
   for (const t of list) {
     try {
-      await processSpace(t);
+      await (rehealth ? rehealthSpace(t) : processSpace(t));
     } catch (e) {
       failed.push(t.project);
       await log(`[${t.project}] FAILED: ${e instanceof Error ? e.message : String(e)}`);

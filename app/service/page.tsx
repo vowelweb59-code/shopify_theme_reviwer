@@ -21,6 +21,7 @@ import { ServiceUser } from "@/models/service-user";
 import { projectHref } from "@/lib/service/ui/back";
 import { closeByLastReport, statusOnDay, type StatusStep } from "@/lib/service/projects/status-at";
 import { isMovedToOtherDept } from "@/lib/service/projects/dept-placement";
+import { loadProjectHealth } from "@/lib/service/api/project-health";
 
 export const dynamic = "force-dynamic";
 
@@ -228,6 +229,9 @@ export default async function ServiceOverviewPage({
   const tab = TABS.find((t) => t.id === sp.tab) ?? TABS.find((t) => t.id === DEFAULT_TAB)!;
   const status = STATUS_TABS.find((s) => s.id === sp.status) ?? STATUS_TABS[0];
   await connectToDatabase();
+  // Projects going in the incorrect direction (owner, 2026-11-28), marked in red in the Active and On hold views.
+  const health = await loadProjectHealth();
+  const showHealth = status.id === "active" || status.id === "on_hold";
   const [allRows, profiles, att, names, users] = await Promise.all([
     ServiceProject.find()
       .select("name clientId status reviewRating contract upworkProfileId people assignments deptOverride history")
@@ -638,6 +642,20 @@ export default async function ServiceOverviewPage({
                     <Link href={projectHref(p._id, here)} className="font-medium text-zinc-900 hover:text-primary hover:underline dark:text-zinc-100">
                       {p.name}
                     </Link>
+                    {showHealth && health.get(p._id)?.red && (
+                      <span
+                        className="ml-2 rounded-full bg-status-fail-bg px-2 py-0.5 text-[11px] font-semibold text-status-fail-text"
+                        title={health
+                          .get(p._id)!
+                          .reasons.map((r) => r.text)
+                          .join("\n")}
+                      >
+                        ● Going the wrong way
+                      </span>
+                    )}
+                    {showHealth && health.get(p._id)?.red && (
+                      <div className="text-xs font-medium text-status-fail-text">{health.get(p._id)!.reasons[0]?.text}</div>
+                    )}
                     <div className="text-xs text-zinc-500">
                       {(p.upworkProfileId && profileName.get(p.upworkProfileId)) || "No profile"}
                       {p.movedDept && (

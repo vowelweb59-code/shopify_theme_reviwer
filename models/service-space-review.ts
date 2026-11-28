@@ -21,10 +21,22 @@ const serviceSpaceReviewSchema = new Schema(
           who: { type: String, default: null },
           evidence: { type: String, default: null },
           threads: { type: String, default: null },
+          risk: { type: Boolean, default: false }, // going the wrong way: shown in red
         },
         itemShape
       ),
     ],
+    // Claude Code's judgement of the project from this space (owner, 2026-11-28); null until judged. Red = going in the incorrect direction.
+    health: {
+      type: new Schema(
+        {
+          level: { type: String, enum: ["ok", "watch", "red"], required: true },
+          reasons: [new Schema({ text: { type: String, required: true }, threads: { type: String, default: null } }, itemShape)],
+        },
+        itemShape
+      ),
+      default: null,
+    },
     opportunities: [
       new Schema(
         {

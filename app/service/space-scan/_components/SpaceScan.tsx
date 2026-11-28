@@ -83,8 +83,9 @@ export function SpaceScan({ review, showScan = false }: { review: SpaceReview | 
           </div>
           <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle bg-surface text-sm">
             {tasks.map((t, i) => (
-              <li key={i} className="space-y-1 px-4 py-3">
-                <p className="font-medium">{t.text}</p>
+              <li key={i} className={`space-y-1 px-4 py-3 ${t.risk ? "border-l-4 border-status-fail-text bg-status-fail-bg" : ""}`}>
+                {t.risk && <span className="rounded-full bg-status-fail-text px-2 py-0.5 text-[11px] font-semibold text-white">Going the wrong way</span>}
+                <p className={`font-medium ${t.risk ? "text-status-fail-text" : ""}`}>{t.text}</p>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
                   {t.who && <span>Who: {t.who}</span>}
                   {t.asked && <span>Asked: {t.asked}</span>}

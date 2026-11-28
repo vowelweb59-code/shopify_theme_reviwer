@@ -8,6 +8,8 @@ export const TASK_GROUPS = [
 export type TaskGroup = (typeof TASK_GROUPS)[number]["id"];
 export const PRIORITIES = ["High", "Medium", "Low"] as const;
 export type Priority = (typeof PRIORITIES)[number];
+export const HEALTH_LEVELS = ["ok", "watch", "red"] as const;
+export type HealthLevel = (typeof HEALTH_LEVELS)[number];
 
 export interface ReviewTask {
   group: TaskGroup;
@@ -16,12 +18,19 @@ export interface ReviewTask {
   who: string | null;
   evidence: string | null;
   threads: string | null;
+  /** The point is going the wrong way (client escalating, deadline missed, waiting far too long): shown in red. */
+  risk: boolean;
 }
 export interface ReviewOpportunity {
   priority: Priority;
   title: string;
   evidence: string | null;
   pitch: string | null;
+}
+/** Claude Code's judgement of the project from its Chat space (owner, 2026-11-28: "if the project is going in the incorrect direction, highlight it in red"). */
+export interface ReviewHealth {
+  level: HealthLevel;
+  reasons: Array<{ text: string; threads: string | null }>;
 }
 export interface SpaceReview {
   space: string;
@@ -31,6 +40,8 @@ export interface SpaceReview {
   tasks: ReviewTask[];
   opportunities: ReviewOpportunity[];
   notes: string[];
+  /** Absent until the space has been judged once. */
+  health: ReviewHealth | null;
 }
 
 const str = (v: unknown, field: string, required = false): string | null => {
@@ -42,7 +53,7 @@ const str = (v: unknown, field: string, required = false): string | null => {
   return v.trim() || null;
 };
 
-/** Reads the JSON file the owner loads; throws a message naming the first bad field. */
+/** Reads the JSON file the owner loads (or Claude Code writes); throws a message naming the first bad field. */
 export function parseSpaceReview(raw: unknown): SpaceReview {
   if (!raw || typeof raw !== "object") throw new Error("The file must hold one JSON object.");
   const o = raw as Record<string, unknown>;
@@ -61,6 +72,7 @@ export function parseSpaceReview(raw: unknown): SpaceReview {
       who: str(r.who, `tasks[${i}].who`),
       evidence: str(r.evidence, `tasks[${i}].evidence`),
       threads: str(r.threads, `tasks[${i}].threads`),
+      risk: r.risk === true,
     };
   });
   const opportunities = o.opportunities.map((t, i) => {
@@ -74,5 +86,20 @@ export function parseSpaceReview(raw: unknown): SpaceReview {
     };
   });
   const notes = Array.isArray(o.notes) ? o.notes.filter((n): n is string => typeof n === "string") : [];
-  return { space, client: str(o.client, "client"), reviewedAt, source: str(o.source, "source"), tasks, opportunities, notes };
+  return { space, client: str(o.client, "client"), reviewedAt, source: str(o.source, "source"), tasks, opportunities, notes, health: parseHealth(o.health) };
+}
+
+function parseHealth(raw: unknown): ReviewHealth | null {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object") throw new Error("health must be an object");
+  const h = raw as Record<string, unknown>;
+  if (!HEALTH_LEVELS.includes(h.level as HealthLevel)) throw new Error("health.level must be ok, watch or red");
+  const list = Array.isArray(h.reasons) ? h.reasons : [];
+  const reasons = list.map((r, i) => {
+    const x = (r ?? {}) as Record<string, unknown>;
+    return { text: str(x.text, `health.reasons[${i}].text`, true)!, threads: str(x.threads, `health.reasons[${i}].threads`) };
+  });
+  // A red or watch level must say why; "ok" carries no reasons.
+  if (h.level !== "ok" && reasons.length === 0) throw new Error("health.reasons must say why when the level is watch or red");
+  return { level: h.level as HealthLevel, reasons: h.level === "ok" ? [] : reasons.slice(0, 5) };
 }

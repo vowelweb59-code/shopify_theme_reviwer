@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listLiveProjects } from "@/lib/service/api/live-projects";
+import { loadProjectHealth } from "@/lib/service/api/project-health";
 import { SPACE_SCAN_SPACE, loadProjectSpaces, loadSpaceReviews } from "@/lib/service/chat/space-scan";
 import { SpaceScan } from "./_components/SpaceScan";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 // connected to any project sits under "Not connected". ?project=<project id> | unlinked picks the tab.
 export default async function SpaceScanPage({ searchParams }: { searchParams: Promise<{ project?: string }> }) {
   const sp = await searchParams;
-  const [live, stored, links] = await Promise.all([listLiveProjects(), loadSpaceReviews(), loadProjectSpaces()]);
+  const [live, stored, links, health] = await Promise.all([listLiveProjects(), loadSpaceReviews(), loadProjectSpaces(), loadProjectHealth()]);
 
   // project id -> its connected spaces. The first link was stored on the review itself; it counts until a link row replaces it.
   const spacesOf = new Map<string, Array<{ space: string; name: string | null }>>();
@@ -30,8 +31,8 @@ export default async function SpaceScanPage({ searchParams }: { searchParams: Pr
   // everything comes back when it is Active again.
   const tabs = [...live].sort((a, b) => Number(spacesOf.has(b.id)) - Number(spacesOf.has(a.id)) || a.name.localeCompare(b.name));
   const allTabs = [
-    ...tabs.map((t) => ({ id: t.id, name: t.name, has: spacesOf.has(t.id) })),
-    ...(unlinked.length ? [{ id: "unlinked", name: "Not connected", has: true }] : []),
+    ...tabs.map((t) => ({ id: t.id, name: t.name, has: spacesOf.has(t.id), red: health.get(t.id)?.red === true })),
+    ...(unlinked.length ? [{ id: "unlinked", name: "Not connected", has: true, red: false }] : []),
   ];
   const selected = allTabs.find((t) => t.id === sp.project) ?? allTabs.find((t) => t.has) ?? allTabs[0];
   const shown =
@@ -43,7 +44,8 @@ export default async function SpaceScanPage({ searchParams }: { searchParams: Pr
     <div className="space-y-4">
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         One tab for each active project ({live.length}, the same list as the Projects tab&apos;s Active view). A project&apos;s tab shows the pending tasks and
-        the opportunities to pitch from its Chat space. A dot marks the tabs that have a space connected ({spacesOf.size} so far).
+        the opportunities to pitch from its Chat space. A green dot marks the tabs that have a space connected ({spacesOf.size} so far). A red tab is a project
+        going in the incorrect direction: judged from its chat and from its hours.
       </p>
       <nav aria-label="Active projects" className="flex flex-wrap gap-1.5">
         {allTabs.map((t) => {
@@ -53,14 +55,42 @@ export default async function SpaceScanPage({ searchParams }: { searchParams: Pr
               key={t.id}
               href={`/service/space-scan?project=${encodeURIComponent(t.id)}`}
               aria-current={on ? "page" : undefined}
-              className={`rounded-full border px-3 py-1 text-sm ${on ? "border-primary bg-primary-tint text-primary-tint-text font-medium" : "border-border-subtle text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"}`}
+              className={`rounded-full border px-3 py-1 text-sm ${
+                t.red
+                  ? `border-status-fail-text bg-status-fail-bg font-semibold text-status-fail-text ${on ? "ring-2 ring-status-fail-text" : ""}`
+                  : on
+                    ? "border-primary bg-primary-tint text-primary-tint-text font-medium"
+                    : "border-border-subtle text-zinc-600 hover:bg-surface-muted dark:text-zinc-400"
+              }`}
+              title={t.red ? "Going in the incorrect direction" : undefined}
             >
-              {t.has && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-status-pass-icon align-middle" aria-hidden />}
+              {t.red ? (
+                <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-status-fail-text align-middle" aria-hidden />
+              ) : (
+                t.has && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-status-pass-icon align-middle" aria-hidden />
+              )}
               {t.name}
             </Link>
           );
         })}
       </nav>
+      {selected && health.get(selected.id) && (
+        <div
+          role="alert"
+          className={`rounded-lg border p-4 text-sm ${health.get(selected.id)!.red ? "border-status-fail-text bg-status-fail-bg text-status-fail-text" : "border-status-warning-icon bg-status-warning-bg text-status-warning-text"}`}
+        >
+          <p className="font-semibold">{health.get(selected.id)!.red ? "This project is going in the incorrect direction" : "Worth watching"}</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            {health.get(selected.id)!.reasons.map((r, i) => (
+              <li key={i}>
+                {r.text}
+                {r.threads ? <span className="opacity-75"> ({r.threads})</span> : null}
+                <span className="ml-1 text-xs opacity-75">{r.kind === "chat" ? "· from the chat" : "· from the numbers"}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {selected && shown.length === 0 && (
         <p className="rounded-lg border border-border-subtle bg-surface p-4 text-sm text-zinc-600 dark:text-zinc-400">
           No Chat space is connected to {selected.name} yet. Once you give me its space, it is connected with <code>scripts/set-space-project.ts</code> and its
