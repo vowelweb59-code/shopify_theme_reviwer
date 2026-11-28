@@ -143,3 +143,29 @@ describe("mergeFrom", () => {
     expect(mergeFrom({ installsExactBy: null, installsExactFrom: null }, "customEvent:theme_name", null)).toBeNull();
   });
 });
+
+describe("splitByTheme", () => {
+  const themes = [
+    { name: "Noble", aliases: themeAliases(["Noble", "Glide"]) },
+    { name: "Zeal", aliases: themeAliases(["Zeal", "Pulse"]) },
+  ];
+  const row = (theme: string, n = 1) => ({ values: ["shop.example.com", theme], installs: n });
+
+  it("gives each theme its own installs, presets included", async () => {
+    const { splitByTheme } = await import("./installAttribution");
+    const r = splitByTheme([row("noble"), row("Noble - Glide"), row("zeal"), row("Pulse")], 1, themes);
+    expect(r.perTheme.get("Noble")?.length).toBe(2);
+    expect(r.perTheme.get("Zeal")?.length).toBe(2);
+    expect(r.noTheme).toEqual([]);
+    expect(r.otherTheme).toEqual([]);
+  });
+
+  it("keeps installs with no theme, or another theme, apart instead of dropping them", async () => {
+    const { splitByTheme } = await import("./installAttribution");
+    const r = splitByTheme([row("(not set)"), row(""), row("Soft"), row("noble")], 1, themes);
+    expect(r.noTheme.length).toBe(2);
+    expect(r.otherTheme.map((x) => x.values[1])).toEqual(["Soft"]);
+    expect(r.perTheme.get("Noble")?.length).toBe(1);
+    expect(r.perTheme.get("Zeal")?.length).toBe(0);
+  });
+});

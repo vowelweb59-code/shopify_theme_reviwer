@@ -23,7 +23,11 @@ const openable = (v: string | undefined, isUrlColumn: boolean): string | null =>
 function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
   const q = query.trim().toLowerCase();
   const rows = useMemo(() => (q ? group.rows.filter((r) => r.values.some((v) => v.toLowerCase().includes(q))) : group.rows), [group.rows, q]);
-  const shared = group.themes.length > 1;
+  const shared = group.themes.length > 1 && !group.leftover;
+  // A split property has one table per theme and, when needed, tables for the installs that belong to none of them.
+  const title = group.leftover
+    ? `${group.themes.join(" and ")}: installs ${group.leftover === "unnamed" ? "with no theme recorded" : "naming another theme"}`
+    : group.themes.join(" + ");
   // The column holding the store address (owner, 2026-11-25: open any store from the table, one by one or all at once).
   const urlCol = group.dimensions.findIndex((d) => /url/i.test(d.label) || /url/i.test(d.apiName));
   const urls = useMemo(() => {
@@ -33,11 +37,17 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
   const [note, setNote] = useState<string | null>(null);
 
   function openAll() {
+    // Not opened with the "noopener" feature: a window opened that way always comes back as null, even when it opened, so a block could not be told
+    // from success. The opener link is cut after opening instead.
     let blocked = 0;
-    for (const u of urls) if (!window.open(u, "_blank", "noopener,noreferrer")) blocked++;
+    for (const u of urls) {
+      const w = window.open(u, "_blank");
+      if (w) w.opener = null;
+      else blocked++;
+    }
     setNote(
       blocked
-        ? `Your browser blocked ${blocked} of ${urls.length} tabs. Allow pop-ups for this site and press again, or use Copy all URLs and paste them into Multiple URL Opener.`
+        ? `Your browser let ${urls.length - blocked} of ${urls.length} tabs open and blocked ${blocked}. Browsers allow only one new tab per click unless pop-ups are allowed: click the "pop-up blocked" icon at the right of the address bar, choose "Always allow pop-ups from this site", then press Open all again. Or use Copy all URLs and paste them into Multiple URL Opener.`
         : `Opened ${urls.length} stores.`
     );
   }
@@ -93,7 +103,7 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
     const url = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `theme-installs-${group.themes
+    a.download = `theme-installs-${group.leftover ? `${group.leftover}-` : ""}${group.themes
       .join("-")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")}-${group.range.start}-${group.range.end}.csv`;
@@ -104,7 +114,7 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
   return (
     <Card>
       <CardHeader
-        title={`${group.themes.join(" + ")}: ${group.total} install${group.total === 1 ? "" : "s"}`}
+        title={`${title}: ${group.total} install${group.total === 1 ? "" : "s"}`}
         description={`GA4 property ${group.propertyId} · ${group.range.start} to ${group.range.end}`}
         action={
           <div className="flex flex-wrap items-center gap-2">
@@ -134,6 +144,13 @@ function GroupTable({ group, query }: { group: InstallGroup; query: string }) {
           {note && (
             <p role="status" className="rounded-md bg-surface-muted p-3 text-sm text-zinc-700 dark:text-zinc-300">
               {note}
+            </p>
+          )}
+          {group.leftover && (
+            <p className="rounded-md bg-surface-muted p-3 text-sm text-zinc-700 dark:text-zinc-300">
+              {group.leftover === "unnamed"
+                ? `These installs have no theme recorded (they are from before GA4 started recording it), so they cannot be given to ${group.themes.join(" or ")}.`
+                : `These installs name a theme that is not one of ${group.themes.join(" and ")} (or their presets), so they are listed apart.`}
             </p>
           )}
           {group.filteredTo && (
@@ -192,7 +209,7 @@ export function InstallsSection() {
       {loading && !data && <p className="text-sm text-zinc-500">Reading GA4…</p>}
       {data?.groups.length === 0 && <p className="text-sm text-zinc-500">No theme with a GA4 property matches this selection.</p>}
       {data?.groups.map((g) => (
-        <GroupTable key={g.propertyId} group={g} query={query} />
+        <GroupTable key={`${g.propertyId}:${g.themes.join("+")}:${g.leftover ?? ""}`} group={g} query={query} />
       ))}
     </div>
   );

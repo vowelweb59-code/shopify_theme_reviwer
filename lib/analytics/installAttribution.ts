@@ -99,3 +99,29 @@ export function mergeInstallRows(...sets: AggregateRow[][]): AggregateRow[] {
 export function unattributedReportRows(unattributed: ReadonlyMap<string, number>): ReportRow[] {
   return [...unattributed].map(([date, n]) => ({ dimensions: [toGa4Date(date), PRIMARY_EVENTS.themeInstall], metrics: [n] }));
 }
+
+/**
+ * Splits install rows (one table each) among the themes that share a property, by the column that names the theme. A row goes to every theme
+ * whose names (the theme and its presets) it matches; rows with no theme value, and rows naming a theme that is not one of these, are returned
+ * apart so no install disappears from the tables.
+ */
+export function splitByTheme<R extends { values: string[] }>(
+  rows: readonly R[],
+  at: number,
+  themes: ReadonlyArray<{ name: string; aliases: string[] }>
+): { perTheme: Map<string, R[]>; noTheme: R[]; otherTheme: R[] } {
+  const perTheme = new Map<string, R[]>(themes.map((t) => [t.name, []]));
+  const noTheme: R[] = [];
+  const otherTheme: R[] = [];
+  for (const r of rows) {
+    const value = r.values[at] ?? "";
+    if (isUnset(value)) {
+      noTheme.push(r);
+      continue;
+    }
+    const hits = themes.filter((t) => matchesAlias(value, t.aliases));
+    if (!hits.length) otherTheme.push(r);
+    for (const t of hits) perTheme.get(t.name)!.push(r);
+  }
+  return { perTheme, noTheme, otherTheme };
+}
